@@ -4,9 +4,11 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/rulehunter"
+	"github.com/lawrencewoodman/rulehunter/csvinput"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -17,17 +19,10 @@ func processExperiment(experimentFilename string, config *config) error {
 	var p *os.File
 	var err error
 
-	experimentFullFilename :=
-		filepath.Join(config.ExperimentsDir, experimentFilename)
 	progressFullFilename := filepath.Join(
 		config.ProgressDir,
 		fmt.Sprintf("%s.progress", experimentFilename),
 	)
-	experiment, err = rulehunter.LoadExperiment(experimentFullFilename)
-	if err != nil {
-		return err
-	}
-
 	p, err = os.Create(progressFullFilename)
 	if err != nil {
 		msg := fmt.Sprintf("Couldn't create progress file: %s", err)
@@ -35,6 +30,16 @@ func processExperiment(experimentFilename string, config *config) error {
 		return err
 	}
 	defer p.Close()
+
+	experimentFullFilename :=
+		filepath.Join(config.ExperimentsDir, experimentFilename)
+	experiment, err = loadExperiment(experimentFullFilename)
+	if err != nil {
+		msg := fmt.Sprintf("Couldn't load experiment file: %s", err)
+		reportProgress(p, msg)
+		err := errors.New(msg)
+		return err
+	}
 
 	reportProgress(p, "Describing input")
 	fieldDescriptions, err := rulehunter.DescribeInput(experiment.Input)
@@ -116,6 +121,55 @@ func processExperiment(experimentFilename string, config *config) error {
 		return err
 	}
 	return nil
+}
+
+type experimentFile struct {
+	Title                 string
+	InputFilename         string
+	FieldNames            []string
+	ExcludeFieldNames     []string
+	IsFirstLineFieldNames bool
+	Separator             string
+	Aggregators           []*rulehunter.AggregatorDesc
+	Goals                 []string
+	SortOrder             []*rulehunter.SortDesc
+}
+
+func loadExperiment(filename string) (*rulehunter.Experiment, error) {
+	var f *os.File
+	var e experimentFile
+	var err error
+
+	f, err = os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	dec := json.NewDecoder(f)
+	if err = dec.Decode(&e); err != nil {
+		return nil, err
+	}
+
+	input, err := csvinput.New(
+		e.FieldNames,
+		e.InputFilename,
+		rune(e.Separator[0]),
+		e.IsFirstLineFieldNames,
+	)
+	if err != nil {
+		return nil, err
+	}
+	experimentDesc := &rulehunter.ExperimentDesc{
+		Title:         e.Title,
+		Input:         input,
+		Fields:        e.FieldNames,
+		ExcludeFields: e.ExcludeFieldNames,
+		Aggregators:   e.Aggregators,
+		Goals:         e.Goals,
+		SortOrder:     e.SortOrder,
+	}
+	experiment, err := rulehunter.MakeExperiment(experimentDesc)
+	return experiment, err
 }
 
 func reportProgress(f *os.File, msg string) {
