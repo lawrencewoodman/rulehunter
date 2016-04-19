@@ -95,6 +95,9 @@ func processExperiment(experimentFilename string, config *config) error {
 
 	bestNonCombinedRules := assessment3.GetRules()
 	numRulesToCombine := 50
+	if len(bestNonCombinedRules) < numRulesToCombine {
+		numRulesToCombine = len(bestNonCombinedRules)
+	}
 	combinedRules :=
 		rulehunter.CombineRules(bestNonCombinedRules[:numRulesToCombine])
 
