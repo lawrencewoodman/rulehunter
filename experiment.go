@@ -117,8 +117,8 @@ func processExperiment(experimentFilename string, config *config) error {
 		return err
 	}
 
-	err = writeReports(assessment5, experiment, experimentFilename,
-		config.ReportsDir)
+	err =
+		writeReport(assessment5, experiment, experimentFilename, config.ReportsDir)
 	if err != nil {
 		reportProgress(p, err.Error())
 		return err

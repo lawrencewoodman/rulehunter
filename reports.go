@@ -16,7 +16,7 @@ import (
 	"sort"
 )
 
-func writeReports(
+func writeReport(
 	assessment *rulehunter.Assessment,
 	experiment *rulehunter.Experiment,
 	experimentFilename string,
@@ -24,43 +24,6 @@ func writeReports(
 ) error {
 	assessment.Sort(experiment.SortOrder)
 	assessment.Refine(1)
-	err := writeJsonReport(assessment, reportsDir, experimentFilename)
-	if err != nil {
-		return err
-	}
-	err = writeHtmlReport(assessment, experiment, reportsDir, experimentFilename)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func writeJsonReport(
-	sortedAssessment *rulehunter.Assessment,
-	reportsDir,
-	experimentFilename string,
-) error {
-	json, err := sortedAssessment.ToJSON()
-	if err != nil {
-		return fmt.Errorf("Couldn't create JSON: %s", err)
-	}
-	outputFilename := filepath.Join(reportsDir, experimentFilename)
-	f, err := os.Create(outputFilename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = f.WriteString(json)
-	return err
-}
-
-func writeHtmlReport(
-	assessment *rulehunter.Assessment,
-	experiment *rulehunter.Experiment,
-	reportsDir string,
-	experimentFilename string,
-) error {
 	const tpl = `
 <!DOCTYPE html>
 <html>
