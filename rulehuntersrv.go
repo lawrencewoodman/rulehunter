@@ -83,11 +83,17 @@ func (p *program) run() {
 				err := processExperiment(file.Name(), p.config)
 				if err == nil {
 					logger.Infof("Successfully processed experiment: %s", file.Name())
-					moveExperimentToSuccess(file.Name(), p.config)
+					err := moveExperimentToSuccess(file.Name(), p.config)
+					if err != nil {
+						logger.Errorf("Couldn't move experiment file: %s", err)
+					}
 				} else {
 					logger.Errorf("Failed processing experiment: %s - %s",
 						file.Name(), err)
-					moveExperimentToFail(file.Name(), p.config)
+					err := moveExperimentToFail(file.Name(), p.config)
+					if err != nil {
+						logger.Errorf("Couldn't move experiment file: %s", err)
+					}
 				}
 			}
 		}
