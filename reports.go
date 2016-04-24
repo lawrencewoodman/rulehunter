@@ -141,9 +141,9 @@ func writeReport(
 			<div class="goals">
 				<table>
 					<tr class="title"><th>Goal</th><th class="last-column">Value</th></tr>
-					{{ range $key, $value := .Goals }}
+					{{ range .Goals }}
 					<tr>
-						<td>{{ $key }}</td><td class="last-column">{{ $value }}</td>
+						<td>{{ .Expr }}</td><td class="last-column">{{ .Passed }}</td>
 					</tr>
 					{{ end }}
 				</table>
@@ -166,7 +166,7 @@ func writeReport(
 	type TplAssessment struct {
 		Rule        string
 		Aggregators []*TplAggregator
-		Goals       map[string]bool
+		Goals       []*rulehunter.GoalAssessment
 	}
 
 	type TplData struct {
