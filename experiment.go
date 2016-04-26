@@ -15,7 +15,6 @@ import (
 )
 
 func processExperiment(experimentFilename string, config *config) error {
-	var experiment *rulehunter.Experiment
 	var p *os.File
 	var err error
 
@@ -33,7 +32,7 @@ func processExperiment(experimentFilename string, config *config) error {
 
 	experimentFullFilename :=
 		filepath.Join(config.ExperimentsDir, experimentFilename)
-	experiment, err = loadExperiment(experimentFullFilename)
+	experiment, categories, err := loadExperiment(experimentFullFilename)
 	if err != nil {
 		msg := fmt.Sprintf("Couldn't load experiment file: %s", err)
 		reportProgress(p, msg)
@@ -116,17 +115,23 @@ func processExperiment(experimentFilename string, config *config) error {
 		return err
 	}
 
-	err =
-		writeReport(assessment5, experiment, experimentFilename, config.ReportsDir)
+	err = writeReport(
+		assessment5,
+		experiment,
+		experimentFilename,
+		categories,
+		config,
+	)
 	if err != nil {
 		reportProgress(p, err.Error())
 		return err
 	}
-	return nil
+	return writeIndexHTML(config.BuildDir, config.ReportsDir)
 }
 
 type experimentFile struct {
 	Title                 string
+	Categories            []string
 	InputFilename         string
 	FieldNames            []string
 	ExcludeFieldNames     []string
@@ -137,19 +142,24 @@ type experimentFile struct {
 	SortOrder             []*rulehunter.SortDesc
 }
 
-func loadExperiment(filename string) (*rulehunter.Experiment, error) {
+func loadExperiment(filename string) (
+	*rulehunter.Experiment,
+	[]string,
+	error,
+) {
 	var f *os.File
 	var e experimentFile
 	var err error
 
 	f, err = os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, []string{}, err
 	}
+	defer f.Close()
 
 	dec := json.NewDecoder(f)
 	if err = dec.Decode(&e); err != nil {
-		return nil, err
+		return nil, []string{}, err
 	}
 
 	input, err := csvinput.New(
@@ -159,7 +169,7 @@ func loadExperiment(filename string) (*rulehunter.Experiment, error) {
 		e.IsFirstLineFieldNames,
 	)
 	if err != nil {
-		return nil, err
+		return nil, []string{}, err
 	}
 	experimentDesc := &rulehunter.ExperimentDesc{
 		Title:         e.Title,
@@ -171,7 +181,7 @@ func loadExperiment(filename string) (*rulehunter.Experiment, error) {
 		SortOrder:     e.SortOrder,
 	}
 	experiment, err := rulehunter.MakeExperiment(experimentDesc)
-	return experiment, err
+	return experiment, e.Categories, err
 }
 
 func reportProgress(f *os.File, msg string) {

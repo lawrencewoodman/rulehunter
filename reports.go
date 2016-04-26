@@ -20,7 +20,8 @@ func writeReport(
 	assessment *rulehunter.Assessment,
 	experiment *rulehunter.Experiment,
 	experimentFilename string,
-	reportsDir string,
+	categories []string,
+	config *config,
 ) error {
 	assessment.Sort(experiment.SortOrder)
 	assessment.Refine(1)
@@ -95,7 +96,11 @@ func writeReport(
 					<th class="last-column"> </th>
 				</tr>
 				<tr>
-					<td>Number of records processed</td>
+					<td>Categories</td>
+					<td class="last-column">{{range .Categories}} {{ . }} {{end}}</td>
+				</tr>
+				<tr>
+					<td>Number of records</td>
 					<td class="last-column">{{.NumRecords}}</td>
 				</tr>
 				<tr>
@@ -171,6 +176,7 @@ func writeReport(
 
 	type TplData struct {
 		Title              string
+		Categories         []string
 		ExperimentFilename string
 		NumRecords         int64
 		SortOrder          []rulehunter.SortField
@@ -206,21 +212,30 @@ func writeReport(
 	}
 	tplData := TplData{
 		experiment.Title,
+		categories,
 		experimentFilename,
 		assessment.NumRecords,
 		experiment.SortOrder,
 		assessments,
 	}
 
-	outputFilename :=
-		filepath.Join(reportsDir, fmt.Sprintf("%s.html", experimentFilename))
-	f, err := os.Create(outputFilename)
+	reportFilename := fmt.Sprintf("%s.html", experimentFilename)
+	fullReportFilename := filepath.Join(config.ReportsDir, reportFilename)
+	f, err := os.Create(fullReportFilename)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	return t.Execute(f, tplData)
+	if err = t.Execute(f, tplData); err != nil {
+		return err
+	}
+	return addReportToIndex(
+		config.BuildDir,
+		reportFilename,
+		experiment.Title,
+		categories,
+	)
 }
 
 func getSortedAggregatorNames(aggregators map[string]*dlit.Literal) []string {

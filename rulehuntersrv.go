@@ -5,7 +5,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"github.com/kardianos/service"
@@ -27,17 +26,10 @@ type config struct {
 	ExperimentsDir string
 	ReportsDir     string
 	ProgressDir    string // Records the progress processing each experiment
+	BuildDir       string
 }
 
 func (p *program) Start(s service.Service) error {
-	configFilename := filepath.Join(p.configDir, "config.json")
-	config, err := loadConfig(configFilename)
-	if err != nil {
-		return errors.New(fmt.Sprintf("Couldn't load configuration %s: %s",
-			configFilename, err))
-	}
-	p.config = config
-
 	go p.run()
 	return nil
 }
@@ -127,6 +119,17 @@ func main() {
 	if *configDirPtr != "" {
 		svcConfig.Arguments = []string{fmt.Sprintf("-configdir=%s", *configDirPtr)}
 		prg.configDir = *configDirPtr
+	}
+
+	configFilename := filepath.Join(prg.configDir, "config.json")
+	config, err := loadConfig(configFilename)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("Couldn't load configuration %s: %s",
+			configFilename, err))
+	}
+	prg.config = config
+	if err = writeIndexHTML(config.BuildDir, config.ReportsDir); err != nil {
+		log.Fatal(err)
 	}
 
 	s, err := service.New(prg, svcConfig)
