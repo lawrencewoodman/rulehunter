@@ -40,6 +40,7 @@ func processExperiment(experimentFilename string, config *config) error {
 		err := errors.New(msg)
 		return err
 	}
+	defer experiment.Close()
 
 	reportProgress(p, "Describing input")
 	fieldDescriptions, err := rulehunter.DescribeInput(experiment.Input)
