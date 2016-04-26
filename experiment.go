@@ -96,11 +96,9 @@ func processExperiment(experimentFilename string, config *config) error {
 
 	bestNonCombinedRules := assessment3.GetRules()
 	numRulesToCombine := 50
-	if len(bestNonCombinedRules) < numRulesToCombine {
-		numRulesToCombine = len(bestNonCombinedRules)
-	}
-	combinedRules :=
-		rulehunter.CombineRules(bestNonCombinedRules[:numRulesToCombine])
+	combinedRules := rulehunter.CombineRules(
+		truncateRules(bestNonCombinedRules, numRulesToCombine),
+	)
 
 	assessment4, err := assessRules(combinedRules, experiment, p)
 	if err != nil {
@@ -243,4 +241,11 @@ func moveExperimentToFail(experimentFilename string, config *config) error {
 	experimentFailFullFilename :=
 		filepath.Join(config.ExperimentsDir, "fail", experimentFilename)
 	return os.Rename(experimentFullFilename, experimentFailFullFilename)
+}
+
+func truncateRules(rules []*rulehunter.Rule, numRules int) []*rulehunter.Rule {
+	if len(rules) < numRules {
+		numRules = len(rules)
+	}
+	return rules[:numRules]
 }
