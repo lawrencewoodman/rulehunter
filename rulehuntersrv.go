@@ -128,7 +128,7 @@ func main() {
 			configFilename, err))
 	}
 	prg.config = config
-	if err = writeIndexHTML(config.BuildDir, config.ReportsDir); err != nil {
+	if err = writeIndexHTML(config); err != nil {
 		log.Fatal(err)
 	}
 

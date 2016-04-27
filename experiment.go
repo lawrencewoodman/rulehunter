@@ -115,7 +115,7 @@ func processExperiment(experimentFilename string, config *config) error {
 		return err
 	}
 
-	err = writeReport(
+	err = writeReportJson(
 		assessment5,
 		experiment,
 		experimentFilename,
@@ -126,7 +126,7 @@ func processExperiment(experimentFilename string, config *config) error {
 		reportProgress(p, err.Error())
 		return err
 	}
-	return writeIndexHTML(config.BuildDir, config.ReportsDir)
+	return writeIndexHTML(config)
 }
 
 type experimentFile struct {

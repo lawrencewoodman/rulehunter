@@ -5,18 +5,42 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/dexpr_go"
 	"github.com/lawrencewoodman/dlit_go"
 	"github.com/lawrencewoodman/rulehunter"
-	"html/template"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 )
 
-func writeReport(
+type JAggregator struct {
+	Name       string
+	Value      string
+	Difference string
+}
+
+type JAssessment struct {
+	Rule        string
+	Aggregators []*JAggregator
+	Goals       []*rulehunter.GoalAssessment
+}
+
+type JData struct {
+	Title              string
+	Categories         []string
+	Stamp              time.Time
+	ExperimentFilename string
+	NumRecords         int64
+	SortOrder          []rulehunter.SortField
+	Assessments        []*JAssessment
+}
+
+func writeReportJson(
 	assessment *rulehunter.Assessment,
 	experiment *rulehunter.Experiment,
 	experimentFilename string,
@@ -25,217 +49,67 @@ func writeReport(
 ) error {
 	assessment.Sort(experiment.SortOrder)
 	assessment.Refine(1)
-	const tpl = `
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="UTF-8">
-		<title>{{.Title}}</title>
-	</head>
-
-	<style>
-		table {
-			border-collapse: collapse;
-		}
-
-		table th {
-			text-align: left;
-			padding-left: 1em;
-			padding-right: 2em;
-			border-collapse: collapse;
-			border-right: 1px solid black;
-			border-bottom: 1px solid black;
-		}
-
-		table th.last-column {
-			border-right: 0;
-		}
-		table td {
-			border-collapse: collapse;
-			border-right: 1px solid black;
-			padding-left: 1em;
-			padding-right: 1em;
-		  padding-top: 0.1em;
-		  padding-bottom: 0.1em;
-		}
-		table td.last-column {
-			border-right: 0;
-		}
-		table tr.title td {
-			border-bottom: 1px solid black;
-		}
-		div {
-			margin-bottom: 2em;
-		}
-		div.aggregators {
-			float: left;
-		  clear: left;
-			margin-right: 3em;
-		}
-		div.goals {
-			float: left;
-		  clear: right;
-		}
-
-		div.config table {
-			margin-bottom: 2em;
-		}
-		div.config table th {
-			height: 1em;
-		}
-	</style>
-
-	<body>
-		<h1>{{.Title}}</h1>
-
-		<div class="config">
-			<h2>Config</h2>
-			<table>
-				<tr class="title">
-					<th> </th>
-					<th class="last-column"> </th>
-				</tr>
-				<tr>
-					<td>Categories</td>
-					<td class="last-column">{{range .Categories}} {{ . }} {{end}}</td>
-				</tr>
-				<tr>
-					<td>Number of records</td>
-					<td class="last-column">{{.NumRecords}}</td>
-				</tr>
-				<tr>
-					<td>Experiment file</td>
-					<td class="last-column">{{.ExperimentFilename}}</td>
-				</tr>
-			</table>
-
-			<table>
-				<tr class="title">
-					<th>Sort Order</th><th class="last-column">Direction</th>
-				</tr>
-				{{range .SortOrder}}
-					<tr>
-						<td>{{ .Field }}</td><td class="last-column">{{ .Direction }}</td>
-					</tr>
-				{{end}}
-			</table>
-		</div>
-
-		<h2>Results</h2>
-		{{range .Assessments}}
-			<h3 style="clear: both;">{{ .Rule }}</h3>
-
-
-			<div class="aggregators">
-				<table>
-					<tr class="title">
-						<th>Aggregator</th>
-            <th>Value</th>
-						<th class="last-column">Improvement</th>
-					</tr>
-					{{ range .Aggregators }}
-					<tr>
-						<td>{{ .Name }}</td>
-						<td>{{ .Value }}</td>
-						<td class="last-column">{{ .Difference }}</td>
-					</tr>
-					{{ end }}
-				</table>
-			</div>
-
-			<div class="goals">
-				<table>
-					<tr class="title"><th>Goal</th><th class="last-column">Value</th></tr>
-					{{ range .Goals }}
-					<tr>
-						<td>{{ .Expr }}</td><td class="last-column">{{ .Passed }}</td>
-					</tr>
-					{{ end }}
-				</table>
-			</div>
-		{{ end }}
-	</body>
-</html>`
-
-	t, err := template.New("webpage").Parse(tpl)
-	if err != nil {
-		return err
-	}
-
-	type TplAggregator struct {
-		Name       string
-		Value      string
-		Difference string
-	}
-
-	type TplAssessment struct {
-		Rule        string
-		Aggregators []*TplAggregator
-		Goals       []*rulehunter.GoalAssessment
-	}
-
-	type TplData struct {
-		Title              string
-		Categories         []string
-		ExperimentFilename string
-		NumRecords         int64
-		SortOrder          []rulehunter.SortField
-		Assessments        []*TplAssessment
-	}
 
 	trueAggregators, err := getTrueAggregators(assessment)
 	if err != nil {
 		return err
 	}
 
-	assessments := make([]*TplAssessment, len(assessment.RuleAssessments))
+	assessments := make([]*JAssessment, len(assessment.RuleAssessments))
 	for i, ruleAssessment := range assessment.RuleAssessments {
 		aggregatorNames := getSortedAggregatorNames(ruleAssessment.Aggregators)
-		aggregators := make([]*TplAggregator, len(ruleAssessment.Aggregators))
+		aggregators := make([]*JAggregator, len(ruleAssessment.Aggregators))
 		j := 0
 		for _, aggregatorName := range aggregatorNames {
 			aggregator := ruleAssessment.Aggregators[aggregatorName]
 			difference :=
 				calcTrueAggregatorDifference(trueAggregators, aggregator, aggregatorName)
-			aggregators[j] = &TplAggregator{
+			aggregators[j] = &JAggregator{
 				aggregatorName,
 				aggregator.String(),
 				difference,
 			}
 			j++
 		}
-		assessments[i] = &TplAssessment{
+		assessments[i] = &JAssessment{
 			ruleAssessment.Rule.String(),
 			aggregators,
 			ruleAssessment.Goals,
 		}
 	}
-	tplData := TplData{
+	jData := JData{
 		experiment.Title,
 		categories,
+		time.Now(),
 		experimentFilename,
 		assessment.NumRecords,
 		experiment.SortOrder,
 		assessments,
 	}
-
-	reportFilename := fmt.Sprintf("%s.html", experimentFilename)
-	fullReportFilename := filepath.Join(config.ReportsDir, reportFilename)
-	f, err := os.Create(fullReportFilename)
+	json, err := json.Marshal(jData)
 	if err != nil {
 		return err
 	}
+	reportFilename :=
+		filepath.Join(config.BuildDir, "reports", experimentFilename)
+	return ioutil.WriteFile(reportFilename, json, 0640)
+}
+
+func loadReportJson(config *config, reportFilename string) (*JData, error) {
+	var jData JData
+	filename := filepath.Join(config.BuildDir, "reports", reportFilename)
+
+	f, err := os.Open(filename)
+	if err != nil {
+		return &JData{}, err
+	}
 	defer f.Close()
 
-	if err = t.Execute(f, tplData); err != nil {
-		return err
+	dec := json.NewDecoder(f)
+	if err = dec.Decode(&jData); err != nil {
+		return &JData{}, err
 	}
-	return addReportToIndex(
-		config.BuildDir,
-		reportFilename,
-		experiment.Title,
-		categories,
-	)
+	return &jData, nil
 }
 
 func getSortedAggregatorNames(aggregators map[string]*dlit.Literal) []string {
