@@ -2,11 +2,13 @@
  * Copyright (C) 2016 Lawrence Woodman <lwoodman@vlifesystems.com>
  */
 
-package main
+package html
 
 import (
 	"fmt"
 	"github.com/lawrencewoodman/rulehunter"
+	"github.com/lawrencewoodman/rulehuntersrv/config"
+	"github.com/lawrencewoodman/rulehuntersrv/report"
 	"hash/crc64"
 	"html/template"
 	"io/ioutil"
@@ -16,7 +18,7 @@ import (
 	"time"
 )
 
-func writeIndexHTML(config *config) error {
+func GenerateReports(config *config.Config) error {
 	const tpl = `
 <!DOCTYPE html>
 <html>
@@ -78,18 +80,18 @@ func writeIndexHTML(config *config) error {
 	i := 0
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			jData, err := loadReportJson(config, file.Name())
+			report, err := report.LoadJson(config, file.Name())
 			if err != nil {
 				return err
 			}
-			reportFilename := makeReportFilename(jData.Stamp, jData.Title)
-			if err = writeReportHtml(jData, reportFilename, config); err != nil {
+			reportFilename := makeReportFilename(report.Stamp, report.Title)
+			if err = writeReportHtml(report, reportFilename, config); err != nil {
 				return err
 			}
 			tplReports[i] = &TplReport{
-				jData.Title,
-				jData.Categories,
-				jData.Stamp.Format(time.RFC822),
+				report.Title,
+				report.Categories,
+				report.Stamp.Format(time.RFC822),
 				filepath.Join(reportFilename),
 			}
 		}
@@ -108,9 +110,9 @@ func writeIndexHTML(config *config) error {
 }
 
 func writeReportHtml(
-	jData *JData,
+	_report *report.Report,
 	reportFilename string,
-	config *config,
+	config *config.Config,
 ) error {
 	const tpl = `
 <!DOCTYPE html>
@@ -256,17 +258,17 @@ func writeReportHtml(
 		ExperimentFilename string
 		NumRecords         int64
 		SortOrder          []rulehunter.SortField
-		Assessments        []*JAssessment
+		Assessments        []*report.Assessment
 	}
 
 	tplData := TplData{
-		jData.Title,
-		jData.Categories,
-		jData.Stamp.Format(time.RFC822),
-		jData.ExperimentFilename,
-		jData.NumRecords,
-		jData.SortOrder,
-		jData.Assessments,
+		_report.Title,
+		_report.Categories,
+		_report.Stamp.Format(time.RFC822),
+		_report.ExperimentFilename,
+		_report.NumRecords,
+		_report.SortOrder,
+		_report.Assessments,
 	}
 
 	fullReportFilename := filepath.Join(config.ReportsDir, reportFilename)

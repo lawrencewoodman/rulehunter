@@ -4,10 +4,12 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/kardianos/service"
+	"github.com/lawrencewoodman/rulehuntersrv/config"
+	"github.com/lawrencewoodman/rulehuntersrv/experiment"
+	"github.com/lawrencewoodman/rulehuntersrv/html"
 	"io/ioutil"
 	"log"
 	"os"
@@ -19,37 +21,12 @@ var logger service.Logger
 
 type program struct {
 	configDir string
-	config    *config
-}
-
-type config struct {
-	ExperimentsDir string
-	ReportsDir     string
-	ProgressDir    string // Records the progress processing each experiment
-	BuildDir       string
+	config    *config.Config
 }
 
 func (p *program) Start(s service.Service) error {
 	go p.run()
 	return nil
-}
-
-func loadConfig(filename string) (*config, error) {
-	var c config
-	var f *os.File
-	var err error
-
-	f, err = os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	dec := json.NewDecoder(f)
-	if err = dec.Decode(&c); err != nil {
-		return nil, err
-	}
-	return &c, nil
 }
 
 func (p *program) run() {
@@ -72,20 +49,10 @@ func (p *program) run() {
 			if !file.IsDir() {
 				logWaitingForExperiments = true
 				logger.Infof("Processing experiment: %s", file.Name())
-				err := processExperiment(file.Name(), p.config)
-				if err == nil {
-					logger.Infof("Successfully processed experiment: %s", file.Name())
-					err := moveExperimentToSuccess(file.Name(), p.config)
-					if err != nil {
-						logger.Errorf("Couldn't move experiment file: %s", err)
-					}
+				if err := experiment.Process(file.Name(), p.config); err != nil {
+					logger.Errorf("Failed processing experiment: %s - %s", file.Name(), err)
 				} else {
-					logger.Errorf("Failed processing experiment: %s - %s",
-						file.Name(), err)
-					err := moveExperimentToFail(file.Name(), p.config)
-					if err != nil {
-						logger.Errorf("Couldn't move experiment file: %s", err)
-					}
+					logger.Infof("Successfully processed experiment: %s", file.Name())
 				}
 			}
 		}
@@ -122,13 +89,13 @@ func main() {
 	}
 
 	configFilename := filepath.Join(prg.configDir, "config.json")
-	config, err := loadConfig(configFilename)
+	config, err := config.Load(configFilename)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Couldn't load configuration %s: %s",
 			configFilename, err))
 	}
 	prg.config = config
-	if err = writeIndexHTML(config); err != nil {
+	if err = html.GenerateReports(config); err != nil {
 		log.Fatal(err)
 	}
 

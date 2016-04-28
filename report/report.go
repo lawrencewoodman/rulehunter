@@ -2,7 +2,7 @@
  * Copyright (C) 2016 Lawrence Woodman <lwoodman@vlifesystems.com>
  */
 
-package main
+package report
 
 import (
 	"encoding/json"
@@ -11,6 +11,7 @@ import (
 	"github.com/lawrencewoodman/dexpr_go"
 	"github.com/lawrencewoodman/dlit_go"
 	"github.com/lawrencewoodman/rulehunter"
+	"github.com/lawrencewoodman/rulehuntersrv/config"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -18,34 +19,34 @@ import (
 	"time"
 )
 
-type JAggregator struct {
+type Aggregator struct {
 	Name       string
 	Value      string
 	Difference string
 }
 
-type JAssessment struct {
+type Assessment struct {
 	Rule        string
-	Aggregators []*JAggregator
+	Aggregators []*Aggregator
 	Goals       []*rulehunter.GoalAssessment
 }
 
-type JData struct {
+type Report struct {
 	Title              string
 	Categories         []string
 	Stamp              time.Time
 	ExperimentFilename string
 	NumRecords         int64
 	SortOrder          []rulehunter.SortField
-	Assessments        []*JAssessment
+	Assessments        []*Assessment
 }
 
-func writeReportJson(
+func WriteJson(
 	assessment *rulehunter.Assessment,
 	experiment *rulehunter.Experiment,
 	experimentFilename string,
 	categories []string,
-	config *config,
+	config *config.Config,
 ) error {
 	assessment.Sort(experiment.SortOrder)
 	assessment.Refine(1)
@@ -55,29 +56,29 @@ func writeReportJson(
 		return err
 	}
 
-	assessments := make([]*JAssessment, len(assessment.RuleAssessments))
+	assessments := make([]*Assessment, len(assessment.RuleAssessments))
 	for i, ruleAssessment := range assessment.RuleAssessments {
 		aggregatorNames := getSortedAggregatorNames(ruleAssessment.Aggregators)
-		aggregators := make([]*JAggregator, len(ruleAssessment.Aggregators))
+		aggregators := make([]*Aggregator, len(ruleAssessment.Aggregators))
 		j := 0
 		for _, aggregatorName := range aggregatorNames {
 			aggregator := ruleAssessment.Aggregators[aggregatorName]
 			difference :=
 				calcTrueAggregatorDifference(trueAggregators, aggregator, aggregatorName)
-			aggregators[j] = &JAggregator{
+			aggregators[j] = &Aggregator{
 				aggregatorName,
 				aggregator.String(),
 				difference,
 			}
 			j++
 		}
-		assessments[i] = &JAssessment{
+		assessments[i] = &Assessment{
 			ruleAssessment.Rule.String(),
 			aggregators,
 			ruleAssessment.Goals,
 		}
 	}
-	jData := JData{
+	report := Report{
 		experiment.Title,
 		categories,
 		time.Now(),
@@ -86,7 +87,7 @@ func writeReportJson(
 		experiment.SortOrder,
 		assessments,
 	}
-	json, err := json.Marshal(jData)
+	json, err := json.Marshal(report)
 	if err != nil {
 		return err
 	}
@@ -95,21 +96,21 @@ func writeReportJson(
 	return ioutil.WriteFile(reportFilename, json, 0640)
 }
 
-func loadReportJson(config *config, reportFilename string) (*JData, error) {
-	var jData JData
+func LoadJson(config *config.Config, reportFilename string) (*Report, error) {
+	var report Report
 	filename := filepath.Join(config.BuildDir, "reports", reportFilename)
 
 	f, err := os.Open(filename)
 	if err != nil {
-		return &JData{}, err
+		return &Report{}, err
 	}
 	defer f.Close()
 
 	dec := json.NewDecoder(f)
-	if err = dec.Decode(&jData); err != nil {
-		return &JData{}, err
+	if err = dec.Decode(&report); err != nil {
+		return &Report{}, err
 	}
-	return &jData, nil
+	return &report, nil
 }
 
 func getSortedAggregatorNames(aggregators map[string]*dlit.Literal) []string {

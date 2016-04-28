@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2016 Lawrence Woodman <lwoodman@vlifesystems.com>
  */
-package main
+package experiment
 
 import (
 	"encoding/json"
@@ -9,12 +9,18 @@ import (
 	"fmt"
 	"github.com/lawrencewoodman/rulehunter"
 	"github.com/lawrencewoodman/rulehunter/csvinput"
+	"github.com/lawrencewoodman/rulehuntersrv/config"
+	"github.com/lawrencewoodman/rulehuntersrv/html"
+	"github.com/lawrencewoodman/rulehuntersrv/report"
 	"os"
 	"path/filepath"
 	"runtime"
 )
 
-func processExperiment(experimentFilename string, config *config) error {
+func Process(
+	experimentFilename string,
+	config *config.Config,
+) error {
 	var p *os.File
 	var err error
 
@@ -115,7 +121,7 @@ func processExperiment(experimentFilename string, config *config) error {
 		return err
 	}
 
-	err = writeReportJson(
+	err = report.WriteJson(
 		assessment5,
 		experiment,
 		experimentFilename,
@@ -126,7 +132,20 @@ func processExperiment(experimentFilename string, config *config) error {
 		reportProgress(p, err.Error())
 		return err
 	}
-	return writeIndexHTML(config)
+	if err := html.GenerateReports(config); err != nil {
+		moveErr := moveExperimentToFail(experimentFilename, config)
+		if moveErr != nil {
+			return fmt.Errorf("%s (Couldn't move experiment file: %s)", err)
+		} else {
+			return err
+		}
+	} else {
+		err := moveExperimentToSuccess(experimentFilename, config)
+		if err != nil {
+			return fmt.Errorf("Couldn't move experiment file: %s", err)
+		}
+	}
+	return nil
 }
 
 type experimentFile struct {
@@ -237,7 +256,10 @@ func assessRules(
 	return assessment, nil
 }
 
-func moveExperimentToSuccess(experimentFilename string, config *config) error {
+func moveExperimentToSuccess(
+	experimentFilename string,
+	config *config.Config,
+) error {
 	experimentFullFilename :=
 		filepath.Join(config.ExperimentsDir, experimentFilename)
 	experimentSuccessFullFilename :=
@@ -245,7 +267,10 @@ func moveExperimentToSuccess(experimentFilename string, config *config) error {
 	return os.Rename(experimentFullFilename, experimentSuccessFullFilename)
 }
 
-func moveExperimentToFail(experimentFilename string, config *config) error {
+func moveExperimentToFail(
+	experimentFilename string,
+	config *config.Config,
+) error {
 	experimentFullFilename :=
 		filepath.Join(config.ExperimentsDir, experimentFilename)
 	experimentFailFullFilename :=
