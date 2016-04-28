@@ -85,7 +85,7 @@ func GenerateReports(config *config.Config) error {
 				return err
 			}
 			reportFilename := makeReportFilename(report.Stamp, report.Title)
-			if err = writeReportHtml(report, reportFilename, config); err != nil {
+			if err = generateReport(report, reportFilename, config); err != nil {
 				return err
 			}
 			tplReports[i] = &TplReport{
@@ -109,7 +109,7 @@ func GenerateReports(config *config.Config) error {
 	return t.Execute(f, tplData)
 }
 
-func writeReportHtml(
+func generateReport(
 	_report *report.Report,
 	reportFilename string,
 	config *config.Config,
