@@ -10,7 +10,7 @@ import (
 
 type Config struct {
 	ExperimentsDir string
-	ReportsDir     string
+	WWWDir         string
 	ProgressDir    string // Records the progress processing each experiment
 	BuildDir       string
 }
@@ -30,5 +30,6 @@ func Load(filename string) (*Config, error) {
 	if err = dec.Decode(&c); err != nil {
 		return nil, err
 	}
+	// TODO: verify fields present and correct
 	return &c, nil
 }

@@ -99,7 +99,7 @@ func GenerateReports(config *config.Config) error {
 	}
 	tplData := TplData{tplReports}
 
-	outputFilename := filepath.Join(config.ReportsDir, "index.html")
+	outputFilename := filepath.Join(config.WWWDir, "reports", "index.html")
 	f, err := os.Create(outputFilename)
 	if err != nil {
 		return err
@@ -271,7 +271,7 @@ func generateReport(
 		_report.Assessments,
 	}
 
-	fullReportFilename := filepath.Join(config.ReportsDir, reportFilename)
+	fullReportFilename := filepath.Join(config.WWWDir, "reports", reportFilename)
 	f, err := os.Create(fullReportFilename)
 	if err != nil {
 		return err
