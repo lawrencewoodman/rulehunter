@@ -9,11 +9,12 @@ import (
 	"github.com/lawrencewoodman/rulehunter"
 	"github.com/lawrencewoodman/rulehuntersrv/config"
 	"github.com/lawrencewoodman/rulehuntersrv/report"
-	"hash/crc64"
+	"hash/crc32"
 	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -48,19 +49,18 @@ func GenerateReports(config *config.Config) error {
 		{{range .Reports}}
 			<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
 			Date: {{ .Stamp }}
-      Categories: {{range .Categories}} {{ . }} {{end}}<br />
+      Categories:
+      {{range $category, $catLink := .Categories}}
+		    <a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+      {{end}}<br />
 			<br />
 		{{end}}
 	</body>
 </html>`
 
-	t, err := template.New("webpage").Parse(tpl)
-	if err != nil {
-		return err
-	}
 	type TplReport struct {
 		Title      string
-		Categories []string
+		Categories map[string]string
 		Stamp      string
 		Filename   string
 	}
@@ -90,7 +90,7 @@ func GenerateReports(config *config.Config) error {
 			}
 			tplReports[i] = &TplReport{
 				report.Title,
-				report.Categories,
+				makeCategoryLinks(report.Categories),
 				report.Stamp.Format(time.RFC822),
 				filepath.Join(reportFilename),
 			}
@@ -99,14 +99,170 @@ func GenerateReports(config *config.Config) error {
 	}
 	tplData := TplData{tplReports}
 
+	if err := generateCategoryPages(config); err != nil {
+		return err
+	}
+
 	outputFilename := filepath.Join(config.WWWDir, "reports", "index.html")
-	f, err := os.Create(outputFilename)
+	return writeTemplate(outputFilename, tpl, tplData)
+}
+
+func generateCategoryPage(
+	config *config.Config,
+	categoryName string,
+) error {
+	const tpl = `
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Reports for category: {{ .Category }}</title>
+	</head>
+
+	<style>
+		a.title {
+			color: black;
+			font-size: 120%;
+			text-decoration: none;
+			font-weight: bold;
+		}
+		a.title:visited {
+			color: black;
+		}
+		a.title:hover {
+			text-decoration: underline;
+		}
+	</style>
+
+	<body>
+		<h1>Reports for category: {{ .Category }}</h1>
+
+		{{range .Reports}}
+			<a class="title" href="../../{{ .Filename }}">{{ .Title }}</a><br />
+			Date: {{ .Stamp }}
+      Categories:
+      {{range $category, $catLink := .Categories}}
+		    <a href="../../{{ $catLink }}">{{ $category }}</a> &nbsp;
+      {{end}}<br />
+			<br />
+		{{end}}
+	</body>
+</html>`
+
+	type TplReport struct {
+		Title      string
+		Categories map[string]string
+		Stamp      string
+		Filename   string
+	}
+
+	type TplData struct {
+		Category string
+		Reports  []*TplReport
+	}
+
+	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 
-	return t.Execute(f, tplData)
+	numReportFiles := countFiles(reportFiles)
+	tplReports := make([]*TplReport, numReportFiles)
+
+	i := 0
+	for _, file := range reportFiles {
+		if !file.IsDir() {
+			report, err := report.LoadJson(config, file.Name())
+			if err != nil {
+				return err
+			}
+			if inStrings(categoryName, report.Categories) {
+				reportFilename := makeReportFilename(report.Stamp, report.Title)
+				tplReports[i] = &TplReport{
+					report.Title,
+					makeCategoryLinks(report.Categories),
+					report.Stamp.Format(time.RFC822),
+					filepath.Join(reportFilename),
+				}
+				i++
+			}
+		}
+	}
+	tplReports = tplReports[:i]
+	tplData := TplData{categoryName, tplReports}
+	fullCategoryDir := filepath.Join(
+		config.WWWDir,
+		"reports",
+		"category",
+		escapeString(categoryName),
+	)
+
+	if err := os.MkdirAll(fullCategoryDir, 0740); err != nil {
+		return err
+	}
+	outputFilename := filepath.Join(fullCategoryDir, "index.html")
+	return writeTemplate(outputFilename, tpl, tplData)
+}
+
+func inStrings(needle string, haystack []string) bool {
+	for _, v := range haystack {
+		if v == needle {
+			return true
+		}
+	}
+	return false
+}
+
+func generateCategoryPages(config *config.Config) error {
+	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
+	if err != nil {
+		return err
+	}
+
+	categoriesSeen := make(map[string]bool)
+	for _, file := range reportFiles {
+		if !file.IsDir() {
+			report, err := report.LoadJson(config, file.Name())
+			if err != nil {
+				return err
+			}
+			for _, category := range report.Categories {
+				if _, ok := categoriesSeen[category]; !ok {
+					if err := generateCategoryPage(config, category); err != nil {
+						return err
+					}
+					categoriesSeen[category] = true
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func makeCategoryLinks(categories []string) map[string]string {
+	catLinks := make(map[string]string, len(categories))
+	for _, category := range categories {
+		catLinks[category] = makeCategoryLink(category)
+	}
+	return catLinks
+}
+
+func makeCategoryLink(category string) string {
+	return fmt.Sprintf(
+		"category/%s/index.html",
+		escapeString(category),
+	)
+}
+
+var nonAlphaNumRegexp = regexp.MustCompile("[^[:alnum:]]")
+
+func escapeString(s string) string {
+	crc32 := strconv.FormatUint(
+		uint64(crc32.Checksum([]byte(s), crc32.MakeTable(crc32.IEEE))),
+		36,
+	)
+	newS := nonAlphaNumRegexp.ReplaceAllString(s, "")
+	return fmt.Sprintf("%s_%s", newS, crc32)
 }
 
 func generateReport(
@@ -186,7 +342,11 @@ func generateReport(
 				</tr>
 				<tr>
 					<td>Categories</td>
-					<td class="last-column">{{range .Categories}} {{ . }} {{end}}</td>
+					<td class="last-column">
+						{{range $category, $catLink := .Categories}}
+							<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+						{{end}}<br />
+					</td>
 				</tr>
 				<tr>
 					<td>Number of records</td>
@@ -246,14 +406,9 @@ func generateReport(
 	</body>
 </html>`
 
-	t, err := template.New("webpage").Parse(tpl)
-	if err != nil {
-		return err
-	}
-
 	type TplData struct {
 		Title              string
-		Categories         []string
+		Categories         map[string]string
 		Stamp              string
 		ExperimentFilename string
 		NumRecords         int64
@@ -261,9 +416,11 @@ func generateReport(
 		Assessments        []*report.Assessment
 	}
 
+	categoryLinks := makeCategoryLinks(_report.Categories)
+
 	tplData := TplData{
 		_report.Title,
-		_report.Categories,
+		categoryLinks,
 		_report.Stamp.Format(time.RFC822),
 		_report.ExperimentFilename,
 		_report.NumRecords,
@@ -272,22 +429,38 @@ func generateReport(
 	}
 
 	fullReportFilename := filepath.Join(config.WWWDir, "reports", reportFilename)
-	f, err := os.Create(fullReportFilename)
+	if err := writeTemplate(fullReportFilename, tpl, tplData); err != nil {
+		return err
+	}
+	return nil
+}
+
+func writeTemplate(
+	filename string,
+	tpl string,
+	tplData interface{},
+) error {
+	t, err := template.New("webpage").Parse(tpl)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	return t.Execute(f, tplData)
+	if err := t.Execute(f, tplData); err != nil {
+		return err
+	}
+	return nil
 }
 
 func makeReportFilename(stamp time.Time, title string) string {
 	timeSeconds := strconv.FormatInt(stamp.Unix(), 36)
-	crc64 := strconv.FormatUint(
-		crc64.Checksum([]byte(title), crc64.MakeTable(crc64.ISO)),
-		36,
-	)
-	return fmt.Sprintf("report_%s_%s.html", timeSeconds, crc64)
+	escapedTitle := escapeString(title)
+	return fmt.Sprintf("%s_%s.html", escapedTitle, timeSeconds)
 }
 
 func countFiles(files []os.FileInfo) int {
