@@ -10,6 +10,7 @@ import (
 	"github.com/lawrencewoodman/rulehuntersrv/config"
 	"github.com/lawrencewoodman/rulehuntersrv/experiment"
 	"github.com/lawrencewoodman/rulehuntersrv/html"
+	"github.com/lawrencewoodman/rulehuntersrv/progress"
 	"io/ioutil"
 	"log"
 	"os"
@@ -20,8 +21,9 @@ import (
 var logger service.Logger
 
 type program struct {
-	configDir string
-	config    *config.Config
+	configDir       string
+	config          *config.Config
+	progressMonitor *progress.ProgressMonitor
 }
 
 func (p *program) Start(s service.Service) error {
@@ -30,8 +32,6 @@ func (p *program) Start(s service.Service) error {
 }
 
 func (p *program) run() {
-	var experimentFiles []os.FileInfo
-	var err error
 	sleepInSeconds := time.Duration(2)
 	logWaitingForExperiments := true
 
@@ -40,26 +40,85 @@ func (p *program) run() {
 			logWaitingForExperiments = false
 			logger.Infof("Waiting for experiments to process")
 		}
-		experimentFiles, err = ioutil.ReadDir(p.config.ExperimentsDir)
+		experimentFilenames, err := p.getExperimentFilenames()
 		if err != nil {
 			logger.Error(err)
 		}
+		for _, experimentFilename := range experimentFilenames {
+			// TODO: Create a neater function to do this
+			err := p.progressMonitor.AddExperiment(experimentFilename)
+			if err != nil {
+				logger.Error(err)
+			}
+		}
 
-		for _, file := range experimentFiles {
-			if !file.IsDir() {
-				logWaitingForExperiments = true
-				logger.Infof("Processing experiment: %s", file.Name())
-				if err := experiment.Process(file.Name(), p.config); err != nil {
-					logger.Errorf("Failed processing experiment: %s - %s", file.Name(), err)
-				} else {
-					logger.Infof("Successfully processed experiment: %s", file.Name())
+		for _, experimentFilename := range experimentFilenames {
+			logWaitingForExperiments = true
+			logger.Infof("Processing experiment: %s", experimentFilename)
+
+			err := experiment.Process(
+				experimentFilename,
+				p.config,
+				p.progressMonitor,
+			)
+			if err != nil {
+				logger.Errorf("Failed processing experiment: %s - %s",
+					experimentFilename, err)
+				err := p.moveExperimentToFail(experimentFilename)
+				if err != nil {
+					fullErr := fmt.Errorf("%s (Couldn't move experiment file: %s)", err)
+					logger.Error(fullErr)
 				}
+			} else {
+				err := p.moveExperimentToSuccess(experimentFilename)
+				if err != nil {
+					fullErr := fmt.Errorf("Couldn't move experiment file: %s", err)
+					logger.Error(fullErr)
+				} else {
+					logger.Infof("Successfully processed experiment: %s",
+						experimentFilename)
+				}
+			}
+			if err := html.GenerateReports(p.config, p.progressMonitor); err != nil {
+				fullErr := fmt.Errorf("Couldn't generate report: %s", err)
+				logger.Error(fullErr)
 			}
 		}
 
 		// Sleeping prevents 'excessive' cpu use and disk access
 		time.Sleep(sleepInSeconds * time.Second)
 	}
+}
+
+func (p *program) getExperimentFilenames() ([]string, error) {
+	experimentFilenames := make([]string, 0)
+	files, err := ioutil.ReadDir(p.config.ExperimentsDir)
+	if err != nil {
+		return experimentFilenames, err
+	}
+
+	for _, file := range files {
+		if !file.IsDir() {
+			experimentFilenames = append(experimentFilenames, file.Name())
+		}
+	}
+	return experimentFilenames, nil
+}
+
+func (p *program) moveExperimentToSuccess(experimentFilename string) error {
+	experimentFullFilename :=
+		filepath.Join(p.config.ExperimentsDir, experimentFilename)
+	experimentSuccessFullFilename :=
+		filepath.Join(p.config.ExperimentsDir, "success", experimentFilename)
+	return os.Rename(experimentFullFilename, experimentSuccessFullFilename)
+}
+
+func (p *program) moveExperimentToFail(experimentFilename string) error {
+	experimentFullFilename :=
+		filepath.Join(p.config.ExperimentsDir, experimentFilename)
+	experimentFailFullFilename :=
+		filepath.Join(p.config.ExperimentsDir, "fail", experimentFilename)
+	return os.Rename(experimentFullFilename, experimentFailFullFilename)
 }
 
 func (p *program) Stop(s service.Service) error {
@@ -95,7 +154,8 @@ func main() {
 			configFilename, err))
 	}
 	prg.config = config
-	if err = html.GenerateReports(config); err != nil {
+	prg.progressMonitor = progress.NewMonitor(config)
+	if err = html.GenerateReports(config, prg.progressMonitor); err != nil {
 		log.Fatal(err)
 	}
 

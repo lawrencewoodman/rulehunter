@@ -5,12 +5,11 @@ package experiment
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/rulehunter"
 	"github.com/lawrencewoodman/rulehunter/csvinput"
 	"github.com/lawrencewoodman/rulehuntersrv/config"
-	"github.com/lawrencewoodman/rulehuntersrv/html"
+	"github.com/lawrencewoodman/rulehuntersrv/progress"
 	"github.com/lawrencewoodman/rulehuntersrv/report"
 	"os"
 	"path/filepath"
@@ -20,81 +19,71 @@ import (
 func Process(
 	experimentFilename string,
 	config *config.Config,
+	progressMonitor *progress.ProgressMonitor,
 ) error {
-	var p *os.File
-	var err error
-
-	progressFullFilename := filepath.Join(
-		config.ProgressDir,
-		fmt.Sprintf("%s.progress", experimentFilename),
-	)
-	p, err = os.Create(progressFullFilename)
+	epr, err :=
+		progress.NewExperimentProgressReporter(progressMonitor, experimentFilename)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't create progress file: %s", err)
-		err := errors.New(msg)
 		return err
 	}
-	defer p.Close()
 
 	experimentFullFilename :=
 		filepath.Join(config.ExperimentsDir, experimentFilename)
 	experiment, categories, err := loadExperiment(experimentFullFilename)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't load experiment file: %s", err)
-		reportProgress(p, msg)
-		err := errors.New(msg)
-		return err
+		fullErr := fmt.Errorf("Couldn't load experiment file: %s", err)
+		return epr.ReportError(fullErr)
 	}
 	defer experiment.Close()
-
-	reportProgress(p, "Describing input")
-	fieldDescriptions, err := rulehunter.DescribeInput(experiment.Input)
+	err = epr.UpdateDetails(experiment.Title, categories)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't describe input: %s", err)
-		reportProgress(p, msg)
-		err := errors.New(msg)
 		return err
 	}
 
-	reportProgress(p, "Generating rules")
+	if err := epr.ReportInfo("Describing input"); err != nil {
+		return err
+	}
+	fieldDescriptions, err := rulehunter.DescribeInput(experiment.Input)
+	if err != nil {
+		fullErr := fmt.Errorf("Couldn't describe input: %s", err)
+		return epr.ReportError(fullErr)
+	}
+
+	if err := epr.ReportInfo("Generating rules"); err != nil {
+		return err
+	}
 	rules, err :=
 		rulehunter.GenerateRules(fieldDescriptions, experiment.ExcludeFieldNames)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't make report: %s", err)
-		reportProgress(p, msg)
-		err := errors.New(msg)
-		return err
+		fullErr := fmt.Errorf("Couldn't generate rules: %s", err)
+		return epr.ReportError(fullErr)
 	}
 
-	assessment, err := assessRules(rules, experiment, p)
+	assessment, err := assessRules(rules, experiment, epr)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't assess rules: %s", err)
-		reportProgress(p, msg)
-		err := errors.New(msg)
-		return err
+		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
+		return epr.ReportError(fullErr)
 	}
 
 	assessment.Sort(experiment.SortOrder)
 	assessment.Refine(3)
 	sortedRules := assessment.GetRules()
 
-	reportProgress(p, "Tweaking rules")
+	if err := epr.ReportInfo("Tweaking rules"); err != nil {
+		return err
+	}
 	tweakableRules := rulehunter.TweakRules(sortedRules, fieldDescriptions)
 
-	assessment2, err := assessRules(tweakableRules, experiment, p)
+	assessment2, err := assessRules(tweakableRules, experiment, epr)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't assess rules: %s", err)
-		reportProgress(p, msg)
-		err := errors.New(msg)
-		return err
+		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
+		return epr.ReportError(fullErr)
 	}
 
 	assessment3, err := assessment.Merge(assessment2)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't merge assessments: %s", err)
-		reportProgress(p, msg)
-		err := errors.New(msg)
-		return err
+		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
+		return epr.ReportError(fullErr)
 	}
 	assessment3.Sort(experiment.SortOrder)
 	assessment3.Refine(1)
@@ -105,20 +94,16 @@ func Process(
 		truncateRules(bestNonCombinedRules, numRulesToCombine),
 	)
 
-	assessment4, err := assessRules(combinedRules, experiment, p)
+	assessment4, err := assessRules(combinedRules, experiment, epr)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't assess rules: %s", err)
-		reportProgress(p, msg)
-		err := errors.New(msg)
-		return err
+		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
+		return epr.ReportError(fullErr)
 	}
 
 	assessment5, err := assessment3.Merge(assessment4)
 	if err != nil {
-		msg := fmt.Sprintf("Couldn't merge assessments: %s", err)
-		reportProgress(p, msg)
-		err := errors.New(msg)
-		return err
+		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
+		return epr.ReportError(fullErr)
 	}
 
 	err = report.WriteJson(
@@ -129,23 +114,11 @@ func Process(
 		config,
 	)
 	if err != nil {
-		reportProgress(p, err.Error())
-		return err
+		fullErr := fmt.Errorf("Couldn't write json report: %s", err)
+		return epr.ReportError(fullErr)
 	}
-	if err := html.GenerateReports(config); err != nil {
-		moveErr := moveExperimentToFail(experimentFilename, config)
-		if moveErr != nil {
-			return fmt.Errorf("%s (Couldn't move experiment file: %s)", err)
-		} else {
-			return err
-		}
-	} else {
-		err := moveExperimentToSuccess(experimentFilename, config)
-		if err != nil {
-			return fmt.Errorf("Couldn't move experiment file: %s", err)
-		}
-	}
-	return nil
+
+	return epr.ReportSuccess()
 }
 
 type experimentFile struct {
@@ -203,10 +176,6 @@ func loadExperiment(filename string) (
 	return experiment, e.Categories, err
 }
 
-func reportProgress(f *os.File, msg string) {
-	f.WriteString(fmt.Sprintf("%s\n", msg))
-}
-
 func prettyPrintFieldDescriptions(fds map[string]*rulehunter.FieldDescription) {
 	fmt.Println("Input Description\n")
 	for field, fd := range fds {
@@ -228,15 +197,18 @@ func prettyPrintFieldDescription(fd *rulehunter.FieldDescription) {
 func assessRules(
 	rules []*rulehunter.Rule,
 	experiment *rulehunter.Experiment,
-	progressFile *os.File,
+	epr *progress.ExperimentProgressReporter,
 ) (*rulehunter.Assessment, error) {
 	var assessment *rulehunter.Assessment
 	// TODO: Make this part of the config
 	maxProcesses := runtime.NumCPU()
 	c := make(chan *rulehunter.AssessRulesMPOutcome)
 
-	reportProgress(progressFile,
-		fmt.Sprintf("Assessing rules using %d CPUs...\n", maxProcesses))
+	msg := fmt.Sprintf("Assessing rules using %d CPUs...\n", maxProcesses)
+	if err := epr.ReportInfo(msg); err != nil {
+		return nil, err
+	}
+
 	go rulehunter.AssessRulesMP(
 		rules,
 		experiment.Aggregators,
@@ -249,33 +221,17 @@ func assessRules(
 		if o.Err != nil {
 			return nil, o.Err
 		}
-		reportProgress(progressFile, fmt.Sprintf("Progress: %.2f%%", o.Progress*100))
+		msg := fmt.Sprintf("Assessment progress: %.2f%%", o.Progress*100)
+		if err := epr.ReportInfo(msg); err != nil {
+			return nil, err
+		}
 		assessment = o.Assessment
 	}
-	reportProgress(progressFile, "Progress: complete")
+	msg = fmt.Sprintf("Assessment progress: 100%%")
+	if err := epr.ReportInfo(msg); err != nil {
+		return nil, err
+	}
 	return assessment, nil
-}
-
-func moveExperimentToSuccess(
-	experimentFilename string,
-	config *config.Config,
-) error {
-	experimentFullFilename :=
-		filepath.Join(config.ExperimentsDir, experimentFilename)
-	experimentSuccessFullFilename :=
-		filepath.Join(config.ExperimentsDir, "success", experimentFilename)
-	return os.Rename(experimentFullFilename, experimentSuccessFullFilename)
-}
-
-func moveExperimentToFail(
-	experimentFilename string,
-	config *config.Config,
-) error {
-	experimentFullFilename :=
-		filepath.Join(config.ExperimentsDir, experimentFilename)
-	experimentFailFullFilename :=
-		filepath.Join(config.ExperimentsDir, "fail", experimentFilename)
-	return os.Rename(experimentFullFilename, experimentFailFullFilename)
 }
 
 func truncateRules(rules []*rulehunter.Rule, numRules int) []*rulehunter.Rule {

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/lawrencewoodman/rulehunter"
 	"github.com/lawrencewoodman/rulehuntersrv/config"
+	"github.com/lawrencewoodman/rulehuntersrv/progress"
 	"github.com/lawrencewoodman/rulehuntersrv/report"
 	"hash/crc32"
 	"html/template"
@@ -19,7 +20,10 @@ import (
 	"time"
 )
 
-func GenerateReports(config *config.Config) error {
+func GenerateReports(
+	config *config.Config,
+	progressMonitor *progress.ProgressMonitor,
+) error {
 	const tpl = `
 <!DOCTYPE html>
 <html>
@@ -92,7 +96,7 @@ func GenerateReports(config *config.Config) error {
 				report.Title,
 				makeCategoryLinks(report.Categories),
 				report.Stamp.Format(time.RFC822),
-				filepath.Join(reportFilename),
+				reportFilename,
 			}
 		}
 		i++
@@ -103,7 +107,91 @@ func GenerateReports(config *config.Config) error {
 		return err
 	}
 
+	if err := generateProgressPage(config, progressMonitor); err != nil {
+		return err
+	}
+
 	outputFilename := filepath.Join(config.WWWDir, "reports", "index.html")
+	return writeTemplate(outputFilename, tpl, tplData)
+}
+
+func generateProgressPage(
+	config *config.Config,
+	progressMonitor *progress.ProgressMonitor,
+) error {
+	const tpl = `
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Progress</title>
+	</head>
+
+	<style>
+		a.title {
+			color: black;
+			font-size: 120%;
+			text-decoration: none;
+			font-weight: bold;
+		}
+		a.title:visited {
+			color: black;
+		}
+		a.title:hover {
+			text-decoration: underline;
+		}
+	</style>
+
+	<body>
+		<h1>Progress</h1>
+
+		{{range .Experiments}}
+			<strong>{{ .Title }}</strong><br />
+			Date: {{ .Stamp }}
+      Categories:
+      {{range $category, $catLink := .Categories}}
+		    <a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+      {{end}}<br />
+			Experiment filename: {{ .Filename }}<br />
+		  Status: {{ .Status }} &nbsp; Message: {{ .Msg }}<br />
+			<br />
+		{{end}}
+	</body>
+</html>`
+
+	type TplExperiment struct {
+		Title      string
+		Categories map[string]string
+		Stamp      string
+		Filename   string
+		Status     string
+		Msg        string
+	}
+
+	type TplData struct {
+		Experiments []*TplExperiment
+	}
+
+	experiments, err := progressMonitor.GetExperiments()
+	if err != nil {
+		return err
+	}
+
+	tplExperiments := make([]*TplExperiment, len(experiments))
+
+	for i, experiment := range experiments {
+		tplExperiments[i] = &TplExperiment{
+			experiment.Title,
+			makeCategoryLinks(experiment.Categories),
+			experiment.Stamp.Format(time.RFC822),
+			experiment.ExperimentFilename,
+			experiment.Status.String(),
+			experiment.Msg,
+		}
+	}
+	tplData := TplData{tplExperiments}
+
+	outputFilename := filepath.Join(config.WWWDir, "progress", "index.html")
 	return writeTemplate(outputFilename, tpl, tplData)
 }
 

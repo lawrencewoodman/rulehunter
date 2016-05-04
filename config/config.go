@@ -11,7 +11,6 @@ import (
 type Config struct {
 	ExperimentsDir string
 	WWWDir         string
-	ProgressDir    string // Records the progress processing each experiment
 	BuildDir       string
 }
 
