@@ -124,6 +124,7 @@ func generateProgressPage(
 <html>
 	<head>
 		<meta charset="UTF-8">
+		<meta http-equiv="refresh" content="4" >
 		<title>Progress</title>
 	</head>
 
