@@ -27,6 +27,7 @@ type program struct {
 }
 
 func (p *program) Start(s service.Service) error {
+	go p.startReportGenerator()
 	go p.run()
 	return nil
 }
@@ -45,7 +46,6 @@ func (p *program) run() {
 			logger.Error(err)
 		}
 		for _, experimentFilename := range experimentFilenames {
-			// TODO: Create a neater function to do this
 			err := p.progressMonitor.AddExperiment(experimentFilename)
 			if err != nil {
 				logger.Error(err)
@@ -78,10 +78,6 @@ func (p *program) run() {
 					logger.Infof("Successfully processed experiment: %s",
 						experimentFilename)
 				}
-			}
-			if err := html.GenerateReports(p.config, p.progressMonitor); err != nil {
-				fullErr := fmt.Errorf("Couldn't generate report: %s", err)
-				logger.Error(fullErr)
 			}
 		}
 
@@ -125,6 +121,19 @@ func (p *program) Stop(s service.Service) error {
 	return nil
 }
 
+func (p *program) startReportGenerator() {
+	sleepInSeconds := time.Duration(4)
+	for {
+		if err := html.GenerateReports(p.config, p.progressMonitor); err != nil {
+			fullErr := fmt.Errorf("Couldn't generate report: %s", err)
+			// TODO: Work out if this is thread safe
+			logger.Error(fullErr)
+		}
+		// Sleeping prevents 'excessive' cpu use and disk access
+		time.Sleep(sleepInSeconds * time.Second)
+	}
+}
+
 func main() {
 	svcConfig := &service.Config{
 		Name:        "GoTestService",
@@ -155,9 +164,6 @@ func main() {
 	}
 	prg.config = config
 	prg.progressMonitor = progress.NewMonitor(config)
-	if err = html.GenerateReports(config, prg.progressMonitor); err != nil {
-		log.Fatal(err)
-	}
 
 	s, err := service.New(prg, svcConfig)
 	if err != nil {
