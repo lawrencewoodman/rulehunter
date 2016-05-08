@@ -163,7 +163,9 @@ func main() {
 			configFilename, err))
 	}
 	prg.config = config
-	prg.progressMonitor = progress.NewMonitor(config)
+
+	prg.progressMonitor =
+		progress.NewMonitor(filepath.Join(config.BuildDir, "progress"))
 
 	s, err := service.New(prg, svcConfig)
 	if err != nil {

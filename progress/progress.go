@@ -7,7 +7,6 @@ package progress
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lawrencewoodman/rulehuntersrv/config"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -108,9 +107,9 @@ func (s StatusKind) String() string {
 	panic("Unrecognized status")
 }
 
-func NewMonitor(config *config.Config) *ProgressMonitor {
+func NewMonitor(progressDir string) *ProgressMonitor {
 	return &ProgressMonitor{
-		filepath.Join(config.BuildDir, "progress", "progress.json"),
+		filepath.Join(progressDir, "progress.json"),
 	}
 }
 
@@ -129,12 +128,32 @@ func (pm *ProgressMonitor) AddExperiment(
 		"Waiting to be processed",
 		Waiting,
 	}
-	if i := pm.findExperiment(experiments, experimentFilename); i >= 0 {
-		experiments[i] = newExperiment
-	} else {
-		experiments = append(experiments, newExperiment)
+	newExperiments := make([]*Experiment, len(experiments))
+	i := 0
+	for _, experiment := range experiments {
+		if experiment.ExperimentFilename != experimentFilename {
+			newExperiments[i] = experiment
+			i++
+		}
 	}
-	return pm.writeJson(experiments)
+	newExperiments = newExperiments[:i]
+	newExperiments = append(newExperiments, newExperiment)
+	return pm.writeJson(newExperiments)
+}
+
+func (pm *ProgressMonitor) GetExperiments() ([]*Experiment, error) {
+	var progress Progress
+	f, err := os.Open(pm.progressFilename)
+	if err != nil {
+		return []*Experiment{}, err
+	}
+	defer f.Close()
+
+	dec := json.NewDecoder(f)
+	if err = dec.Decode(&progress); err != nil {
+		return []*Experiment{}, err
+	}
+	return progress.Experiments, nil
 }
 
 func (pm *ProgressMonitor) updateExperimentDetails(
@@ -204,20 +223,4 @@ func (pm *ProgressMonitor) writeJson(experiments []*Experiment) error {
 	}
 	// TODO: consider sorting
 	return ioutil.WriteFile(pm.progressFilename, json, 0640)
-}
-
-func (pm *ProgressMonitor) GetExperiments() ([]*Experiment, error) {
-	var progress Progress
-	f, err := os.Open(pm.progressFilename)
-	if err != nil {
-		// TODO: Test this
-		return []*Experiment{}, err
-	}
-	defer f.Close()
-
-	dec := json.NewDecoder(f)
-	if err = dec.Decode(&progress); err != nil {
-		return []*Experiment{}, err
-	}
-	return progress.Experiments, nil
 }
