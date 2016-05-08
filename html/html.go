@@ -151,7 +151,7 @@ func generateProgressPage(
 			Date: {{ .Stamp }}
       Categories:
       {{range $category, $catLink := .Categories}}
-		    <a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+		    <a href="../reports/{{ $catLink }}">{{ $category }}</a> &nbsp;
       {{end}}<br />
 			Experiment filename: {{ .Filename }}<br />
 		  Status: {{ .Status }} &nbsp; Message: {{ .Msg }}<br />
