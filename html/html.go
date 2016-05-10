@@ -5,6 +5,7 @@
 package html
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/lawrencewoodman/rulehunter"
 	"github.com/lawrencewoodman/rulehuntersrv/config"
@@ -28,6 +29,7 @@ func GenerateReports(
 <!DOCTYPE html>
 <html>
 	<head>
+		{{ index .Html "head" }}
 		<meta charset="UTF-8">
 		<title>Reports</title>
 	</head>
@@ -48,17 +50,25 @@ func GenerateReports(
 	</style>
 
 	<body>
-		<h1>Reports</h1>
+		{{ index .Html "nav" }}
 
-		{{range .Reports}}
-			<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
-			Date: {{ .Stamp }}
-      Categories:
-      {{range $category, $catLink := .Categories}}
-		    <a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
-      {{end}}<br />
-			<br />
-		{{end}}
+		<div id="content">
+			<div class="container">
+				<h1>Reports</h1>
+
+				{{range .Reports}}
+					<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
+					Date: {{ .Stamp }}
+					Categories:
+					{{range $category, $catLink := .Categories}}
+						<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+					{{end}}<br />
+					<br />
+				{{end}}
+			</div>
+		</div>
+
+		{{ index .Html "bootstrapJS" }}
 	</body>
 </html>`
 
@@ -71,6 +81,7 @@ func GenerateReports(
 
 	type TplData struct {
 		Reports []*TplReport
+		Html    map[string]template.HTML
 	}
 
 	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
@@ -101,8 +112,10 @@ func GenerateReports(
 		}
 		i++
 	}
-	tplData := TplData{tplReports}
-
+	tplData := TplData{
+		tplReports,
+		makeHtml("reports"),
+	}
 	if err := generateCategoryPages(config); err != nil {
 		return err
 	}
@@ -122,41 +135,34 @@ func generateProgressPage(
 	const tpl = `
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="UTF-8">
-		<meta http-equiv="refresh" content="4" >
-		<title>Progress</title>
-	</head>
-
-	<style>
-		a.title {
-			color: black;
-			font-size: 120%;
-			text-decoration: none;
-			font-weight: bold;
-		}
-		a.title:visited {
-			color: black;
-		}
-		a.title:hover {
-			text-decoration: underline;
-		}
-	</style>
+  <head>
+		{{ index .Html "head" }}
+		<meta http-equiv="refresh" content="4">
+    <title>Progress</title>
+  </head>
 
 	<body>
-		<h1>Progress</h1>
+		{{ index .Html "nav" }}
 
-		{{range .Experiments}}
-			<strong>{{ .Title }}</strong><br />
-			Date: {{ .Stamp }}
-      Categories:
-      {{range $category, $catLink := .Categories}}
-		    <a href="../reports/{{ $catLink }}">{{ $category }}</a> &nbsp;
-      {{end}}<br />
-			Experiment filename: {{ .Filename }}<br />
-		  Status: {{ .Status }} &nbsp; Message: {{ .Msg }}<br />
-			<br />
-		{{end}}
+		<div id="content">
+			<div class="container">
+				<h1>Progress</h1>
+
+				{{range .Experiments}}
+					<strong>{{ .Title }}</strong><br />
+					Date: {{ .Stamp }}
+					Categories:
+					{{range $category, $catLink := .Categories}}
+						<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+					{{end}}<br />
+					Experiment filename: {{ .Filename }}<br />
+					Status: {{ .Status }} &nbsp; Message: {{ .Msg }}<br />
+					<br />
+				{{end}}
+			</div>
+		</div>
+
+		{{ index .Html "bootstrapJS" }}
 	</body>
 </html>`
 
@@ -171,6 +177,7 @@ func generateProgressPage(
 
 	type TplData struct {
 		Experiments []*TplExperiment
+		Html        map[string]template.HTML
 	}
 
 	experiments, err := progressMonitor.GetExperiments()
@@ -190,7 +197,7 @@ func generateProgressPage(
 			experiment.Msg,
 		}
 	}
-	tplData := TplData{tplExperiments}
+	tplData := TplData{tplExperiments, makeHtml("progress")}
 
 	outputFilename := filepath.Join(config.WWWDir, "progress", "index.html")
 	return writeTemplate(outputFilename, tpl, tplData)
@@ -204,7 +211,7 @@ func generateCategoryPage(
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="UTF-8">
+		{{ index .Html "head" }}
 		<title>Reports for category: {{ .Category }}</title>
 	</head>
 
@@ -224,17 +231,25 @@ func generateCategoryPage(
 	</style>
 
 	<body>
-		<h1>Reports for category: {{ .Category }}</h1>
+		{{ index .Html "nav" }}
 
-		{{range .Reports}}
-			<a class="title" href="../../{{ .Filename }}">{{ .Title }}</a><br />
-			Date: {{ .Stamp }}
-      Categories:
-      {{range $category, $catLink := .Categories}}
-		    <a href="../../{{ $catLink }}">{{ $category }}</a> &nbsp;
-      {{end}}<br />
-			<br />
-		{{end}}
+		<div id="content">
+			<div class="container">
+				<h1>Reports for category: {{ .Category }}</h1>
+
+				{{range .Reports}}
+					<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
+					Date: {{ .Stamp }}
+					Categories:
+					{{range $category, $catLink := .Categories}}
+						<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+					{{end}}<br />
+					<br />
+				{{end}}
+			</div>
+		</div>
+
+		{{ index .Html "bootstrapJS" }}
 	</body>
 </html>`
 
@@ -248,6 +263,7 @@ func generateCategoryPage(
 	type TplData struct {
 		Category string
 		Reports  []*TplReport
+		Html     map[string]template.HTML
 	}
 
 	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
@@ -271,14 +287,14 @@ func generateCategoryPage(
 					report.Title,
 					makeCategoryLinks(report.Categories),
 					report.Stamp.Format(time.RFC822),
-					filepath.Join(reportFilename),
+					fmt.Sprintf("/reports/%s", reportFilename),
 				}
 				i++
 			}
 		}
 	}
 	tplReports = tplReports[:i]
-	tplData := TplData{categoryName, tplReports}
+	tplData := TplData{categoryName, tplReports, makeHtml("category")}
 	fullCategoryDir := filepath.Join(
 		config.WWWDir,
 		"reports",
@@ -338,7 +354,7 @@ func makeCategoryLinks(categories []string) map[string]string {
 
 func makeCategoryLink(category string) string {
 	return fmt.Sprintf(
-		"category/%s/index.html",
+		"/reports/category/%s/",
 		escapeString(category),
 	)
 }
@@ -363,7 +379,7 @@ func generateReport(
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="UTF-8">
+		{{ index .Html "head" }}
 		<title>{{.Title}}</title>
 	</head>
 
@@ -398,7 +414,8 @@ func generateReport(
 		table tr.title td {
 			border-bottom: 1px solid black;
 		}
-		div {
+
+		div.rule-assessment {
 			margin-bottom: 2em;
 		}
 		div.aggregators {
@@ -420,78 +437,92 @@ func generateReport(
 	</style>
 
 	<body>
-		<h1>{{.Title}}</h1>
+		{{ index .Html "nav" }}
 
-		<div class="config">
-			<h2>Config</h2>
-			<table>
-				<tr class="title">
-					<th> </th>
-					<th class="last-column"> </th>
-				</tr>
-				<tr>
-					<td>Categories</td>
-					<td class="last-column">
-						{{range $category, $catLink := .Categories}}
-							<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
-						{{end}}<br />
-					</td>
-				</tr>
-				<tr>
-					<td>Number of records</td>
-					<td class="last-column">{{.NumRecords}}</td>
-				</tr>
-				<tr>
-					<td>Experiment file</td>
-					<td class="last-column">{{.ExperimentFilename}}</td>
-				</tr>
-			</table>
+		<div id="content">
+			<div class="container">
+				<h1>{{.Title}}</h1>
 
-			<table>
-				<tr class="title">
-					<th>Sort Order</th><th class="last-column">Direction</th>
-				</tr>
-				{{range .SortOrder}}
-					<tr>
-						<td>{{ .Field }}</td><td class="last-column">{{ .Direction }}</td>
-					</tr>
-				{{end}}
-			</table>
+				<div class="config">
+					<h2>Config</h2>
+					<table>
+						<tr class="title">
+							<th> </th>
+							<th class="last-column"> </th>
+						</tr>
+						<tr>
+							<td>Categories</td>
+							<td class="last-column">
+								{{range $category, $catLink := .Categories}}
+									<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+								{{end}}<br />
+							</td>
+						</tr>
+						<tr>
+							<td>Number of records</td>
+							<td class="last-column">{{.NumRecords}}</td>
+						</tr>
+						<tr>
+							<td>Experiment file</td>
+							<td class="last-column">{{.ExperimentFilename}}</td>
+						</tr>
+					</table>
+
+					<table>
+						<tr class="title">
+							<th>Sort Order</th><th class="last-column">Direction</th>
+						</tr>
+						{{range .SortOrder}}
+							<tr>
+								<td>{{ .Field }}</td><td class="last-column">{{ .Direction }}</td>
+							</tr>
+						{{end}}
+					</table>
+				</div>
+			</div>
+
+			<div class="container">
+				<h2>Results</h2>
+			</div>
+			{{range .Assessments}}
+				<div class="container rule-assessment">
+					<h3>{{ .Rule }}</h3>
+
+					<div class="aggregators">
+						<table>
+							<tr class="title">
+								<th>Aggregator</th>
+								<th>Value</th>
+								<th class="last-column">Improvement</th>
+							</tr>
+							{{ range .Aggregators }}
+							<tr>
+								<td>{{ .Name }}</td>
+								<td>{{ .Value }}</td>
+								<td class="last-column">{{ .Difference }}</td>
+							</tr>
+							{{ end }}
+						</table>
+					</div>
+
+					<div class="goals">
+						<table>
+							<tr class="title">
+								<th>Goal</th><th class="last-column">Value</th>
+							</tr>
+							{{ range .Goals }}
+							<tr>
+								<td>{{ .Expr }}</td><td class="last-column">{{ .Passed }}</td>
+							</tr>
+							{{ end }}
+						</table>
+					</div>
+
+				</div>
+			{{ end }}
 		</div>
 
-		<h2>Results</h2>
-		{{range .Assessments}}
-			<h3 style="clear: both;">{{ .Rule }}</h3>
-
-
-			<div class="aggregators">
-				<table>
-					<tr class="title">
-						<th>Aggregator</th>
-            <th>Value</th>
-						<th class="last-column">Improvement</th>
-					</tr>
-					{{ range .Aggregators }}
-					<tr>
-						<td>{{ .Name }}</td>
-						<td>{{ .Value }}</td>
-						<td class="last-column">{{ .Difference }}</td>
-					</tr>
-					{{ end }}
-				</table>
-			</div>
-
-			<div class="goals">
-				<table>
-					<tr class="title"><th>Goal</th><th class="last-column">Value</th></tr>
-					{{ range .Goals }}
-					<tr>
-						<td>{{ .Expr }}</td><td class="last-column">{{ .Passed }}</td>
-					</tr>
-					{{ end }}
-				</table>
-			</div>
-		{{ end }}
+		{{ index .Html "bootstrapJS" }}
 	</body>
 </html>`
 
@@ -503,6 +534,7 @@ func generateReport(
 		NumRecords         int64
 		SortOrder          []rulehunter.SortField
 		Assessments        []*report.Assessment
+		Html               map[string]template.HTML
 	}
 
 	categoryLinks := makeCategoryLinks(_report.Categories)
@@ -515,6 +547,7 @@ func generateReport(
 		_report.NumRecords,
 		_report.SortOrder,
 		_report.Assessments,
+		makeHtml("reports"),
 	}
 
 	fullReportFilename := filepath.Join(config.WWWDir, "reports", reportFilename)
@@ -560,4 +593,110 @@ func countFiles(files []os.FileInfo) int {
 		}
 	}
 	return numFiles
+}
+
+const htmlHead = `
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/sitestyle.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->`
+
+const htmlBootstrapJS = `
+		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+			<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+			<!-- Include all compiled plugins (below), or include individual files as needed -->
+			<script src="/js/bootstrap.min.js"></script>`
+
+func makeHtmlNav(menuItem string) template.HTML {
+	const tpl = `
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed"
+                  data-toggle="collapse" data-target="#navbar"
+								  aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">RuleHunter</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+						{{if eq .MenuItem "home"}}
+							<li class="active"><a href="/">Home</a></li>
+						{{else}}
+							<li><a href="/">Home</a></li>
+						{{end}}
+
+						{{if eq .MenuItem "reports"}}
+            <li class="active"><a href="/reports/">Reports</a></li>
+						{{else}}
+            <li><a href="/reports/">Reports</a></li>
+						{{end}}
+
+						{{if eq .MenuItem "category"}}
+            <li class="active"><a href=".">Category</a></li>
+						{{end}}
+
+						{{if eq .MenuItem "progress"}}
+            <li class="active"><a href="/progress/">Progress</a></li>
+						{{else}}
+            <li><a href="/progress/">Progress</a></li>
+						{{end}}
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>`
+
+	var doc bytes.Buffer
+	validMenuItems := []string{
+		"home",
+		"reports",
+		"category",
+		"progress",
+	}
+
+	foundValidItem := false
+	for _, validMenuItem := range validMenuItems {
+		if validMenuItem == menuItem {
+			foundValidItem = true
+		}
+	}
+	if !foundValidItem {
+		panic(fmt.Sprintf("menuItem not valid: %s", menuItem))
+	}
+
+	t, err := template.New("webpage").Parse(tpl)
+	if err != nil {
+		panic(fmt.Sprintf("Couldn't create nav html: %s",
+			menuItem, err))
+	}
+
+	tplData := struct{ MenuItem string }{menuItem}
+
+	if err := t.Execute(&doc, tplData); err != nil {
+		panic(fmt.Sprintf("Couldn't create nav html: %s",
+			menuItem, err))
+	}
+	return template.HTML(doc.String())
+}
+
+func makeHtml(menuItem string) map[string]template.HTML {
+	r := make(map[string]template.HTML)
+	r["head"] = template.HTML(htmlHead)
+	r["nav"] = makeHtmlNav(menuItem)
+	r["bootstrapJS"] = template.HTML(htmlBootstrapJS)
+	return r
 }
