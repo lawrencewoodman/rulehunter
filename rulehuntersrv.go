@@ -124,7 +124,7 @@ func (p *program) Stop(s service.Service) error {
 func (p *program) startReportGenerator() {
 	sleepInSeconds := time.Duration(4)
 	for {
-		if err := html.GenerateReports(p.config, p.progressMonitor); err != nil {
+		if err := html.Generate(p.config, p.progressMonitor); err != nil {
 			fullErr := fmt.Errorf("Couldn't generate report: %s", err)
 			// TODO: Work out if this is thread safe
 			logger.Error(fullErr)

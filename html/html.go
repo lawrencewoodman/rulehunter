@@ -21,7 +21,61 @@ import (
 	"time"
 )
 
-func GenerateReports(
+func Generate(
+	config *config.Config,
+	progressMonitor *progress.ProgressMonitor,
+) error {
+	if err := generateHomePage(config, progressMonitor); err != nil {
+		return err
+	}
+	if err := generateReports(config, progressMonitor); err != nil {
+		return err
+	}
+	if err := generateCategoryPages(config); err != nil {
+		return err
+	}
+	return generateProgressPage(config, progressMonitor)
+}
+
+func generateHomePage(
+	config *config.Config,
+	progressMonitor *progress.ProgressMonitor,
+) error {
+	const tpl = `
+<!DOCTYPE html>
+<html>
+	<head>
+		{{ index .Html "head" }}
+		<meta charset="UTF-8">
+		<title>Rulehunter</title>
+	</head>
+
+	<body>
+		{{ index .Html "nav" }}
+
+		<div id="content">
+			<div class="container">
+				<h1>Rulehunter</h1>
+			</div>
+		</div>
+
+		{{ index .Html "bootstrapJS" }}
+	</body>
+</html>`
+
+	type TplData struct {
+		Html map[string]template.HTML
+	}
+
+	tplData := TplData{
+		makeHtml("home"),
+	}
+
+	outputFilename := filepath.Join(config.WWWDir, "index.html")
+	return writeTemplate(outputFilename, tpl, tplData)
+}
+
+func generateReports(
 	config *config.Config,
 	progressMonitor *progress.ProgressMonitor,
 ) error {
@@ -115,13 +169,6 @@ func GenerateReports(
 	tplData := TplData{
 		tplReports,
 		makeHtml("reports"),
-	}
-	if err := generateCategoryPages(config); err != nil {
-		return err
-	}
-
-	if err := generateProgressPage(config, progressMonitor); err != nil {
-		return err
 	}
 
 	outputFilename := filepath.Join(config.WWWDir, "reports", "index.html")
@@ -641,19 +688,19 @@ func makeHtmlNav(menuItem string) template.HTML {
 						{{end}}
 
 						{{if eq .MenuItem "reports"}}
-            <li class="active"><a href="/reports/">Reports</a></li>
+							<li class="active"><a href="/reports/">Reports</a></li>
 						{{else}}
-            <li><a href="/reports/">Reports</a></li>
+							<li><a href="/reports/">Reports</a></li>
 						{{end}}
 
 						{{if eq .MenuItem "category"}}
-            <li class="active"><a href=".">Category</a></li>
+							<li class="active"><a href=".">Category</a></li>
 						{{end}}
 
 						{{if eq .MenuItem "progress"}}
-            <li class="active"><a href="/progress/">Progress</a></li>
+							<li class="active"><a href="/progress/">Progress</a></li>
 						{{else}}
-            <li><a href="/progress/">Progress</a></li>
+							<li><a href="/progress/">Progress</a></li>
 						{{end}}
           </ul>
         </div><!--/.nav-collapse -->
