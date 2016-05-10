@@ -88,21 +88,6 @@ func generateReports(
 		<title>Reports</title>
 	</head>
 
-	<style>
-		a.title {
-			color: black;
-			font-size: 120%;
-			text-decoration: none;
-			font-weight: bold;
-		}
-		a.title:visited {
-			color: black;
-		}
-		a.title:hover {
-			text-decoration: underline;
-		}
-	</style>
-
 	<body>
 		{{ index .Html "nav" }}
 
@@ -110,15 +95,18 @@ func generateReports(
 			<div class="container">
 				<h1>Reports</h1>
 
-				{{range .Reports}}
-					<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
-					Date: {{ .Stamp }}
-					Categories:
-					{{range $category, $catLink := .Categories}}
-						<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
-					{{end}}<br />
-					<br />
-				{{end}}
+				<ul class="reports">
+					{{range .Reports}}
+						<li>
+							<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
+							Date: {{ .Stamp }}
+							Categories:
+							{{range $category, $catLink := .Categories}}
+								<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+							{{end}}
+						</li>
+					{{end}}
+				</ul>
 			</div>
 		</div>
 
@@ -262,21 +250,6 @@ func generateCategoryPage(
 		<title>Reports for category: {{ .Category }}</title>
 	</head>
 
-	<style>
-		a.title {
-			color: black;
-			font-size: 120%;
-			text-decoration: none;
-			font-weight: bold;
-		}
-		a.title:visited {
-			color: black;
-		}
-		a.title:hover {
-			text-decoration: underline;
-		}
-	</style>
-
 	<body>
 		{{ index .Html "nav" }}
 
@@ -284,15 +257,18 @@ func generateCategoryPage(
 			<div class="container">
 				<h1>Reports for category: {{ .Category }}</h1>
 
-				{{range .Reports}}
-					<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
-					Date: {{ .Stamp }}
-					Categories:
-					{{range $category, $catLink := .Categories}}
-						<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
-					{{end}}<br />
-					<br />
-				{{end}}
+				<ul class="reports">
+					{{range .Reports}}
+						<li>
+							<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
+							Date: {{ .Stamp }}
+							Categories:
+							{{range $category, $catLink := .Categories}}
+								<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+							{{end}}
+						</li>
+					{{end}}
+				</ul>
 			</div>
 		</div>
 
@@ -430,59 +406,6 @@ func generateReport(
 		<title>{{.Title}}</title>
 	</head>
 
-	<style>
-		table {
-			border-collapse: collapse;
-		}
-
-		table th {
-			text-align: left;
-			padding-left: 1em;
-			padding-right: 2em;
-			border-collapse: collapse;
-			border-right: 1px solid black;
-			border-bottom: 1px solid black;
-		}
-
-		table th.last-column {
-			border-right: 0;
-		}
-		table td {
-			border-collapse: collapse;
-			border-right: 1px solid black;
-			padding-left: 1em;
-			padding-right: 1em;
-		  padding-top: 0.1em;
-		  padding-bottom: 0.1em;
-		}
-		table td.last-column {
-			border-right: 0;
-		}
-		table tr.title td {
-			border-bottom: 1px solid black;
-		}
-
-		div.rule-assessment {
-			margin-bottom: 2em;
-		}
-		div.aggregators {
-			float: left;
-		  clear: left;
-			margin-right: 3em;
-		}
-		div.goals {
-			float: left;
-		  clear: right;
-		}
-
-		div.config table {
-			margin-bottom: 2em;
-		}
-		div.config table th {
-			height: 1em;
-		}
-	</style>
-
 	<body>
 		{{ index .Html "nav" }}
 
@@ -490,53 +413,51 @@ func generateReport(
 			<div class="container">
 				<h1>{{.Title}}</h1>
 
-				<div class="config">
-					<h2>Config</h2>
-					<table>
-						<tr class="title">
-							<th> </th>
-							<th class="last-column"> </th>
-						</tr>
-						<tr>
-							<td>Categories</td>
-							<td class="last-column">
-								{{range $category, $catLink := .Categories}}
-									<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
-								{{end}}<br />
-							</td>
-						</tr>
-						<tr>
-							<td>Number of records</td>
-							<td class="last-column">{{.NumRecords}}</td>
-						</tr>
-						<tr>
-							<td>Experiment file</td>
-							<td class="last-column">{{.ExperimentFilename}}</td>
-						</tr>
-					</table>
+				<h2>Config</h2>
+				<table class="neat-table">
+					<tr class="title">
+						<th> </th>
+						<th class="last-column"> </th>
+					</tr>
+					<tr>
+						<td>Categories</td>
+						<td class="last-column">
+							{{range $category, $catLink := .Categories}}
+								<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+							{{end}}<br />
+						</td>
+					</tr>
+					<tr>
+						<td>Number of records</td>
+						<td class="last-column">{{.NumRecords}}</td>
+					</tr>
+					<tr>
+						<td>Experiment file</td>
+						<td class="last-column">{{.ExperimentFilename}}</td>
+					</tr>
+				</table>
 
-					<table>
-						<tr class="title">
-							<th>Sort Order</th><th class="last-column">Direction</th>
+				<table class="neat-table">
+					<tr class="title">
+						<th>Sort Order</th><th class="last-column">Direction</th>
+					</tr>
+					{{range .SortOrder}}
+						<tr>
+							<td>{{ .Field }}</td><td class="last-column">{{ .Direction }}</td>
 						</tr>
-						{{range .SortOrder}}
-							<tr>
-								<td>{{ .Field }}</td><td class="last-column">{{ .Direction }}</td>
-							</tr>
-						{{end}}
-					</table>
-				</div>
+					{{end}}
+				</table>
 			</div>
 
 			<div class="container">
 				<h2>Results</h2>
 			</div>
 			{{range .Assessments}}
-				<div class="container rule-assessment">
+				<div class="container">
 					<h3>{{ .Rule }}</h3>
 
-					<div class="aggregators">
-						<table>
+					<div class="pull-left aggregators">
+						<table class="neat-table">
 							<tr class="title">
 								<th>Aggregator</th>
 								<th>Value</th>
@@ -552,8 +473,8 @@ func generateReport(
 						</table>
 					</div>
 
-					<div class="goals">
-						<table>
+					<div class="pull-left">
+						<table class="neat-table">
 							<tr class="title">
 								<th>Goal</th><th class="last-column">Value</th>
 							</tr>
@@ -643,20 +564,20 @@ func countFiles(files []os.FileInfo) int {
 }
 
 const htmlHead = `
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/css/sitestyle.css" rel="stylesheet">
+<link href="/css/bootstrap.min.css" rel="stylesheet">
+<link href="/css/sitestyle.css" rel="stylesheet">
 
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->`
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+<![endif]-->`
 
 const htmlBootstrapJS = `
 		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -666,46 +587,47 @@ const htmlBootstrapJS = `
 
 func makeHtmlNav(menuItem string) template.HTML {
 	const tpl = `
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed"
-                  data-toggle="collapse" data-target="#navbar"
-								  aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="/">RuleHunter</a>
-        </div>
-        <div id="navbar" class="collapse navbar-collapse">
-          <ul class="nav navbar-nav">
-						{{if eq .MenuItem "home"}}
-							<li class="active"><a href="/">Home</a></li>
-						{{else}}
-							<li><a href="/">Home</a></li>
-						{{end}}
+<nav class="navbar navbar-inverse navbar-fixed-top">
+	<div class="container">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed"
+			        data-toggle="collapse" data-target="#navbar"
+			        aria-expanded="false" aria-controls="navbar">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="/">RuleHunter</a>
+		</div>
 
-						{{if eq .MenuItem "reports"}}
-							<li class="active"><a href="/reports/">Reports</a></li>
-						{{else}}
-							<li><a href="/reports/">Reports</a></li>
-						{{end}}
+		<div id="navbar" class="collapse navbar-collapse">
+			<ul class="nav navbar-nav">
+				{{if eq .MenuItem "home"}}
+					<li class="active"><a href="/">Home</a></li>
+				{{else}}
+					<li><a href="/">Home</a></li>
+				{{end}}
 
-						{{if eq .MenuItem "category"}}
-							<li class="active"><a href=".">Category</a></li>
-						{{end}}
+				{{if eq .MenuItem "reports"}}
+					<li class="active"><a href="/reports/">Reports</a></li>
+				{{else}}
+					<li><a href="/reports/">Reports</a></li>
+				{{end}}
 
-						{{if eq .MenuItem "progress"}}
-							<li class="active"><a href="/progress/">Progress</a></li>
-						{{else}}
-							<li><a href="/progress/">Progress</a></li>
-						{{end}}
-          </ul>
-        </div><!--/.nav-collapse -->
-      </div>
-    </nav>`
+				{{if eq .MenuItem "category"}}
+					<li class="active"><a href=".">Category</a></li>
+				{{end}}
+
+				{{if eq .MenuItem "progress"}}
+					<li class="active"><a href="/progress/">Progress</a></li>
+				{{else}}
+					<li><a href="/progress/">Progress</a></li>
+				{{end}}
+			</ul>
+		</div><!--/.nav-collapse -->
+	</div>
+</nav>`
 
 	var doc bytes.Buffer
 	validMenuItems := []string{

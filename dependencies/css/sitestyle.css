@@ -1,3 +1,54 @@
 div#content {
   padding: 60px 15px;
 }
+
+ul.reports {
+  margin-top: 2em;
+  margin-bottom: 2em;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 0;
+  list-style: none;
+}
+ul.reports li {
+  padding-bottom: 1em;
+}
+ul.reports a.title {
+  font-size: 120%;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+table.neat-table {
+  border-collapse: collapse;
+  margin-bottom: 2em;
+}
+
+table.neat-table th {
+  text-align: left;
+  padding-left: 1em;
+  padding-right: 2em;
+  border-collapse: collapse;
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
+  height: 1em;
+}
+
+table.neat-table th.last-column {
+  border-right: 0;
+}
+table.neat-table td {
+  border-collapse: collapse;
+  border-right: 1px solid black;
+  padding-left: 1em;
+  padding-right: 1em;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+}
+table.neat-table td.last-column {
+  border-right: 0;
+}
+
+div.aggregators {
+  margin-right: 3em;
+}
