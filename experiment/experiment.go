@@ -106,8 +106,13 @@ func Process(
 		return epr.ReportError(fullErr)
 	}
 
+	assessment5.Sort(experiment.SortOrder)
+	assessment5.Refine(1)
+
+	assessment6 := assessment5.LimitRuleAssessments(config.NumRulesInReport)
+
 	err = report.WriteJson(
-		assessment5,
+		assessment6,
 		experiment,
 		experimentFilename,
 		categories,

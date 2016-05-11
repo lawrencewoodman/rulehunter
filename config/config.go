@@ -9,9 +9,10 @@ import (
 )
 
 type Config struct {
-	ExperimentsDir string
-	WWWDir         string
-	BuildDir       string
+	ExperimentsDir   string
+	WWWDir           string
+	BuildDir         string
+	NumRulesInReport int
 }
 
 func Load(filename string) (*Config, error) {
