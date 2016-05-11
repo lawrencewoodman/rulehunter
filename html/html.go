@@ -172,7 +172,7 @@ func generateProgressPage(
 <html>
   <head>
 		{{ index .Html "head" }}
-		<meta http-equiv="refresh" content="4">
+		<!-- <meta http-equiv="refresh" content="4"> -->
     <title>Progress</title>
   </head>
 
@@ -183,17 +183,37 @@ func generateProgressPage(
 			<div class="container">
 				<h1>Progress</h1>
 
+				<ul class="reports-progress">
 				{{range .Experiments}}
-					<strong>{{ .Title }}</strong><br />
-					Date: {{ .Stamp }}
-					Categories:
-					{{range $category, $catLink := .Categories}}
-						<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
-					{{end}}<br />
-					Experiment filename: {{ .Filename }}<br />
-					Status: {{ .Status }} &nbsp; Message: {{ .Msg }}<br />
-					<br />
+					<li>
+						<table class="table table-bordered">
+						  <tr>
+								<th class="report-progress-th">Date</th>
+								<td>{{ .Stamp }}</td>
+							</tr>
+							{{if .Title}}
+								<tr><th>Title</th><td>{{ .Title }}</td></tr>
+							{{end}}
+							{{if .Categories}}
+								<tr>
+									<th>Categories</th>
+									<td>
+										{{range $category, $catLink := .Categories}}
+											<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+										{{end}}
+									</td>
+								</tr>
+							{{end}}
+							<tr><th>Experiment filename</th><td>{{ .Filename }}</td></tr>
+							<tr><th>Message</th><td>{{ .Msg }}</td></tr>
+							<tr>
+								<th>Status</th>
+								<td class="status-{{ .Status }}">{{ .Status }}</td>
+							</tr>
+						</table>
+					</li>
 				{{end}}
+				</ul>
 			</div>
 		</div>
 

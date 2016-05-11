@@ -1,7 +1,6 @@
 package progress
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -12,20 +11,13 @@ import (
 )
 
 func TestGetExperiments(t *testing.T) {
+	/* This sorts in reverse order of date */
 	expected := []*Experiment{
 		&Experiment{
-			Title:              "",
-			Categories:         []string{},
-			Stamp:              mustParseTime("2016-05-04T14:52:08.993750731+01:00"),
-			ExperimentFilename: "bank-bad.json",
-			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
-			Status:             Failure,
-		},
-		&Experiment{
-			Title:              "Who is more likely to be divorced",
-			Categories:         []string{"test", "bank"},
-			Stamp:              mustParseTime("2016-05-04T14:53:00.570347516+01:00"),
-			ExperimentFilename: "bank-divorced.json",
+			Title:              "This is a jolly nice title",
+			Categories:         []string{"test", "bank", "fred / ned"},
+			Stamp:              mustParseTime("2016-05-05T09:37:58.220312223+01:00"),
+			ExperimentFilename: "bank-tiny.json",
 			Msg:                "Finished processing successfully",
 			Status:             Success,
 		},
@@ -38,12 +30,20 @@ func TestGetExperiments(t *testing.T) {
 			Status:             Waiting,
 		},
 		&Experiment{
-			Title:              "This is a jolly nice title",
-			Categories:         []string{"test", "bank", "fred / ned"},
-			Stamp:              mustParseTime("2016-05-05T09:37:58.220312223+01:00"),
-			ExperimentFilename: "bank-tiny.json",
+			Title:              "Who is more likely to be divorced",
+			Categories:         []string{"test", "bank"},
+			Stamp:              mustParseTime("2016-05-04T14:53:00.570347516+01:00"),
+			ExperimentFilename: "bank-divorced.json",
 			Msg:                "Finished processing successfully",
 			Status:             Success,
+		},
+		&Experiment{
+			Title:              "",
+			Categories:         []string{},
+			Stamp:              mustParseTime("2016-05-04T14:52:08.993750731+01:00"),
+			ExperimentFilename: "bank-bad.json",
+			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
+			Status:             Failure,
 		},
 	}
 
@@ -71,7 +71,7 @@ func TestGetExperiments(t *testing.T) {
 	}
 }
 
-func TestGetExperiments_error(t *testing.T) {
+func TestGetExperiments_notExists(t *testing.T) {
 	tempDir, err := ioutil.TempDir("", "progress_test")
 	if err != nil {
 		t.Errorf("TempDir() err: %s", err)
@@ -80,14 +80,13 @@ func TestGetExperiments_error(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	pm := NewMonitor(tempDir)
-	expectedErr := &os.PathError{
-		"open",
-		filepath.Join(tempDir, "progress.json"),
-		errors.New("no such file or directory"),
+	experiments, err := pm.GetExperiments()
+	if err != nil {
+		t.Errorf("GetExperiments() err: %s", err)
 	}
-	_, err = pm.GetExperiments()
-	if err.Error() != expectedErr.Error() {
-		t.Errorf("GetExperiments() err: %s, expected: %s", err, expectedErr)
+	if len(experiments) != 0 {
+		t.Errorf("GetExperiments() expected 0 experiments got: %d",
+			len(experiments))
 	}
 }
 
@@ -96,16 +95,8 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		&Experiment{
 			Title:              "",
 			Categories:         []string{},
-			Stamp:              mustParseTime("2016-05-04T14:52:08.993750731+01:00"),
-			ExperimentFilename: "bank-bad.json",
-			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
-			Status:             Failure,
-		},
-		&Experiment{
-			Title:              "Who is more likely to be divorced",
-			Categories:         []string{},
-			Stamp:              mustParseTime("2016-05-05T09:36:59.762587932+01:00"),
-			ExperimentFilename: "bank-full-divorced.json",
+			Stamp:              time.Now(),
+			ExperimentFilename: "bank-divorced.json",
 			Msg:                "Waiting to be processed",
 			Status:             Waiting,
 		},
@@ -118,12 +109,20 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 			Status:             Success,
 		},
 		&Experiment{
-			Title:              "",
+			Title:              "Who is more likely to be divorced",
 			Categories:         []string{},
-			Stamp:              time.Now(),
-			ExperimentFilename: "bank-divorced.json",
+			Stamp:              mustParseTime("2016-05-05T09:36:59.762587932+01:00"),
+			ExperimentFilename: "bank-full-divorced.json",
 			Msg:                "Waiting to be processed",
 			Status:             Waiting,
+		},
+		&Experiment{
+			Title:              "",
+			Categories:         []string{},
+			Stamp:              mustParseTime("2016-05-04T14:52:08.993750731+01:00"),
+			ExperimentFilename: "bank-bad.json",
+			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
+			Status:             Failure,
 		},
 	}
 
@@ -160,24 +159,8 @@ func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
 		&Experiment{
 			Title:              "",
 			Categories:         []string{},
-			Stamp:              mustParseTime("2016-05-04T14:52:08.993750731+01:00"),
-			ExperimentFilename: "bank-bad.json",
-			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
-			Status:             Failure,
-		},
-		&Experiment{
-			Title:              "Who is more likely to be divorced",
-			Categories:         []string{"test", "bank"},
-			Stamp:              mustParseTime("2016-05-04T14:53:00.570347516+01:00"),
-			ExperimentFilename: "bank-divorced.json",
-			Msg:                "Finished processing successfully",
-			Status:             Success,
-		},
-		&Experiment{
-			Title:              "Who is more likely to be divorced",
-			Categories:         []string{},
-			Stamp:              mustParseTime("2016-05-05T09:36:59.762587932+01:00"),
-			ExperimentFilename: "bank-full-divorced.json",
+			Stamp:              time.Now(),
+			ExperimentFilename: "bank-credit.json",
 			Msg:                "Waiting to be processed",
 			Status:             Waiting,
 		},
@@ -190,12 +173,28 @@ func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
 			Status:             Success,
 		},
 		&Experiment{
-			Title:              "",
+			Title:              "Who is more likely to be divorced",
 			Categories:         []string{},
-			Stamp:              time.Now(),
-			ExperimentFilename: "bank-credit.json",
+			Stamp:              mustParseTime("2016-05-05T09:36:59.762587932+01:00"),
+			ExperimentFilename: "bank-full-divorced.json",
 			Msg:                "Waiting to be processed",
 			Status:             Waiting,
+		},
+		&Experiment{
+			Title:              "Who is more likely to be divorced",
+			Categories:         []string{"test", "bank"},
+			Stamp:              mustParseTime("2016-05-04T14:53:00.570347516+01:00"),
+			ExperimentFilename: "bank-divorced.json",
+			Msg:                "Finished processing successfully",
+			Status:             Success,
+		},
+		&Experiment{
+			Title:              "",
+			Categories:         []string{},
+			Stamp:              mustParseTime("2016-05-04T14:52:08.993750731+01:00"),
+			ExperimentFilename: "bank-bad.json",
+			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
+			Status:             Failure,
 		},
 	}
 
@@ -224,26 +223,6 @@ func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
 	experimentsMatch, matchMsg := doExperimentsMatch(got, expected)
 	if !experimentsMatch {
 		t.Errorf("doExperimentsMatch() msg: %s", matchMsg)
-	}
-}
-
-func TestAddExperiment_error(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "progress_test")
-	if err != nil {
-		t.Errorf("TempDir() err: %s", err)
-		return
-	}
-	defer os.RemoveAll(tempDir)
-
-	pm := NewMonitor(tempDir)
-	expectedErr := &os.PathError{
-		"open",
-		filepath.Join(tempDir, "progress.json"),
-		errors.New("no such file or directory"),
-	}
-	err = pm.AddExperiment("bank-credit.json")
-	if err.Error() != expectedErr.Error() {
-		t.Errorf("AddExperiment() err: %s, expected: %s", err, expectedErr)
 	}
 }
 

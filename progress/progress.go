@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 )
 
@@ -144,6 +145,9 @@ func (pm *ProgressMonitor) AddExperiment(
 func (pm *ProgressMonitor) GetExperiments() ([]*Experiment, error) {
 	var progress Progress
 	f, err := os.Open(pm.progressFilename)
+	if os.IsNotExist(err) {
+		return []*Experiment{}, nil
+	}
 	if err != nil {
 		return []*Experiment{}, err
 	}
@@ -153,6 +157,7 @@ func (pm *ProgressMonitor) GetExperiments() ([]*Experiment, error) {
 	if err = dec.Decode(&progress); err != nil {
 		return []*Experiment{}, err
 	}
+	sort.Sort(sort.Reverse(progress))
 	return progress.Experiments, nil
 }
 
@@ -221,6 +226,16 @@ func (pm *ProgressMonitor) writeJson(experiments []*Experiment) error {
 	if err != nil {
 		return err
 	}
-	// TODO: consider sorting
 	return ioutil.WriteFile(pm.progressFilename, json, 0640)
+}
+
+// Implements sort.Interface for Progress
+func (p Progress) Len() int { return len(p.Experiments) }
+func (p Progress) Swap(i, j int) {
+	p.Experiments[i], p.Experiments[j] =
+		p.Experiments[j], p.Experiments[i]
+}
+
+func (p Progress) Less(i, j int) bool {
+	return p.Experiments[i].Stamp.Before(p.Experiments[j].Stamp)
 }
