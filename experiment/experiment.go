@@ -88,11 +88,9 @@ func Process(
 	assessment3.Sort(experiment.SortOrder)
 	assessment3.Refine(1)
 
-	bestNonCombinedRules := assessment3.GetRules()
 	numRulesToCombine := 50
-	combinedRules := rulehunter.CombineRules(
-		truncateRules(bestNonCombinedRules, numRulesToCombine),
-	)
+	bestNonCombinedRules := assessment3.GetRules(numRulesToCombine)
+	combinedRules := rulehunter.CombineRules(bestNonCombinedRules)
 
 	assessment4, err := assessRules(combinedRules, experiment, epr)
 	if err != nil {
@@ -237,11 +235,4 @@ func assessRules(
 		return nil, err
 	}
 	return assessment, nil
-}
-
-func truncateRules(rules []*rulehunter.Rule, numRules int) []*rulehunter.Rule {
-	if len(rules) < numRules {
-		numRules = len(rules)
-	}
-	return rules[:numRules]
 }
