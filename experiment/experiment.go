@@ -29,13 +29,13 @@ func Process(
 
 	experimentFullFilename :=
 		filepath.Join(config.ExperimentsDir, experimentFilename)
-	experiment, categories, err := loadExperiment(experimentFullFilename)
+	experiment, tags, err := loadExperiment(experimentFullFilename)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't load experiment file: %s", err)
 		return epr.ReportError(fullErr)
 	}
 	defer experiment.Close()
-	err = epr.UpdateDetails(experiment.Title, categories)
+	err = epr.UpdateDetails(experiment.Title, tags)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func Process(
 		assessment6,
 		experiment,
 		experimentFilename,
-		categories,
+		tags,
 		config,
 	)
 	if err != nil {
@@ -126,7 +126,7 @@ func Process(
 
 type experimentFile struct {
 	Title                 string
-	Categories            []string
+	Tags                  []string
 	InputFilename         string
 	FieldNames            []string
 	ExcludeFieldNames     []string
@@ -176,7 +176,7 @@ func loadExperiment(filename string) (
 		SortOrder:     e.SortOrder,
 	}
 	experiment, err := rulehunter.MakeExperiment(experimentDesc)
-	return experiment, e.Categories, err
+	return experiment, e.Tags, err
 }
 
 func prettyPrintFieldDescriptions(fds map[string]*rulehunter.FieldDescription) {

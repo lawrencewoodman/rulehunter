@@ -33,7 +33,7 @@ type Assessment struct {
 
 type Report struct {
 	Title              string
-	Categories         []string
+	Tags               []string
 	Stamp              time.Time
 	ExperimentFilename string
 	NumRecords         int64
@@ -45,7 +45,7 @@ func WriteJson(
 	assessment *rulehunter.Assessment,
 	experiment *rulehunter.Experiment,
 	experimentFilename string,
-	categories []string,
+	tags []string,
 	config *config.Config,
 ) error {
 	assessment.Sort(experiment.SortOrder)
@@ -80,7 +80,7 @@ func WriteJson(
 	}
 	report := Report{
 		experiment.Title,
-		categories,
+		tags,
 		time.Now(),
 		experimentFilename,
 		assessment.NumRecords,

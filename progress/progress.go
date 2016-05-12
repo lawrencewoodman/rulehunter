@@ -29,12 +29,12 @@ func NewExperimentProgressReporter(
 
 func (epr *ExperimentProgressReporter) UpdateDetails(
 	title string,
-	categories []string,
+	tags []string,
 ) error {
 	return epr.pm.updateExperimentDetails(
 		epr.experimentFilename,
 		title,
-		categories,
+		tags,
 	)
 }
 
@@ -87,7 +87,7 @@ type Progress struct {
 
 type Experiment struct {
 	Title              string
-	Categories         []string
+	Tags               []string
 	Stamp              time.Time // Time of last update
 	ExperimentFilename string
 	Msg                string
@@ -164,7 +164,7 @@ func (pm *ProgressMonitor) GetExperiments() ([]*Experiment, error) {
 func (pm *ProgressMonitor) updateExperimentDetails(
 	experimentFilename string,
 	title string,
-	categories []string,
+	tags []string,
 ) error {
 	experiments, err := pm.GetExperiments()
 	if err != nil {
@@ -172,7 +172,7 @@ func (pm *ProgressMonitor) updateExperimentDetails(
 	}
 	newExperiment := &Experiment{
 		title,
-		categories,
+		tags,
 		time.Now(),
 		experimentFilename,
 		"Waiting to be processed",

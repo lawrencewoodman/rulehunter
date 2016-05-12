@@ -15,7 +15,7 @@ func TestGetExperiments(t *testing.T) {
 	expected := []*Experiment{
 		&Experiment{
 			Title:              "This is a jolly nice title",
-			Categories:         []string{"test", "bank", "fred / ned"},
+			Tags:               []string{"test", "bank", "fred / ned"},
 			Stamp:              mustParseTime("2016-05-05T09:37:58.220312223+01:00"),
 			ExperimentFilename: "bank-tiny.json",
 			Msg:                "Finished processing successfully",
@@ -23,7 +23,7 @@ func TestGetExperiments(t *testing.T) {
 		},
 		&Experiment{
 			Title:              "Who is more likely to be divorced",
-			Categories:         []string{},
+			Tags:               []string{},
 			Stamp:              mustParseTime("2016-05-05T09:36:59.762587932+01:00"),
 			ExperimentFilename: "bank-full-divorced.json",
 			Msg:                "Waiting to be processed",
@@ -31,7 +31,7 @@ func TestGetExperiments(t *testing.T) {
 		},
 		&Experiment{
 			Title:              "Who is more likely to be divorced",
-			Categories:         []string{"test", "bank"},
+			Tags:               []string{"test", "bank"},
 			Stamp:              mustParseTime("2016-05-04T14:53:00.570347516+01:00"),
 			ExperimentFilename: "bank-divorced.json",
 			Msg:                "Finished processing successfully",
@@ -39,7 +39,7 @@ func TestGetExperiments(t *testing.T) {
 		},
 		&Experiment{
 			Title:              "",
-			Categories:         []string{},
+			Tags:               []string{},
 			Stamp:              mustParseTime("2016-05-04T14:52:08.993750731+01:00"),
 			ExperimentFilename: "bank-bad.json",
 			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
@@ -94,7 +94,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 	expected := []*Experiment{
 		&Experiment{
 			Title:              "",
-			Categories:         []string{},
+			Tags:               []string{},
 			Stamp:              time.Now(),
 			ExperimentFilename: "bank-divorced.json",
 			Msg:                "Waiting to be processed",
@@ -102,7 +102,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		},
 		&Experiment{
 			Title:              "This is a jolly nice title",
-			Categories:         []string{"test", "bank", "fred / ned"},
+			Tags:               []string{"test", "bank", "fred / ned"},
 			Stamp:              mustParseTime("2016-05-05T09:37:58.220312223+01:00"),
 			ExperimentFilename: "bank-tiny.json",
 			Msg:                "Finished processing successfully",
@@ -110,7 +110,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		},
 		&Experiment{
 			Title:              "Who is more likely to be divorced",
-			Categories:         []string{},
+			Tags:               []string{},
 			Stamp:              mustParseTime("2016-05-05T09:36:59.762587932+01:00"),
 			ExperimentFilename: "bank-full-divorced.json",
 			Msg:                "Waiting to be processed",
@@ -118,7 +118,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		},
 		&Experiment{
 			Title:              "",
-			Categories:         []string{},
+			Tags:               []string{},
 			Stamp:              mustParseTime("2016-05-04T14:52:08.993750731+01:00"),
 			ExperimentFilename: "bank-bad.json",
 			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
@@ -158,7 +158,7 @@ func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
 	expected := []*Experiment{
 		&Experiment{
 			Title:              "",
-			Categories:         []string{},
+			Tags:               []string{},
 			Stamp:              time.Now(),
 			ExperimentFilename: "bank-credit.json",
 			Msg:                "Waiting to be processed",
@@ -166,7 +166,7 @@ func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
 		},
 		&Experiment{
 			Title:              "This is a jolly nice title",
-			Categories:         []string{"test", "bank", "fred / ned"},
+			Tags:               []string{"test", "bank", "fred / ned"},
 			Stamp:              mustParseTime("2016-05-05T09:37:58.220312223+01:00"),
 			ExperimentFilename: "bank-tiny.json",
 			Msg:                "Finished processing successfully",
@@ -174,7 +174,7 @@ func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
 		},
 		&Experiment{
 			Title:              "Who is more likely to be divorced",
-			Categories:         []string{},
+			Tags:               []string{},
 			Stamp:              mustParseTime("2016-05-05T09:36:59.762587932+01:00"),
 			ExperimentFilename: "bank-full-divorced.json",
 			Msg:                "Waiting to be processed",
@@ -182,7 +182,7 @@ func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
 		},
 		&Experiment{
 			Title:              "Who is more likely to be divorced",
-			Categories:         []string{"test", "bank"},
+			Tags:               []string{"test", "bank"},
 			Stamp:              mustParseTime("2016-05-04T14:53:00.570347516+01:00"),
 			ExperimentFilename: "bank-divorced.json",
 			Msg:                "Finished processing successfully",
@@ -190,7 +190,7 @@ func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
 		},
 		&Experiment{
 			Title:              "",
-			Categories:         []string{},
+			Tags:               []string{},
 			Stamp:              mustParseTime("2016-05-04T14:52:08.993750731+01:00"),
 			ExperimentFilename: "bank-bad.json",
 			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
@@ -275,12 +275,12 @@ func doesExperimentMatch(e1, e2 *Experiment) (bool, string) {
 	if !timesClose(e1.Stamp, e2.Stamp, 1) {
 		return false, "Stamp not close in time"
 	}
-	if len(e1.Categories) != len(e2.Categories) {
-		return false, "Categories doesn't match"
+	if len(e1.Tags) != len(e2.Tags) {
+		return false, "Tags doesn't match"
 	}
-	for i, c := range e1.Categories {
-		if c != e2.Categories[i] {
-			return false, "Categories doesn't match"
+	for i, t := range e1.Tags {
+		if t != e2.Tags[i] {
+			return false, "Tags doesn't match"
 		}
 	}
 	return true, ""

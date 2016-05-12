@@ -31,7 +31,7 @@ func Generate(
 	if err := generateReports(config, progressMonitor); err != nil {
 		return err
 	}
-	if err := generateCategoryPages(config); err != nil {
+	if err := generateTagPages(config); err != nil {
 		return err
 	}
 	return generateProgressPage(config, progressMonitor)
@@ -100,9 +100,9 @@ func generateReports(
 						<li>
 							<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
 							Date: {{ .Stamp }}
-							Categories:
-							{{range $category, $catLink := .Categories}}
-								<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+							Tags:
+							{{range $tag, $catLink := .Tags}}
+								<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
 							{{end}}
 						</li>
 					{{end}}
@@ -115,10 +115,10 @@ func generateReports(
 </html>`
 
 	type TplReport struct {
-		Title      string
-		Categories map[string]string
-		Stamp      string
-		Filename   string
+		Title    string
+		Tags     map[string]string
+		Stamp    string
+		Filename string
 	}
 
 	type TplData struct {
@@ -147,7 +147,7 @@ func generateReports(
 			}
 			tplReports[i] = &TplReport{
 				report.Title,
-				makeCategoryLinks(report.Categories),
+				makeTagLinks(report.Tags),
 				report.Stamp.Format(time.RFC822),
 				reportFilename,
 			}
@@ -194,12 +194,12 @@ func generateProgressPage(
 							{{if .Title}}
 								<tr><th>Title</th><td>{{ .Title }}</td></tr>
 							{{end}}
-							{{if .Categories}}
+							{{if .Tags}}
 								<tr>
-									<th>Categories</th>
+									<th>Tags</th>
 									<td>
-										{{range $category, $catLink := .Categories}}
-											<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+										{{range $tag, $catLink := .Tags}}
+											<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
 										{{end}}
 									</td>
 								</tr>
@@ -222,12 +222,12 @@ func generateProgressPage(
 </html>`
 
 	type TplExperiment struct {
-		Title      string
-		Categories map[string]string
-		Stamp      string
-		Filename   string
-		Status     string
-		Msg        string
+		Title    string
+		Tags     map[string]string
+		Stamp    string
+		Filename string
+		Status   string
+		Msg      string
 	}
 
 	type TplData struct {
@@ -245,7 +245,7 @@ func generateProgressPage(
 	for i, experiment := range experiments {
 		tplExperiments[i] = &TplExperiment{
 			experiment.Title,
-			makeCategoryLinks(experiment.Categories),
+			makeTagLinks(experiment.Tags),
 			experiment.Stamp.Format(time.RFC822),
 			experiment.ExperimentFilename,
 			experiment.Status.String(),
@@ -258,16 +258,16 @@ func generateProgressPage(
 	return writeTemplate(outputFilename, tpl, tplData)
 }
 
-func generateCategoryPage(
+func generateTagPage(
 	config *config.Config,
-	categoryName string,
+	tagName string,
 ) error {
 	const tpl = `
 <!DOCTYPE html>
 <html>
 	<head>
 		{{ index .Html "head" }}
-		<title>Reports for category: {{ .Category }}</title>
+		<title>Reports for tag: {{ .Tag }}</title>
 	</head>
 
 	<body>
@@ -275,16 +275,16 @@ func generateCategoryPage(
 
 		<div id="content">
 			<div class="container">
-				<h1>Reports for category: {{ .Category }}</h1>
+				<h1>Reports for tag: {{ .Tag }}</h1>
 
 				<ul class="reports">
 					{{range .Reports}}
 						<li>
 							<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
 							Date: {{ .Stamp }}
-							Categories:
-							{{range $category, $catLink := .Categories}}
-								<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+							Tags:
+							{{range $tag, $catLink := .Tags}}
+								<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
 							{{end}}
 						</li>
 					{{end}}
@@ -297,16 +297,16 @@ func generateCategoryPage(
 </html>`
 
 	type TplReport struct {
-		Title      string
-		Categories map[string]string
-		Stamp      string
-		Filename   string
+		Title    string
+		Tags     map[string]string
+		Stamp    string
+		Filename string
 	}
 
 	type TplData struct {
-		Category string
-		Reports  []*TplReport
-		Html     map[string]template.HTML
+		Tag     string
+		Reports []*TplReport
+		Html    map[string]template.HTML
 	}
 
 	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
@@ -324,11 +324,11 @@ func generateCategoryPage(
 			if err != nil {
 				return err
 			}
-			if inStrings(categoryName, report.Categories) {
+			if inStrings(tagName, report.Tags) {
 				reportFilename := makeReportFilename(report.Stamp, report.Title)
 				tplReports[i] = &TplReport{
 					report.Title,
-					makeCategoryLinks(report.Categories),
+					makeTagLinks(report.Tags),
 					report.Stamp.Format(time.RFC822),
 					fmt.Sprintf("/reports/%s", reportFilename),
 				}
@@ -337,18 +337,18 @@ func generateCategoryPage(
 		}
 	}
 	tplReports = tplReports[:i]
-	tplData := TplData{categoryName, tplReports, makeHtml("category")}
-	fullCategoryDir := filepath.Join(
+	tplData := TplData{tagName, tplReports, makeHtml("tag")}
+	fullTagDir := filepath.Join(
 		config.WWWDir,
 		"reports",
-		"category",
-		escapeString(categoryName),
+		"tag",
+		escapeString(tagName),
 	)
 
-	if err := os.MkdirAll(fullCategoryDir, 0740); err != nil {
+	if err := os.MkdirAll(fullTagDir, 0740); err != nil {
 		return err
 	}
-	outputFilename := filepath.Join(fullCategoryDir, "index.html")
+	outputFilename := filepath.Join(fullTagDir, "index.html")
 	return writeTemplate(outputFilename, tpl, tplData)
 }
 
@@ -361,25 +361,25 @@ func inStrings(needle string, haystack []string) bool {
 	return false
 }
 
-func generateCategoryPages(config *config.Config) error {
+func generateTagPages(config *config.Config) error {
 	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
 	if err != nil {
 		return err
 	}
 
-	categoriesSeen := make(map[string]bool)
+	tagsSeen := make(map[string]bool)
 	for _, file := range reportFiles {
 		if !file.IsDir() {
 			report, err := report.LoadJson(config, file.Name())
 			if err != nil {
 				return err
 			}
-			for _, category := range report.Categories {
-				if _, ok := categoriesSeen[category]; !ok {
-					if err := generateCategoryPage(config, category); err != nil {
+			for _, tag := range report.Tags {
+				if _, ok := tagsSeen[tag]; !ok {
+					if err := generateTagPage(config, tag); err != nil {
 						return err
 					}
-					categoriesSeen[category] = true
+					tagsSeen[tag] = true
 				}
 			}
 		}
@@ -387,18 +387,18 @@ func generateCategoryPages(config *config.Config) error {
 	return nil
 }
 
-func makeCategoryLinks(categories []string) map[string]string {
-	catLinks := make(map[string]string, len(categories))
-	for _, category := range categories {
-		catLinks[category] = makeCategoryLink(category)
+func makeTagLinks(tags []string) map[string]string {
+	links := make(map[string]string, len(tags))
+	for _, tag := range tags {
+		links[tag] = makeTagLink(tag)
 	}
-	return catLinks
+	return links
 }
 
-func makeCategoryLink(category string) string {
+func makeTagLink(tag string) string {
 	return fmt.Sprintf(
-		"/reports/category/%s/",
-		escapeString(category),
+		"/reports/tag/%s/",
+		escapeString(tag),
 	)
 }
 
@@ -440,10 +440,10 @@ func generateReport(
 						<th class="last-column"> </th>
 					</tr>
 					<tr>
-						<td>Categories</td>
+						<td>Tags</td>
 						<td class="last-column">
-							{{range $category, $catLink := .Categories}}
-								<a href="{{ $catLink }}">{{ $category }}</a> &nbsp;
+							{{range $tag, $catLink := .Tags}}
+								<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
 							{{end}}<br />
 						</td>
 					</tr>
@@ -516,7 +516,7 @@ func generateReport(
 
 	type TplData struct {
 		Title              string
-		Categories         map[string]string
+		Tags               map[string]string
 		Stamp              string
 		ExperimentFilename string
 		NumRecords         int64
@@ -525,11 +525,11 @@ func generateReport(
 		Html               map[string]template.HTML
 	}
 
-	categoryLinks := makeCategoryLinks(_report.Categories)
+	tagLinks := makeTagLinks(_report.Tags)
 
 	tplData := TplData{
 		_report.Title,
-		categoryLinks,
+		tagLinks,
 		_report.Stamp.Format(time.RFC822),
 		_report.ExperimentFilename,
 		_report.NumRecords,
@@ -635,8 +635,8 @@ func makeHtmlNav(menuItem string) template.HTML {
 					<li><a href="/reports/">Reports</a></li>
 				{{end}}
 
-				{{if eq .MenuItem "category"}}
-					<li class="active"><a href=".">Category</a></li>
+				{{if eq .MenuItem "tag"}}
+					<li class="active"><a href=".">Tag</a></li>
 				{{end}}
 
 				{{if eq .MenuItem "progress"}}
@@ -653,7 +653,7 @@ func makeHtmlNav(menuItem string) template.HTML {
 	validMenuItems := []string{
 		"home",
 		"reports",
-		"category",
+		"tag",
 		"progress",
 	}
 
