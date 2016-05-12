@@ -172,7 +172,7 @@ func generateProgressPage(
 <html>
   <head>
 		{{ index .Html "head" }}
-		<!-- <meta http-equiv="refresh" content="4"> -->
+		<meta http-equiv="refresh" content="4">
     <title>Progress</title>
   </head>
 

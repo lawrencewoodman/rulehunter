@@ -19,6 +19,27 @@ ul.reports a.title {
   font-weight: bold;
 }
 
+ul.reports-progress {
+  margin-top: 2em;
+  margin-bottom: 2em;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 0;
+  list-style: none;
+}
+ul.reports-progress li {
+  padding-bottom: 1em;
+}
+ul.reports-progress span.date {
+  font-size: 120%;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+ul.reports-progress th {
+  width: 23ex;
+}
+
 table.neat-table {
   border-collapse: collapse;
   margin-bottom: 2em;
@@ -47,6 +68,26 @@ table.neat-table td {
 }
 table.neat-table td.last-column {
   border-right: 0;
+}
+
+table td.status-processing {
+  font-weight: bold;
+  color: orange;
+}
+
+table td.status-waiting {
+  font-weight: bold;
+  color: black;
+}
+
+table td.status-success {
+  font-weight: bold;
+  color: green;
+}
+
+table td.status-failure {
+  font-weight: bold;
+  color: red;
 }
 
 div.aggregators {
