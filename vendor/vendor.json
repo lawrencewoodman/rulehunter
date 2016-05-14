@@ -1,0 +1,55 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "6nmAJBw2phU9MUmkUnqFvbO5urg=",
+			"path": "github.com/kardianos/osext",
+			"revision": "29ae4ffbc9a6fe9fb2bc5029050ce6996ea1d3bc",
+			"revisionTime": "2015-12-22T15:32:29Z"
+		},
+		{
+			"checksumSHA1": "kN+8MBe3K9CA5bTH9XkfGHSnBfI=",
+			"path": "github.com/kardianos/service",
+			"revision": "d97d87340b4a0d418f4d266ca7b00ba1d31e0d5a",
+			"revisionTime": "2016-03-01T17:23:23Z"
+		},
+		{
+			"checksumSHA1": "C7Fxn2GhiszT8V51hHm7LV6pNhw=",
+			"path": "github.com/lawrencewoodman/dexpr",
+			"revision": "82c5ee0733b1e02d9178fa4fcad9085b0f631f98",
+			"revisionTime": "2016-05-12T06:13:52Z"
+		},
+		{
+			"checksumSHA1": "jedERcCgucn9ziUCbUHNpinYB1M=",
+			"path": "github.com/lawrencewoodman/dlit",
+			"revision": "ad89c4b75526941ff3b243880c4a77da236fac08",
+			"revisionTime": "2016-05-12T06:11:22Z"
+		},
+		{
+			"checksumSHA1": "EtNlR67BCGwH7ySFVB2ZWKsfPDc=",
+			"path": "github.com/lawrencewoodman/rulehunter",
+			"revision": "15c8836d3157c8cf14f2636b13aa2f1f5b25a8a7",
+			"revisionTime": "2016-05-14T05:54:51Z"
+		},
+		{
+			"checksumSHA1": "BQMW1BSokkzgxMi8PnvDf5/c9+I=",
+			"path": "github.com/lawrencewoodman/rulehunter/csvinput",
+			"revision": "15c8836d3157c8cf14f2636b13aa2f1f5b25a8a7",
+			"revisionTime": "2016-05-14T05:54:51Z"
+		},
+		{
+			"checksumSHA1": "lHeIIa7KNsymAxp6jd4v2MLZ8rc=",
+			"path": "github.com/lawrencewoodman/rulehunter/input",
+			"revision": "15c8836d3157c8cf14f2636b13aa2f1f5b25a8a7",
+			"revisionTime": "2016-05-14T05:54:51Z"
+		},
+		{
+			"checksumSHA1": "DOGRey8nHL4PizUB4You47Tfxac=",
+			"path": "github.com/lawrencewoodman/rulehunter/internal",
+			"revision": "15c8836d3157c8cf14f2636b13aa2f1f5b25a8a7",
+			"revisionTime": "2016-05-14T05:54:51Z"
+		}
+	],
+	"rootPath": "github.com/lawrencewoodman/rulehuntersrv"
+}
