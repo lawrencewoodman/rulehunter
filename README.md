@@ -9,13 +9,13 @@ These have all be vendored into the `vendor/` directory using the
 
 * [dexpr](https://github.com/lawrencewoodman/dexpr) package
 * [dlit](https://github.com/lawrencewoodman/dlit) package
-* [rulehunter](https://github.com/lawrencewoodman/rulehunter) package
+* [rulehunter](https://github.com/vlifesystems/rulehunter) package
 * [osext](https://github.com/kardianos/osext) package
 * [service](https://github.com/kardianos/service) package
 
 Contributing
 ------------
-If you want to improve this program make a pull request to the [repo](https://github.com/LawrenceWoodman/rulehuntersrv) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/LawrenceWoodman/rulehuntersrv/issues) also on github.
+If you want to improve this program make a pull request to the [repo](https://github.com/vlifesystems/rulehuntersrv) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/vlifesystems/rulehuntersrv/issues) also on github.
 
 Installation
 ------------

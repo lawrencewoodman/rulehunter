@@ -27,29 +27,29 @@
 			"revisionTime": "2016-05-12T06:11:22Z"
 		},
 		{
-			"checksumSHA1": "EtNlR67BCGwH7ySFVB2ZWKsfPDc=",
-			"path": "github.com/lawrencewoodman/rulehunter",
-			"revision": "15c8836d3157c8cf14f2636b13aa2f1f5b25a8a7",
-			"revisionTime": "2016-05-14T05:54:51Z"
+			"checksumSHA1": "TZNwDuae5YcpWom888nZQXoowjQ=",
+			"path": "github.com/vlifesystems/rulehunter",
+			"revision": "742f16ce42311ce01c8c2ff8e63f553d2f3e8150",
+			"revisionTime": "2016-05-14T07:40:31Z"
 		},
 		{
-			"checksumSHA1": "BQMW1BSokkzgxMi8PnvDf5/c9+I=",
-			"path": "github.com/lawrencewoodman/rulehunter/csvinput",
-			"revision": "15c8836d3157c8cf14f2636b13aa2f1f5b25a8a7",
-			"revisionTime": "2016-05-14T05:54:51Z"
+			"checksumSHA1": "TzGtqXFTNvYnD5hrQps0PW+ejHk=",
+			"path": "github.com/vlifesystems/rulehunter/csvinput",
+			"revision": "742f16ce42311ce01c8c2ff8e63f553d2f3e8150",
+			"revisionTime": "2016-05-14T07:40:31Z"
 		},
 		{
-			"checksumSHA1": "lHeIIa7KNsymAxp6jd4v2MLZ8rc=",
-			"path": "github.com/lawrencewoodman/rulehunter/input",
-			"revision": "15c8836d3157c8cf14f2636b13aa2f1f5b25a8a7",
-			"revisionTime": "2016-05-14T05:54:51Z"
+			"checksumSHA1": "RaHzAUmaMQCw1lCRdZN2dPr14n0=",
+			"path": "github.com/vlifesystems/rulehunter/input",
+			"revision": "742f16ce42311ce01c8c2ff8e63f553d2f3e8150",
+			"revisionTime": "2016-05-14T07:40:31Z"
 		},
 		{
-			"checksumSHA1": "DOGRey8nHL4PizUB4You47Tfxac=",
-			"path": "github.com/lawrencewoodman/rulehunter/internal",
-			"revision": "15c8836d3157c8cf14f2636b13aa2f1f5b25a8a7",
-			"revisionTime": "2016-05-14T05:54:51Z"
+			"checksumSHA1": "XtB+69bT2N6EqoUg5gMcv6l1tyw=",
+			"path": "github.com/vlifesystems/rulehunter/internal",
+			"revision": "742f16ce42311ce01c8c2ff8e63f553d2f3e8150",
+			"revisionTime": "2016-05-14T07:40:31Z"
 		}
 	],
-	"rootPath": "github.com/lawrencewoodman/rulehuntersrv"
+	"rootPath": "github.com/vlifesystems/rulehuntersrv"
 }

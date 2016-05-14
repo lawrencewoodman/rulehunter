@@ -21,10 +21,10 @@ package html
 import (
 	"bytes"
 	"fmt"
-	"github.com/lawrencewoodman/rulehunter"
-	"github.com/lawrencewoodman/rulehuntersrv/config"
-	"github.com/lawrencewoodman/rulehuntersrv/progress"
-	"github.com/lawrencewoodman/rulehuntersrv/report"
+	"github.com/vlifesystems/rulehunter"
+	"github.com/vlifesystems/rulehuntersrv/config"
+	"github.com/vlifesystems/rulehuntersrv/progress"
+	"github.com/vlifesystems/rulehuntersrv/report"
 	"hash/crc32"
 	"html/template"
 	"io/ioutil"
@@ -89,7 +89,7 @@ func generateHomePage(
 				along with this program.  If not, see
 				<a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p>
 
-				<p>The source is available on github: <a href="https://github.com/LawrenceWoodman/rulehuntersrv">https://github.com/LawrenceWoodman/rulehuntersrv</a>.</p>
+				<p>The source is available on github: <a href="https://github.com/vlifesystems/rulehuntersrv">https://github.com/vlifesystems/rulehuntersrv</a>.</p>
 
 			</div>
 		</div>

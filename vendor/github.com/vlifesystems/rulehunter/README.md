@@ -9,7 +9,7 @@ Requirements
 
 Contributing
 ------------
-If you want to improve this program make a pull request to the [repo](https://github.com/LawrenceWoodman/rulehunter) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/LawrenceWoodman/rulehunter/issues) also on github.
+If you want to improve this program make a pull request to the [repo](https://github.com/vlifesystems/rulehunter) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/vlifesystems/rulehunter/issues) also on github.
 
 
 Licence

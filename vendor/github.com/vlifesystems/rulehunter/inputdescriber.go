@@ -21,7 +21,7 @@ package rulehunter
 import (
 	"fmt"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/lawrencewoodman/rulehunter/input"
+	"github.com/vlifesystems/rulehunter/input"
 	"math"
 	"strings"
 )

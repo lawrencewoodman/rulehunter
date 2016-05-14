@@ -21,7 +21,7 @@ package rulehunter
 import (
 	"errors"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/lawrencewoodman/rulehunter/internal"
+	"github.com/vlifesystems/rulehunter/internal"
 )
 
 type ruleAssessment struct {

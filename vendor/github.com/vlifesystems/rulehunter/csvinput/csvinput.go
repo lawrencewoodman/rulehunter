@@ -22,7 +22,7 @@ import (
 	"encoding/csv"
 	"errors"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/lawrencewoodman/rulehunter/input"
+	"github.com/vlifesystems/rulehunter/input"
 	"io"
 	"os"
 )

@@ -22,8 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/lawrencewoodman/rulehunter/input"
-	"github.com/lawrencewoodman/rulehunter/internal"
+	"github.com/vlifesystems/rulehunter/input"
+	"github.com/vlifesystems/rulehunter/internal"
 	"sort"
 )
 
