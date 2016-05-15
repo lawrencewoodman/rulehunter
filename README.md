@@ -1,4 +1,4 @@
-rulehuntersrv
+Rulehuntersrv
 =============
 A server to find rules in data based on user specified goals
 
@@ -13,13 +13,16 @@ These have all be vendored into the `vendor/` directory using the
 * [osext](https://github.com/kardianos/osext) package
 * [service](https://github.com/kardianos/service) package
 
+
+To format the html pages properly [Twitter Boostrap](http://getbootstrap.com) is used and hence has been included in the `support/` directory.
+
 Contributing
 ------------
 If you want to improve this program make a pull request to the [repo](https://github.com/vlifesystems/rulehuntersrv) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/vlifesystems/rulehuntersrv/issues) also on github.
 
 Installation
 ------------
-Copy directories from `html_dependencies/` to the `wwwDir` directory specified in `config.json`.
+Copy directories from `support/bootstrap` and `support/rulehuntersrv` to the `wwwDir` directory specified in `config.json`.
 
 Testing
 -------
@@ -33,7 +36,8 @@ If you don't like ruby there is this [list of one-liner static webservers](https
 
 Licence
 -------
-rulehuntersrv - A server to find rules in data based on user specified goals
+Rulehuntersrv - A server to find rules in data based on user specified goals
+
 Copyright (C) 2016 [vLife Systems Ltd](http://vlifesystems.com)
 
 This program is free software: you can redistribute it and/or modify
@@ -52,4 +56,15 @@ along with this program; see the file COPYING.  If not, see
 
 Additional Licences
 -------------------
-This repository includes other packages in the `html_dependencies/` folder and in the `vendor/` folder.  Please see those packages for the licences that cover those works.
+
+### Twitter Boostrap
+
+This has been included in the repository under `support/bootstrap`.
+
+Copyright 2011-2015 Twitter, Inc.
+
+Licensed under the MIT license.  For details see: [http://getbootstrap.com](http://getbootstrap.com).
+
+### Vendored Go Packages
+
+This repository includes other packages in the `vendor/` directory.  Please see those packages for the licences that cover those works.
