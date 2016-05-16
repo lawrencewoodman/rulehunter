@@ -16,11 +16,15 @@
 	along with this program; see the file COPYING.  If not, see
 	<http://www.gnu.org/licenses/>.
 */
+
+// Package config handles the loading of a config file
 package config
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
+	"runtime"
 )
 
 type Config struct {
@@ -28,8 +32,10 @@ type Config struct {
 	WWWDir           string
 	BuildDir         string
 	NumRulesInReport int
+	MaxNumProcesses  int
 }
 
+// Load the configuration file from filename
 func Load(filename string) (*Config, error) {
 	var c Config
 	var f *os.File
@@ -45,6 +51,30 @@ func Load(filename string) (*Config, error) {
 	if err = dec.Decode(&c); err != nil {
 		return nil, err
 	}
-	// TODO: verify fields present and correct
+
+	if c.MaxNumProcesses < 1 {
+		c.MaxNumProcesses = runtime.NumCPU()
+	}
+
+	if c.NumRulesInReport < 1 {
+		c.NumRulesInReport = 100
+	}
+
+	if err := checkConfigValid(&c); err != nil {
+		return nil, err
+	}
 	return &c, nil
+}
+
+func checkConfigValid(c *Config) error {
+	if len(c.ExperimentsDir) == 0 {
+		return errors.New("missing field: experimentsDir")
+	}
+	if len(c.WWWDir) == 0 {
+		return errors.New("missing field: wwwDir")
+	}
+	if len(c.BuildDir) == 0 {
+		return errors.New("missing field: buildDir")
+	}
+	return nil
 }

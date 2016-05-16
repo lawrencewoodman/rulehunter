@@ -28,12 +28,11 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/report"
 	"os"
 	"path/filepath"
-	"runtime"
 )
 
 func Process(
 	experimentFilename string,
-	config *config.Config,
+	cfg *config.Config,
 	progressMonitor *progress.ProgressMonitor,
 ) error {
 	epr, err :=
@@ -43,7 +42,7 @@ func Process(
 	}
 
 	experimentFullFilename :=
-		filepath.Join(config.ExperimentsDir, experimentFilename)
+		filepath.Join(cfg.ExperimentsDir, experimentFilename)
 	experiment, tags, err := loadExperiment(experimentFullFilename)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't load experiment file: %s", err)
@@ -74,7 +73,7 @@ func Process(
 		return epr.ReportError(fullErr)
 	}
 
-	assessment, err := assessRules(rules, experiment, epr)
+	assessment, err := assessRules(rules, experiment, epr, cfg)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
@@ -89,7 +88,7 @@ func Process(
 	}
 	tweakableRules := rulehunter.TweakRules(sortedRules, fieldDescriptions)
 
-	assessment2, err := assessRules(tweakableRules, experiment, epr)
+	assessment2, err := assessRules(tweakableRules, experiment, epr, cfg)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
@@ -107,7 +106,7 @@ func Process(
 	bestNonCombinedRules := assessment3.GetRules(numRulesToCombine)
 	combinedRules := rulehunter.CombineRules(bestNonCombinedRules)
 
-	assessment4, err := assessRules(combinedRules, experiment, epr)
+	assessment4, err := assessRules(combinedRules, experiment, epr, cfg)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
@@ -122,14 +121,14 @@ func Process(
 	assessment5.Sort(experiment.SortOrder)
 	assessment5.Refine(1)
 
-	assessment6 := assessment5.LimitRuleAssessments(config.NumRulesInReport)
+	assessment6 := assessment5.LimitRuleAssessments(cfg.NumRulesInReport)
 
 	err = report.WriteJson(
 		assessment6,
 		experiment,
 		experimentFilename,
 		tags,
-		config,
+		cfg,
 	)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't write json report: %s", err)
@@ -216,13 +215,12 @@ func assessRules(
 	rules []*rulehunter.Rule,
 	experiment *rulehunter.Experiment,
 	epr *progress.ExperimentProgressReporter,
+	cfg *config.Config,
 ) (*rulehunter.Assessment, error) {
 	var assessment *rulehunter.Assessment
-	// TODO: Make this part of the config
-	maxProcesses := runtime.NumCPU()
 	c := make(chan *rulehunter.AssessRulesMPOutcome)
 
-	msg := fmt.Sprintf("Assessing rules using %d CPUs...\n", maxProcesses)
+	msg := fmt.Sprintf("Assessing rules using %d CPUs...\n", cfg.MaxNumProcesses)
 	if err := epr.ReportInfo(msg); err != nil {
 		return nil, err
 	}
@@ -232,7 +230,7 @@ func assessRules(
 		experiment.Aggregators,
 		experiment.Goals,
 		experiment.Input,
-		maxProcesses,
+		cfg.MaxNumProcesses,
 		c,
 	)
 	for o := range c {

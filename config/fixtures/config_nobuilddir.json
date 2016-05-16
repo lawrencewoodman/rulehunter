@@ -1,0 +1,6 @@
+{
+  "experimentsDir": "experiments",
+  "wwwDir": "www",
+  "numRulesInReport": 100,
+  "maxNumProcesses": 4 
+}

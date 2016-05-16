@@ -1,0 +1,6 @@
+{
+  "experimentsDir": "experiments",
+  "wwwDir": "www",
+  "buildDir": "build",
+  "maxNumProcesses": 4 
+}
