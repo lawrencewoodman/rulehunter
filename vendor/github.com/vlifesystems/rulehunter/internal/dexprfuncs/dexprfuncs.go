@@ -16,7 +16,9 @@
 	along with Rulehunter; see the file COPYING.  If not, see
 	<http://www.gnu.org/licenses/>.
 */
-package internal
+
+// Package to handle functions to be used by dexpr
+package dexprfuncs
 
 import (
 	"errors"
@@ -42,9 +44,8 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 	}
 	x, isFloat := args[0].Float()
 	if !isFloat {
-		if args[0].IsError() {
-			// TODO: Create a function in dlit to access error directly
-			return args[0], errors.New(args[0].String())
+		if err, isErr := args[0].Err(); isErr {
+			return args[0], err
 		}
 		err := errors.New(fmt.Sprintf("Can't convert to float: %s", args[0]))
 		r := dlit.MustNew(err)
@@ -52,9 +53,8 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 	}
 	p, isInt := args[1].Int()
 	if !isInt {
-		if args[1].IsError() {
-			// TODO: Create a function in dlit to access error directly
-			return args[1], errors.New(args[1].String())
+		if err, isErr := args[1].Err(); isErr {
+			return args[1], err
 		}
 		err := errors.New(fmt.Sprintf("Can't convert to int: %s", args[0]))
 		r := dlit.MustNew(err)

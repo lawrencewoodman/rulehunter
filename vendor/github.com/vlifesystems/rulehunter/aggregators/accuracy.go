@@ -16,63 +16,80 @@
 	along with Rulehunter; see the file COPYING.  If not, see
 	<http://www.gnu.org/licenses/>.
 */
-package internal
+
+package aggregators
 
 import (
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rulehunter/goal"
+	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
 )
 
-type CountAggregator struct {
+type accuracy struct {
 	name       string
 	numMatches int64
 	expr       *dexpr.Expr
 }
 
-func NewCountAggregator(name string, expr string) (*CountAggregator, error) {
+var accuracyExpr = dexpr.MustNew("roundto(100*numMatches/numRecords,2)")
+
+func newAccuracy(name string, expr string) (*accuracy, error) {
 	dexpr, err := dexpr.New(expr)
 	if err != nil {
 		return nil, err
 	}
-	ca := &CountAggregator{name: name, numMatches: 0, expr: dexpr}
+	ca :=
+		&accuracy{name: name, numMatches: 0, expr: dexpr}
 	return ca, nil
 }
 
-func (a *CountAggregator) CloneNew() Aggregator {
-	return &CountAggregator{name: a.name, numMatches: 0, expr: a.expr}
+func (a *accuracy) CloneNew() Aggregator {
+	return &accuracy{
+		name:       a.name,
+		numMatches: 0,
+		expr:       a.expr,
+	}
 }
 
-func (a *CountAggregator) GetName() string {
+func (a *accuracy) GetName() string {
 	return a.name
 }
 
-func (a *CountAggregator) GetArg() string {
+func (a *accuracy) GetArg() string {
 	return a.expr.String()
 }
 
-func (a *CountAggregator) NextRecord(record map[string]*dlit.Literal,
+func (a *accuracy) NextRecord(record map[string]*dlit.Literal,
 	isRuleTrue bool) error {
-	countExprIsTrue, err := a.expr.EvalBool(record, CallFuncs)
+	matchExprIsTrue, err := a.expr.EvalBool(record, dexprfuncs.CallFuncs)
 	if err != nil {
 		return err
 	}
-	if isRuleTrue && countExprIsTrue {
+	if isRuleTrue == matchExprIsTrue {
 		a.numMatches++
 	}
 	return nil
 }
 
-func (a *CountAggregator) GetResult(
+func (a *accuracy) GetResult(
 	aggregators []Aggregator,
-	goals []*Goal,
+	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
-	l := dlit.MustNew(a.numMatches)
-	return l
+	if numRecords == 0 {
+		return dlit.MustNew(0)
+	}
+
+	vars := map[string]*dlit.Literal{
+		"numRecords": dlit.MustNew(numRecords),
+		"numMatches": dlit.MustNew(a.numMatches),
+	}
+	return accuracyExpr.Eval(vars, dexprfuncs.CallFuncs)
 }
 
-func (a *CountAggregator) IsEqual(o Aggregator) bool {
-	if _, ok := o.(*CountAggregator); !ok {
+func (a *accuracy) IsEqual(o Aggregator) bool {
+	if _, ok := o.(*accuracy); !ok {
 		return false
 	}
 	return a.name == o.GetName() && a.GetArg() == o.GetArg()

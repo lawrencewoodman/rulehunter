@@ -16,82 +16,66 @@
 	along with Rulehunter; see the file COPYING.  If not, see
 	<http://www.gnu.org/licenses/>.
 */
-package internal
+
+package aggregators
 
 import (
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rulehunter/goal"
+	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
 )
 
-type PercentAggregator struct {
+type count struct {
 	name       string
-	numRecords int64
 	numMatches int64
 	expr       *dexpr.Expr
 }
 
-var percentExpr = dexpr.MustNew("roundto(100*numMatches/numRecords,2)")
-
-func NewPercentAggregator(name string, expr string) (*PercentAggregator, error) {
+func newCount(name string, expr string) (*count, error) {
 	dexpr, err := dexpr.New(expr)
 	if err != nil {
 		return nil, err
 	}
-	ca :=
-		&PercentAggregator{name: name, numMatches: 0, numRecords: 0, expr: dexpr}
+	ca := &count{name: name, numMatches: 0, expr: dexpr}
 	return ca, nil
 }
 
-func (a *PercentAggregator) CloneNew() Aggregator {
-	return &PercentAggregator{
-		name:       a.name,
-		numMatches: 0,
-		numRecords: 0,
-		expr:       a.expr,
-	}
+func (a *count) CloneNew() Aggregator {
+	return &count{name: a.name, numMatches: 0, expr: a.expr}
 }
 
-func (a *PercentAggregator) GetName() string {
+func (a *count) GetName() string {
 	return a.name
 }
 
-func (a *PercentAggregator) GetArg() string {
+func (a *count) GetArg() string {
 	return a.expr.String()
 }
 
-func (a *PercentAggregator) NextRecord(record map[string]*dlit.Literal,
+func (a *count) NextRecord(record map[string]*dlit.Literal,
 	isRuleTrue bool) error {
-	countExprIsTrue, err := a.expr.EvalBool(record, CallFuncs)
+	countExprIsTrue, err := a.expr.EvalBool(record, dexprfuncs.CallFuncs)
 	if err != nil {
 		return err
 	}
-	if isRuleTrue {
-		a.numRecords++
-		if countExprIsTrue {
-			a.numMatches++
-		}
+	if isRuleTrue && countExprIsTrue {
+		a.numMatches++
 	}
 	return nil
 }
 
-func (a *PercentAggregator) GetResult(
+func (a *count) GetResult(
 	aggregators []Aggregator,
-	goals []*Goal,
+	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
-	if a.numRecords == 0 {
-		return dlit.MustNew(0)
-	}
-
-	vars := map[string]*dlit.Literal{
-		"numRecords": dlit.MustNew(a.numRecords),
-		"numMatches": dlit.MustNew(a.numMatches),
-	}
-	return percentExpr.Eval(vars, CallFuncs)
+	l := dlit.MustNew(a.numMatches)
+	return l
 }
 
-func (a *PercentAggregator) IsEqual(o Aggregator) bool {
-	if _, ok := o.(*PercentAggregator); !ok {
+func (a *count) IsEqual(o Aggregator) bool {
+	if _, ok := o.(*count); !ok {
 		return false
 	}
 	return a.name == o.GetName() && a.GetArg() == o.GetArg()

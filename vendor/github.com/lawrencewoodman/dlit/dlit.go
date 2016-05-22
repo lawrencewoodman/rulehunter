@@ -156,8 +156,11 @@ func (l *Literal) String() string {
 	return l.s
 }
 
-func (l *Literal) IsError() bool {
-	return l.canBeError == yes
+func (l *Literal) Err() (error, bool) {
+	if l.canBeError == yes {
+		return l.e, true
+	}
+	return nil, false
 }
 
 type ErrInvalidKind string

@@ -16,45 +16,50 @@
 	along with Rulehunter; see the file COPYING.  If not, see
 	<http://www.gnu.org/licenses/>.
 */
-package internal
+
+package aggregators
 
 import (
+	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rulehunter/goal"
+	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
 )
 
-type GoalsPassedScoreAggregator struct {
+type calc struct {
 	name string
+	expr *dexpr.Expr
 }
 
-func NewGoalsPassedScoreAggregator(
-	name string,
-) (*GoalsPassedScoreAggregator, error) {
-	a := &GoalsPassedScoreAggregator{name: name}
-	return a, nil
+func newCalc(name string, expr string) (*calc, error) {
+	dexpr, err := dexpr.New(expr)
+	if err != nil {
+		return nil, err
+	}
+	ca := &calc{name: name, expr: dexpr}
+	return ca, nil
 }
 
-func (a *GoalsPassedScoreAggregator) CloneNew() Aggregator {
-	return &GoalsPassedScoreAggregator{name: a.name}
+func (a *calc) CloneNew() Aggregator {
+	return &calc{name: a.name, expr: a.expr}
 }
 
-func (a *GoalsPassedScoreAggregator) GetName() string {
+func (a *calc) GetName() string {
 	return a.name
 }
 
-func (a *GoalsPassedScoreAggregator) GetArg() string {
-	return ""
+func (a *calc) GetArg() string {
+	return a.expr.String()
 }
 
-func (a *GoalsPassedScoreAggregator) NextRecord(
-	record map[string]*dlit.Literal,
-	isRuleTrue bool,
-) error {
+func (a *calc) NextRecord(
+	record map[string]*dlit.Literal, isRuleTrue bool) error {
 	return nil
 }
 
-func (a *GoalsPassedScoreAggregator) GetResult(
+func (a *calc) GetResult(
 	aggregators []Aggregator,
-	goals []*Goal,
+	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
 	aggregatorsMap, err :=
@@ -62,26 +67,12 @@ func (a *GoalsPassedScoreAggregator) GetResult(
 	if err != nil {
 		return dlit.MustNew(err)
 	}
-	numGoalsPassed := 0.0
-	increment := 1.0
-	for _, goal := range goals {
-		hasPassed, err := goal.Assess(aggregatorsMap)
-		if err != nil {
-			return dlit.MustNew(err)
-		}
-
-		if hasPassed {
-			numGoalsPassed += increment
-		} else {
-			increment = 0.001
-		}
-	}
-	return dlit.MustNew(numGoalsPassed)
+	return a.expr.Eval(aggregatorsMap, dexprfuncs.CallFuncs)
 }
 
-func (a *GoalsPassedScoreAggregator) IsEqual(o Aggregator) bool {
-	if _, ok := o.(*GoalsPassedScoreAggregator); !ok {
+func (a *calc) IsEqual(o Aggregator) bool {
+	if _, ok := o.(*calc); !ok {
 		return false
 	}
-	return a.name == o.GetName()
+	return a.name == o.GetName() && a.GetArg() == o.GetArg()
 }

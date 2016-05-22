@@ -17,17 +17,14 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-// Package input describes the Input interface
-package input
+package internal
 
-import "github.com/lawrencewoodman/dlit"
+import "strings"
 
-type Input interface {
-	Clone() (Input, error)
-	Next() bool
-	Err() error
-	Read() (map[string]*dlit.Literal, error)
-	Rewind() error
-	GetFieldNames() []string
-	Close() error
+func NumDecPlaces(s string) int {
+	i := strings.IndexByte(s, '.')
+	if i > -1 {
+		return len(s) - i - 1
+	}
+	return 0
 }

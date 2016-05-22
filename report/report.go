@@ -24,7 +24,8 @@ import (
 	"fmt"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter"
+	"github.com/vlifesystems/rulehunter/assessment"
+	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"io/ioutil"
 	"os"
@@ -42,7 +43,7 @@ type Aggregator struct {
 type Assessment struct {
 	Rule        string
 	Aggregators []*Aggregator
-	Goals       []*rulehunter.GoalAssessment
+	Goals       []*assessment.GoalAssessment
 }
 
 type Report struct {
@@ -51,27 +52,28 @@ type Report struct {
 	Stamp              time.Time
 	ExperimentFilename string
 	NumRecords         int64
-	SortOrder          []rulehunter.SortField
+	SortOrder          []experiment.SortField
 	Assessments        []*Assessment
 }
 
 func WriteJson(
-	assessment *rulehunter.Assessment,
-	experiment *rulehunter.Experiment,
+	assessment *assessment.Assessment,
+	experiment *experiment.Experiment,
 	experimentFilename string,
 	tags []string,
 	config *config.Config,
 ) error {
-	assessment.Sort(experiment.SortOrder)
-	assessment.Refine(1)
+	_assessment := assessment
+	_assessment.Sort(experiment.SortOrder)
+	_assessment.Refine(1)
 
-	trueAggregators, err := getTrueAggregators(assessment)
+	trueAggregators, err := getTrueAggregators(_assessment)
 	if err != nil {
 		return err
 	}
 
-	assessments := make([]*Assessment, len(assessment.RuleAssessments))
-	for i, ruleAssessment := range assessment.RuleAssessments {
+	assessments := make([]*Assessment, len(_assessment.RuleAssessments))
+	for i, ruleAssessment := range _assessment.RuleAssessments {
 		aggregatorNames := getSortedAggregatorNames(ruleAssessment.Aggregators)
 		aggregators := make([]*Aggregator, len(ruleAssessment.Aggregators))
 		j := 0
@@ -139,7 +141,7 @@ func getSortedAggregatorNames(aggregators map[string]*dlit.Literal) []string {
 }
 
 func getTrueAggregators(
-	assessment *rulehunter.Assessment,
+	assessment *assessment.Assessment,
 ) (map[string]*dlit.Literal, error) {
 	trueRuleAssessment :=
 		assessment.RuleAssessments[len(assessment.RuleAssessments)-1]
@@ -166,7 +168,7 @@ func calcTrueAggregatorDifference(
 	}
 	difference := "N/A"
 	differenceL := diffExpr.Eval(vars, funcs)
-	if !differenceL.IsError() {
+	if _, isErr := differenceL.Err(); !isErr {
 		difference = differenceL.String()
 	}
 	return difference

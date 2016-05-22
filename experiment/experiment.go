@@ -22,7 +22,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/vlifesystems/rulehunter"
+	"github.com/vlifesystems/rulehunter/assessment"
 	"github.com/vlifesystems/rulehunter/csvinput"
+	"github.com/vlifesystems/rulehunter/experiment"
+	"github.com/vlifesystems/rulehunter/rule"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"github.com/vlifesystems/rulehuntersrv/report"
@@ -146,13 +149,13 @@ type experimentFile struct {
 	ExcludeFieldNames     []string
 	IsFirstLineFieldNames bool
 	Separator             string
-	Aggregators           []*rulehunter.AggregatorDesc
+	Aggregators           []*experiment.AggregatorDesc
 	Goals                 []string
-	SortOrder             []*rulehunter.SortDesc
+	SortOrder             []*experiment.SortDesc
 }
 
 func loadExperiment(filename string) (
-	*rulehunter.Experiment,
+	*experiment.Experiment,
 	[]string,
 	error,
 ) {
@@ -180,44 +183,25 @@ func loadExperiment(filename string) (
 	if err != nil {
 		return nil, []string{}, err
 	}
-	experimentDesc := &rulehunter.ExperimentDesc{
+	experimentDesc := &experiment.ExperimentDesc{
 		Title:         e.Title,
 		Input:         input,
-		Fields:        e.FieldNames,
 		ExcludeFields: e.ExcludeFieldNames,
 		Aggregators:   e.Aggregators,
 		Goals:         e.Goals,
 		SortOrder:     e.SortOrder,
 	}
-	experiment, err := rulehunter.MakeExperiment(experimentDesc)
+	experiment, err := experiment.New(experimentDesc)
 	return experiment, e.Tags, err
 }
 
-func prettyPrintFieldDescriptions(fds map[string]*rulehunter.FieldDescription) {
-	fmt.Println("Input Description\n")
-	for field, fd := range fds {
-		fmt.Println("--------------------------")
-		fmt.Printf("%s\n--------------------------\n", field)
-		prettyPrintFieldDescription(fd)
-	}
-	fmt.Println("\n")
-}
-
-func prettyPrintFieldDescription(fd *rulehunter.FieldDescription) {
-	fmt.Printf("Kind: %s\n", fd.Kind)
-	fmt.Printf("Min: %s\n", fd.Min)
-	fmt.Printf("Max: %s\n", fd.Max)
-	fmt.Printf("MaxDP: %d\n", fd.MaxDP)
-	fmt.Printf("Values: %s\n", fd.Values)
-}
-
 func assessRules(
-	rules []*rulehunter.Rule,
-	experiment *rulehunter.Experiment,
+	rules []*rule.Rule,
+	experiment *experiment.Experiment,
 	epr *progress.ExperimentProgressReporter,
 	cfg *config.Config,
-) (*rulehunter.Assessment, error) {
-	var assessment *rulehunter.Assessment
+) (*assessment.Assessment, error) {
+	var assessment *assessment.Assessment
 	c := make(chan *rulehunter.AssessRulesMPOutcome)
 
 	msg := fmt.Sprintf("Assessing rules using %d CPUs...\n", cfg.MaxNumProcesses)
@@ -227,9 +211,7 @@ func assessRules(
 
 	go rulehunter.AssessRulesMP(
 		rules,
-		experiment.Aggregators,
-		experiment.Goals,
-		experiment.Input,
+		experiment,
 		cfg.MaxNumProcesses,
 		c,
 	)

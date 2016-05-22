@@ -67,8 +67,8 @@ func (expr *Expr) EvalBool(
 	l := expr.Eval(vars, callFuncs)
 	if b, isBool := l.Bool(); isBool {
 		return b, nil
-	} else if l.IsError() {
-		return false, ErrInvalidExpr(l.String())
+	} else if err, isErr := l.Err(); isErr {
+		return false, ErrInvalidExpr(err.Error())
 	} else {
 		return false, ErrInvalidExpr("Expression doesn't return a bool")
 	}
@@ -110,16 +110,16 @@ func nodeToLiteral(
 	case *ast.BinaryExpr:
 		lh := nodeToLiteral(vars, callFuncs, x.X)
 		rh := nodeToLiteral(vars, callFuncs, x.Y)
-		if lh.IsError() {
+		if _, isErr := lh.Err(); isErr {
 			l = lh
-		} else if rh.IsError() {
+		} else if _, isErr := rh.Err(); isErr {
 			l = rh
 		} else {
 			l = evalBinaryExpr(lh, rh, x.Op)
 		}
 	case *ast.UnaryExpr:
 		rh := nodeToLiteral(vars, callFuncs, x.X)
-		if rh.IsError() {
+		if _, isErr := rh.Err(); isErr {
 			l = rh
 		} else {
 			l = evalUnaryExpr(rh, x.Op)
@@ -349,8 +349,9 @@ func opEql(lh *dlit.Literal, rh *dlit.Literal) *dlit.Literal {
 	// Don't compare bools as otherwise with the way that floats or ints
 	// are cast to bools you would find that "True" == 1.0 because they would
 	// both convert to true bools
-
-	if lh.IsError() || rh.IsError() {
+	_, lhIsErr := lh.Err()
+	_, rhIsErr := rh.Err()
+	if lhIsErr || rhIsErr {
 		return makeErrInvalidExprLiteralFmt(errMsg, lh, rh)
 	}
 
@@ -378,8 +379,9 @@ func opNeq(lh *dlit.Literal, rh *dlit.Literal) *dlit.Literal {
 	// Don't compare bools as otherwise with the way that floats or ints
 	// are cast to bools you would find that "True" == 1.0 because they would
 	// both convert to true bools
-
-	if lh.IsError() || rh.IsError() {
+	_, lhIsErr := lh.Err()
+	_, rhIsErr := rh.Err()
+	if lhIsErr || rhIsErr {
 		return makeErrInvalidExprLiteralFmt(errMsg, lh, rh)
 	}
 

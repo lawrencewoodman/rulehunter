@@ -17,17 +17,12 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-// Package input describes the Input interface
-package input
+package internal
 
-import "github.com/lawrencewoodman/dlit"
+import "regexp"
 
-type Input interface {
-	Clone() (Input, error)
-	Next() bool
-	Err() error
-	Read() (map[string]*dlit.Literal, error)
-	Rewind() error
-	GetFieldNames() []string
-	Close() error
+var validIdentifierRegexp = regexp.MustCompile("^[a-zA-Z]([0-9a-zA-Z_])*$")
+
+func IsIdentifierValid(identifier string) bool {
+	return validIdentifierRegexp.MatchString(identifier)
 }

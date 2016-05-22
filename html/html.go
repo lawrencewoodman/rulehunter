@@ -21,7 +21,7 @@ package html
 import (
 	"bytes"
 	"fmt"
-	"github.com/vlifesystems/rulehunter"
+	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"github.com/vlifesystems/rulehuntersrv/report"
@@ -555,7 +555,7 @@ func generateReport(
 		Stamp              string
 		ExperimentFilename string
 		NumRecords         int64
-		SortOrder          []rulehunter.SortField
+		SortOrder          []experiment.SortField
 		Assessments        []*report.Assessment
 		Html               map[string]template.HTML
 	}

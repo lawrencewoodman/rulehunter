@@ -16,20 +16,22 @@
 	along with Rulehunter; see the file COPYING.  If not, see
 	<http://www.gnu.org/licenses/>.
 */
-package rulehunter
+
+// Package experiment handles initialization and validation of experiment
+package experiment
 
 import (
 	"errors"
 	"fmt"
+	"github.com/vlifesystems/rulehunter/aggregators"
+	"github.com/vlifesystems/rulehunter/goal"
 	"github.com/vlifesystems/rulehunter/input"
 	"github.com/vlifesystems/rulehunter/internal"
-	"regexp"
 )
 
 type ExperimentDesc struct {
 	Title         string
 	Input         input.Input
-	Fields        []string
 	ExcludeFields []string
 	Aggregators   []*AggregatorDesc
 	Goals         []string
@@ -50,10 +52,9 @@ type SortDesc struct {
 type Experiment struct {
 	Title             string
 	Input             input.Input
-	FieldNames        []string
 	ExcludeFieldNames []string
-	Aggregators       []internal.Aggregator
-	Goals             []*internal.Goal
+	Aggregators       []aggregators.Aggregator
+	Goals             []*goal.Goal
 	SortOrder         []SortField
 }
 
@@ -76,9 +77,10 @@ func (d direction) String() string {
 	return "descending"
 }
 
-func MakeExperiment(e *ExperimentDesc) (*Experiment, error) {
-	var goals []*internal.Goal
-	var aggregators []internal.Aggregator
+// Create a new Experiment from the description
+func New(e *ExperimentDesc) (*Experiment, error) {
+	var goals []*goal.Goal
+	var aggregators []aggregators.Aggregator
 	var sortOrder []SortField
 	var err error
 
@@ -103,7 +105,6 @@ func MakeExperiment(e *ExperimentDesc) (*Experiment, error) {
 	return &Experiment{
 		Title:             e.Title,
 		Input:             e.Input,
-		FieldNames:        e.Fields,
 		ExcludeFieldNames: e.ExcludeFields,
 		Aggregators:       aggregators,
 		Goals:             goals,
@@ -116,38 +117,16 @@ func (e *Experiment) Close() error {
 }
 
 func checkExperimentDescValid(e *ExperimentDesc) error {
-	if len(e.Fields) < 2 {
-		return errors.New("Must specify at least two field names")
-	}
-	err := checkSortDescsValid(e)
-	if err != nil {
+	if err := checkSortDescsValid(e); err != nil {
 		return err
 	}
 
-	err = checkFieldsValid(e)
-	if err != nil {
+	if err := checkExcludeFieldsValid(e); err != nil {
 		return err
 	}
 
-	err = checkExcludeFieldsValid(e)
-	if err != nil {
+	if err := checkAggregatorsValid(e); err != nil {
 		return err
-	}
-
-	err = checkAggregatorsValid(e)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-var validIdentifierRegexp = regexp.MustCompile("^[a-zA-z]([0-9a-zA-z_])*$")
-
-func checkFieldsValid(e *ExperimentDesc) error {
-	for _, field := range e.Fields {
-		if !validIdentifierRegexp.MatchString(field) {
-			return fmt.Errorf("Invalid field name: %s", field)
-		}
 	}
 	return nil
 }
@@ -177,37 +156,38 @@ func checkSortDescsValid(e *ExperimentDesc) error {
 }
 
 func checkExcludeFieldsValid(e *ExperimentDesc) error {
+	fieldNames := e.Input.GetFieldNames()
 	for _, excludeField := range e.ExcludeFields {
-		found := false
-		for _, field := range e.Fields {
-			if excludeField == field {
-				found = true
-				break
-			}
+		if !internal.IsIdentifierValid(excludeField) {
+			return fmt.Errorf("Invalid exclude field: %s", excludeField)
 		}
-		if !found {
+		if !isStringInSlice(excludeField, fieldNames) {
 			return fmt.Errorf("Invalid exclude field: %s", excludeField)
 		}
 	}
 	return nil
 }
 
+func isStringInSlice(needle string, haystack []string) bool {
+	for _, s := range haystack {
+		if needle == s {
+			return true
+		}
+	}
+	return false
+}
+
 func checkAggregatorsValid(e *ExperimentDesc) error {
+	fieldNames := e.Input.GetFieldNames()
 	for _, aggregator := range e.Aggregators {
-		if !validIdentifierRegexp.MatchString(aggregator.Name) {
+		if !internal.IsIdentifierValid(aggregator.Name) {
 			return fmt.Errorf("Invalid aggregator name: %s", aggregator.Name)
 		}
-		nameClash := false
-		for _, field := range e.Fields {
-			if aggregator.Name == field {
-				nameClash = true
-				break
-			}
-		}
-		if nameClash {
+		if isStringInSlice(aggregator.Name, fieldNames) {
 			return fmt.Errorf("Aggregator name clashes with field name: %s",
 				aggregator.Name)
-		} else if aggregator.Name == "percentMatches" ||
+		}
+		if aggregator.Name == "percentMatches" ||
 			aggregator.Name == "numMatches" ||
 			aggregator.Name == "numGoalsPassed" {
 			return fmt.Errorf("Aggregator name reserved: %s", aggregator.Name)
@@ -216,17 +196,17 @@ func checkAggregatorsValid(e *ExperimentDesc) error {
 	return nil
 }
 
-func makeGoal(expr string) (*internal.Goal, error) {
-	r, err := internal.NewGoal(expr)
+func makeGoal(expr string) (*goal.Goal, error) {
+	r, err := goal.New(expr)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Can't make goal: %s", err))
 	}
 	return r, nil
 }
 
-func makeGoals(exprs []string) ([]*internal.Goal, error) {
+func makeGoals(exprs []string) ([]*goal.Goal, error) {
 	var err error
-	r := make([]*internal.Goal, len(exprs))
+	r := make([]*goal.Goal, len(exprs))
 	for i, s := range exprs {
 		r[i], err = makeGoal(s)
 		if err != nil {
@@ -236,42 +216,13 @@ func makeGoals(exprs []string) ([]*internal.Goal, error) {
 	return r, nil
 }
 
-func makeAggregator(name, aggType, arg string) (internal.Aggregator, error) {
-	var r internal.Aggregator
-	var err error
-	switch aggType {
-	case "accuracy":
-		r, err = internal.NewAccuracyAggregator(name, arg)
-		return r, err
-	case "calc":
-		r, err = internal.NewCalcAggregator(name, arg)
-		return r, err
-	case "count":
-		r, err = internal.NewCountAggregator(name, arg)
-		return r, err
-	case "percent":
-		r, err = internal.NewPercentAggregator(name, arg)
-		return r, err
-	case "sum":
-		r, err = internal.NewSumAggregator(name, arg)
-		return r, err
-	default:
-		err = errors.New("Unrecognized aggregator")
-	}
-	if err != nil {
-		// TODO: Make custome error type
-		err = errors.New(fmt.Sprintf("Can't make aggregator: %s", err))
-	}
-	return r, err
-}
-
 func makeAggregators(
 	eAggregators []*AggregatorDesc,
-) ([]internal.Aggregator, error) {
+) ([]aggregators.Aggregator, error) {
 	var err error
-	r := make([]internal.Aggregator, len(eAggregators))
+	r := make([]aggregators.Aggregator, len(eAggregators))
 	for i, ea := range eAggregators {
-		r[i], err = makeAggregator(ea.Name, ea.Function, ea.Arg)
+		r[i], err = aggregators.New(ea.Name, ea.Function, ea.Arg)
 		if err != nil {
 			return r, err
 		}
