@@ -24,35 +24,35 @@ import (
 	"github.com/vlifesystems/rulehunter/goal"
 )
 
-type goalsPassedScore struct {
+type goalsScore struct {
 	name string
 }
 
-func newGoalsPassedScore(name string) (*goalsPassedScore, error) {
-	a := &goalsPassedScore{name: name}
+func newGoalsScore(name string) (*goalsScore, error) {
+	a := &goalsScore{name: name}
 	return a, nil
 }
 
-func (a *goalsPassedScore) CloneNew() Aggregator {
-	return &goalsPassedScore{name: a.name}
+func (a *goalsScore) CloneNew() Aggregator {
+	return &goalsScore{name: a.name}
 }
 
-func (a *goalsPassedScore) GetName() string {
+func (a *goalsScore) GetName() string {
 	return a.name
 }
 
-func (a *goalsPassedScore) GetArg() string {
+func (a *goalsScore) GetArg() string {
 	return ""
 }
 
-func (a *goalsPassedScore) NextRecord(
+func (a *goalsScore) NextRecord(
 	record map[string]*dlit.Literal,
 	isRuleTrue bool,
 ) error {
 	return nil
 }
 
-func (a *goalsPassedScore) GetResult(
+func (a *goalsScore) GetResult(
 	aggregators []Aggregator,
 	goals []*goal.Goal,
 	numRecords int64,
@@ -62,7 +62,7 @@ func (a *goalsPassedScore) GetResult(
 	if err != nil {
 		return dlit.MustNew(err)
 	}
-	numGoalsPassed := 0.0
+	goalsScore := 0.0
 	increment := 1.0
 	for _, goal := range goals {
 		hasPassed, err := goal.Assess(aggregatorsMap)
@@ -71,16 +71,16 @@ func (a *goalsPassedScore) GetResult(
 		}
 
 		if hasPassed {
-			numGoalsPassed += increment
+			goalsScore += increment
 		} else {
 			increment = 0.001
 		}
 	}
-	return dlit.MustNew(numGoalsPassed)
+	return dlit.MustNew(goalsScore)
 }
 
-func (a *goalsPassedScore) IsEqual(o Aggregator) bool {
-	if _, ok := o.(*goalsPassedScore); !ok {
+func (a *goalsScore) IsEqual(o Aggregator) bool {
+	if _, ok := o.(*goalsScore); !ok {
 		return false
 	}
 	return a.name == o.GetName()

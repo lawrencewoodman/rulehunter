@@ -39,7 +39,7 @@ type Aggregator interface {
 // Create a new Aggregator where 'name' is what the aggregator will be
 // known as, 'aggType' is the type of the Aggregator and 'args' are any
 // arguments to pass to the Aggregator.  The valid values for 'aggType'
-// are: accuracy, calc, count, percent, sum, goalspassedscore.
+// are: accuracy, calc, count, percent, sum, goalsscore.
 func New(name string, aggType string, args ...string) (Aggregator, error) {
 	var r Aggregator
 	var err error
@@ -78,11 +78,11 @@ func New(name string, aggType string, args ...string) (Aggregator, error) {
 			return r, err
 		}
 		r, err = newSum(name, args[0])
-	case "goalspassedscore":
+	case "goalsscore":
 		if err = checkArgs(0); err != nil {
 			return r, err
 		}
-		r, err = newGoalsPassedScore(name)
+		r, err = newGoalsScore(name)
 	default:
 		err = fmt.Errorf("Unrecognized aggregator: %s", aggType)
 	}

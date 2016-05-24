@@ -241,14 +241,14 @@ func addDefaultAggregators(
 	if err != nil {
 		return newAggregators, err
 	}
-	goalsPassedScoreAggregator, err :=
-		aggregators.New("numGoalsPassed", "goalspassedscore")
+	goalsScoreAggregator, err :=
+		aggregators.New("goalsScore", "goalsscore")
 	if err != nil {
 		return newAggregators, err
 	}
 	newAggregators[0] = numMatchesAggregator
 	newAggregators[1] = percentMatchesAggregator
 	newAggregators = append(newAggregators, _aggregators...)
-	newAggregators = append(newAggregators, goalsPassedScoreAggregator)
+	newAggregators = append(newAggregators, goalsScoreAggregator)
 	return newAggregators, nil
 }

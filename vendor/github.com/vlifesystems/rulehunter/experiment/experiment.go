@@ -148,7 +148,7 @@ func checkSortDescsValid(e *ExperimentDesc) error {
 		if !nameFound &&
 			sortName != "percentMatches" &&
 			sortName != "numMatches" &&
-			sortName != "numGoalsPassed" {
+			sortName != "goalsScore" {
 			return fmt.Errorf("Invalid sort field: %s", sortName)
 		}
 	}
@@ -189,7 +189,7 @@ func checkAggregatorsValid(e *ExperimentDesc) error {
 		}
 		if aggregator.Name == "percentMatches" ||
 			aggregator.Name == "numMatches" ||
-			aggregator.Name == "numGoalsPassed" {
+			aggregator.Name == "goalsScore" {
 			return fmt.Errorf("Aggregator name reserved: %s", aggregator.Name)
 		}
 	}
