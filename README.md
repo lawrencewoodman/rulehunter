@@ -18,6 +18,8 @@ To format the html pages properly [Twitter Boostrap](http://getbootstrap.com) is
 
 Contributing
 ------------
+[![Build Status](https://travis-ci.org/vlifesystems/rulehuntersrv.svg?branch=master)](https://travis-ci.org/vlifesystems/rulehuntersrv)
+
 If you want to improve this program make a pull request to the [repo](https://github.com/vlifesystems/rulehuntersrv) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/vlifesystems/rulehuntersrv/issues) also on github.
 
 Installation
