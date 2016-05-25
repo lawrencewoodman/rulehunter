@@ -27,3 +27,17 @@ const (
 	Progress
 	Reports
 )
+
+func (c Cmd) String() string {
+	switch c {
+	case All:
+		return "all"
+	case Flush:
+		return "flush"
+	case Progress:
+		return "progress"
+	case Reports:
+		return "reports"
+	}
+	return "error"
+}

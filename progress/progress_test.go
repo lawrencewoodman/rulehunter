@@ -2,10 +2,12 @@ package progress
 
 import (
 	"fmt"
+	"github.com/vlifesystems/rulehuntersrv/html/cmd"
 	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -59,7 +61,10 @@ func TestGetExperiments(t *testing.T) {
 		t.Errorf("copyFile() err: %s", err)
 		return
 	}
-	pm := NewMonitor(tempDir)
+	htmlCmds := make(chan cmd.Cmd)
+	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.run()
+	pm := NewMonitor(tempDir, htmlCmds)
 	got, err := pm.GetExperiments()
 	if err != nil {
 		t.Errorf("GetExperiments() err: %s", err)
@@ -79,7 +84,10 @@ func TestGetExperiments_notExists(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	pm := NewMonitor(tempDir)
+	htmlCmds := make(chan cmd.Cmd)
+	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.run()
+	pm := NewMonitor(tempDir, htmlCmds)
 	experiments, err := pm.GetExperiments()
 	if err != nil {
 		t.Errorf("GetExperiments() err: %s", err)
@@ -138,7 +146,10 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		t.Errorf("copyFile() err: %s", err)
 		return
 	}
-	pm := NewMonitor(tempDir)
+	htmlCmds := make(chan cmd.Cmd)
+	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.run()
+	pm := NewMonitor(tempDir, htmlCmds)
 	if err := pm.AddExperiment("bank-divorced.json"); err != nil {
 		t.Errorf("AddExperiment() err: %s", err)
 		return
@@ -154,15 +165,15 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 	}
 }
 
-func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
-	expected := []*Experiment{
+func TestReportSuccess(t *testing.T) {
+	wantExperiments := []*Experiment{
 		&Experiment{
 			Title:              "",
 			Tags:               []string{},
 			Stamp:              time.Now(),
-			ExperimentFilename: "bank-credit.json",
-			Msg:                "Waiting to be processed",
-			Status:             Waiting,
+			ExperimentFilename: "bank-full-divorced.json",
+			Msg:                "Finished processing successfully",
+			Status:             Success,
 		},
 		&Experiment{
 			Title:              "This is a jolly nice title",
@@ -171,14 +182,6 @@ func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
 			ExperimentFilename: "bank-tiny.json",
 			Msg:                "Finished processing successfully",
 			Status:             Success,
-		},
-		&Experiment{
-			Title:              "Who is more likely to be divorced",
-			Tags:               []string{},
-			Stamp:              mustParseTime("2016-05-05T09:36:59.762587932+01:00"),
-			ExperimentFilename: "bank-full-divorced.json",
-			Msg:                "Waiting to be processed",
-			Status:             Waiting,
 		},
 		&Experiment{
 			Title:              "Who is more likely to be divorced",
@@ -197,6 +200,7 @@ func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
 			Status:             Failure,
 		},
 	}
+	wantHtmlCmdsReceived := []cmd.Cmd{cmd.Progress, cmd.Progress, cmd.Reports}
 
 	tempDir, err := ioutil.TempDir("", "progress_test")
 	if err != nil {
@@ -210,25 +214,62 @@ func TestAddExperiment_experiment_doesnt_exist(t *testing.T) {
 		t.Errorf("copyFile() err: %s", err)
 		return
 	}
-	pm := NewMonitor(tempDir)
-	if err := pm.AddExperiment("bank-credit.json"); err != nil {
-		t.Errorf("AddExperiment() err: %s", err)
+	htmlCmds := make(chan cmd.Cmd)
+	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.run()
+	pm := NewMonitor(tempDir, htmlCmds)
+	epr, err := NewExperimentProgressReporter(pm, "bank-full-divorced.json")
+	if err != nil {
+		t.Errorf("NewExperimentProgressReporter(pm, \"bank-full-divorced.json\") err: %s", err)
 		return
 	}
+
+	epr.ReportSuccess()
 	got, err := pm.GetExperiments()
 	if err != nil {
 		t.Errorf("GetExperiments() err: %s", err)
 		return
 	}
-	experimentsMatch, matchMsg := doExperimentsMatch(got, expected)
+	experimentsMatch, matchMsg := doExperimentsMatch(got, wantExperiments)
 	if !experimentsMatch {
-		t.Errorf("doExperimentsMatch() msg: %s", matchMsg)
+		t.Errorf("doExperimentsMatch() msg: %s, got: %s", matchMsg, got)
+	}
+	sleep(1)
+	close(htmlCmds)
+	htmlCmdsReceived := cmdMonitor.getCmdsReceived()
+	if !reflect.DeepEqual(htmlCmdsReceived, wantHtmlCmdsReceived) {
+		t.Errorf("getCmdsRecevied() received commands - got: %s, want: %s",
+			htmlCmdsReceived, wantHtmlCmdsReceived)
 	}
 }
 
 /**************************************
  *   Helper functions
  **************************************/
+
+func sleep(s int) {
+	sleepInSeconds := time.Duration(s)
+	time.Sleep(sleepInSeconds * time.Second)
+}
+
+type htmlCmdMonitor struct {
+	htmlCmds     chan cmd.Cmd
+	cmdsReceived []cmd.Cmd
+}
+
+func newHtmlCmdMonitor(cmds chan cmd.Cmd) *htmlCmdMonitor {
+	return &htmlCmdMonitor{cmds, []cmd.Cmd{}}
+}
+
+func (h *htmlCmdMonitor) run() {
+	for c := range h.htmlCmds {
+		h.cmdsReceived = append(h.cmdsReceived, c)
+	}
+}
+
+func (h *htmlCmdMonitor) getCmdsReceived() []cmd.Cmd {
+	return h.cmdsReceived
+}
 
 func copyFile(srcFilename, dstDir string) error {
 	contents, err := ioutil.ReadFile(srcFilename)
