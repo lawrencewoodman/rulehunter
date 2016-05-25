@@ -79,20 +79,13 @@ func (p *program) run() {
 			if err != nil {
 				logger.Errorf("Failed processing experiment: %s - %s",
 					experimentFilename, err)
-				err := p.moveExperimentToFail(experimentFilename)
-				if err != nil {
-					fullErr := fmt.Errorf("%s (Couldn't move experiment file: %s)", err)
-					logger.Error(fullErr)
-				}
 			} else {
-				err := p.moveExperimentToSuccess(experimentFilename)
-				if err != nil {
-					fullErr := fmt.Errorf("Couldn't move experiment file: %s", err)
-					logger.Error(fullErr)
-				} else {
-					logger.Infof("Successfully processed experiment: %s",
-						experimentFilename)
-				}
+				logger.Infof("Successfully processed experiment: %s",
+					experimentFilename)
+			}
+			if err := p.moveExperimentToProcessed(experimentFilename); err != nil {
+				fullErr := fmt.Errorf("Couldn't move experiment file: %s", err)
+				logger.Error(fullErr)
 			}
 		}
 
@@ -116,20 +109,12 @@ func (p *program) getExperimentFilenames() ([]string, error) {
 	return experimentFilenames, nil
 }
 
-func (p *program) moveExperimentToSuccess(experimentFilename string) error {
+func (p *program) moveExperimentToProcessed(experimentFilename string) error {
 	experimentFullFilename :=
 		filepath.Join(p.config.ExperimentsDir, experimentFilename)
-	experimentSuccessFullFilename :=
-		filepath.Join(p.config.ExperimentsDir, "success", experimentFilename)
-	return os.Rename(experimentFullFilename, experimentSuccessFullFilename)
-}
-
-func (p *program) moveExperimentToFail(experimentFilename string) error {
-	experimentFullFilename :=
-		filepath.Join(p.config.ExperimentsDir, experimentFilename)
-	experimentFailFullFilename :=
-		filepath.Join(p.config.ExperimentsDir, "fail", experimentFilename)
-	return os.Rename(experimentFullFilename, experimentFailFullFilename)
+	experimentProcessedFullFilename :=
+		filepath.Join(p.config.ExperimentsDir, "processed", experimentFilename)
+	return os.Rename(experimentFullFilename, experimentProcessedFullFilename)
 }
 
 func (p *program) Stop(s service.Service) error {
