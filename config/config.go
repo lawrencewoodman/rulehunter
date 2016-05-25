@@ -31,6 +31,7 @@ type Config struct {
 	ExperimentsDir   string
 	WWWDir           string
 	BuildDir         string
+	SourceURL        string
 	NumRulesInReport int
 	MaxNumProcesses  int
 }
@@ -58,6 +59,10 @@ func Load(filename string) (*Config, error) {
 
 	if c.NumRulesInReport < 1 {
 		c.NumRulesInReport = 100
+	}
+
+	if c.SourceURL == "" {
+		c.SourceURL = "https://github.com/vlifesystems/rulehuntersrv"
 	}
 
 	if err := checkConfigValid(&c); err != nil {

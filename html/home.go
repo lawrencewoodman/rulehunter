@@ -31,11 +31,13 @@ func generateHomePage(
 	progressMonitor *progress.ProgressMonitor,
 ) error {
 	type TplData struct {
-		Html map[string]template.HTML
+		Html      map[string]template.HTML
+		SourceURL string
 	}
 
 	tplData := TplData{
 		makeHtml("home"),
+		config.SourceURL,
 	}
 
 	outputFilename := filepath.Join(config.WWWDir, "index.html")

@@ -53,7 +53,7 @@ const homeTpl = `
 				along with this program.  If not, see
 				<a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p>
 
-				<p>The source is available on github: <a href="https://github.com/vlifesystems/rulehuntersrv">https://github.com/vlifesystems/rulehuntersrv</a>.</p>
+				<p>The source code is available at: <a href="{{ .SourceURL }}">{{ .SourceURL }}</a>.</p>
 
 			</div>
 		</div>
