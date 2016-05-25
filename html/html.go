@@ -22,7 +22,9 @@ package html
 import (
 	"bytes"
 	"fmt"
+	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehuntersrv/config"
+	"github.com/vlifesystems/rulehuntersrv/html/cmd"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"hash/crc32"
 	"html/template"
@@ -32,21 +34,86 @@ import (
 	"time"
 )
 
-func Generate(
+// This should be run as a goroutine and each time a command is passed to
+// cmds the html will be generated
+func Run(
 	config *config.Config,
-	progressMonitor *progress.ProgressMonitor,
-) error {
-	if err := generateHomePage(config, progressMonitor); err != nil {
-		return err
+	pm *progress.ProgressMonitor,
+	logger service.Logger,
+	cmds chan cmd.Cmd,
+) {
+	const minWaitSeconds = 4.0
+	lastCmd := cmd.Flush
+	lastTime := time.Now()
+
+	go pulse(cmds)
+	for c := range cmds {
+		durationSinceLast := time.Since(lastTime)
+		if c != lastCmd || durationSinceLast.Seconds() > minWaitSeconds {
+			if c == cmd.Flush {
+				c = lastCmd
+				lastCmd = cmd.Flush
+			} else {
+				lastCmd = c
+			}
+			lastTime = time.Now()
+			if err := generate(c, config, pm); err != nil {
+				fullErr := fmt.Errorf("Couldn't generate report: %s", err)
+				// TODO: Work out if this is thread safe
+				logger.Error(fullErr)
+			}
+		}
 	}
-	if err := generateReports(config, progressMonitor); err != nil {
-		return err
-	}
-	if err := generateTagPages(config); err != nil {
-		return err
-	}
-	return generateProgressPage(config, progressMonitor)
 }
+
+// This is used where a command has been received such as when a report has
+// finished, but the correct time hasn't elapsed before generating html.
+// Therefore a pulse is periodically sent to flush the command.
+func pulse(cmds chan cmd.Cmd) {
+	sleepInSeconds := time.Duration(4)
+	for {
+		cmds <- cmd.Flush
+		time.Sleep(sleepInSeconds * time.Second)
+	}
+}
+
+func generate(
+	c cmd.Cmd,
+	config *config.Config,
+	pm *progress.ProgressMonitor,
+) error {
+	switch c {
+	case cmd.Progress:
+		if err := generateProgressPage(config, pm); err != nil {
+			return err
+		}
+	case cmd.Reports:
+		if err := generateReports(config, pm); err != nil {
+			return err
+		}
+		if err := generateTagPages(config); err != nil {
+			return err
+		}
+		if err := generateProgressPage(config, pm); err != nil {
+			return err
+		}
+	case cmd.All:
+		if err := generateHomePage(config, pm); err != nil {
+			return err
+		}
+		if err := generateReports(config, pm); err != nil {
+			return err
+		}
+		if err := generateTagPages(config); err != nil {
+			return err
+		}
+		if err := generateProgressPage(config, pm); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func inStrings(needle string, haystack []string) bool {
 	for _, v := range haystack {
 		if v == needle {

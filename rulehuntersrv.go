@@ -25,6 +25,7 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/experiment"
 	"github.com/vlifesystems/rulehuntersrv/html"
+	"github.com/vlifesystems/rulehuntersrv/html/cmd"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"io/ioutil"
 	"log"
@@ -42,7 +43,6 @@ type program struct {
 }
 
 func (p *program) Start(s service.Service) error {
-	go p.startReportGenerator()
 	go p.run()
 	return nil
 }
@@ -136,19 +136,6 @@ func (p *program) Stop(s service.Service) error {
 	return nil
 }
 
-func (p *program) startReportGenerator() {
-	sleepInSeconds := time.Duration(4)
-	for {
-		if err := html.Generate(p.config, p.progressMonitor); err != nil {
-			fullErr := fmt.Errorf("Couldn't generate report: %s", err)
-			// TODO: Work out if this is thread safe
-			logger.Error(fullErr)
-		}
-		// Sleeping prevents 'excessive' cpu use and disk access
-		time.Sleep(sleepInSeconds * time.Second)
-	}
-}
-
 func main() {
 	svcConfig := &service.Config{
 		Name:        "GoTestService",
@@ -179,8 +166,9 @@ func main() {
 	}
 	prg.config = config
 
+	htmlCmds := make(chan cmd.Cmd)
 	prg.progressMonitor =
-		progress.NewMonitor(filepath.Join(config.BuildDir, "progress"))
+		progress.NewMonitor(filepath.Join(config.BuildDir, "progress"), htmlCmds)
 
 	s, err := service.New(prg, svcConfig)
 	if err != nil {
@@ -190,6 +178,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	go html.Run(config, prg.progressMonitor, logger, htmlCmds)
+	htmlCmds <- cmd.All
 
 	if *installPtr {
 		if *configDirPtr == "" {

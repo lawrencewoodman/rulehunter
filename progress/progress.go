@@ -21,6 +21,7 @@ package progress
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/vlifesystems/rulehuntersrv/html/cmd"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -75,15 +76,20 @@ func (epr *ExperimentProgressReporter) ReportError(err error) error {
 }
 
 func (epr *ExperimentProgressReporter) ReportSuccess() error {
-	return epr.pm.updateExperiment(
+	err := epr.pm.updateExperiment(
 		epr.experimentFilename,
 		Success,
 		"Finished processing successfully",
 	)
+	if err == nil {
+		epr.pm.htmlCmds <- cmd.Reports
+	}
+	return err
 }
 
 type ProgressMonitor struct {
 	progressFilename string
+	htmlCmds         chan cmd.Cmd
 }
 
 type StatusKind int
@@ -122,9 +128,10 @@ func (s StatusKind) String() string {
 	panic("Unrecognized status")
 }
 
-func NewMonitor(progressDir string) *ProgressMonitor {
+func NewMonitor(progressDir string, htmlCmds chan cmd.Cmd) *ProgressMonitor {
 	return &ProgressMonitor{
 		filepath.Join(progressDir, "progress.json"),
+		htmlCmds,
 	}
 }
 
@@ -153,7 +160,11 @@ func (pm *ProgressMonitor) AddExperiment(
 	}
 	newExperiments = newExperiments[:i]
 	newExperiments = append(newExperiments, newExperiment)
-	return pm.writeJson(newExperiments)
+	err = pm.writeJson(newExperiments)
+	if err == nil {
+		pm.htmlCmds <- cmd.Progress
+	}
+	return err
 }
 
 func (pm *ProgressMonitor) GetExperiments() ([]*Experiment, error) {
@@ -198,7 +209,11 @@ func (pm *ProgressMonitor) updateExperimentDetails(
 		return fmt.Errorf("Can't update experiment details for: %s",
 			experimentFilename)
 	}
-	return pm.writeJson(experiments)
+	err = pm.writeJson(experiments)
+	if err == nil {
+		pm.htmlCmds <- cmd.Progress
+	}
+	return err
 }
 
 func (pm *ProgressMonitor) updateExperiment(
@@ -218,7 +233,11 @@ func (pm *ProgressMonitor) updateExperiment(
 		return fmt.Errorf("Can't update experiment with filename: %s",
 			experimentFilename)
 	}
-	return pm.writeJson(experiments)
+	err = pm.writeJson(experiments)
+	if err == nil {
+		pm.htmlCmds <- cmd.Progress
+	}
+	return err
 }
 
 // Returns index of found experiment or -1 if not found
