@@ -26,19 +26,22 @@ import (
 	"html/template"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"time"
 )
+
+type TplReport struct {
+	Title    string
+	Tags     map[string]string
+	DateTime string
+	Filename string
+	Stamp    time.Time
+}
 
 func generateReports(
 	config *config.Config,
 	progressMonitor *progress.ProgressMonitor,
 ) error {
-	type TplReport struct {
-		Title    string
-		Tags     map[string]string
-		Stamp    string
-		Filename string
-	}
 
 	type TplData struct {
 		Reports []*TplReport
@@ -69,10 +72,12 @@ func generateReports(
 				makeTagLinks(report.Tags),
 				report.Stamp.Format(time.RFC822),
 				reportFilename,
+				report.Stamp,
 			}
 		}
 		i++
 	}
+	sortTplReportsByDate(tplReports)
 	tplData := TplData{
 		tplReports,
 		makeHtml("reports"),
@@ -80,4 +85,19 @@ func generateReports(
 
 	outputFilename := filepath.Join(config.WWWDir, "reports", "index.html")
 	return writeTemplate(outputFilename, reportsTpl, tplData)
+}
+
+// byDate implements sort.Interface for []*TplReport
+type byDate []*TplReport
+
+func (r byDate) Len() int { return len(r) }
+func (r byDate) Swap(i, j int) {
+	r[i], r[j] = r[j], r[i]
+}
+func (r byDate) Less(i, j int) bool {
+	return r[j].Stamp.Before(r[i].Stamp)
+}
+
+func sortTplReportsByDate(tplReports []*TplReport) {
+	sort.Sort(byDate(tplReports))
 }

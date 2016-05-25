@@ -182,7 +182,7 @@ func (pm *ProgressMonitor) GetExperiments() ([]*Experiment, error) {
 	if err = dec.Decode(&progress); err != nil {
 		return []*Experiment{}, err
 	}
-	sort.Sort(sort.Reverse(progress))
+	sort.Sort(progress)
 	return progress.Experiments, nil
 }
 
@@ -270,5 +270,5 @@ func (p Progress) Swap(i, j int) {
 }
 
 func (p Progress) Less(i, j int) bool {
-	return p.Experiments[i].Stamp.Before(p.Experiments[j].Stamp)
+	return p.Experiments[j].Stamp.Before(p.Experiments[i].Stamp)
 }

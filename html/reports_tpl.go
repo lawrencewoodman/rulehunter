@@ -39,7 +39,7 @@ const reportsTpl = `
 					{{range .Reports}}
 						<li>
 							<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
-							Date: {{ .Stamp }}
+							Date: {{ .DateTime }}
 							Tags:
 							{{range $tag, $catLink := .Tags}}
 								<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
