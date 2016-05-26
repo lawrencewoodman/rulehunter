@@ -27,7 +27,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 func generateTagPages(config *config.Config) error {
@@ -57,13 +56,6 @@ func generateTagPages(config *config.Config) error {
 }
 
 func generateTagPage(config *config.Config, tagName string) error {
-	type TplReport struct {
-		Title    string
-		Tags     map[string]string
-		Stamp    string
-		Filename string
-	}
-
 	type TplData struct {
 		Tag     string
 		Reports []*TplReport
@@ -87,17 +79,18 @@ func generateTagPage(config *config.Config, tagName string) error {
 			}
 			if inStrings(tagName, report.Tags) {
 				reportFilename := makeReportFilename(report.Stamp, report.Title)
-				tplReports[i] = &TplReport{
+				tplReports[i] = newTplReport(
 					report.Title,
 					makeTagLinks(report.Tags),
-					report.Stamp.Format(time.RFC822),
 					fmt.Sprintf("/reports/%s", reportFilename),
-				}
+					report.Stamp,
+				)
 				i++
 			}
 		}
 	}
 	tplReports = tplReports[:i]
+	sortTplReportsByDate(tplReports)
 	tplData := TplData{tagName, tplReports, makeHtml("tag")}
 	fullTagDir := filepath.Join(
 		config.WWWDir,

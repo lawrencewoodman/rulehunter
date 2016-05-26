@@ -19,36 +19,45 @@
 
 package html
 
-const tagTpl = `
-<!DOCTYPE html>
-<html>
-	<head>
-		{{ index .Html "head" }}
-		<title>Reports for tag: {{ .Tag }}</title>
-	</head>
+import (
+	"sort"
+	"time"
+)
 
-	<body>
-		{{ index .Html "nav" }}
+type TplReport struct {
+	Title    string
+	Tags     map[string]string
+	DateTime string
+	Filename string
+	Stamp    time.Time
+}
 
-		<div id="content">
-			<div class="container">
-				<h1>Reports for tag: {{ .Tag }}</h1>
+func newTplReport(
+	title string,
+	tags map[string]string,
+	filename string,
+	stamp time.Time,
+) *TplReport {
+	return &TplReport{
+		title,
+		tags,
+		stamp.Format(time.RFC822),
+		filename,
+		stamp,
+	}
+}
 
-				<ul class="reports">
-					{{range .Reports}}
-						<li>
-							<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
-							Date: {{ .DateTime }} &nbsp;
-							Tags:
-							{{range $tag, $catLink := .Tags}}
-								<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
-							{{end}}
-						</li>
-					{{end}}
-				</ul>
-			</div>
-		</div>
+// byDate implements sort.Interface for []*TplReport
+type byDate []*TplReport
 
-		{{ index .Html "bootstrapJS" }}
-	</body>
-</html>`
+func (r byDate) Len() int { return len(r) }
+func (r byDate) Swap(i, j int) {
+	r[i], r[j] = r[j], r[i]
+}
+func (r byDate) Less(i, j int) bool {
+	return r[j].Stamp.Before(r[i].Stamp)
+}
+
+func sortTplReportsByDate(tplReports []*TplReport) {
+	sort.Sort(byDate(tplReports))
+}
