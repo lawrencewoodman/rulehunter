@@ -36,7 +36,7 @@ func generateReport(
 	type TplData struct {
 		Title              string
 		Tags               map[string]string
-		Stamp              string
+		DateTime           string
 		ExperimentFilename string
 		NumRecords         int64
 		SortOrder          []experiment.SortField

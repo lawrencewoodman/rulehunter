@@ -33,31 +33,16 @@ const reportTpl = `
 		<div id="content">
 			<div class="container">
 				<h1>{{.Title}}</h1>
-
-				<h2>Config</h2>
-				<table class="neat-table">
-					<tr class="title">
-						<th> </th>
-						<th class="last-column"> </th>
-					</tr>
-					<tr>
-						<td>Tags</td>
-						<td class="last-column">
-							{{range $tag, $catLink := .Tags}}
-								<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
-							{{end}}<br />
-						</td>
-					</tr>
-					<tr>
-						<td>Number of records</td>
-						<td class="last-column">{{.NumRecords}}</td>
-					</tr>
-					<tr>
-						<td>Experiment file</td>
-						<td class="last-column">{{.ExperimentFilename}}</td>
-					</tr>
-				</table>
-
+				Date: {{ .DateTime }} &nbsp;
+				Tags:
+				{{range $tag, $catLink := .Tags}}
+					<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
+				{{end}}
+				<br />
+				<br />
+				<h2>Experiment Details</h2>
+				<p>Experiment file: {{ .ExperimentFilename }}</p>
+				<br />
 				<table class="neat-table">
 					<tr class="title">
 						<th>Sort Order</th><th class="last-column">Direction</th>
@@ -68,6 +53,10 @@ const reportTpl = `
 						</tr>
 					{{end}}
 				</table>
+
+				<h2>Data Set</h2>
+				The data set contained {{ .NumRecords }} records.</br />
+				<br />
 			</div>
 
 			<div class="container">
