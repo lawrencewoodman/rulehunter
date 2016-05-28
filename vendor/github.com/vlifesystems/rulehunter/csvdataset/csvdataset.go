@@ -16,20 +16,22 @@
 	along with Rulehunter; see the file COPYING.  If not, see
 	<http://www.gnu.org/licenses/>.
 */
-package csvinput
+
+// Package csvdataset handles access to a CSV dataset
+package csvdataset
 
 import (
 	"encoding/csv"
 	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/input"
+	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/internal"
 	"io"
 	"os"
 )
 
-type CsvInput struct {
+type CsvDataset struct {
 	file          *os.File
 	reader        *csv.Reader
 	fieldNames    []string
@@ -45,7 +47,7 @@ func New(
 	filename string,
 	separator rune,
 	skipFirstLine bool,
-) (input.Input, error) {
+) (dataset.Dataset, error) {
 	if err := checkFieldsValid(fieldNames); err != nil {
 		return nil, err
 	}
@@ -54,7 +56,7 @@ func New(
 		return nil, err
 	}
 	r.Comma = separator
-	return &CsvInput{
+	return &CsvDataset{
 		file:          f,
 		reader:        r,
 		fieldNames:    fieldNames,
@@ -65,18 +67,18 @@ func New(
 	}, nil
 }
 
-func (c *CsvInput) Clone() (input.Input, error) {
+func (c *CsvDataset) Clone() (dataset.Dataset, error) {
 	newC, err :=
 		New(c.fieldNames, c.filename, c.separator, c.skipFirstLine)
 	return newC, err
 }
 
-func (c *CsvInput) Next() bool {
+func (c *CsvDataset) Next() bool {
 	if c.err != nil {
 		return false
 	}
 	if c.reader == nil {
-		c.err = errors.New("input has been closed")
+		c.err = errors.New("dataset has been closed")
 		return false
 	}
 	record, err := c.reader.Read()
@@ -92,21 +94,21 @@ func (c *CsvInput) Next() bool {
 	return true
 }
 
-func (c *CsvInput) Err() error {
+func (c *CsvDataset) Err() error {
 	if c.err == io.EOF {
 		return nil
 	}
 	return c.err
 }
 
-func (c *CsvInput) Read() (map[string]*dlit.Literal, error) {
+func (c *CsvDataset) Read() (map[string]*dlit.Literal, error) {
 	recordLits := make(map[string]*dlit.Literal)
 	if c.Err() != nil {
 		return recordLits, c.Err()
 	}
 	if len(c.currentRecord) != len(c.fieldNames) {
 		// TODO: Create specific error type for this
-		c.err = errors.New("wrong number of field names for input")
+		c.err = errors.New("wrong number of field names for dataset")
 		c.Close()
 		return recordLits, c.err
 	}
@@ -122,13 +124,13 @@ func (c *CsvInput) Read() (map[string]*dlit.Literal, error) {
 	return recordLits, nil
 }
 
-func (c *CsvInput) Rewind() error {
+func (c *CsvDataset) Rewind() error {
 	var err error
 	if c.Err() != nil {
 		return c.err
 	}
 	if c.reader == nil {
-		c.err = errors.New("input has been closed")
+		c.err = errors.New("dataset has been closed")
 		return c.err
 	}
 	if err := c.file.Close(); err != nil {
@@ -144,14 +146,14 @@ func (c *CsvInput) Rewind() error {
 	return err
 }
 
-func (c *CsvInput) Close() error {
+func (c *CsvDataset) Close() error {
 	err := c.file.Close()
 	c.file = nil
 	c.reader = nil
 	return err
 }
 
-func (c *CsvInput) GetFieldNames() []string {
+func (c *CsvDataset) GetFieldNames() []string {
 	return c.fieldNames
 }
 

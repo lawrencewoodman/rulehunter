@@ -24,8 +24,8 @@ import (
 	"fmt"
 	"github.com/vlifesystems/rulehunter/aggregators"
 	"github.com/vlifesystems/rulehunter/assessment"
+	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/experiment"
-	"github.com/vlifesystems/rulehunter/input"
 	"github.com/vlifesystems/rulehunter/internal/ruleassessor"
 	"github.com/vlifesystems/rulehunter/rule"
 )
@@ -49,14 +49,14 @@ func AssessRules(
 		ruleAssessors[i] = ruleassessor.New(rule, allAggregators, e.Goals)
 	}
 
-	// The input must be cloned to be thread safe when AssessRules called by
+	// The dataset must be cloned to be thread safe when AssessRules called by
 	// AssessRulesMP
-	inputClone, err := e.Input.Clone()
+	datasetClone, err := e.Dataset.Clone()
 	if err != nil {
 		return &assessment.Assessment{}, err
 	}
-	defer e.Input.Close()
-	numRecords, err = processInput(inputClone, ruleAssessors)
+	defer e.Dataset.Close()
+	numRecords, err = processDataset(datasetClone, ruleAssessors)
 	if err != nil {
 		return &assessment.Assessment{}, err
 	}
@@ -201,17 +201,18 @@ func filterGoodRuleAssessors(
 	return goodRuleAssessors, nil
 }
 
-func processInput(input input.Input,
+func processDataset(
+	dataset dataset.Dataset,
 	ruleAssessors []*ruleassessor.RuleAssessor,
 ) (int64, error) {
 	numRecords := int64(0)
 	// TODO: test this rewinds properly
-	if err := input.Rewind(); err != nil {
+	if err := dataset.Rewind(); err != nil {
 		return numRecords, err
 	}
 
-	for input.Next() {
-		record, err := input.Read()
+	for dataset.Next() {
+		record, err := dataset.Read()
 		if err != nil {
 			return numRecords, err
 		}
@@ -224,7 +225,7 @@ func processInput(input input.Input,
 		}
 	}
 
-	return numRecords, input.Err()
+	return numRecords, dataset.Err()
 }
 
 func addDefaultAggregators(

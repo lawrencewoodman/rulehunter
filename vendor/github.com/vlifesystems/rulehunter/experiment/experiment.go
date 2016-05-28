@@ -24,14 +24,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/vlifesystems/rulehunter/aggregators"
+	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/goal"
-	"github.com/vlifesystems/rulehunter/input"
 	"github.com/vlifesystems/rulehunter/internal"
 )
 
 type ExperimentDesc struct {
 	Title         string
-	Input         input.Input
+	Dataset       dataset.Dataset
 	ExcludeFields []string
 	Aggregators   []*AggregatorDesc
 	Goals         []string
@@ -51,7 +51,7 @@ type SortDesc struct {
 
 type Experiment struct {
 	Title             string
-	Input             input.Input
+	Dataset           dataset.Dataset
 	ExcludeFieldNames []string
 	Aggregators       []aggregators.Aggregator
 	Goals             []*goal.Goal
@@ -104,7 +104,7 @@ func New(e *ExperimentDesc) (*Experiment, error) {
 
 	return &Experiment{
 		Title:             e.Title,
-		Input:             e.Input,
+		Dataset:           e.Dataset,
 		ExcludeFieldNames: e.ExcludeFields,
 		Aggregators:       aggregators,
 		Goals:             goals,
@@ -113,7 +113,7 @@ func New(e *ExperimentDesc) (*Experiment, error) {
 }
 
 func (e *Experiment) Close() error {
-	return e.Input.Close()
+	return e.Dataset.Close()
 }
 
 func checkExperimentDescValid(e *ExperimentDesc) error {
@@ -156,7 +156,7 @@ func checkSortDescsValid(e *ExperimentDesc) error {
 }
 
 func checkExcludeFieldsValid(e *ExperimentDesc) error {
-	fieldNames := e.Input.GetFieldNames()
+	fieldNames := e.Dataset.GetFieldNames()
 	for _, excludeField := range e.ExcludeFields {
 		if !internal.IsIdentifierValid(excludeField) {
 			return fmt.Errorf("Invalid exclude field: %s", excludeField)
@@ -178,7 +178,7 @@ func isStringInSlice(needle string, haystack []string) bool {
 }
 
 func checkAggregatorsValid(e *ExperimentDesc) error {
-	fieldNames := e.Input.GetFieldNames()
+	fieldNames := e.Dataset.GetFieldNames()
 	for _, aggregator := range e.Aggregators {
 		if !internal.IsIdentifierValid(aggregator.Name) {
 			return fmt.Errorf("Invalid aggregator name: %s", aggregator.Name)

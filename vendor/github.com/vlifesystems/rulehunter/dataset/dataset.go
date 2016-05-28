@@ -17,24 +17,17 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rulehunter
+// Package dataset describes the Dataset interface
+package dataset
 
-import (
-	"github.com/vlifesystems/rulehunter/description"
-	"github.com/vlifesystems/rulehunter/input"
-)
+import "github.com/lawrencewoodman/dlit"
 
-func DescribeInput(input input.Input) (*description.Description, error) {
-	_description := description.New()
-	input.Rewind()
-
-	for input.Next() {
-		record, err := input.Read()
-		if err != nil {
-			return _description, err
-		}
-		_description.NextRecord(record)
-	}
-
-	return _description, input.Err()
+type Dataset interface {
+	Clone() (Dataset, error)
+	Next() bool
+	Err() error
+	Read() (map[string]*dlit.Literal, error)
+	Rewind() error
+	GetFieldNames() []string
+	Close() error
 }

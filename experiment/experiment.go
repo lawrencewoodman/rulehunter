@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"github.com/vlifesystems/rulehunter"
 	"github.com/vlifesystems/rulehunter/assessment"
-	"github.com/vlifesystems/rulehunter/csvinput"
+	"github.com/vlifesystems/rulehunter/csvdataset"
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehunter/rule"
 	"github.com/vlifesystems/rulehuntersrv/config"
@@ -57,12 +57,12 @@ func Process(
 		return err
 	}
 
-	if err := epr.ReportInfo("Describing input"); err != nil {
+	if err := epr.ReportInfo("Describing dataset"); err != nil {
 		return err
 	}
-	fieldDescriptions, err := rulehunter.DescribeInput(experiment.Input)
+	fieldDescriptions, err := rulehunter.DescribeDataset(experiment.Dataset)
 	if err != nil {
-		fullErr := fmt.Errorf("Couldn't describe input: %s", err)
+		fullErr := fmt.Errorf("Couldn't describe dataset: %s", err)
 		return epr.ReportError(fullErr)
 	}
 
@@ -144,7 +144,7 @@ func Process(
 type experimentFile struct {
 	Title                 string
 	Tags                  []string
-	InputFilename         string
+	DatasetFilename       string
 	FieldNames            []string
 	ExcludeFieldNames     []string
 	IsFirstLineFieldNames bool
@@ -174,9 +174,9 @@ func loadExperiment(filename string) (
 		return nil, []string{}, err
 	}
 
-	input, err := csvinput.New(
+	dataset, err := csvdataset.New(
 		e.FieldNames,
-		e.InputFilename,
+		e.DatasetFilename,
 		rune(e.Separator[0]),
 		e.IsFirstLineFieldNames,
 	)
@@ -185,7 +185,7 @@ func loadExperiment(filename string) (
 	}
 	experimentDesc := &experiment.ExperimentDesc{
 		Title:         e.Title,
-		Input:         input,
+		Dataset:       dataset,
 		ExcludeFields: e.ExcludeFieldNames,
 		Aggregators:   e.Aggregators,
 		Goals:         e.Goals,

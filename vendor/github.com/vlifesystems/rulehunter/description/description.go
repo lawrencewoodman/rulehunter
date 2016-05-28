@@ -17,7 +17,7 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-// Package description handles the description of data in records
+// Package description handles the description of data set
 package description
 
 import (
