@@ -24,7 +24,23 @@ If you want to improve this program make a pull request to the [repo](https://gi
 
 Installation
 ------------
-Copy directories from `support/bootstrap` and `support/rulehuntersrv` to the `wwwDir` directory specified in `config.json`.
+There are several files needed to render the html properly these are located in the `support/` directory.
+
+### Twitter Bootstrap
+
+Copy directories from `support/bootstrap` to the `wwwDir` directory specified in `config.json`.
+
+### jQuery
+
+Copy directory `support/jquery/js` to the `wwwDir` directory specified in `config.json`.
+
+### Html5 Shiv
+
+Copy directory `support/html5shiv/js` to the `wwwDir` directory specified in `config.json`.
+
+### Rulehuntersrv
+
+Copy directories from `support/rulehuntersrv` to the `wwwDir` directory specified in `config.json`.
 
 Testing
 -------
@@ -61,11 +77,35 @@ Additional Licences
 
 ### Twitter Boostrap
 
-This has been included in the repository under `support/bootstrap`.
+[Twitter Boostrap](http://getbootstrap.com) has been included in the repository under `support/bootstrap`.
 
 Copyright 2011-2015 Twitter, Inc.
 
 Licensed under the MIT license.  For details see: [http://getbootstrap.com](http://getbootstrap.com).
+
+### jQuery
+
+[jQuery](https://jquery.org) has been included in the repository under `support/jquery`.
+
+Copyright jQuery Foundation
+
+Licensed under the MIT license.  For details see [https://jquery.org/license/](https://jquery.org/license/).
+
+### Html5 Shiv
+
+[Html5 Shiv](https://github.com/aFarkas/html5shiv) has been included in part in the repository under `support/html5shiv`
+
+Copyright (c) 2014 Alexander Farkas (aFarkas).
+
+This is dual licensed under the MIT and GPL version 2 licence.  For the sake of Rulehuntersrv we will take it to be the MIT license as this makes it easier to combine with the Affero GPL version 3 license that Rulehuntersrv is licenced under.  For details see the licence file in `support/html5shiv`.
+
+### Respond
+
+[Respond](https://github.com/scottjehl/Respond) has been included in part in the repository under `support/respond`
+
+Copyright (c) 2013 Scott Jehl
+
+Licensed under the MIT license.  For details see the license file in `support/respond`.
 
 ### Vendored Go Packages
 
