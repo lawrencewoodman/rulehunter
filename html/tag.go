@@ -78,11 +78,11 @@ func generateTagPage(config *config.Config, tagName string) error {
 				return err
 			}
 			if inStrings(tagName, report.Tags) {
-				reportFilename := makeReportFilename(report.Stamp, report.Title)
+				reportURLDir := genReportURLDir(report.Stamp, report.Title)
 				tplReports[i] = newTplReport(
 					report.Title,
 					makeTagLinks(report.Tags),
-					fmt.Sprintf("/reports/%s", reportFilename),
+					reportURLDir,
 					report.Stamp,
 				)
 				i++
@@ -99,7 +99,7 @@ func generateTagPage(config *config.Config, tagName string) error {
 		escapeString(tagName),
 	)
 
-	if err := os.MkdirAll(fullTagDir, 0740); err != nil {
+	if err := os.MkdirAll(fullTagDir, modePerm); err != nil {
 		return err
 	}
 	outputFilename := filepath.Join(fullTagDir, "index.html")

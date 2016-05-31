@@ -24,15 +24,13 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/report"
 	"html/template"
-	"path/filepath"
 	"time"
 )
 
 func generateReport(
 	_report *report.Report,
-	reportFilename string,
 	config *config.Config,
-) error {
+) (string, error) {
 	type TplData struct {
 		Title              string
 		Tags               map[string]string
@@ -57,9 +55,13 @@ func generateReport(
 		makeHtml("reports"),
 	}
 
-	fullReportFilename := filepath.Join(config.WWWDir, "reports", reportFilename)
-	if err := writeTemplate(fullReportFilename, reportTpl, tplData); err != nil {
-		return err
+	reportURLDir, err :=
+		makeReportURLDir(config.WWWDir, _report.Stamp, _report.Title)
+	if err != nil {
+		return "", err
 	}
-	return nil
+	reportFilename :=
+		genReportFilename(config.WWWDir, _report.Stamp, _report.Title)
+	err = writeTemplate(reportFilename, reportTpl, tplData)
+	return reportURLDir, err
 }

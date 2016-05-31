@@ -53,14 +53,14 @@ func generateReports(
 			if err != nil {
 				return err
 			}
-			reportFilename := makeReportFilename(report.Stamp, report.Title)
-			if err = generateReport(report, reportFilename, config); err != nil {
+			reportURLDir, err := generateReport(report, config)
+			if err != nil {
 				return err
 			}
 			tplReports[i] = newTplReport(
 				report.Title,
 				makeTagLinks(report.Tags),
-				reportFilename,
+				reportURLDir,
 				report.Stamp,
 			)
 		}

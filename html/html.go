@@ -26,13 +26,21 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/html/cmd"
 	"github.com/vlifesystems/rulehuntersrv/progress"
-	"hash/crc32"
 	"html/template"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
+
+// File mode permission used as standard for the html content:
+// No special permission bits
+// User: Read, Write Execute
+// Group: Read
+// Other: None
+const modePerm = 0740
 
 // This should be run as a goroutine and each time a command is passed to
 // cmds the html will be generated
@@ -123,15 +131,16 @@ func inStrings(needle string, haystack []string) bool {
 	return false
 }
 
-var nonAlphaNumRegexp = regexp.MustCompile("[^[:alnum:]]")
+var nonAlphaNumOrSpaceRegexp = regexp.MustCompile("[^[:alnum:] ]")
+var spaceRegexp = regexp.MustCompile(" ")
+var multipleHyphenRegexp = regexp.MustCompile("-+")
 
 func escapeString(s string) string {
-	crc32 := strconv.FormatUint(
-		uint64(crc32.Checksum([]byte(s), crc32.MakeTable(crc32.IEEE))),
-		36,
-	)
-	newS := nonAlphaNumRegexp.ReplaceAllString(s, "")
-	return fmt.Sprintf("%s_%s", newS, crc32)
+	newS := nonAlphaNumOrSpaceRegexp.ReplaceAllString(s, "")
+	newS = spaceRegexp.ReplaceAllString(newS, "-")
+	newS = multipleHyphenRegexp.ReplaceAllString(newS, "-")
+	newS = strings.Trim(newS, " -")
+	return strings.ToLower(newS)
 }
 
 func writeTemplate(
@@ -156,10 +165,49 @@ func writeTemplate(
 	return nil
 }
 
-func makeReportFilename(stamp time.Time, title string) string {
-	timeSeconds := strconv.FormatInt(stamp.Unix(), 36)
+func genReportFilename(wwwDir string, stamp time.Time, title string) string {
+	localDir := genReportLocalDir(wwwDir, stamp, title)
+	return filepath.Join(localDir, "index.html")
+}
+
+func genStampMagicString(stamp time.Time) string {
+	sum := stamp.Hour()*3600 + stamp.Minute()*60 + stamp.Second()
+	return strconv.FormatUint(uint64(sum), 36)
+}
+
+func genReportURLDir(
+	stamp time.Time,
+	title string,
+) string {
+	magicNumber := genStampMagicString(stamp)
 	escapedTitle := escapeString(title)
-	return fmt.Sprintf("%s_%s.html", escapedTitle, timeSeconds)
+	return fmt.Sprintf("/reports/%d/%02d/%02d/%s_%s",
+		stamp.Year(), stamp.Month(), stamp.Day(), magicNumber, escapedTitle)
+}
+
+func genReportLocalDir(
+	wwwDir string,
+	stamp time.Time,
+	title string,
+) string {
+	magicNumber := genStampMagicString(stamp)
+	escapedTitle := escapeString(title)
+	return filepath.Join(wwwDir, "reports",
+		fmt.Sprintf("%d", stamp.Year()),
+		fmt.Sprintf("%02d", stamp.Month()),
+		fmt.Sprintf("%02d", stamp.Day()),
+		fmt.Sprintf("%s_%s", magicNumber, escapedTitle))
+}
+
+func makeReportURLDir(
+	wwwDir string,
+	stamp time.Time,
+	title string,
+) (string, error) {
+	URLDir := genReportURLDir(stamp, title)
+	localDir := genReportLocalDir(wwwDir, stamp, title)
+	err := os.MkdirAll(localDir, modePerm)
+	return URLDir, err
 }
 
 func countFiles(files []os.FileInfo) int {
