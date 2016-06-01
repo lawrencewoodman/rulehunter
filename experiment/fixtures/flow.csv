@@ -1,0 +1,12 @@
+group,district,height,flow
+a,northcal,120,16.5
+a,midcal,128,19
+a,soutchcal,18,5
+
+b,northcal,20,19.25
+b,midcal,28,10
+b,soutchcal,8,7
+
+c,northcal,320,20.73
+c,midcal,328,82.4
+c,soutchcal,38,1

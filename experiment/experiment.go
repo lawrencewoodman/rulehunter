@@ -20,6 +20,7 @@ package experiment
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/vlifesystems/rulehunter"
 	"github.com/vlifesystems/rulehunter/assessment"
@@ -174,6 +175,10 @@ func loadExperiment(filename string) (
 		return nil, []string{}, err
 	}
 
+	if err := e.checkValid(); err != nil {
+		return nil, []string{}, err
+	}
+
 	dataset, err := csvdataset.New(
 		e.FieldNames,
 		e.DatasetFilename,
@@ -193,6 +198,16 @@ func loadExperiment(filename string) (
 	}
 	experiment, err := experiment.New(experimentDesc)
 	return experiment, e.Tags, err
+}
+
+func (e *experimentFile) checkValid() error {
+	if len(e.Title) == 0 {
+		return errors.New("Experiment field missing: title")
+	}
+	if len(e.DatasetFilename) == 0 {
+		return errors.New("Experiment field missing: datasetFilename")
+	}
+	return nil
 }
 
 func assessRules(
