@@ -170,6 +170,10 @@ func genReportFilename(wwwDir string, stamp time.Time, title string) string {
 	return filepath.Join(localDir, "index.html")
 }
 
+// This doesn't change below a second as if two or more reports had the same
+// title and were made less than a second apart then you wouldn't be able to
+// tell them apart anyway from the list of reports.  This should therfore
+// be discouraged.
 func genStampMagicString(stamp time.Time) string {
 	sum := stamp.Hour()*3600 + stamp.Minute()*60 + stamp.Second()
 	return strconv.FormatUint(uint64(sum), 36)
