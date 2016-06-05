@@ -35,7 +35,7 @@ func generateTagPages(config *config.Config) error {
 		return err
 	}
 
-	tagsSeen := make(map[string]bool)
+	tagsLen := make(map[string]int)
 	for _, file := range reportFiles {
 		if !file.IsDir() {
 			report, err := report.LoadJson(config, file.Name())
@@ -43,11 +43,15 @@ func generateTagPages(config *config.Config) error {
 				return err
 			}
 			for _, tag := range report.Tags {
-				if _, ok := tagsSeen[tag]; !ok {
+				escapedTag := escapeString(tag)
+				if _, ok := tagsLen[escapedTag]; !ok ||
+					len(tag) < tagsLen[escapedTag] {
 					if err := generateTagPage(config, tag); err != nil {
 						return err
 					}
-					tagsSeen[tag] = true
+					// Use the shortest tag out of those that resolve to the
+					// same escaped tag
+					tagsLen[escapedTag] = len(tag)
 				}
 			}
 		}
@@ -77,15 +81,18 @@ func generateTagPage(config *config.Config, tagName string) error {
 			if err != nil {
 				return err
 			}
-			if inStrings(tagName, report.Tags) {
-				reportURLDir := genReportURLDir(report.Stamp, report.Title)
-				tplReports[i] = newTplReport(
-					report.Title,
-					makeTagLinks(report.Tags),
-					reportURLDir,
-					report.Stamp,
-				)
-				i++
+			escapedTagname := escapeString(tagName)
+			for _, reportTag := range report.Tags {
+				if escapedTagname == escapeString(reportTag) {
+					reportURLDir := genReportURLDir(report.Stamp, report.Title)
+					tplReports[i] = newTplReport(
+						report.Title,
+						makeTagLinks(report.Tags),
+						reportURLDir,
+						report.Stamp,
+					)
+					i++
+				}
 			}
 		}
 	}

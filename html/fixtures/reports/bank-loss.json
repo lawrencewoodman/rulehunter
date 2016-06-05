@@ -1,0 +1,23 @@
+{
+  "Title":"How to make a loss",
+  "Tags":["bank","fred / ned", "hot -- & in the city", "Fahrenheit 451"],
+  "Stamp":"2016-05-23T16:26:20.801239819+01:00",
+  "ExperimentFilename":"bank-tiny.json",
+  "NumRecords":9,
+  "SortOrder":[{"Field":"profit","Direction":0},{"Field":"numSignedUp","Direction":1}],
+  "Assessments":[
+    {
+      "Rule":"age \u003c= 27",
+      "Aggregators":[
+        {"Name":"cost","Value":"5","Difference":"-17.5"},
+        {"Name":"goalsScore","Value":"0","Difference":"0"},
+        {"Name":"income","Value":"0","Difference":"0"},
+        {"Name":"numMatches","Value":"2","Difference":"-7"},
+        {"Name":"numSignedUp","Value":"0","Difference":"0"},
+        {"Name":"percentMatches","Value":"22.22","Difference":"-77.78"},
+        {"Name":"profit","Value":"-5","Difference":"17.5"}
+      ],
+      "Goals":[{"Expr":"profit \u003e 0","Passed":false}]
+    }
+  ]
+}
