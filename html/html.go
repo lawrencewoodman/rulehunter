@@ -185,7 +185,7 @@ func genReportURLDir(
 ) string {
 	magicNumber := genStampMagicString(stamp)
 	escapedTitle := escapeString(title)
-	return fmt.Sprintf("/reports/%d/%02d/%02d/%s_%s",
+	return fmt.Sprintf("/reports/%d/%02d/%02d/%s_%s/",
 		stamp.Year(), stamp.Month(), stamp.Day(), magicNumber, escapedTitle)
 }
 

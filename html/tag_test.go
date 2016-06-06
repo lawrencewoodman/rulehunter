@@ -61,45 +61,45 @@ func TestGenerateTagPages(t *testing.T) {
 		"bank": &tagInfo{
 			"Reports for tag: bank",
 			[]string{
-				"/reports/2016/05/24/19pk_how-to-keep-costs-low",
-				"/reports/2016/05/24/19nw_how-to-make-a-profit",
-				"/reports/2016/05/23/19nw_how-to-make-a-loss",
+				"/reports/2016/05/24/19pk_how-to-keep-costs-low/",
+				"/reports/2016/05/24/19nw_how-to-make-a-profit/",
+				"/reports/2016/05/23/19nw_how-to-make-a-loss/",
 			},
 		},
 		"expensive": &tagInfo{
 			"Reports for tag: expensive",
 			[]string{
-				"/reports/2016/05/24/19pk_how-to-keep-costs-low",
+				"/reports/2016/05/24/19pk_how-to-keep-costs-low/",
 			},
 		},
 		"fahrenheit-451": &tagInfo{
 			"Reports for tag: Fahrenheit 451",
 			[]string{
-				"/reports/2016/05/24/19pk_how-to-keep-costs-low",
-				"/reports/2016/05/24/19nw_how-to-make-a-profit",
-				"/reports/2016/05/23/19nw_how-to-make-a-loss",
+				"/reports/2016/05/24/19pk_how-to-keep-costs-low/",
+				"/reports/2016/05/24/19nw_how-to-make-a-profit/",
+				"/reports/2016/05/23/19nw_how-to-make-a-loss/",
 			},
 		},
 		"fred-ned": &tagInfo{
 			"Reports for tag: fred / ned",
 			[]string{
-				"/reports/2016/05/24/19pk_how-to-keep-costs-low",
-				"/reports/2016/05/24/19nw_how-to-make-a-profit",
-				"/reports/2016/05/23/19nw_how-to-make-a-loss",
+				"/reports/2016/05/24/19pk_how-to-keep-costs-low/",
+				"/reports/2016/05/24/19nw_how-to-make-a-profit/",
+				"/reports/2016/05/23/19nw_how-to-make-a-loss/",
 			},
 		},
 		"hot-in-the-city": &tagInfo{
 			"Reports for tag: hot in the city",
 			[]string{
-				"/reports/2016/05/24/19pk_how-to-keep-costs-low",
-				"/reports/2016/05/24/19nw_how-to-make-a-profit",
-				"/reports/2016/05/23/19nw_how-to-make-a-loss",
+				"/reports/2016/05/24/19pk_how-to-keep-costs-low/",
+				"/reports/2016/05/24/19nw_how-to-make-a-profit/",
+				"/reports/2016/05/23/19nw_how-to-make-a-loss/",
 			},
 		},
 		"test": &tagInfo{
 			"Reports for tag: test",
 			[]string{
-				"/reports/2016/05/24/19nw_how-to-make-a-profit",
+				"/reports/2016/05/24/19nw_how-to-make-a-profit/",
 			},
 		},
 	}
