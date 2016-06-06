@@ -14,7 +14,7 @@ import (
 )
 
 // This tests:
-//    i) That the correct reports are listed for each tag
+//    i) That the correct reports are listed for each tag in date order
 //   ii) That reports with different tags that resolve to the same
 //       escaped tag are listed under a single tag
 //  iii) That the shortest tag name is used if there are multiple ones that
