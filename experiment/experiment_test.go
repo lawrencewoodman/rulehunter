@@ -70,7 +70,13 @@ func TestLoadExperiment_error(t *testing.T) {
 		{filepath.Join("fixtures", "flow_no_title.json"),
 			errors.New("Experiment field missing: title")},
 		{filepath.Join("fixtures", "flow_no_dataset.json"),
-			errors.New("Experiment field missing: datasetFilename")},
+			errors.New("Experiment field missing: dataset")},
+		{filepath.Join("fixtures", "flow_no_csv.json"),
+			errors.New("Experiment field missing: csv")},
+		{filepath.Join("fixtures", "flow_no_csv_filename.json"),
+			errors.New("Experiment field missing: csv > filename")},
+		{filepath.Join("fixtures", "flow_no_csv_separator.json"),
+			errors.New("Experiment field missing: csv > separator")},
 	}
 	for _, c := range cases {
 		_, _, err := loadExperiment(c.filename)

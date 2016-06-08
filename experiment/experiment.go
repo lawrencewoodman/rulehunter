@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"github.com/vlifesystems/rulehunter"
 	"github.com/vlifesystems/rulehunter/csvdataset"
+	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/progress"
@@ -31,6 +32,24 @@ import (
 	"os"
 	"path/filepath"
 )
+
+type experimentFile struct {
+	Title             string
+	Tags              []string
+	Dataset           string
+	Csv               *csvDesc
+	FieldNames        []string
+	ExcludeFieldNames []string
+	Aggregators       []*experiment.AggregatorDesc
+	Goals             []string
+	SortOrder         []*experiment.SortDesc
+}
+
+type csvDesc struct {
+	Filename  string
+	HasHeader bool
+	Separator string
+}
 
 func Process(
 	experimentFilename string,
@@ -139,19 +158,6 @@ func Process(
 	return epr.ReportSuccess()
 }
 
-type experimentFile struct {
-	Title                 string
-	Tags                  []string
-	DatasetFilename       string
-	FieldNames            []string
-	ExcludeFieldNames     []string
-	IsFirstLineFieldNames bool
-	Separator             string
-	Aggregators           []*experiment.AggregatorDesc
-	Goals                 []string
-	SortOrder             []*experiment.SortDesc
-}
-
 func loadExperiment(filename string) (
 	*experiment.Experiment,
 	[]string,
@@ -176,12 +182,7 @@ func loadExperiment(filename string) (
 		return nil, []string{}, err
 	}
 
-	dataset, err := csvdataset.New(
-		e.FieldNames,
-		e.DatasetFilename,
-		rune(e.Separator[0]),
-		e.IsFirstLineFieldNames,
-	)
+	dataset, err := makeDataset(&e)
 	if err != nil {
 		return nil, []string{}, err
 	}
@@ -197,12 +198,45 @@ func loadExperiment(filename string) (
 	return experiment, e.Tags, err
 }
 
+func makeDataset(e *experimentFile) (dataset.Dataset, error) {
+	var dataset dataset.Dataset
+	var err error
+
+	switch e.Dataset {
+	case "csv":
+		dataset, err = csvdataset.New(
+			e.FieldNames,
+			e.Csv.Filename,
+			rune(e.Csv.Separator[0]),
+			e.Csv.HasHeader,
+		)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil,
+			fmt.Errorf("Experiment field: dataset, has invalid type: %s", e.Dataset)
+	}
+	return dataset, nil
+}
+
 func (e *experimentFile) checkValid() error {
 	if len(e.Title) == 0 {
 		return errors.New("Experiment field missing: title")
 	}
-	if len(e.DatasetFilename) == 0 {
-		return errors.New("Experiment field missing: datasetFilename")
+	if len(e.Dataset) == 0 {
+		return errors.New("Experiment field missing: dataset")
+	}
+	if e.Dataset == "csv" {
+		if e.Csv == nil {
+			return errors.New("Experiment field missing: csv")
+		}
+		if len(e.Csv.Filename) == 0 {
+			return errors.New("Experiment field missing: csv > filename")
+		}
+		if len(e.Csv.Separator) == 0 {
+			return errors.New("Experiment field missing: csv > separator")
+		}
 	}
 	return nil
 }

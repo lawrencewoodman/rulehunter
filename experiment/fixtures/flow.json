@@ -1,11 +1,14 @@
 {
   "title": "What would indicate good flow?",
   "tags": ["test", "fred / ned"],
-  "datasetFilename": "fixtures/flow.csv",
+  "dataset": "csv",
+  "csv": {
+    "filename": "fixtures/flow.csv",
+    "hasHeader": true,
+    "separator":  ","
+  },
   "fieldNames": ["group","district","height","flow"],
   "excludeFieldNames": ["flow"],
-  "isFirstLineFieldNames": true,
-  "separator":  ",",
   "aggregators": [
     {
       "name": "goodFlowAccuracy",

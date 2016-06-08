@@ -1,6 +1,7 @@
 {
   "title": "What would indicate good flow?",
   "tags": ["test", "fred / ned"],
+  "dataset": "csv",
   "fieldNames": ["group","district","height","flow"],
   "excludeFieldNames": ["flow"],
   "aggregators": [
