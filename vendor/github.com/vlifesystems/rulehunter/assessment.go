@@ -17,8 +17,7 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-// Package assessment implements functions to handle Assessments
-package assessment
+package rulehunter
 
 import (
 	"errors"
@@ -27,8 +26,6 @@ import (
 	"github.com/vlifesystems/rulehunter/aggregators"
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehunter/goal"
-	"github.com/vlifesystems/rulehunter/internal/ruleassessor"
-	"github.com/vlifesystems/rulehunter/rule"
 	"sort"
 	"strings"
 )
@@ -40,7 +37,7 @@ type Assessment struct {
 }
 
 type RuleAssessment struct {
-	Rule        *rule.Rule
+	Rule        *Rule
 	Aggregators map[string]*dlit.Literal
 	Goals       []*GoalAssessment
 }
@@ -52,9 +49,9 @@ type GoalAssessment struct {
 
 type ErrNameConflict string
 
-func New(
+func newAssessment(
 	numRecords int64,
-	goodRuleAssessors []*ruleassessor.RuleAssessor,
+	goodRuleAssessors []*ruleAssessor,
 	goals []*goal.Goal,
 ) (*Assessment, error) {
 	ruleAssessments := make([]*RuleAssessment, len(goodRuleAssessors))
@@ -208,7 +205,7 @@ func (a *Assessment) TruncateRuleAssessments(
 }
 
 // Can optionally pass maximum number of rules to return
-func (a *Assessment) GetRules(args ...int) []*rule.Rule {
+func (a *Assessment) GetRules(args ...int) []*Rule {
 	var numRules int
 	switch len(args) {
 	case 0:
@@ -222,7 +219,7 @@ func (a *Assessment) GetRules(args ...int) []*rule.Rule {
 		panic(fmt.Sprintf("incorrect number of arguments passed: %d", len(args)))
 	}
 
-	r := make([]*rule.Rule, numRules)
+	r := make([]*Rule, numRules)
 	for i, ruleAssessment := range a.RuleAssessments {
 		if i >= numRules {
 			break
@@ -262,7 +259,7 @@ func (sortedAssessment *Assessment) excludePoorerInNiRules(
 	niFields := make(map[string]int)
 	for _, a := range sortedAssessment.RuleAssessments {
 		rule := a.Rule
-		isInNiRule, operator, field := rule.GetInNiParts()
+		isInNiRule, operator, field := rule.getInNiParts()
 		if !isInNiRule {
 			goodRuleAssessments = append(goodRuleAssessments, a)
 		} else if operator == "in" {
@@ -295,7 +292,7 @@ func (sortedAssessment *Assessment) excludePoorerTweakableRules(
 	fieldOperatorIDs := make(map[string]int)
 	for _, a := range sortedAssessment.RuleAssessments {
 		rule := a.Rule
-		isTweakable, field, operator, _ := rule.GetTweakableParts()
+		isTweakable, field, operator, _ := rule.getTweakableParts()
 		if !isTweakable {
 			goodRuleAssessments = append(goodRuleAssessments, a)
 		} else {

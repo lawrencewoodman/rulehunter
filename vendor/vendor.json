@@ -27,82 +27,52 @@
 			"revisionTime": "2016-05-22T11:24:06Z"
 		},
 		{
-			"checksumSHA1": "XDHexERXW5IorojGrKCdmRhJl8c=",
+			"checksumSHA1": "4CWLNdmw26rEc/pwoKiznsxHFn8=",
 			"path": "github.com/vlifesystems/rulehunter",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
+			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
+			"revisionTime": "2016-06-07T19:29:01Z"
 		},
 		{
 			"checksumSHA1": "sDpRAOqg+xt6NiXc0xhpgpGniY8=",
 			"path": "github.com/vlifesystems/rulehunter/aggregators",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
+			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
+			"revisionTime": "2016-06-07T19:29:01Z"
 		},
 		{
-			"checksumSHA1": "9XLofTCkM9DIS082ia6Ax+yv9Mk=",
-			"path": "github.com/vlifesystems/rulehunter/assessment",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
-		},
-		{
-			"checksumSHA1": "GJs381706jiOzLM7soxJf1K0LSc=",
+			"checksumSHA1": "ummDb26purCuV0YbFOmO8IdJnos=",
 			"path": "github.com/vlifesystems/rulehunter/csvdataset",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
+			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
+			"revisionTime": "2016-06-07T19:29:01Z"
 		},
 		{
-			"checksumSHA1": "P0mNKyDLtwosMe8+jWj2P4ZMW6s=",
+			"checksumSHA1": "6k84/+R+sO6F3lUCQYJNEu2DOTA=",
 			"path": "github.com/vlifesystems/rulehunter/dataset",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
+			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
+			"revisionTime": "2016-06-07T19:29:01Z"
 		},
 		{
-			"checksumSHA1": "B9QVLcdbDNTz3PX5zvjtTGK1Poo=",
-			"path": "github.com/vlifesystems/rulehunter/description",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
-		},
-		{
-			"checksumSHA1": "uRNYab3v18crYokr7drifzjor4o=",
+			"checksumSHA1": "Hn5fdTamYLXx5aaAdnqpdRL5Ags=",
 			"path": "github.com/vlifesystems/rulehunter/experiment",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
+			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
+			"revisionTime": "2016-06-07T19:29:01Z"
 		},
 		{
 			"checksumSHA1": "bKK7X1VZaZZM3E84nPHPpznqgGQ=",
 			"path": "github.com/vlifesystems/rulehunter/goal",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
+			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
+			"revisionTime": "2016-06-07T19:29:01Z"
 		},
 		{
-			"checksumSHA1": "lSugD04PeR5LLfb5iSDi0i264ug=",
+			"checksumSHA1": "a8CNcDygt/e1QnSyDgI7SvGkm7c=",
 			"path": "github.com/vlifesystems/rulehunter/internal",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
+			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
+			"revisionTime": "2016-06-07T19:29:01Z"
 		},
 		{
 			"checksumSHA1": "h9Z0JzyQsa+LG3vzW7vDTvKaNd4=",
 			"path": "github.com/vlifesystems/rulehunter/internal/dexprfuncs",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
-		},
-		{
-			"checksumSHA1": "UVPesb2cYxov9V1xdljI2e7vWfc=",
-			"path": "github.com/vlifesystems/rulehunter/internal/ruleassessor",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
-		},
-		{
-			"checksumSHA1": "1cVPsZjnvxShQDZA+BSVgN67mWo=",
-			"path": "github.com/vlifesystems/rulehunter/reducedataset",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
-		},
-		{
-			"checksumSHA1": "3I3iiLK900o7FVq4KktraiqGW4Q=",
-			"path": "github.com/vlifesystems/rulehunter/rule",
-			"revision": "7e41e7a6e89de6d19bb8a4861bb65d812dd591c2",
-			"revisionTime": "2016-05-28T05:59:29Z"
+			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
+			"revisionTime": "2016-06-07T19:29:01Z"
 		},
 		{
 			"checksumSHA1": "vqc3a+oTUGX8PmD0TS+qQ7gmN8I=",

@@ -17,13 +17,13 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rule
+package rulehunter
 
 import (
 	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/dexpr"
-	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
 	"regexp"
 )
@@ -42,7 +42,7 @@ func (r *Rule) String() string {
 	return r.expr.String()
 }
 
-func New(exprStr string) (*Rule, error) {
+func newRule(exprStr string) (*Rule, error) {
 	expr, err := dexpr.New(exprStr)
 	if err != nil {
 		return nil, ErrInvalidRule(fmt.Sprintf("Invalid rule: %s", exprStr))
@@ -50,15 +50,15 @@ func New(exprStr string) (*Rule, error) {
 	return &Rule{expr}, nil
 }
 
-func MustNew(exprStr string) *Rule {
-	rule, err := New(exprStr)
+func mustNewRule(exprStr string) *Rule {
+	rule, err := newRule(exprStr)
 	if err != nil {
 		panic(err)
 	}
 	return rule
 }
 
-func (r *Rule) GetTweakableParts() (bool, string, string, string) {
+func (r *Rule) getTweakableParts() (bool, string, string, string) {
 	ruleStr := r.String()
 	isTweakable := isTweakableRegexp.MatchString(ruleStr)
 	if !isTweakable {
@@ -70,7 +70,7 @@ func (r *Rule) GetTweakableParts() (bool, string, string, string) {
 	return isTweakable, fieldName, operator, value
 }
 
-func (r *Rule) GetInNiParts() (bool, string, string) {
+func (r *Rule) getInNiParts() (bool, string, string) {
 	ruleStr := r.String()
 	isInNi := isInNiRegexp.MatchString(ruleStr)
 	if !isInNi {
@@ -81,19 +81,19 @@ func (r *Rule) GetInNiParts() (bool, string, string) {
 	return isInNi, operator, fieldName
 }
 
-func (r *Rule) IsTrue(record map[string]*dlit.Literal) (bool, error) {
+func (r *Rule) isTrue(record dataset.Record) (bool, error) {
 	isTrue, err := r.expr.EvalBool(record, dexprfuncs.CallFuncs)
 	// TODO: Create an error type for rule rather than coopting the dexpr one
 	return isTrue, err
 }
 
-func (r *Rule) CloneWithValue(newValue string) (*Rule, error) {
-	isTweakable, fieldName, operator, _ := r.GetTweakableParts()
+func (r *Rule) cloneWithValue(newValue string) (*Rule, error) {
+	isTweakable, fieldName, operator, _ := r.getTweakableParts()
 	if !isTweakable {
 		return nil, errors.New(fmt.Sprintf("Can't clone non-tweakable rule: %s", r))
 	}
 	newRule, err :=
-		New(fmt.Sprintf("%s %s %s", fieldName, operator, newValue))
+		newRule(fmt.Sprintf("%s %s %s", fieldName, operator, newValue))
 	return newRule, err
 }
 

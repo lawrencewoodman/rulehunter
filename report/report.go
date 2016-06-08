@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/assessment"
+	"github.com/vlifesystems/rulehunter"
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"io/ioutil"
@@ -43,7 +43,7 @@ type Aggregator struct {
 type Assessment struct {
 	Rule        string
 	Aggregators []*Aggregator
-	Goals       []*assessment.GoalAssessment
+	Goals       []*rulehunter.GoalAssessment
 }
 
 type Report struct {
@@ -57,7 +57,7 @@ type Report struct {
 }
 
 func WriteJson(
-	assessment *assessment.Assessment,
+	assessment *rulehunter.Assessment,
 	experiment *experiment.Experiment,
 	experimentFilename string,
 	tags []string,
@@ -141,7 +141,7 @@ func getSortedAggregatorNames(aggregators map[string]*dlit.Literal) []string {
 }
 
 func getTrueAggregators(
-	assessment *assessment.Assessment,
+	assessment *rulehunter.Assessment,
 ) (map[string]*dlit.Literal, error) {
 	trueRuleAssessment :=
 		assessment.RuleAssessments[len(assessment.RuleAssessments)-1]

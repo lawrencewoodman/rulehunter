@@ -22,16 +22,15 @@ package rulehunter
 import (
 	"fmt"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/description"
-	"github.com/vlifesystems/rulehunter/rule"
+	"github.com/vlifesystems/rulehunter/internal"
 	"sort"
 	"strings"
 )
 
 func TweakRules(
-	sortedRules []*rule.Rule,
-	inputDescription *description.Description,
-) []*rule.Rule {
+	sortedRules []*Rule,
+	inputDescription *Description,
+) []*Rule {
 	numRulesPerGroup := 3
 	groupedRules :=
 		groupTweakableRules(sortedRules, numRulesPerGroup)
@@ -39,12 +38,12 @@ func TweakRules(
 }
 
 func groupTweakableRules(
-	sortedRules []*rule.Rule,
+	sortedRules []*Rule,
 	numPerGroup int,
-) map[string][]*rule.Rule {
-	groups := make(map[string][]*rule.Rule)
+) map[string][]*Rule {
+	groups := make(map[string][]*Rule)
 	for _, rule := range sortedRules {
-		isTweakable, fieldName, operator, _ := rule.GetTweakableParts()
+		isTweakable, fieldName, operator, _ := rule.getTweakableParts()
 		if isTweakable {
 			groupID := fmt.Sprintf("%s^%s", fieldName, operator)
 			if len(groups[groupID]) < numPerGroup {
@@ -56,16 +55,16 @@ func groupTweakableRules(
 }
 
 func tweakRules(
-	groupedRules map[string][]*rule.Rule,
-	inputDescription *description.Description,
-) []*rule.Rule {
-	newRules := make([]*rule.Rule, 1)
-	newRules[0] = rule.MustNew("true()")
+	groupedRules map[string][]*Rule,
+	inputDescription *Description,
+) []*Rule {
+	newRules := make([]*Rule, 1)
+	newRules[0] = mustNewRule("true()")
 	for _, rules := range groupedRules {
 		firstRule := rules[0]
 		comparisonPoints := makeComparisonPoints(rules, inputDescription)
 		for _, point := range comparisonPoints {
-			newRule, err := firstRule.CloneWithValue(point)
+			newRule, err := firstRule.cloneWithValue(point)
 			if err != nil {
 				panic(fmt.Sprintf("Can't tweak rule: %s - %s", firstRule, err))
 			}
@@ -88,8 +87,8 @@ func dlitInSlices(needle *dlit.Literal, haystacks ...[]*dlit.Literal) bool {
 
 // TODO: Share similar code with generaters such as generateInt
 func makeComparisonPoints(
-	rules []*rule.Rule,
-	inputDescription *description.Description,
+	rules []*Rule,
+	inputDescription *Description,
 ) []string {
 	var minInt int64
 	var maxInt int64
@@ -98,18 +97,18 @@ func makeComparisonPoints(
 	var field string
 	var tweakableValue string
 
-	fd := inputDescription.Fields
+	fd := inputDescription.fields
 	numbers := make([]*dlit.Literal, len(rules))
 	newPoints := make([]*dlit.Literal, 0)
 	for i, rule := range rules {
-		_, field, _, tweakableValue = rule.GetTweakableParts()
+		_, field, _, tweakableValue = rule.getTweakableParts()
 		numbers[i] = dlit.MustNew(tweakableValue)
 	}
 
 	numNumbers := len(numbers)
 	sortNumbers(numbers)
 
-	if fd[field].Kind == description.INT {
+	if fd[field].kind == internal.INT {
 		for numI, numJ := 0, 1; numJ < numNumbers; numI, numJ = numI+1, numJ+1 {
 			vI := numbers[numI]
 			vJ := numbers[numJ]
@@ -137,7 +136,7 @@ func makeComparisonPoints(
 			}
 		}
 	} else {
-		maxDP := fd[field].MaxDP
+		maxDP := fd[field].maxDP
 		for numI, numJ := 0, 1; numJ < numNumbers; numI, numJ = numI+1, numJ+1 {
 			vI := numbers[numI]
 			vJ := numbers[numJ]

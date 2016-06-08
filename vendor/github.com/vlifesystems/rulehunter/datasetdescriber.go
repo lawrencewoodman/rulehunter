@@ -21,22 +21,25 @@ package rulehunter
 
 import (
 	"github.com/vlifesystems/rulehunter/dataset"
-	"github.com/vlifesystems/rulehunter/description"
 )
 
 func DescribeDataset(
 	dataset dataset.Dataset,
-) (*description.Description, error) {
-	_description := description.New()
-	dataset.Rewind()
+) (*Description, error) {
+	_description := newDescription()
+	conn, err := dataset.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
 
-	for dataset.Next() {
-		record, err := dataset.Read()
+	for conn.Next() {
+		record, err := conn.Read()
 		if err != nil {
 			return _description, err
 		}
 		_description.NextRecord(record)
 	}
 
-	return _description, dataset.Err()
+	return _description, conn.Err()
 }

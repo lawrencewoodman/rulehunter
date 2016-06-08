@@ -23,10 +23,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/vlifesystems/rulehunter"
-	"github.com/vlifesystems/rulehunter/assessment"
 	"github.com/vlifesystems/rulehunter/csvdataset"
 	"github.com/vlifesystems/rulehunter/experiment"
-	"github.com/vlifesystems/rulehunter/rule"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"github.com/vlifesystems/rulehuntersrv/report"
@@ -52,7 +50,6 @@ func Process(
 		fullErr := fmt.Errorf("Couldn't load experiment file: %s", err)
 		return epr.ReportError(fullErr)
 	}
-	defer experiment.Close()
 	err = epr.UpdateDetails(experiment.Title, tags)
 	if err != nil {
 		return err
@@ -211,12 +208,12 @@ func (e *experimentFile) checkValid() error {
 }
 
 func assessRules(
-	rules []*rule.Rule,
+	rules []*rulehunter.Rule,
 	experiment *experiment.Experiment,
 	epr *progress.ExperimentProgressReporter,
 	cfg *config.Config,
-) (*assessment.Assessment, error) {
-	var assessment *assessment.Assessment
+) (*rulehunter.Assessment, error) {
+	var assessment *rulehunter.Assessment
 	c := make(chan *rulehunter.AssessRulesMPOutcome)
 
 	msg := fmt.Sprintf("Assessing rules using %d CPUs...\n", cfg.MaxNumProcesses)

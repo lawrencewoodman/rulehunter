@@ -112,10 +112,6 @@ func New(e *ExperimentDesc) (*Experiment, error) {
 	}, nil
 }
 
-func (e *Experiment) Close() error {
-	return e.Dataset.Close()
-}
-
 func checkExperimentDescValid(e *ExperimentDesc) error {
 	if err := checkSortDescsValid(e); err != nil {
 		return err

@@ -32,12 +32,17 @@ import (
 )
 
 type CsvDataset struct {
-	file          *os.File
-	reader        *csv.Reader
 	fieldNames    []string
+	numFields     int
 	filename      string
 	separator     rune
 	skipFirstLine bool
+}
+
+type CsvDatasetConn struct {
+	dataset       *CsvDataset
+	file          *os.File
+	reader        *csv.Reader
 	currentRecord []string
 	err           error
 }
@@ -51,114 +56,108 @@ func New(
 	if err := checkFieldsValid(fieldNames); err != nil {
 		return nil, err
 	}
-	f, r, err := makeCsvReader(filename, separator, skipFirstLine)
-	if err != nil {
-		return nil, err
-	}
-	r.Comma = separator
+
 	return &CsvDataset{
-		file:          f,
-		reader:        r,
 		fieldNames:    fieldNames,
+		numFields:     len(fieldNames),
 		filename:      filename,
 		separator:     separator,
 		skipFirstLine: skipFirstLine,
-		currentRecord: []string{},
 	}, nil
 }
 
-func (c *CsvDataset) Clone() (dataset.Dataset, error) {
-	newC, err :=
-		New(c.fieldNames, c.filename, c.separator, c.skipFirstLine)
-	return newC, err
-}
-
-func (c *CsvDataset) Next() bool {
-	if c.err != nil {
-		return false
-	}
-	if c.reader == nil {
-		c.err = errors.New("dataset has been closed")
-		return false
-	}
-	record, err := c.reader.Read()
-	if err == io.EOF {
-		c.err = err
-		return false
-	} else if err != nil {
-		c.Close()
-		c.err = err
-		return false
-	}
-	c.currentRecord = record
-	return true
-}
-
-func (c *CsvDataset) Err() error {
-	if c.err == io.EOF {
-		return nil
-	}
-	return c.err
-}
-
-func (c *CsvDataset) Read() (map[string]*dlit.Literal, error) {
-	recordLits := make(map[string]*dlit.Literal)
-	if c.Err() != nil {
-		return recordLits, c.Err()
-	}
-	if len(c.currentRecord) != len(c.fieldNames) {
-		// TODO: Create specific error type for this
-		c.err = errors.New("wrong number of field names for dataset")
-		c.Close()
-		return recordLits, c.err
-	}
-	for i, field := range c.currentRecord {
-		l, err := dlit.New(field)
-		if err != nil {
-			c.Close()
-			c.err = err
-			return recordLits, err
-		}
-		recordLits[c.fieldNames[i]] = l
-	}
-	return recordLits, nil
-}
-
-func (c *CsvDataset) Rewind() error {
-	var err error
-	if c.Err() != nil {
-		return c.err
-	}
-	if c.reader == nil {
-		c.err = errors.New("dataset has been closed")
-		return c.err
-	}
-	if err := c.file.Close(); err != nil {
-		c.err = err
-		return err
-	}
-	c.file, c.reader, err =
-		makeCsvReader(c.filename, c.separator, c.skipFirstLine)
+func (c *CsvDataset) Open() (dataset.Conn, error) {
+	f, r, err := makeCsvReader(c.filename, c.separator, c.skipFirstLine)
 	if err != nil {
-		_ = c.Close
+		return nil, err
 	}
-	c.err = err
-	return err
-}
+	r.Comma = c.separator
 
-func (c *CsvDataset) Close() error {
-	err := c.file.Close()
-	c.file = nil
-	c.reader = nil
-	return err
+	return &CsvDatasetConn{
+		dataset:       c,
+		file:          f,
+		reader:        r,
+		currentRecord: []string{},
+		err:           nil,
+	}, nil
 }
 
 func (c *CsvDataset) GetFieldNames() []string {
 	return c.fieldNames
 }
 
-func makeCsvReader(filename string, separator rune,
-	skipFirstLine bool) (*os.File, *csv.Reader, error) {
+func (cc *CsvDatasetConn) Next() bool {
+	if cc.err != nil {
+		return false
+	}
+	if cc.reader == nil {
+		cc.err = errors.New("connection has been closed")
+		return false
+	}
+	record, err := cc.reader.Read()
+	if err == io.EOF {
+		cc.err = err
+		return false
+	} else if err != nil {
+		cc.Close()
+		cc.err = err
+		return false
+	}
+	cc.currentRecord = record
+	return true
+}
+
+func (cc *CsvDatasetConn) Err() error {
+	if cc.err == io.EOF {
+		return nil
+	}
+	return cc.err
+}
+
+func (cc *CsvDatasetConn) Read() (dataset.Record, error) {
+	recordLits := make(dataset.Record)
+	if cc.Err() != nil {
+		return recordLits, cc.Err()
+	}
+	fieldNames := cc.dataset.GetFieldNames()
+	if len(cc.currentRecord) != cc.getNumFields() {
+		// TODO: Create specific error type for this
+		cc.err = errors.New("wrong number of field names for dataset")
+		cc.Close()
+		return recordLits, cc.err
+	}
+	for i, field := range cc.currentRecord {
+		l, err := dlit.New(field)
+		if err != nil {
+			cc.Close()
+			cc.err = err
+			return recordLits, err
+		}
+		recordLits[fieldNames[i]] = l
+	}
+	return recordLits, nil
+}
+
+func (cc *CsvDatasetConn) Close() error {
+	err := cc.file.Close()
+	cc.file = nil
+	cc.reader = nil
+	return err
+}
+
+func (cc *CsvDatasetConn) getNumFields() int {
+	return cc.dataset.numFields
+}
+
+func (cc *CsvDatasetConn) getFieldNames() []string {
+	return cc.dataset.fieldNames
+}
+
+func makeCsvReader(
+	filename string,
+	separator rune,
+	skipFirstLine bool,
+) (*os.File, *csv.Reader, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, nil, err

@@ -17,21 +17,32 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-// Package dataset describes the Dataset interface
-package dataset
+package internal
 
-import "github.com/lawrencewoodman/dlit"
+import "fmt"
 
-type Dataset interface {
-	Open() (Conn, error)
-	GetFieldNames() []string
+type FieldType int
+
+const (
+	UNKNOWN FieldType = iota
+	IGNORE
+	INT
+	FLOAT
+	STRING
+)
+
+func (ft FieldType) String() string {
+	switch ft {
+	case UNKNOWN:
+		return "Unknown"
+	case IGNORE:
+		return "Ignore"
+	case INT:
+		return "Int"
+	case FLOAT:
+		return "Float"
+	case STRING:
+		return "String"
+	}
+	panic(fmt.Sprintf("Unsupported type: %d", ft))
 }
-
-type Conn interface {
-	Next() bool
-	Err() error
-	Read() (Record, error)
-	Close() error
-}
-
-type Record map[string]*dlit.Literal

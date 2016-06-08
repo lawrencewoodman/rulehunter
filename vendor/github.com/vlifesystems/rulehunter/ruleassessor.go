@@ -17,27 +17,27 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package ruleassessor
+package rulehunter
 
 import (
 	"errors"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rulehunter/aggregators"
+	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/goal"
-	"github.com/vlifesystems/rulehunter/rule"
 )
 
-type RuleAssessor struct {
-	Rule        *rule.Rule
+type ruleAssessor struct {
+	Rule        *Rule
 	Aggregators []aggregators.Aggregator
 	Goals       []*goal.Goal
 }
 
-func New(
-	rule *rule.Rule,
+func newRuleAssessor(
+	rule *Rule,
 	_aggregators []aggregators.Aggregator,
 	goals []*goal.Goal,
-) *RuleAssessor {
+) *ruleAssessor {
 	// Clone the aggregators and goals to ensure the results are
 	// specific to this rule
 	cloneAggregators := make([]aggregators.Aggregator, len(_aggregators))
@@ -48,15 +48,18 @@ func New(
 	for i, g := range goals {
 		cloneGoals[i] = g.Clone()
 	}
-	return &RuleAssessor{Rule: rule, Aggregators: cloneAggregators,
-		Goals: cloneGoals}
+	return &ruleAssessor{
+		Rule:        rule,
+		Aggregators: cloneAggregators,
+		Goals:       cloneGoals,
+	}
 }
 
-func (ra *RuleAssessor) NextRecord(record map[string]*dlit.Literal) error {
+func (ra *ruleAssessor) NextRecord(record dataset.Record) error {
 	var ruleIsTrue bool
 	var err error
 	for _, aggregator := range ra.Aggregators {
-		ruleIsTrue, err = ra.Rule.IsTrue(record)
+		ruleIsTrue, err = ra.Rule.isTrue(record)
 		if err != nil {
 			return err
 		}
@@ -68,7 +71,7 @@ func (ra *RuleAssessor) NextRecord(record map[string]*dlit.Literal) error {
 	return nil
 }
 
-func (ra *RuleAssessor) GetAggregatorValue(
+func (ra *ruleAssessor) GetAggregatorValue(
 	name string,
 	numRecords int64,
 ) (*dlit.Literal, bool) {
