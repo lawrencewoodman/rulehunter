@@ -203,10 +203,7 @@ func processDataset(
 	defer conn.Close()
 
 	for conn.Next() {
-		record, err := conn.Read()
-		if err != nil {
-			return numRecords, err
-		}
+		record := conn.Read()
 		numRecords++
 		for _, ruleAssessor := range ruleAssessors {
 			err := ruleAssessor.NextRecord(record)

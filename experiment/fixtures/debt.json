@@ -1,0 +1,37 @@
+{
+  "title": "What would predict people being helped to be debt free?",
+  "tags": ["debt"],
+  "dataset": "sql",
+  "sql": {
+    "driverName": "sqlite3",
+    "dataSourceName": "../fixtures/debt.db",
+    "tableName": "people"
+  },
+  "fieldNames": [
+		"name",
+		"balance",
+		"numCards",
+		"martialStatus",
+		"tertiaryEducated",
+		"success"
+  ],
+  "excludeFieldNames": ["success"],
+  "aggregators": [
+    {
+      "name": "helpedAccuracy",
+      "function": "accuracy",
+      "arg": "success"
+    }
+  ],
+  "goals": ["helpedAccuracy > 10"],
+  "sortOrder": [
+    {
+      "aggregatorName": "helpedAccuracy",
+      "direction": "descending"
+    },
+    {
+      "aggregatorName": "numMatches",
+      "direction": "descending"
+    }
+  ]
+}

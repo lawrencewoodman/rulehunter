@@ -26,7 +26,7 @@ import (
 func DescribeDataset(
 	dataset dataset.Dataset,
 ) (*Description, error) {
-	_description := newDescription()
+	description := newDescription()
 	conn, err := dataset.Open()
 	if err != nil {
 		return nil, err
@@ -34,12 +34,9 @@ func DescribeDataset(
 	defer conn.Close()
 
 	for conn.Next() {
-		record, err := conn.Read()
-		if err != nil {
-			return _description, err
-		}
-		_description.NextRecord(record)
+		record := conn.Read()
+		description.NextRecord(record)
 	}
 
-	return _description, conn.Err()
+	return description, conn.Err()
 }

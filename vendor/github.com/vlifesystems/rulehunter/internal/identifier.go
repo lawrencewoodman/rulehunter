@@ -23,6 +23,8 @@ import "regexp"
 
 var validIdentifierRegexp = regexp.MustCompile("^[a-zA-Z]([0-9a-zA-Z_])*$")
 
+// Returns whether the string can be used as an identifier for a field name or
+// for an aggregator
 func IsIdentifierValid(identifier string) bool {
 	return validIdentifierRegexp.MatchString(identifier)
 }

@@ -23,10 +23,8 @@ package csvdataset
 import (
 	"encoding/csv"
 	"errors"
-	"fmt"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rulehunter/dataset"
-	"github.com/vlifesystems/rulehunter/internal"
 	"io"
 	"os"
 )
@@ -43,7 +41,7 @@ type CsvDatasetConn struct {
 	dataset       *CsvDataset
 	file          *os.File
 	reader        *csv.Reader
-	currentRecord []string
+	currentRecord dataset.Record
 	err           error
 }
 
@@ -53,7 +51,7 @@ func New(
 	separator rune,
 	skipFirstLine bool,
 ) (dataset.Dataset, error) {
-	if err := checkFieldsValid(fieldNames); err != nil {
+	if err := dataset.CheckFieldNamesValid(fieldNames); err != nil {
 		return nil, err
 	}
 
@@ -77,7 +75,7 @@ func (c *CsvDataset) Open() (dataset.Conn, error) {
 		dataset:       c,
 		file:          f,
 		reader:        r,
-		currentRecord: []string{},
+		currentRecord: make(dataset.Record, c.numFields),
 		err:           nil,
 	}, nil
 }
@@ -94,48 +92,28 @@ func (cc *CsvDatasetConn) Next() bool {
 		cc.err = errors.New("connection has been closed")
 		return false
 	}
-	record, err := cc.reader.Read()
+	row, err := cc.reader.Read()
 	if err == io.EOF {
-		cc.err = err
 		return false
 	} else if err != nil {
 		cc.Close()
 		cc.err = err
 		return false
 	}
-	cc.currentRecord = record
+	if err := cc.makeRowCurrentRecord(row); err != nil {
+		cc.Close()
+		cc.err = err
+		return false
+	}
 	return true
 }
 
 func (cc *CsvDatasetConn) Err() error {
-	if cc.err == io.EOF {
-		return nil
-	}
 	return cc.err
 }
 
-func (cc *CsvDatasetConn) Read() (dataset.Record, error) {
-	recordLits := make(dataset.Record)
-	if cc.Err() != nil {
-		return recordLits, cc.Err()
-	}
-	fieldNames := cc.dataset.GetFieldNames()
-	if len(cc.currentRecord) != cc.getNumFields() {
-		// TODO: Create specific error type for this
-		cc.err = errors.New("wrong number of field names for dataset")
-		cc.Close()
-		return recordLits, cc.err
-	}
-	for i, field := range cc.currentRecord {
-		l, err := dlit.New(field)
-		if err != nil {
-			cc.Close()
-			cc.err = err
-			return recordLits, err
-		}
-		recordLits[fieldNames[i]] = l
-	}
-	return recordLits, nil
+func (cc *CsvDatasetConn) Read() dataset.Record {
+	return cc.currentRecord
 }
 
 func (cc *CsvDatasetConn) Close() error {
@@ -151,6 +129,26 @@ func (cc *CsvDatasetConn) getNumFields() int {
 
 func (cc *CsvDatasetConn) getFieldNames() []string {
 	return cc.dataset.fieldNames
+}
+
+func (cc *CsvDatasetConn) makeRowCurrentRecord(row []string) error {
+	fieldNames := cc.dataset.GetFieldNames()
+	if len(row) != cc.getNumFields() {
+		// TODO: Create specific error type for this
+		cc.err = errors.New("wrong number of field names for dataset")
+		cc.Close()
+		return cc.err
+	}
+	for i, field := range row {
+		l, err := dlit.New(field)
+		if err != nil {
+			cc.Close()
+			cc.err = err
+			return err
+		}
+		cc.currentRecord[fieldNames[i]] = l
+	}
+	return nil
 }
 
 func makeCsvReader(
@@ -171,16 +169,4 @@ func makeCsvReader(
 		}
 	}
 	return f, r, err
-}
-
-func checkFieldsValid(fieldNames []string) error {
-	if len(fieldNames) < 2 {
-		return fmt.Errorf("Must specify at least two field names")
-	}
-	for _, field := range fieldNames {
-		if !internal.IsIdentifierValid(field) {
-			return fmt.Errorf("Invalid field name: %s", field)
-		}
-	}
-	return nil
 }

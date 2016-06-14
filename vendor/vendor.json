@@ -21,58 +21,64 @@
 			"revisionTime": "2016-05-22T09:28:32Z"
 		},
 		{
-			"checksumSHA1": "czO9FJk4EoI6nd7zEYaLGFDLhDE=",
+			"checksumSHA1": "40+hxyLfNiPePbkkc5XeRzHdho0=",
 			"path": "github.com/lawrencewoodman/dlit",
-			"revision": "544ac7a3dcdcaaf2084a7d11c32f3a232c736f5a",
-			"revisionTime": "2016-05-22T11:24:06Z"
+			"revision": "7a71c6f7097e75e4461c5803f871f7d1e0944b2a",
+			"revisionTime": "2016-06-12T05:59:06Z"
 		},
 		{
-			"checksumSHA1": "4CWLNdmw26rEc/pwoKiznsxHFn8=",
+			"checksumSHA1": "+q6a7iju2XMMu5DB/we6odv3/Iw=",
+			"path": "github.com/mattn/go-sqlite3",
+			"revision": "38ee283dabf11c9cbdb968eebd79b1fa7acbabe6",
+			"revisionTime": "2016-05-14T12:23:48Z"
+		},
+		{
+			"checksumSHA1": "Rn1YH66hlJHjt62kexTah7GewFk=",
 			"path": "github.com/vlifesystems/rulehunter",
-			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
-			"revisionTime": "2016-06-07T19:29:01Z"
+			"revision": "e64d38b7f17ce077235b9a3f9ec8ad0a8e418c87",
+			"revisionTime": "2016-06-14T09:56:05Z"
 		},
 		{
 			"checksumSHA1": "sDpRAOqg+xt6NiXc0xhpgpGniY8=",
 			"path": "github.com/vlifesystems/rulehunter/aggregators",
-			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
-			"revisionTime": "2016-06-07T19:29:01Z"
+			"revision": "e64d38b7f17ce077235b9a3f9ec8ad0a8e418c87",
+			"revisionTime": "2016-06-14T09:56:05Z"
 		},
 		{
-			"checksumSHA1": "ummDb26purCuV0YbFOmO8IdJnos=",
+			"checksumSHA1": "7jc65wwjZiCS/ogxcCSEyL0VQek=",
 			"path": "github.com/vlifesystems/rulehunter/csvdataset",
-			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
-			"revisionTime": "2016-06-07T19:29:01Z"
+			"revision": "e64d38b7f17ce077235b9a3f9ec8ad0a8e418c87",
+			"revisionTime": "2016-06-14T09:56:05Z"
 		},
 		{
-			"checksumSHA1": "6k84/+R+sO6F3lUCQYJNEu2DOTA=",
+			"checksumSHA1": "1lQnSZ0JFmBLMZ5w4U6/cB1haXQ=",
 			"path": "github.com/vlifesystems/rulehunter/dataset",
-			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
-			"revisionTime": "2016-06-07T19:29:01Z"
+			"revision": "e64d38b7f17ce077235b9a3f9ec8ad0a8e418c87",
+			"revisionTime": "2016-06-14T09:56:05Z"
 		},
 		{
 			"checksumSHA1": "Hn5fdTamYLXx5aaAdnqpdRL5Ags=",
 			"path": "github.com/vlifesystems/rulehunter/experiment",
-			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
-			"revisionTime": "2016-06-07T19:29:01Z"
+			"revision": "e64d38b7f17ce077235b9a3f9ec8ad0a8e418c87",
+			"revisionTime": "2016-06-14T09:56:05Z"
 		},
 		{
 			"checksumSHA1": "bKK7X1VZaZZM3E84nPHPpznqgGQ=",
 			"path": "github.com/vlifesystems/rulehunter/goal",
-			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
-			"revisionTime": "2016-06-07T19:29:01Z"
+			"revision": "e64d38b7f17ce077235b9a3f9ec8ad0a8e418c87",
+			"revisionTime": "2016-06-14T09:56:05Z"
 		},
 		{
-			"checksumSHA1": "a8CNcDygt/e1QnSyDgI7SvGkm7c=",
+			"checksumSHA1": "m7EhnHD1Wc2i1RcHqgFL9DMOKrM=",
 			"path": "github.com/vlifesystems/rulehunter/internal",
-			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
-			"revisionTime": "2016-06-07T19:29:01Z"
+			"revision": "e64d38b7f17ce077235b9a3f9ec8ad0a8e418c87",
+			"revisionTime": "2016-06-14T09:56:05Z"
 		},
 		{
 			"checksumSHA1": "h9Z0JzyQsa+LG3vzW7vDTvKaNd4=",
 			"path": "github.com/vlifesystems/rulehunter/internal/dexprfuncs",
-			"revision": "18b11c59c8e4f892ba45f7eddd43f56d890d2b8f",
-			"revisionTime": "2016-06-07T19:29:01Z"
+			"revision": "e64d38b7f17ce077235b9a3f9ec8ad0a8e418c87",
+			"revisionTime": "2016-06-14T09:56:05Z"
 		},
 		{
 			"checksumSHA1": "vqc3a+oTUGX8PmD0TS+qQ7gmN8I=",

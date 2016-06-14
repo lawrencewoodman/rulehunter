@@ -29,6 +29,7 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"github.com/vlifesystems/rulehuntersrv/report"
+	"github.com/vlifesystems/rulehuntersrv/sqldataset"
 	"os"
 	"path/filepath"
 )
@@ -38,6 +39,7 @@ type experimentFile struct {
 	Tags              []string
 	Dataset           string
 	Csv               *csvDesc
+	Sql               *sqlDesc
 	FieldNames        []string
 	ExcludeFieldNames []string
 	Aggregators       []*experiment.AggregatorDesc
@@ -49,6 +51,12 @@ type csvDesc struct {
 	Filename  string
 	HasHeader bool
 	Separator string
+}
+
+type sqlDesc struct {
+	DriverName     string
+	DataSourceName string
+	TableName      string
 }
 
 func Process(
@@ -213,6 +221,13 @@ func makeDataset(e *experimentFile) (dataset.Dataset, error) {
 		if err != nil {
 			return nil, err
 		}
+	case "sql":
+		dataset, err = sqldataset.New(
+			e.Sql.DriverName,
+			e.Sql.DataSourceName,
+			e.Sql.TableName,
+			e.FieldNames,
+		)
 	default:
 		return nil,
 			fmt.Errorf("Experiment field: dataset, has invalid type: %s", e.Dataset)

@@ -20,7 +20,11 @@
 // Package dataset describes the Dataset interface
 package dataset
 
-import "github.com/lawrencewoodman/dlit"
+import (
+	"fmt"
+	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rulehunter/internal"
+)
 
 type Dataset interface {
 	Open() (Conn, error)
@@ -30,8 +34,21 @@ type Dataset interface {
 type Conn interface {
 	Next() bool
 	Err() error
-	Read() (Record, error)
+	Read() Record
 	Close() error
 }
 
 type Record map[string]*dlit.Literal
+
+// Check that the field names are valid identifiers
+func CheckFieldNamesValid(fieldNames []string) error {
+	if len(fieldNames) < 2 {
+		return fmt.Errorf("must specify at least two field names")
+	}
+	for _, field := range fieldNames {
+		if !internal.IsIdentifierValid(field) {
+			return fmt.Errorf("invalid field name: %s", field)
+		}
+	}
+	return nil
+}

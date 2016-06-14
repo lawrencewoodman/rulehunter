@@ -122,15 +122,6 @@ func generate(
 	return nil
 }
 
-func inStrings(needle string, haystack []string) bool {
-	for _, v := range haystack {
-		if v == needle {
-			return true
-		}
-	}
-	return false
-}
-
 var nonAlphaNumOrSpaceRegexp = regexp.MustCompile("[^[:alnum:] ]")
 var spaceRegexp = regexp.MustCompile(" ")
 var multipleHyphenRegexp = regexp.MustCompile("-+")

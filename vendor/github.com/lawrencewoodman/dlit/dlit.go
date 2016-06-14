@@ -56,6 +56,10 @@ func New(v interface{}) (*Literal, error) {
 	return newErrorLiteral(err), err
 }
 
+func NewString(s string) *Literal {
+	return &Literal{s: s}
+}
+
 func MustNew(v interface{}) *Literal {
 	l, err := New(v)
 	if err != nil {

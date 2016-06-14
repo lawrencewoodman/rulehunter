@@ -14,7 +14,6 @@ import (
 )
 
 func TestLoadExperiment(t *testing.T) {
-	fieldNames := []string{"group", "district", "height", "flow"}
 	cases := []struct {
 		filename       string
 		wantExperiment *experiment.Experiment
@@ -24,7 +23,7 @@ func TestLoadExperiment(t *testing.T) {
 			&experiment.Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: mustNewCsvDataset(
-					fieldNames,
+					[]string{"group", "district", "height", "flow"},
 					filepath.Join("fixtures", "flow.csv"),
 					rune(','),
 					true,
@@ -40,6 +39,34 @@ func TestLoadExperiment(t *testing.T) {
 				},
 			},
 			[]string{"test", "fred / ned"},
+		},
+		{filepath.Join("fixtures", "debt.json"),
+			&experiment.Experiment{
+				Title: "What would predict people being helped to be debt free?",
+				Dataset: mustNewCsvDataset(
+					[]string{
+						"name",
+						"balance",
+						"numCards",
+						"martialStatus",
+						"tertiaryEducated",
+						"success",
+					},
+					filepath.Join("..", "fixtures", "debt.csv"),
+					rune(','),
+					true,
+				),
+				ExcludeFieldNames: []string{"success"},
+				Aggregators: []aggregators.Aggregator{
+					aggregators.MustNew("helpedAccuracy", "accuracy", "success"),
+				},
+				Goals: []*goal.Goal{goal.MustNew("helpedAccuracy > 10")},
+				SortOrder: []experiment.SortField{
+					experiment.SortField{"helpedAccuracy", experiment.DESCENDING},
+					experiment.SortField{"numMatches", experiment.DESCENDING},
+				},
+			},
+			[]string{"debt"},
 		},
 	}
 	for _, c := range cases {
@@ -138,14 +165,10 @@ func checkDatasetsEqual(ds1, ds2 dataset.Dataset) error {
 			break
 		}
 
-		conn1Record, conn1Err := conn1.Read()
-		conn2Record, conn2Err := conn2.Read()
-		if conn1Err != conn2Err {
-			return errors.New("Datasets don't error at same point")
-		} else if conn1Err == nil && conn2Err == nil {
-			if !reflect.DeepEqual(conn1Record, conn2Record) {
-				return errors.New("Datasets don't match")
-			}
+		conn1Record := conn1.Read()
+		conn2Record := conn2.Read()
+		if !reflect.DeepEqual(conn1Record, conn2Record) {
+			return errors.New("Datasets don't match")
 		}
 	}
 	if conn1.Err() != conn2.Err() {
