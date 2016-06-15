@@ -104,6 +104,14 @@ func TestLoadExperiment_error(t *testing.T) {
 			errors.New("Experiment field missing: csv > filename")},
 		{filepath.Join("fixtures", "flow_no_csv_separator.json"),
 			errors.New("Experiment field missing: csv > separator")},
+		{filepath.Join("fixtures", "flow_no_sql.json"),
+			errors.New("Experiment field missing: sql")},
+		{filepath.Join("fixtures", "flow_no_sql_drivername.json"),
+			errors.New("Experiment field missing: sql > driverName")},
+		{filepath.Join("fixtures", "flow_no_sql_datasourcename.json"),
+			errors.New("Experiment field missing: sql > dataSourceName")},
+		{filepath.Join("fixtures", "flow_no_sql_tablename.json"),
+			errors.New("Experiment field missing: sql > tableName")},
 	}
 	for _, c := range cases {
 		_, _, err := loadExperiment(c.filename)

@@ -253,6 +253,20 @@ func (e *experimentFile) checkValid() error {
 			return errors.New("Experiment field missing: csv > separator")
 		}
 	}
+	if e.Dataset == "sql" {
+		if e.Sql == nil {
+			return errors.New("Experiment field missing: sql")
+		}
+		if len(e.Sql.DriverName) == 0 {
+			return errors.New("Experiment field missing: sql > driverName")
+		}
+		if len(e.Sql.DataSourceName) == 0 {
+			return errors.New("Experiment field missing: sql > dataSourceName")
+		}
+		if len(e.Sql.TableName) == 0 {
+			return errors.New("Experiment field missing: sql > tableName")
+		}
+	}
 	return nil
 }
 

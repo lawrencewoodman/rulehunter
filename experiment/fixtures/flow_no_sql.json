@@ -1,0 +1,25 @@
+{
+  "title": "What would indicate good flow?",
+  "tags": ["test", "fred / ned"],
+  "dataset": "sql",
+  "fieldNames": ["group","district","height","flow"],
+  "excludeFieldNames": ["flow"],
+  "aggregators": [
+    {
+      "name": "goodFlowAccuracy",
+      "function": "accuracy",
+      "arg": "flow > 60"
+    }
+  ],
+  "goals": ["goodFlowAccuracy > 10"],
+  "sortOrder": [
+    {
+      "aggregatorName": "goodFlowAccuracy",
+      "direction": "descending"
+    },
+    {
+      "aggregatorName": "numMatches",
+      "direction": "descending"
+    }
+  ]
+}
