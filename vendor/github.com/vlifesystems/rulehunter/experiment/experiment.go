@@ -23,15 +23,15 @@ package experiment
 import (
 	"errors"
 	"fmt"
+	"github.com/lawrencewoodman/ddataset"
 	"github.com/vlifesystems/rulehunter/aggregators"
-	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/goal"
 	"github.com/vlifesystems/rulehunter/internal"
 )
 
 type ExperimentDesc struct {
 	Title         string
-	Dataset       dataset.Dataset
+	Dataset       ddataset.Dataset
 	ExcludeFields []string
 	Aggregators   []*AggregatorDesc
 	Goals         []string
@@ -51,7 +51,7 @@ type SortDesc struct {
 
 type Experiment struct {
 	Title             string
-	Dataset           dataset.Dataset
+	Dataset           ddataset.Dataset
 	ExcludeFieldNames []string
 	Aggregators       []aggregators.Aggregator
 	Goals             []*goal.Goal

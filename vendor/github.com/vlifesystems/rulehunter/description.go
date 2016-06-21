@@ -21,8 +21,8 @@ package rulehunter
 
 import (
 	"fmt"
+	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/internal"
 	"math"
 )
@@ -52,7 +52,7 @@ func (fd *fieldDescription) String() string {
 }
 
 // Analyse this record
-func (d *Description) NextRecord(record dataset.Record) {
+func (d *Description) NextRecord(record ddataset.Record) {
 	if len(d.fields) == 0 {
 		for field, value := range record {
 			d.fields[field] = &fieldDescription{

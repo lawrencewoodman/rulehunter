@@ -62,7 +62,6 @@ type parser struct {
 // The position information recorded in the AST is undefined. The filename used
 // in error messages is the empty string.
 func parseExpr(x string) (ast.Expr, error) {
-	var err error
 	text := []byte(x)
 	fset := token.NewFileSet()
 
@@ -75,7 +74,6 @@ func parseExpr(x string) (ast.Expr, error) {
 			}
 		}
 		p.errors.Sort()
-		err = p.errors.Err()
 	}()
 
 	// parse expr
@@ -303,30 +301,6 @@ func syncStmt(p *parser) {
 			// leads to skipping of possibly correct code if a
 			// previous error is present, and thus is preferred
 			// over a non-terminating parse.
-		case token.EOF:
-			return
-		}
-		p.next()
-	}
-}
-
-// syncDecl advances to the next declaration.
-// Used for synchronization after an error.
-//
-func syncDecl(p *parser) {
-	for {
-		switch p.tok {
-		case token.CONST, token.TYPE, token.VAR:
-			// see comments in syncStmt
-			if p.pos == p.syncPos && p.syncCnt < 10 {
-				p.syncCnt++
-				return
-			}
-			if p.pos > p.syncPos {
-				p.syncPos = p.pos
-				p.syncCnt = 0
-				return
-			}
 		case token.EOF:
 			return
 		}

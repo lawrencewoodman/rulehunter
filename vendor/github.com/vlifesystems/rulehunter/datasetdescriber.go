@@ -20,11 +20,11 @@
 package rulehunter
 
 import (
-	"github.com/vlifesystems/rulehunter/dataset"
+	"github.com/lawrencewoodman/ddataset"
 )
 
 func DescribeDataset(
-	dataset dataset.Dataset,
+	dataset ddataset.Dataset,
 ) (*Description, error) {
 	description := newDescription()
 	conn, err := dataset.Open()

@@ -1,0 +1,21 @@
+version: "{build}"
+
+platform:
+  - x86
+  - x64
+
+clone_folder: c:\gopath\src\github.com\LawrenceWoodman\ddataset
+
+environment:
+  GOPATH: c:\gopath
+
+install:
+  - choco install mingw -y
+  - set PATH=%PATH%;C:\tools\mingw64\bin
+  - echo %PATH%
+  - go version
+  - go env
+  - go get -v -t ./...
+
+build_script:
+  - go test -v ./...

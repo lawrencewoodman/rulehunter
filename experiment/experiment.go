@@ -16,20 +16,21 @@
 	along with this program; see the file COPYING.  If not, see
 	<http://www.gnu.org/licenses/>.
 */
+
 package experiment
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/ddataset/dcsv"
+	"github.com/lawrencewoodman/ddataset/dsql"
 	"github.com/vlifesystems/rulehunter"
-	"github.com/vlifesystems/rulehunter/csvdataset"
-	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"github.com/vlifesystems/rulehuntersrv/report"
-	"github.com/vlifesystems/rulehuntersrv/sqldataset"
 	"os"
 	"path/filepath"
 )
@@ -206,26 +207,24 @@ func loadExperiment(filename string) (
 	return experiment, e.Tags, err
 }
 
-func makeDataset(e *experimentFile) (dataset.Dataset, error) {
-	var dataset dataset.Dataset
+func makeDataset(e *experimentFile) (ddataset.Dataset, error) {
+	var dataset ddataset.Dataset
 	var err error
 
 	switch e.Dataset {
 	case "csv":
-		dataset, err = csvdataset.New(
-			e.FieldNames,
+		dataset = dcsv.New(
 			e.Csv.Filename,
-			rune(e.Csv.Separator[0]),
 			e.Csv.HasHeader,
+			rune(e.Csv.Separator[0]),
+			e.FieldNames,
 		)
 		if err != nil {
 			return nil, err
 		}
 	case "sql":
-		dataset, err = sqldataset.New(
-			e.Sql.DriverName,
-			e.Sql.DataSourceName,
-			e.Sql.TableName,
+		dataset = dsql.New(
+			newSQLHandler(e.Sql.DriverName, e.Sql.DataSourceName, e.Sql.TableName),
 			e.FieldNames,
 		)
 	default:
@@ -234,6 +233,8 @@ func makeDataset(e *experimentFile) (dataset.Dataset, error) {
 	}
 	return dataset, nil
 }
+
+var validDrivers = []string{"sqlite3"}
 
 func (e *experimentFile) checkValid() error {
 	if len(e.Title) == 0 {
@@ -259,6 +260,9 @@ func (e *experimentFile) checkValid() error {
 		}
 		if len(e.Sql.DriverName) == 0 {
 			return errors.New("Experiment field missing: sql > driverName")
+		}
+		if !inStringsSlice(e.Sql.DriverName, validDrivers) {
+			return errors.New("Experiment has invalid sql > driverName")
 		}
 		if len(e.Sql.DataSourceName) == 0 {
 			return errors.New("Experiment field missing: sql > dataSourceName")
@@ -305,4 +309,13 @@ func assessRules(
 		return nil, err
 	}
 	return assessment, nil
+}
+
+func inStringsSlice(needle string, haystack []string) bool {
+	for _, v := range haystack {
+		if v == needle {
+			return true
+		}
+	}
+	return false
 }

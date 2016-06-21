@@ -21,9 +21,9 @@ package rulehunter
 
 import (
 	"errors"
+	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rulehunter/aggregators"
-	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/goal"
 )
 
@@ -55,7 +55,7 @@ func newRuleAssessor(
 	}
 }
 
-func (ra *ruleAssessor) NextRecord(record dataset.Record) error {
+func (ra *ruleAssessor) NextRecord(record ddataset.Record) error {
 	var ruleIsTrue bool
 	var err error
 	for _, aggregator := range ra.Aggregators {

@@ -44,7 +44,7 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 	}
 	x, isFloat := args[0].Float()
 	if !isFloat {
-		if err, isErr := args[0].Err(); isErr {
+		if err := args[0].Err(); err != nil {
 			return args[0], err
 		}
 		err := errors.New(fmt.Sprintf("Can't convert to float: %s", args[0]))
@@ -53,7 +53,7 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 	}
 	p, isInt := args[1].Int()
 	if !isInt {
-		if err, isErr := args[1].Err(); isErr {
+		if err := args[1].Err(); err != nil {
 			return args[1], err
 		}
 		err := errors.New(fmt.Sprintf("Can't convert to int: %s", args[0]))

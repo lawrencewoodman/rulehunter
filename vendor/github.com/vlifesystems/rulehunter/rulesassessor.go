@@ -22,8 +22,8 @@ package rulehunter
 import (
 	"errors"
 	"fmt"
+	"github.com/lawrencewoodman/ddataset"
 	"github.com/vlifesystems/rulehunter/aggregators"
-	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/experiment"
 )
 
@@ -192,7 +192,7 @@ func filterGoodRuleAssessors(
 }
 
 func processDataset(
-	dataset dataset.Dataset,
+	dataset ddataset.Dataset,
 	ruleAssessors []*ruleAssessor,
 ) (int64, error) {
 	numRecords := int64(0)

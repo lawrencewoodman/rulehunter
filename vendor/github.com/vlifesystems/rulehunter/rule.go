@@ -22,8 +22,8 @@ package rulehunter
 import (
 	"errors"
 	"fmt"
+	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dexpr"
-	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
 	"regexp"
 )
@@ -81,7 +81,7 @@ func (r *Rule) getInNiParts() (bool, string, string) {
 	return isInNi, operator, fieldName
 }
 
-func (r *Rule) isTrue(record dataset.Record) (bool, error) {
+func (r *Rule) isTrue(record ddataset.Record) (bool, error) {
 	isTrue, err := r.expr.EvalBool(record, dexprfuncs.CallFuncs)
 	// TODO: Create an error type for rule rather than coopting the dexpr one
 	return isTrue, err

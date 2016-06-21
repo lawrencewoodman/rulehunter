@@ -6,6 +6,7 @@
  * Licensed under an MIT licence.  Please see LICENCE.md for details.
  */
 
+// Package dlit handles dynamic typed Literals
 package dlit
 
 import (
@@ -15,6 +16,7 @@ import (
 	"strconv"
 )
 
+// Literal represents a dynamically typed value
 type Literal struct {
 	i          int64
 	f          float64
@@ -35,6 +37,8 @@ const (
 	no
 )
 
+// New creates a Literal from any of the following types:
+// int, int64, float32, float64, string, bool, error
 func New(v interface{}) (*Literal, error) {
 	switch e := v.(type) {
 	case int:
@@ -56,10 +60,12 @@ func New(v interface{}) (*Literal, error) {
 	return newErrorLiteral(err), err
 }
 
+// NewString creates a Literal from a string
 func NewString(s string) *Literal {
 	return &Literal{s: s}
 }
 
+// MustNew creates a New Literal and panic if it fails
 func MustNew(v interface{}) *Literal {
 	l, err := New(v)
 	if err != nil {
@@ -68,7 +74,8 @@ func MustNew(v interface{}) *Literal {
 	return l
 }
 
-func (l *Literal) Int() (int64, bool) {
+// Int returns Literal as an int64 and whether it can be an int64
+func (l *Literal) Int() (value int64, canBeInt bool) {
 	switch l.canBeInt {
 	case yes:
 		return l.i, true
@@ -85,7 +92,8 @@ func (l *Literal) Int() (int64, bool) {
 	return 0, false
 }
 
-func (l *Literal) Float() (float64, bool) {
+// Float returns Literal as a float64 and whether it can be a float64
+func (l *Literal) Float() (value float64, canBeFloat bool) {
 	switch l.canBeFloat {
 	case yes:
 		return l.f, true
@@ -101,7 +109,8 @@ func (l *Literal) Float() (float64, bool) {
 	return 0, false
 }
 
-func (l *Literal) Bool() (bool, bool) {
+// Bool returns Literal as a bool and whether it can be a bool
+func (l *Literal) Bool() (value bool, canBeBool bool) {
 	switch l.canBeBool {
 	case yes:
 		return l.b, true
@@ -139,6 +148,7 @@ func (l *Literal) Bool() (bool, bool) {
 	return false, false
 }
 
+// String returns Literal as a string
 func (l *Literal) String() string {
 	if len(l.s) > 0 {
 		return l.s
@@ -160,15 +170,18 @@ func (l *Literal) String() string {
 	return l.s
 }
 
-func (l *Literal) Err() (error, bool) {
+// Err returns an error if can be an error or nil
+func (l *Literal) Err() error {
 	if l.canBeError == yes {
-		return l.e, true
+		return l.e
 	}
-	return nil, false
+	return nil
 }
 
+// ErrInvalidKind indicates that a Literal can't be created from this type
 type ErrInvalidKind string
 
+// Error returns the error as a string
 func (e ErrInvalidKind) Error() string {
 	return fmt.Sprintf("Can't create Literal from type: %s", string(e))
 }

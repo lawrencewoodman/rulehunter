@@ -119,7 +119,7 @@ func AggregatorsToMap(
 			}
 		}
 		l := aggregator.GetResult(aggregators, goals, numRecords)
-		if err, isErr := l.Err(); isErr {
+		if err := l.Err(); err != nil {
 			return r, err
 		}
 		r[aggregator.GetName()] = l

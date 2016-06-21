@@ -2,10 +2,9 @@ package experiment
 
 import (
 	"errors"
-	"fmt"
+	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/ddataset/dcsv"
 	"github.com/vlifesystems/rulehunter/aggregators"
-	"github.com/vlifesystems/rulehunter/csvdataset"
-	"github.com/vlifesystems/rulehunter/dataset"
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehunter/goal"
 	"path/filepath"
@@ -22,11 +21,11 @@ func TestLoadExperiment(t *testing.T) {
 		{filepath.Join("fixtures", "flow.json"),
 			&experiment.Experiment{
 				Title: "What would indicate good flow?",
-				Dataset: mustNewCsvDataset(
-					[]string{"group", "district", "height", "flow"},
+				Dataset: dcsv.New(
 					filepath.Join("fixtures", "flow.csv"),
-					rune(','),
 					true,
+					rune(','),
+					[]string{"group", "district", "height", "flow"},
 				),
 				ExcludeFieldNames: []string{"flow"},
 				Aggregators: []aggregators.Aggregator{
@@ -43,7 +42,10 @@ func TestLoadExperiment(t *testing.T) {
 		{filepath.Join("fixtures", "debt.json"),
 			&experiment.Experiment{
 				Title: "What would predict people being helped to be debt free?",
-				Dataset: mustNewCsvDataset(
+				Dataset: dcsv.New(
+					filepath.Join("..", "fixtures", "debt.csv"),
+					true,
+					rune(','),
 					[]string{
 						"name",
 						"balance",
@@ -52,9 +54,6 @@ func TestLoadExperiment(t *testing.T) {
 						"tertiaryEducated",
 						"success",
 					},
-					filepath.Join("..", "fixtures", "debt.csv"),
-					rune(','),
-					true,
 				),
 				ExcludeFieldNames: []string{"success"},
 				Aggregators: []aggregators.Aggregator{
@@ -108,6 +107,8 @@ func TestLoadExperiment_error(t *testing.T) {
 			errors.New("Experiment field missing: sql")},
 		{filepath.Join("fixtures", "flow_no_sql_drivername.json"),
 			errors.New("Experiment field missing: sql > driverName")},
+		{filepath.Join("fixtures", "flow_invalid_sql_drivername.json"),
+			errors.New("Experiment has invalid sql > driverName")},
 		{filepath.Join("fixtures", "flow_no_sql_datasourcename.json"),
 			errors.New("Experiment field missing: sql > dataSourceName")},
 		{filepath.Join("fixtures", "flow_no_sql_tablename.json"),
@@ -154,7 +155,7 @@ func checkExperimentMatch(
 	return checkDatasetsEqual(e1.Dataset, e2.Dataset)
 }
 
-func checkDatasetsEqual(ds1, ds2 dataset.Dataset) error {
+func checkDatasetsEqual(ds1, ds2 ddataset.Dataset) error {
 	conn1, err := ds1.Open()
 	if err != nil {
 		return err
@@ -239,18 +240,4 @@ func areSortOrdersEqual(
 		}
 	}
 	return true
-}
-
-func mustNewCsvDataset(
-	fieldNames []string,
-	filename string,
-	separator rune,
-	skipFirstLine bool,
-) dataset.Dataset {
-	dataset, err :=
-		csvdataset.New(fieldNames, filename, separator, skipFirstLine)
-	if err != nil {
-		panic(fmt.Sprintf("Couldn't create Csv Dataset: %s", err))
-	}
-	return dataset
 }

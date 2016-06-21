@@ -11,6 +11,8 @@ Contributing
 ------------
 
 [![Build Status](https://travis-ci.org/LawrenceWoodman/dexpr.svg?branch=master)](https://travis-ci.org/LawrenceWoodman/dexpr)
+[![Coverage Status](https://coveralls.io/repos/LawrenceWoodman/dexpr/badge.svg?branch=master)](https://coveralls.io/r/LawrenceWoodman/dexpr?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/LawrenceWoodman/dexpr)](https://goreportcard.com/report/github.com/LawrenceWoodman/dexpr)
 
 If you want to improve this program make a pull request to the [repo](https://github.com/LawrenceWoodman/dexpr) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/LawrenceWoodman/dexpr/issues) also on github.
 

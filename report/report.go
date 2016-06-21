@@ -168,7 +168,7 @@ func calcTrueAggregatorDifference(
 	}
 	difference := "N/A"
 	differenceL := diffExpr.Eval(vars, funcs)
-	if _, isErr := differenceL.Err(); !isErr {
+	if err := differenceL.Err(); err != nil {
 		difference = differenceL.String()
 	}
 	return difference
