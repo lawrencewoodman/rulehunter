@@ -3,3 +3,13 @@ language: go
 go:
   - 1.6
   - tip
+
+before_install:
+  - go get github.com/mattn/goveralls
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/lawrencewoodman/roveralls
+
+script:
+  - go test -v ./...
+  - $HOME/gopath/bin/roveralls
+  - $HOME/gopath/bin/goveralls -coverprofile=roveralls.coverprofile -service=travis-ci
