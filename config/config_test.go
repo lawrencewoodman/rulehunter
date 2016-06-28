@@ -2,9 +2,11 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"syscall"
 	"testing"
 )
 
@@ -87,7 +89,7 @@ func TestLoad_errors(t *testing.T) {
 			&os.PathError{
 				"open",
 				filepath.Join("fixtures", "config_nonexistant.json"),
-				errors.New("no such file or directory"),
+				syscall.ENOENT,
 			},
 		},
 		{filepath.Join("fixtures", "config_noexperimentsdir.json"),
@@ -102,9 +104,8 @@ func TestLoad_errors(t *testing.T) {
 
 	for _, c := range cases {
 		_, gotErr := Load(c.filename)
-		if gotErr == nil || gotErr.Error() != c.wantErr.Error() {
-			t.Errorf("Load(%s) gotErr: %s, wantErr: %s",
-				c.filename, gotErr, c.wantErr)
+		if err := checkErrorMatch(gotErr, c.wantErr); err != nil {
+			t.Errorf("Load(%s) %s", c.filename, err)
 			return
 		}
 	}
@@ -119,4 +120,35 @@ func configsMatch(c1, c2 *Config) bool {
 		c1.BuildDir == c2.BuildDir &&
 		c1.NumRulesInReport == c2.NumRulesInReport &&
 		c1.MaxNumProcesses == c2.MaxNumProcesses
+}
+
+func checkErrorMatch(got, want error) error {
+	if perr, ok := want.(*os.PathError); ok {
+		return checkPathErrorMatch(got, perr)
+	}
+	if got.Error() != want.Error() {
+		return fmt.Errorf("got err: %s, want err: %s", got, want)
+	}
+	return nil
+}
+
+func checkPathErrorMatch(
+	checkErr error,
+	wantErr *os.PathError,
+) error {
+	perr, ok := checkErr.(*os.PathError)
+	if !ok {
+		return fmt.Errorf("got err type: %T, want error type: os.PathError",
+			checkErr)
+	}
+	if perr.Op != wantErr.Op {
+		return fmt.Errorf("got perr.Op: %s, want: %s", perr.Op, wantErr.Op)
+	}
+	if filepath.Clean(perr.Path) != filepath.Clean(wantErr.Path) {
+		return fmt.Errorf("got perr.Path: %s, want: %s", perr.Path, wantErr.Path)
+	}
+	if perr.Err != wantErr.Err {
+		return fmt.Errorf("got perr.Err: %s, want: %s", perr.Err, wantErr.Err)
+	}
+	return nil
 }
