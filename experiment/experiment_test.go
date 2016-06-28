@@ -111,8 +111,8 @@ func TestLoadExperiment_error(t *testing.T) {
 			errors.New("Experiment has invalid sql > driverName")},
 		{filepath.Join("fixtures", "flow_no_sql_datasourcename.json"),
 			errors.New("Experiment field missing: sql > dataSourceName")},
-		{filepath.Join("fixtures", "flow_no_sql_tablename.json"),
-			errors.New("Experiment field missing: sql > tableName")},
+		{filepath.Join("fixtures", "flow_no_sql_query.json"),
+			errors.New("Experiment field missing: sql > query")},
 	}
 	for _, c := range cases {
 		_, _, err := loadExperiment(c.filename)

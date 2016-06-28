@@ -4,7 +4,7 @@
   "dataset": "sql",
   "sql": {
     "dataSourceName": "users.db",
-    "tableName": "people"
+    "query": "select * from \"people\""
   },
   "fieldNames": ["group","district","height","flow"],
   "excludeFieldNames": ["flow"],

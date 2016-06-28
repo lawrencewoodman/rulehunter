@@ -4,7 +4,7 @@
   "dataset": "sql",
   "sql": {
     "driverName": "sqlite3",
-    "tableName": "people"
+    "query": "select * from \"people\""
   },
   "fieldNames": ["group","district","height","flow"],
   "excludeFieldNames": ["flow"],

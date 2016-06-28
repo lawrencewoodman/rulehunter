@@ -57,7 +57,7 @@ type csvDesc struct {
 type sqlDesc struct {
 	DriverName     string
 	DataSourceName string
-	TableName      string
+	Query          string
 }
 
 func Process(
@@ -223,10 +223,12 @@ func makeDataset(e *experimentFile) (ddataset.Dataset, error) {
 			return nil, err
 		}
 	case "sql":
-		dataset = dsql.New(
-			newSQLHandler(e.Sql.DriverName, e.Sql.DataSourceName, e.Sql.TableName),
-			e.FieldNames,
+		sqlHandler := newSQLHandler(
+			e.Sql.DriverName,
+			e.Sql.DataSourceName,
+			e.Sql.Query,
 		)
+		dataset = dsql.New(sqlHandler, e.FieldNames)
 	default:
 		return nil,
 			fmt.Errorf("Experiment field: dataset, has invalid type: %s", e.Dataset)
@@ -267,8 +269,8 @@ func (e *experimentFile) checkValid() error {
 		if len(e.Sql.DataSourceName) == 0 {
 			return errors.New("Experiment field missing: sql > dataSourceName")
 		}
-		if len(e.Sql.TableName) == 0 {
-			return errors.New("Experiment field missing: sql > tableName")
+		if len(e.Sql.Query) == 0 {
+			return errors.New("Experiment field missing: sql > query")
 		}
 	}
 	return nil

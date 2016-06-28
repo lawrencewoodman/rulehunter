@@ -30,17 +30,21 @@ import (
 type sqlHandler struct {
 	driverName     string
 	dataSourceName string
-	tableName      string
+	query          string
 	db             *sql.DB
 	openConn       int
 	sync.Mutex
 }
 
-func newSQLHandler(driverName, dataSourceName, tableName string) *sqlHandler {
+func newSQLHandler(
+	driverName string,
+	dataSourceName string,
+	query string,
+) *sqlHandler {
 	return &sqlHandler{
 		driverName:     driverName,
 		dataSourceName: dataSourceName,
-		tableName:      tableName,
+		query:          query,
 		db:             nil,
 		openConn:       0,
 	}
@@ -74,40 +78,11 @@ func (s *sqlHandler) Close() error {
 }
 
 func (s *sqlHandler) Rows() (*sql.Rows, error) {
-	if err := s.checkTableExists(s.tableName); err != nil {
-		s.Close()
-		return nil, err
-	}
-	rows, err := s.db.Query(fmt.Sprintf("SELECT * FROM \"%s\"", s.tableName))
+	rows, err := s.db.Query(s.query)
 	if err != nil {
 		s.Close()
 	}
 	return rows, err
-}
-
-// checkTableExists returns error if table doesn't exist in database
-func (s *sqlHandler) checkTableExists(tableName string) error {
-	var rowTableName string
-	var rows *sql.Rows
-	var err error
-	tableNames := make([]string, 0)
-
-	rows, err = s.db.Query("select name from sqlite_master where type='table'")
-	if err != nil {
-		return err
-	}
-
-	for rows.Next() {
-		if err := rows.Scan(&rowTableName); err != nil {
-			return err
-		}
-		tableNames = append(tableNames, rowTableName)
-	}
-
-	if !inStringsSlice(tableName, tableNames) {
-		return fmt.Errorf("table name doesn't exist: %s", tableName)
-	}
-	return nil
 }
 
 func fileExists(path string) bool {

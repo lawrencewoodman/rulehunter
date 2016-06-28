@@ -5,7 +5,7 @@
   "sql": {
     "driverName": "sqlite3",
     "dataSourceName": "../fixtures/debt.db",
-    "tableName": "people"
+    "query": "select * from \"people\""
   },
   "fieldNames": [
 		"name",
