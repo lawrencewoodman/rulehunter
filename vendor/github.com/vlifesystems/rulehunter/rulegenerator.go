@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/internal"
 	"regexp"
 	"sort"
 	"strings"
@@ -96,7 +95,7 @@ func generateIntRules(
 	field string,
 ) ([]*Rule, error) {
 	fd := inputDescription.fields[field]
-	if fd.kind != internal.INT {
+	if fd.kind != ftInt {
 		return []*Rule{}, nil
 	}
 	rulesMap := make(map[string]*Rule)
@@ -168,7 +167,7 @@ func generateFloatRules(
 	inputDescription *Description,
 	excludeFields []string, field string) ([]*Rule, error) {
 	fd := inputDescription.fields[field]
-	if fd.kind != internal.FLOAT {
+	if fd.kind != ftFloat {
 		return []*Rule{}, nil
 	}
 	rulesMap := make(map[string]*Rule)
@@ -234,7 +233,7 @@ func generateCompareNumericRules(
 	field string,
 ) ([]*Rule, error) {
 	fd := inputDescription.fields[field]
-	if fd.kind != internal.INT && fd.kind != internal.FLOAT {
+	if fd.kind != ftInt && fd.kind != ftFloat {
 		return []*Rule{}, nil
 	}
 	fieldNum := calcFieldNum(inputDescription.fields, field)
@@ -269,7 +268,7 @@ func generateCompareStringRules(
 	field string,
 ) ([]*Rule, error) {
 	fd := inputDescription.fields[field]
-	if fd.kind != internal.STRING {
+	if fd.kind != ftString {
 		return []*Rule{}, nil
 	}
 	fieldNum := calcFieldNum(inputDescription.fields, field)
@@ -278,7 +277,7 @@ func generateCompareStringRules(
 		"%s == %s", "%s != %s",
 	}
 	for oField, oFd := range inputDescription.fields {
-		if oFd.kind == internal.STRING {
+		if oFd.kind == ftString {
 			oFieldNum := calcFieldNum(inputDescription.fields, oField)
 			numSharedValues := calcNumSharedValues(fd, oFd)
 			if fieldNum < oFieldNum &&
@@ -320,7 +319,7 @@ func generateStringRules(
 	field string,
 ) ([]*Rule, error) {
 	fd := inputDescription.fields[field]
-	if fd.kind != internal.STRING {
+	if fd.kind != ftString {
 		return []*Rule{}, nil
 	}
 	rulesMap := make(map[string]*Rule)
@@ -347,7 +346,7 @@ func generateStringRules(
 }
 
 func isNumberField(fd *fieldDescription) bool {
-	return fd.kind == internal.INT || fd.kind == internal.FLOAT
+	return fd.kind == ftInt || fd.kind == ftFloat
 }
 
 func hasComparableNumberRange(
@@ -393,9 +392,9 @@ func generateInNiRules(
 ) ([]*Rule, error) {
 	fd := inputDescription.fields[field]
 	numValues := len(fd.values)
-	if fd.kind != internal.STRING &&
-		fd.kind != internal.FLOAT &&
-		fd.kind != internal.INT ||
+	if fd.kind != ftString &&
+		fd.kind != ftFloat &&
+		fd.kind != ftInt ||
 		numValues <= 3 || numValues > 12 {
 		return []*Rule{}, nil
 	}

@@ -22,7 +22,6 @@ package rulehunter
 import (
 	"fmt"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/internal"
 	"sort"
 	"strings"
 )
@@ -108,7 +107,7 @@ func makeComparisonPoints(
 	numNumbers := len(numbers)
 	sortNumbers(numbers)
 
-	if fd[field].kind == internal.INT {
+	if fd[field].kind == ftInt {
 		for numI, numJ := 0, 1; numJ < numNumbers; numI, numJ = numI+1, numJ+1 {
 			vI := numbers[numI]
 			vJ := numbers[numJ]

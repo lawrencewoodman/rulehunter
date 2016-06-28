@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/internal"
 	"math"
 )
 
@@ -38,7 +37,7 @@ func newDescription() *Description {
 }
 
 type fieldDescription struct {
-	kind      internal.FieldType
+	kind      fieldType
 	min       *dlit.Literal
 	max       *dlit.Literal
 	maxDP     int
@@ -56,7 +55,7 @@ func (d *Description) NextRecord(record ddataset.Record) {
 	if len(d.fields) == 0 {
 		for field, value := range record {
 			d.fields[field] = &fieldDescription{
-				kind: internal.UNKNOWN,
+				kind: ftUnknown,
 				min:  value,
 				max:  value,
 			}
@@ -76,28 +75,28 @@ func (f *fieldDescription) processValue(value *dlit.Literal) {
 
 func (f *fieldDescription) updateKind(value *dlit.Literal) {
 	switch f.kind {
-	case internal.UNKNOWN:
+	case ftUnknown:
 		fallthrough
-	case internal.INT:
+	case ftInt:
 		if _, isInt := value.Int(); isInt {
-			f.kind = internal.INT
+			f.kind = ftInt
 			break
 		}
 		fallthrough
-	case internal.FLOAT:
+	case ftFloat:
 		if _, isFloat := value.Float(); isFloat {
-			f.kind = internal.FLOAT
+			f.kind = ftFloat
 			break
 		}
-		f.kind = internal.STRING
+		f.kind = ftString
 	}
 }
 
 func (f *fieldDescription) updateValues(value *dlit.Literal) {
 	// Chose 31 so could hold each day in month
 	maxNumValues := 31
-	if f.kind == internal.IGNORE ||
-		f.kind == internal.UNKNOWN ||
+	if f.kind == ftIgnore ||
+		f.kind == ftUnknown ||
 		f.numValues == -1 {
 		return
 	}
@@ -107,8 +106,8 @@ func (f *fieldDescription) updateValues(value *dlit.Literal) {
 		}
 	}
 	if f.numValues >= maxNumValues {
-		if f.kind == internal.STRING {
-			f.kind = internal.IGNORE
+		if f.kind == ftString {
+			f.kind = ftIgnore
 		}
 		f.values = []*dlit.Literal{}
 		f.numValues = -1
@@ -119,7 +118,7 @@ func (f *fieldDescription) updateValues(value *dlit.Literal) {
 }
 
 func (f *fieldDescription) updateNumBoundaries(value *dlit.Literal) {
-	if f.kind == internal.INT {
+	if f.kind == ftInt {
 		valueInt, valueIsInt := value.Int()
 		minInt, minIsInt := f.min.Int()
 		maxInt, maxIsInt := f.max.Int()
@@ -128,7 +127,7 @@ func (f *fieldDescription) updateNumBoundaries(value *dlit.Literal) {
 		}
 		f.min = dlit.MustNew(minI(minInt, valueInt))
 		f.max = dlit.MustNew(maxI(maxInt, valueInt))
-	} else if f.kind == internal.FLOAT {
+	} else if f.kind == ftFloat {
 		valueFloat, valueIsFloat := value.Float()
 		minFloat, minIsFloat := f.min.Float()
 		maxFloat, maxIsFloat := f.max.Float()
@@ -138,7 +137,7 @@ func (f *fieldDescription) updateNumBoundaries(value *dlit.Literal) {
 		f.min = dlit.MustNew(math.Min(minFloat, valueFloat))
 		f.max = dlit.MustNew(math.Max(maxFloat, valueFloat))
 		f.maxDP =
-			int(maxI(int64(f.maxDP), int64(internal.NumDecPlaces(value.String()))))
+			int(maxI(int64(f.maxDP), int64(numDecPlaces(value.String()))))
 	}
 }
 
