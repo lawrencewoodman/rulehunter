@@ -19,135 +19,37 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehuntersrv/config"
-	"github.com/vlifesystems/rulehuntersrv/experiment"
 	"github.com/vlifesystems/rulehuntersrv/html"
 	"github.com/vlifesystems/rulehuntersrv/html/cmd"
 	"github.com/vlifesystems/rulehuntersrv/progress"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 )
 
-var logger service.Logger
-
-type program struct {
-	configDir       string
-	config          *config.Config
-	progressMonitor *progress.ProgressMonitor
-}
-
-func (p *program) Start(s service.Service) error {
-	go p.run()
-	return nil
-}
-
-func (p *program) run() {
-	sleepInSeconds := time.Duration(2)
-	logWaitingForExperiments := true
-
-	for {
-		if logWaitingForExperiments {
-			logWaitingForExperiments = false
-			logger.Infof("Waiting for experiments to process")
-		}
-		experimentFilenames, err := p.getExperimentFilenames()
-		if err != nil {
-			logger.Error(err)
-		}
-		for _, experimentFilename := range experimentFilenames {
-			err := p.progressMonitor.AddExperiment(experimentFilename)
-			if err != nil {
-				logger.Error(err)
-			}
-		}
-
-		for _, experimentFilename := range experimentFilenames {
-			logWaitingForExperiments = true
-			logger.Infof("Processing experiment: %s", experimentFilename)
-
-			err := experiment.Process(
-				experimentFilename,
-				p.config,
-				p.progressMonitor,
-			)
-			if err != nil {
-				logger.Errorf("Failed processing experiment: %s - %s",
-					experimentFilename, err)
-			} else {
-				logger.Infof("Successfully processed experiment: %s",
-					experimentFilename)
-			}
-			if err := p.moveExperimentToProcessed(experimentFilename); err != nil {
-				fullErr := fmt.Errorf("Couldn't move experiment file: %s", err)
-				logger.Error(fullErr)
-			}
-		}
-
-		// Sleeping prevents 'excessive' cpu use and disk access
-		time.Sleep(sleepInSeconds * time.Second)
-	}
-}
-
-func (p *program) getExperimentFilenames() ([]string, error) {
-	experimentFilenames := make([]string, 0)
-	files, err := ioutil.ReadDir(p.config.ExperimentsDir)
-	if err != nil {
-		return experimentFilenames, err
-	}
-
-	for _, file := range files {
-		if !file.IsDir() {
-			experimentFilenames = append(experimentFilenames, file.Name())
-		}
-	}
-	return experimentFilenames, nil
-}
-
-func (p *program) moveExperimentToProcessed(experimentFilename string) error {
-	experimentFullFilename :=
-		filepath.Join(p.config.ExperimentsDir, experimentFilename)
-	experimentProcessedFullFilename :=
-		filepath.Join(p.config.ExperimentsDir, "processed", experimentFilename)
-	return os.Rename(experimentFullFilename, experimentProcessedFullFilename)
-}
-
-func (p *program) Stop(s service.Service) error {
-	return nil
-}
-
 func main() {
-	svcConfig := &service.Config{
-		Name:        "GoTestService",
-		DisplayName: "Go Test Service",
-		Description: "A test Go service.",
+	flags := parseFlags()
+	exitCode, err := subMain(flags)
+	if err != nil {
+		log.Fatal(err)
 	}
+	os.Exit(exitCode)
+}
+
+func subMain(flags *cmdFlags) (int, error) {
 	prg := &program{}
 
-	userPtr := flag.String("user", "", "The user to run the server as")
-	configDirPtr := flag.String("configdir", "", "The configuration directory")
-	installPtr := flag.Bool("install", false, "Install the server as a service")
-	flag.Parse()
-
-	if *userPtr != "" {
-		svcConfig.UserName = *userPtr
-	}
-
-	if *configDirPtr != "" {
-		svcConfig.Arguments = []string{fmt.Sprintf("-configdir=%s", *configDirPtr)}
-		prg.configDir = *configDirPtr
-	}
-
-	configFilename := filepath.Join(prg.configDir, "config.json")
+	svcConfig := makeServiceConfig(flags)
+	configFilename := filepath.Join(flags.configDir, "config.json")
 	config, err := config.Load(configFilename)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Couldn't load configuration %s: %s",
-			configFilename, err))
+		return 1, errConfigLoad{
+			filename: configFilename,
+			err:      err,
+		}
 	}
 	prg.config = config
 
@@ -157,28 +59,45 @@ func main() {
 
 	s, err := service.New(prg, svcConfig)
 	if err != nil {
-		log.Fatal(err)
+		return 1, err
 	}
-	logger, err = s.Logger(nil)
+	prg.logger, err = s.Logger(nil)
 	if err != nil {
-		log.Fatal(err)
+		return 1, err
 	}
 
-	go html.Run(config, prg.progressMonitor, logger, htmlCmds)
+	go html.Run(config, prg.progressMonitor, prg.logger, htmlCmds)
 	htmlCmds <- cmd.All
 
-	if *installPtr {
-		if *configDirPtr == "" {
-			log.Fatal("No -configdir argument")
+	if flags.install {
+		if flags.configDir == "" {
+			return 1, errNoConfigDirArg
 		}
-		err = s.Install()
-		if err != nil {
-			log.Fatal(err)
+		if err = s.Install(); err != nil {
+			return 1, err
 		}
 	} else {
-		err = s.Run()
-		if err != nil {
-			logger.Error(err)
+		if err = s.Run(); err != nil {
+			return 1, err
 		}
 	}
+	return 0, nil
+}
+
+func makeServiceConfig(flags *cmdFlags) *service.Config {
+	svcConfig := &service.Config{
+		Name:        "GoTestService",
+		DisplayName: "Go Test Service",
+		Description: "A test Go service.",
+	}
+
+	if flags.user != "" {
+		svcConfig.UserName = flags.user
+	}
+
+	if flags.configDir != "" {
+		svcConfig.Arguments =
+			[]string{fmt.Sprintf("-configdir=%s", flags.configDir)}
+	}
+	return svcConfig
 }
