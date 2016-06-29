@@ -42,6 +42,10 @@ func main() {
 func subMain(flags *cmdFlags) (int, error) {
 	prg := &program{}
 
+	if err := handleFlags(flags); err != nil {
+		return 1, err
+	}
+
 	svcConfig := makeServiceConfig(flags)
 	configFilename := filepath.Join(flags.configDir, "config.json")
 	config, err := config.Load(configFilename)
@@ -70,9 +74,6 @@ func subMain(flags *cmdFlags) (int, error) {
 	htmlCmds <- cmd.All
 
 	if flags.install {
-		if flags.configDir == "" {
-			return 1, errNoConfigDirArg
-		}
 		if err = s.Install(); err != nil {
 			return 1, err
 		}

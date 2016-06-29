@@ -53,3 +53,10 @@ func parseFlags() *cmdFlags {
 	flag.Parse()
 	return flags
 }
+
+func handleFlags(flags *cmdFlags) error {
+	if flags.install && flags.configDir == "" {
+		return errNoConfigDirArg
+	}
+	return nil
+}
