@@ -89,6 +89,12 @@ func TestSubMain(t *testing.T) {
 		},
 	}
 
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd() err: ", err)
+	}
+	defer os.Chdir(wd)
+
 	for _, c := range cases {
 		configDir, err := buildConfigDirs()
 		if err != nil {
@@ -100,7 +106,7 @@ func TestSubMain(t *testing.T) {
 		testLogger := logger.NewTestLogger()
 		quitter := newQuitter()
 		go func() {
-			tryInSeconds := 10
+			tryInSeconds := 5
 			for i := 0; i < tryInSeconds*5; i++ {
 				if reflect.DeepEqual(testLogger.GetEntries(), c.wantEntries) {
 					quitter.Quit()
@@ -110,6 +116,9 @@ func TestSubMain(t *testing.T) {
 			}
 			quitter.Quit()
 		}()
+		if err := os.Chdir(configDir); err != nil {
+			t.Fatalf("Chdir() err: %s", err)
+		}
 		exitCode, err := subMain(c.flags, testLogger.MakeRun(), quitter)
 		if exitCode != c.wantExitCode {
 			t.Errorf("subMain(%q) exitCode: %d, want: %d",
@@ -142,9 +151,15 @@ func buildConfigDirs() (string, error) {
 		return "", errors.New("TempDir() couldn't create dir")
 	}
 
-	subDirs := []string{"experiments", "www", "build"}
+	// TODO: Create the www/* and build/* subdirectories from rulehuntersrv code
+	subDirs := []string{
+		"experiments",
+		filepath.Join("www", "reports"),
+		filepath.Join("www", "progress"),
+		filepath.Join("build", "reports")}
 	for _, subDir := range subDirs {
-		if err := os.MkdirAll(subDir, modePerm); err != nil {
+		fullSubDir := filepath.Join(tmpDir, subDir)
+		if err := os.MkdirAll(fullSubDir, modePerm); err != nil {
 			return "", fmt.Errorf("can't make directory: %s", subDir)
 		}
 	}
