@@ -24,6 +24,7 @@ import (
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/experiment"
+	"github.com/vlifesystems/rulehuntersrv/logger"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"io/ioutil"
 	"os"
@@ -35,7 +36,21 @@ type program struct {
 	config          *config.Config
 	cmdFlags        cmdFlags
 	progressMonitor *progress.ProgressMonitor
-	logger          service.Logger
+	logger          chan logger.Entry
+	quitter         *quitter
+}
+
+func newProgram(
+	c *config.Config,
+	p *progress.ProgressMonitor,
+	q *quitter,
+) *program {
+	return &program{
+		config:          c,
+		progressMonitor: p,
+		quitter:         q,
+		logger:          make(chan logger.Entry),
+	}
 }
 
 func (p *program) Start(s service.Service) error {
@@ -46,26 +61,40 @@ func (p *program) Start(s service.Service) error {
 func (p *program) run() {
 	sleepInSeconds := time.Duration(2)
 	logWaitingForExperiments := true
+	p.quitter.Add()
+	defer p.quitter.Done()
 
-	for {
+	for !p.quitter.ShouldQuit() {
 		if logWaitingForExperiments {
 			logWaitingForExperiments = false
-			p.logger.Infof("Waiting for experiments to process")
+			p.logger <- logger.Entry{
+				logger.Info,
+				"Waiting for experiments to process",
+			}
 		}
 		experimentFilenames, err := p.getExperimentFilenames()
 		if err != nil {
-			p.logger.Error(err)
+			p.logger <- logger.Entry{
+				logger.Error,
+				err.Error(),
+			}
 		}
 		for _, experimentFilename := range experimentFilenames {
 			err := p.progressMonitor.AddExperiment(experimentFilename)
 			if err != nil {
-				p.logger.Error(err)
+				p.logger <- logger.Entry{
+					logger.Error,
+					err.Error(),
+				}
 			}
 		}
 
 		for _, experimentFilename := range experimentFilenames {
 			logWaitingForExperiments = true
-			p.logger.Infof("Processing experiment: %s", experimentFilename)
+			p.logger <- logger.Entry{
+				logger.Info,
+				fmt.Sprintf("Processing experiment: %s", experimentFilename),
+			}
 
 			err := experiment.Process(
 				experimentFilename,
@@ -73,21 +102,30 @@ func (p *program) run() {
 				p.progressMonitor,
 			)
 			if err != nil {
-				p.logger.Errorf("Failed processing experiment: %s - %s",
-					experimentFilename, err)
+				p.logger <- logger.Entry{
+					logger.Error,
+					fmt.Sprintf("Failed processing experiment: %s - %s",
+						experimentFilename, err),
+				}
 			} else {
-				p.logger.Infof("Successfully processed experiment: %s",
-					experimentFilename)
+				p.logger <- logger.Entry{
+					logger.Info,
+					fmt.Sprintf("Successfully processed experiment: %s",
+						experimentFilename),
+				}
 			}
 			if err := p.moveExperimentToProcessed(experimentFilename); err != nil {
-				fullErr := fmt.Errorf("Couldn't move experiment file: %s", err)
-				p.logger.Error(fullErr)
+				p.logger <- logger.Entry{
+					logger.Error,
+					fmt.Sprintf("Couldn't move experiment file: %s", err),
+				}
 			}
 		}
 
 		// Sleeping prevents 'excessive' cpu use and disk access
 		time.Sleep(sleepInSeconds * time.Second)
 	}
+	_ = "breakpoint"
 }
 
 func (p *program) getExperimentFilenames() ([]string, error) {
@@ -114,6 +152,6 @@ func (p *program) moveExperimentToProcessed(experimentFilename string) error {
 }
 
 func (p *program) Stop(s service.Service) error {
-	// TODO: Put code here to stop processing cleanly
+	p.quitter.Quit()
 	return nil
 }

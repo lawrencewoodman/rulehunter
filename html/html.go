@@ -22,9 +22,9 @@ package html
 import (
 	"bytes"
 	"fmt"
-	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/html/cmd"
+	"github.com/vlifesystems/rulehuntersrv/logger"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"html/template"
 	"os"
@@ -47,7 +47,7 @@ const modePerm = 0740
 func Run(
 	config *config.Config,
 	pm *progress.ProgressMonitor,
-	logger service.Logger,
+	log chan logger.Entry,
 	cmds chan cmd.Cmd,
 ) {
 	const minWaitSeconds = 4.0
@@ -66,9 +66,10 @@ func Run(
 			}
 			lastTime = time.Now()
 			if err := generate(c, config, pm); err != nil {
-				fullErr := fmt.Errorf("Couldn't generate report: %s", err)
-				// TODO: Work out if this is thread safe
-				logger.Error(fullErr)
+				log <- logger.Entry{
+					logger.Error,
+					fmt.Sprintf("Couldn't generate report: %s", err),
+				}
 			}
 		}
 	}

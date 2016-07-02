@@ -24,6 +24,7 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/html"
 	"github.com/vlifesystems/rulehuntersrv/html/cmd"
+	"github.com/vlifesystems/rulehuntersrv/logger"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"log"
 	"os"
@@ -31,45 +32,53 @@ import (
 )
 
 func main() {
+	quitter := newQuitter()
+	defer quitter.Quit()
 	flags := parseFlags()
-	exitCode, err := subMain(flags)
+	exitCode, err := subMain(flags, logger.Run, quitter)
 	if err != nil {
 		log.Fatal(err)
 	}
 	os.Exit(exitCode)
 }
 
-func subMain(flags *cmdFlags) (int, error) {
-	prg := &program{}
-
+// subMain is split from main to improve testing. quitter is used to stop
+// the routine.
+func subMain(
+	flags *cmdFlags,
+	logRunner logger.Runner,
+	quitter *quitter,
+) (int, error) {
 	if err := handleFlags(flags); err != nil {
 		return 1, err
 	}
 
-	svcConfig := makeServiceConfig(flags)
 	configFilename := filepath.Join(flags.configDir, "config.json")
 	config, err := config.Load(configFilename)
 	if err != nil {
-		return 1, errConfigLoad{
-			filename: configFilename,
-			err:      err,
-		}
+		return 1, errConfigLoad{filename: configFilename, err: err}
 	}
-	prg.config = config
 
 	htmlCmds := make(chan cmd.Cmd)
-	prg.progressMonitor =
-		progress.NewMonitor(filepath.Join(config.BuildDir, "progress"), htmlCmds)
+	prg := newProgram(
+		config,
+		progress.NewMonitor(filepath.Join(config.BuildDir, "progress"), htmlCmds),
+		quitter,
+	)
 
-	s, err := service.New(prg, svcConfig)
+	s, err := newService(prg, flags)
 	if err != nil {
 		return 1, err
 	}
-	prg.logger, err = s.Logger(nil)
+	quitter.SetService(s)
+	svcLogger, err := s.Logger(nil)
 	if err != nil {
 		return 1, err
 	}
 
+	// TODO: pass quitter to logRunner
+	go logRunner(svcLogger, prg.logger)
+	// TODO: pass quitter to html.Run
 	go html.Run(config, prg.progressMonitor, prg.logger, htmlCmds)
 	htmlCmds <- cmd.All
 
@@ -81,11 +90,12 @@ func subMain(flags *cmdFlags) (int, error) {
 		if err = s.Run(); err != nil {
 			return 1, err
 		}
+
 	}
 	return 0, nil
 }
 
-func makeServiceConfig(flags *cmdFlags) *service.Config {
+func newService(prg *program, flags *cmdFlags) (service.Service, error) {
 	svcConfig := &service.Config{
 		Name:        "GoTestService",
 		DisplayName: "Go Test Service",
@@ -100,5 +110,6 @@ func makeServiceConfig(flags *cmdFlags) *service.Config {
 		svcConfig.Arguments =
 			[]string{fmt.Sprintf("-configdir=%s", flags.configDir)}
 	}
-	return svcConfig
+	s, err := service.New(prg, svcConfig)
+	return s, err
 }
