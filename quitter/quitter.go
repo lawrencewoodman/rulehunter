@@ -21,6 +21,7 @@
 package quitter
 
 import (
+	"fmt"
 	"os"
 	"sync"
 )
@@ -58,7 +59,9 @@ func (q *Quitter) Quit(killProcess bool) {
 		if err != nil {
 			panic("Can't find process to Quit")
 		}
-		p.Signal(os.Interrupt)
+		if err := p.Signal(os.Interrupt); err != nil {
+			panic(fmt.Sprintf("Can't send signal: %s", err))
+		}
 	}
 }
 
