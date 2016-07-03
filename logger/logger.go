@@ -22,7 +22,9 @@ package logger
 import (
 	"fmt"
 	"github.com/kardianos/service"
+	"github.com/vlifesystems/rulehuntersrv/quitter"
 	"sync"
+	"time"
 )
 
 type Entry struct {
@@ -37,40 +39,97 @@ const (
 	Error
 )
 
-type Runner func(svcLogger service.Logger, entries chan Entry)
+type Logger interface {
+	Run()
+	Log(Level, string)
+	SetSvcLogger(service.Logger)
+}
 
-func Run(svcLogger service.Logger, entries chan Entry) {
-	for e := range entries {
+type SvcLogger struct {
+	svcLogger service.Logger
+	entries   chan Entry
+	quitter   *quitter.Quitter
+}
+
+func NewSvcLogger(quitter *quitter.Quitter) *SvcLogger {
+	return &SvcLogger{
+		svcLogger: nil,
+		entries:   make(chan Entry),
+		quitter:   quitter,
+	}
+}
+
+func (l *SvcLogger) Run() {
+	quitCheckInSec := time.Duration(2)
+	if l.svcLogger == nil {
+		panic("service logger not set")
+	}
+	l.quitter.Add()
+	defer l.quitter.Done()
+
+	go func() {
+		for {
+			if l.quitter.ShouldQuit() {
+				close(l.entries)
+			}
+			time.Sleep(quitCheckInSec * time.Second)
+		}
+	}()
+
+	for e := range l.entries {
 		switch e.Level {
 		case Info:
-			svcLogger.Info(e.Msg)
+			l.svcLogger.Info(e.Msg)
 		case Error:
-			svcLogger.Error(e.Msg)
+			l.svcLogger.Error(e.Msg)
 		default:
 			panic(fmt.Sprintf("Unknown log level: %d", e.Level))
 		}
 	}
 }
 
+func (l *SvcLogger) SetSvcLogger(logger service.Logger) {
+	l.svcLogger = logger
+}
+
+func (l *SvcLogger) Log(level Level, msg string) {
+	l.entries <- Entry{
+		Level: level,
+		Msg:   msg,
+	}
+}
+
 type TestLogger struct {
 	entries []Entry
+	quitter *quitter.Quitter
 	sync.Mutex
 }
 
-func NewTestLogger() *TestLogger {
+func NewTestLogger(quitter *quitter.Quitter) *TestLogger {
 	return &TestLogger{
 		entries: make([]Entry, 0),
+		quitter: quitter,
 	}
 }
 
-func (t *TestLogger) MakeRun() Runner {
-	return func(svcLogger service.Logger, entries chan Entry) {
-		for e := range entries {
-			t.Lock()
-			t.entries = append(t.entries, e)
-			t.Unlock()
-		}
+func (l *TestLogger) Run() {
+	l.quitter.Add()
+	for !l.quitter.ShouldQuit() {
 	}
+	l.quitter.Done()
+}
+
+func (l *TestLogger) SetSvcLogger(logger service.Logger) {
+}
+
+func (l *TestLogger) Log(level Level, msg string) {
+	e := Entry{
+		Level: level,
+		Msg:   msg,
+	}
+	l.Lock()
+	defer l.Unlock()
+	l.entries = append(l.entries, e)
 }
 
 func (t *TestLogger) GetEntries() []Entry {

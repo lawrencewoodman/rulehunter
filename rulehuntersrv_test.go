@@ -1,9 +1,10 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
 	"github.com/vlifesystems/rulehuntersrv/logger"
+	"github.com/vlifesystems/rulehuntersrv/quitter"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -53,9 +54,9 @@ func TestSubMain_errors(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		testLogger := logger.NewTestLogger()
-		quitter := newQuitter()
-		exitCode, err := subMain(c.flags, testLogger.MakeRun(), quitter)
+		q := quitter.New()
+		l := logger.NewTestLogger(q)
+		exitCode, err := subMain(c.flags, l, q)
 		if exitCode != c.wantExitCode {
 			t.Errorf("subMain(%q) exitCode: %d, want: %d",
 				c.flags, exitCode, c.wantExitCode)
@@ -63,8 +64,8 @@ func TestSubMain_errors(t *testing.T) {
 		if err := checkErrorMatch(err, c.wantErr); err != nil {
 			t.Errorf("subMain(%q) %s", c.flags, err)
 		}
-		if len(testLogger.GetEntries()) != 0 {
-			t.Errorf("GetEntries() got: %s, want: {}", testLogger.GetEntries())
+		if len(l.GetEntries()) != 0 {
+			t.Errorf("GetEntries() got: %s, want: {}", l.GetEntries())
 		}
 	}
 }
@@ -96,30 +97,30 @@ func TestSubMain(t *testing.T) {
 	defer os.Chdir(wd)
 
 	for _, c := range cases {
-		configDir, err := buildConfigDirs()
+		configDir, err := testhelpers.BuildConfigDirs()
 		if err != nil {
 			t.Fatalf("buildConfigDirs() err: %s", err)
 		}
-		defer os.RemoveAll(c.flags.configDir)
+		defer os.RemoveAll(configDir)
 		c.flags.configDir = configDir
 
-		testLogger := logger.NewTestLogger()
-		quitter := newQuitter()
+		q := quitter.New()
+		l := logger.NewTestLogger(q)
 		go func() {
-			tryInSeconds := 5
+			tryInSeconds := 4
 			for i := 0; i < tryInSeconds*5; i++ {
-				if reflect.DeepEqual(testLogger.GetEntries(), c.wantEntries) {
-					quitter.Quit()
+				if reflect.DeepEqual(l.GetEntries(), c.wantEntries) {
+					q.Quit(true)
 					return
 				}
 				time.Sleep(200 * time.Millisecond)
 			}
-			quitter.Quit()
+			q.Quit(true)
 		}()
 		if err := os.Chdir(configDir); err != nil {
 			t.Fatalf("Chdir() err: %s", err)
 		}
-		exitCode, err := subMain(c.flags, testLogger.MakeRun(), quitter)
+		exitCode, err := subMain(c.flags, l, q)
 		if exitCode != c.wantExitCode {
 			t.Errorf("subMain(%q) exitCode: %d, want: %d",
 				c.flags, exitCode, c.wantExitCode)
@@ -127,9 +128,8 @@ func TestSubMain(t *testing.T) {
 		if err := checkErrorMatch(err, c.wantErr); err != nil {
 			t.Errorf("subMain(%q) %s", c.flags, err)
 		}
-		if !reflect.DeepEqual(testLogger.GetEntries(), c.wantEntries) {
-			t.Errorf("GetEntries() got: %s, want: %s",
-				testLogger.GetEntries(), c.wantEntries)
+		if !reflect.DeepEqual(l.GetEntries(), c.wantEntries) {
+			t.Errorf("GetEntries() got: %s, want: %s", l.GetEntries(), c.wantEntries)
 		}
 	}
 }
@@ -137,36 +137,6 @@ func TestSubMain(t *testing.T) {
 /*************************************
  *  Helper functions
  *************************************/
-
-func buildConfigDirs() (string, error) {
-	// File mode permission:
-	// No special permission bits
-	// User: Read, Write Execute
-	// Group: None
-	// Other: None
-	const modePerm = 0700
-
-	tmpDir, err := ioutil.TempDir("", "rulehuntersrv")
-	if err != nil {
-		return "", errors.New("TempDir() couldn't create dir")
-	}
-
-	// TODO: Create the www/* and build/* subdirectories from rulehuntersrv code
-	subDirs := []string{
-		"experiments",
-		filepath.Join("www", "reports"),
-		filepath.Join("www", "progress"),
-		filepath.Join("build", "reports")}
-	for _, subDir := range subDirs {
-		fullSubDir := filepath.Join(tmpDir, subDir)
-		if err := os.MkdirAll(fullSubDir, modePerm); err != nil {
-			return "", fmt.Errorf("can't make directory: %s", subDir)
-		}
-	}
-
-	err = copyFile(filepath.Join("fixtures", "config.json"), tmpDir)
-	return tmpDir, err
-}
 
 func checkErrorMatch(got, want error) error {
 	if got == nil && want == nil {
@@ -220,18 +190,4 @@ func checkErrConfigLoadMatch(checkErr error, wantErr errConfigLoad) error {
 			cerr.filename, wantErr.filename)
 	}
 	return checkPathErrorMatch(cerr.err, wantErr.err)
-}
-
-func copyFile(srcFilename, dstDir string) error {
-	contents, err := ioutil.ReadFile(srcFilename)
-	if err != nil {
-		return err
-	}
-	info, err := os.Stat(srcFilename)
-	if err != nil {
-		return err
-	}
-	mode := info.Mode()
-	dstFilename := filepath.Join(dstDir, filepath.Base(srcFilename))
-	return ioutil.WriteFile(dstFilename, contents, mode)
 }

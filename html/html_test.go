@@ -2,6 +2,12 @@ package html
 
 import (
 	"fmt"
+	"github.com/vlifesystems/rulehuntersrv/config"
+	"github.com/vlifesystems/rulehuntersrv/html/cmd"
+	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
+	"github.com/vlifesystems/rulehuntersrv/logger"
+	"github.com/vlifesystems/rulehuntersrv/progress"
+	"github.com/vlifesystems/rulehuntersrv/quitter"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,6 +15,45 @@ import (
 	"testing"
 	"time"
 )
+
+// This checks if Run will quit properly when told to
+func TestRun_quit(t *testing.T) {
+	config := &config.Config{
+		ExperimentsDir:   "experiments",
+		WWWDir:           "www",
+		BuildDir:         "build",
+		NumRulesInReport: 100,
+	}
+	q := quitter.New()
+	l := logger.NewTestLogger(q)
+	htmlCmds := make(chan cmd.Cmd)
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd() err: ", err)
+	}
+	defer os.Chdir(wd)
+	configDir, err := testhelpers.BuildConfigDirs()
+	defer os.RemoveAll(configDir)
+	pm := progress.NewMonitor(
+		filepath.Join(configDir, "build", "progress"),
+		htmlCmds,
+	)
+	go Run(config, pm, l, q, htmlCmds)
+	time.Sleep(1 * time.Second)
+	htmlCmds <- cmd.Flush
+
+	go func() {
+		quitTime := time.Now()
+		const secsWait = 2.0
+		for {
+			durationSinceQuit := time.Since(quitTime)
+			if durationSinceQuit.Seconds() > secsWait {
+				t.Fatalf("Run() didn't quit within %d seconds", secsWait)
+			}
+		}
+	}()
+	q.Quit(false)
+}
 
 func TestGenReportFilename(t *testing.T) {
 	wwwDir := "/var/wwww"

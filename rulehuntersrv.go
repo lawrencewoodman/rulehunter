@@ -26,16 +26,18 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/html/cmd"
 	"github.com/vlifesystems/rulehuntersrv/logger"
 	"github.com/vlifesystems/rulehuntersrv/progress"
+	"github.com/vlifesystems/rulehuntersrv/quitter"
 	"log"
 	"os"
 	"path/filepath"
 )
 
 func main() {
-	quitter := newQuitter()
-	defer quitter.Quit()
 	flags := parseFlags()
-	exitCode, err := subMain(flags, logger.Run, quitter)
+	q := quitter.New()
+	defer q.Quit(true)
+	l := logger.NewSvcLogger(q)
+	exitCode, err := subMain(flags, l, q)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,8 +48,8 @@ func main() {
 // the routine.
 func subMain(
 	flags *cmdFlags,
-	logRunner logger.Runner,
-	quitter *quitter,
+	l logger.Logger,
+	q *quitter.Quitter,
 ) (int, error) {
 	if err := handleFlags(flags); err != nil {
 		return 1, err
@@ -63,24 +65,22 @@ func subMain(
 	prg := newProgram(
 		config,
 		progress.NewMonitor(filepath.Join(config.BuildDir, "progress"), htmlCmds),
-		quitter,
+		l,
+		q,
 	)
 
 	s, err := newService(prg, flags)
 	if err != nil {
 		return 1, err
 	}
-	quitter.SetService(s)
 	svcLogger, err := s.Logger(nil)
 	if err != nil {
 		return 1, err
 	}
 
-	// TODO: pass quitter to logRunner
-	go logRunner(svcLogger, prg.logger)
-	// TODO: pass quitter to html.Run
-	go html.Run(config, prg.progressMonitor, prg.logger, htmlCmds)
-	htmlCmds <- cmd.All
+	l.SetSvcLogger(svcLogger)
+	go l.Run()
+	go html.Run(config, prg.progressMonitor, l, q, htmlCmds)
 
 	if flags.install {
 		if err = s.Install(); err != nil {

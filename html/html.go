@@ -26,6 +26,7 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/html/cmd"
 	"github.com/vlifesystems/rulehuntersrv/logger"
 	"github.com/vlifesystems/rulehuntersrv/progress"
+	"github.com/vlifesystems/rulehuntersrv/quitter"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -47,15 +48,28 @@ const modePerm = 0740
 func Run(
 	config *config.Config,
 	pm *progress.ProgressMonitor,
-	log chan logger.Entry,
+	l logger.Logger,
+	q *quitter.Quitter,
 	cmds chan cmd.Cmd,
 ) {
 	const minWaitSeconds = 4.0
 	lastCmd := cmd.Flush
 	lastTime := time.Now()
+	if err := generate(cmd.All, config, pm); err != nil {
+		l.Log(
+			logger.Error,
+			fmt.Sprintf("Couldn't generate report: %s", err),
+		)
+	}
 
+	q.Add()
+	defer q.Done()
 	go pulse(cmds)
+
 	for c := range cmds {
+		if q.ShouldQuit() {
+			break
+		}
 		durationSinceLast := time.Since(lastTime)
 		if c != lastCmd || durationSinceLast.Seconds() > minWaitSeconds {
 			if c == cmd.Flush {
@@ -66,10 +80,10 @@ func Run(
 			}
 			lastTime = time.Now()
 			if err := generate(c, config, pm); err != nil {
-				log <- logger.Entry{
+				l.Log(
 					logger.Error,
 					fmt.Sprintf("Couldn't generate report: %s", err),
-				}
+				)
 			}
 		}
 	}
