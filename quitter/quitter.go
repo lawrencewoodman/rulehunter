@@ -60,9 +60,7 @@ func (q *Quitter) Quit(killProcess bool) {
 			panic("Can't find process to Quit")
 		}
 		if err := p.Signal(os.Interrupt); err != nil {
-			if err := p.Kill(); err != nil {
-				panic(fmt.Sprintf("Can't kill process: %s", err))
-			}
+			panic(fmt.Sprintf("Can't send os.Interrupt signal: %s", err))
 		}
 	}
 }
