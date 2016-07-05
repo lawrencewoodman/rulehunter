@@ -96,9 +96,9 @@ func subMain(
 
 func newService(prg *program, flags *cmdFlags) (service.Service, error) {
 	svcConfig := &service.Config{
-		Name:        "GoTestService",
-		DisplayName: "Go Test Service",
-		Description: "A test Go service.",
+		Name:        "RulehunterSrv",
+		DisplayName: "Rulehunter server",
+		Description: "Finds rules in data based on user specified goals.",
 	}
 
 	if flags.user != "" {
