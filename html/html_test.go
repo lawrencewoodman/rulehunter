@@ -25,7 +25,7 @@ func TestRun_quit(t *testing.T) {
 		NumRulesInReport: 100,
 	}
 	q := quitter.New()
-	l := logger.NewTestLogger(q)
+	l := logger.NewTestLogger()
 	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
 	if err != nil {
