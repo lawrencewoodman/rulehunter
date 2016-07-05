@@ -12,8 +12,12 @@ environment:
 install:
    # pre-installed MinGW at C:\MinGW is 32bit only
    # but MSYS2 at C:\msys64 has mingw64
+  - echo %PLATFORM%
   - IF %PLATFORM% == "x86" (set PATH "C:\mingw\bin;%PATH%")
+  - IF %PLATFORM% == "x86" (echo "x86 here")
+  - IF %PLATFORM% EQU "x86" (echo "x86 here")
   - IF %PLATFORM% == "x64" (set PATH "C:\msys64\mingw64\bin;%PATH%")
+  - IF %PLATFORM% == "x64" (echo "x64 here")
   - echo %PATH%
   - go version
   - go env
