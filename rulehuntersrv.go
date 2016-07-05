@@ -34,10 +34,8 @@ import (
 
 func main() {
 	flags := parseFlags()
-	q := quitter.New()
-	defer q.Quit(true)
-	l := logger.NewSvcLogger(q)
-	exitCode, err := subMain(flags, l, q)
+	l := logger.NewSvcLogger()
+	exitCode, err := subMain(flags, l)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,11 +47,13 @@ func main() {
 func subMain(
 	flags *cmdFlags,
 	l logger.Logger,
-	q *quitter.Quitter,
 ) (int, error) {
 	if err := handleFlags(flags); err != nil {
 		return 1, err
 	}
+
+	q := quitter.New()
+	defer q.Quit()
 
 	configFilename := filepath.Join(flags.configDir, "config.json")
 	config, err := config.Load(configFilename)
@@ -62,12 +62,11 @@ func subMain(
 	}
 
 	htmlCmds := make(chan cmd.Cmd)
-	prg := newProgram(
-		config,
-		progress.NewMonitor(filepath.Join(config.BuildDir, "progress"), htmlCmds),
-		l,
-		q,
+	pm := progress.NewMonitor(
+		filepath.Join(config.BuildDir, "progress"),
+		htmlCmds,
 	)
+	prg := newProgram(config, pm, l, q)
 
 	s, err := newService(prg, flags)
 	if err != nil {
@@ -79,7 +78,7 @@ func subMain(
 	}
 
 	l.SetSvcLogger(svcLogger)
-	go l.Run()
+	go l.Run(q)
 	go html.Run(config, prg.progressMonitor, l, q, htmlCmds)
 
 	if flags.install {

@@ -52,7 +52,7 @@ func TestRun_quit(t *testing.T) {
 			}
 		}
 	}()
-	q.Quit(false)
+	q.Quit()
 }
 
 func TestGenReportFilename(t *testing.T) {

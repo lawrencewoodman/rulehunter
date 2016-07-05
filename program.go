@@ -145,6 +145,7 @@ func (p *program) moveExperimentToProcessed(experimentFilename string) error {
 }
 
 func (p *program) Stop(s service.Service) error {
-	p.quitter.Quit(true)
+	fmt.Printf("program.Stop()\n")
+	p.quitter.Quit()
 	return nil
 }

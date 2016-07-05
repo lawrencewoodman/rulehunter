@@ -21,8 +21,6 @@
 package quitter
 
 import (
-	"fmt"
-	"os"
 	"sync"
 )
 
@@ -49,20 +47,10 @@ func (q *Quitter) Done() {
 }
 
 // Quit indicates to all the go routines that they should quit, it then waits
-// for them to finish. Once they have all finished if killProcess is true
-// then the os.Interrupt signal is sent to stop the process.
-func (q *Quitter) Quit(killProcess bool) {
+// for them to finish.
+func (q *Quitter) Quit() {
 	q.shouldQuit = true
 	q.waitGroup.Wait()
-	if killProcess {
-		p, err := os.FindProcess(os.Getpid())
-		if err != nil {
-			panic("Can't find process to Quit")
-		}
-		if err := p.Signal(os.Interrupt); err != nil {
-			panic(fmt.Sprintf("Can't send os.Interrupt signal: %s", err))
-		}
-	}
 }
 
 // ShouldQuit returns if a go routine should quit

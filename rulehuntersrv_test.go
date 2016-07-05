@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
 	"github.com/vlifesystems/rulehuntersrv/logger"
-	"github.com/vlifesystems/rulehuntersrv/quitter"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -54,9 +53,8 @@ func TestSubMain_errors(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		q := quitter.New()
-		l := logger.NewTestLogger(q)
-		exitCode, err := subMain(c.flags, l, q)
+		l := logger.NewTestLogger()
+		exitCode, err := subMain(c.flags, l)
 		if exitCode != c.wantExitCode {
 			t.Errorf("subMain(%q) exitCode: %d, want: %d",
 				c.flags, exitCode, c.wantExitCode)
@@ -104,23 +102,22 @@ func TestSubMain(t *testing.T) {
 		defer os.RemoveAll(configDir)
 		c.flags.configDir = configDir
 
-		q := quitter.New()
-		l := logger.NewTestLogger(q)
+		l := logger.NewTestLogger()
 		go func() {
 			tryInSeconds := 4
 			for i := 0; i < tryInSeconds*5; i++ {
 				if reflect.DeepEqual(l.GetEntries(), c.wantEntries) {
-					q.Quit(true)
+					interruptProcess()
 					return
 				}
 				time.Sleep(200 * time.Millisecond)
 			}
-			q.Quit(true)
+			interruptProcess()
 		}()
 		if err := os.Chdir(configDir); err != nil {
 			t.Fatalf("Chdir() err: %s", err)
 		}
-		exitCode, err := subMain(c.flags, l, q)
+		exitCode, err := subMain(c.flags, l)
 		if exitCode != c.wantExitCode {
 			t.Errorf("subMain(%q) exitCode: %d, want: %d",
 				c.flags, exitCode, c.wantExitCode)
@@ -137,6 +134,16 @@ func TestSubMain(t *testing.T) {
 /*************************************
  *  Helper functions
  *************************************/
+
+func interruptProcess() {
+	p, err := os.FindProcess(os.Getpid())
+	if err != nil {
+		panic("Can't find process to Quit")
+	}
+	if err := p.Signal(os.Interrupt); err != nil {
+		panic(fmt.Sprintf("Can't send os.Interrupt signal: %s", err))
+	}
+}
 
 func checkErrorMatch(got, want error) error {
 	if got == nil && want == nil {

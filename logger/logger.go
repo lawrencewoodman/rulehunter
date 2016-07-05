@@ -40,7 +40,7 @@ const (
 )
 
 type Logger interface {
-	Run()
+	Run(*quitter.Quitter)
 	Log(Level, string)
 	SetSvcLogger(service.Logger)
 }
@@ -51,25 +51,24 @@ type SvcLogger struct {
 	quitter   *quitter.Quitter
 }
 
-func NewSvcLogger(quitter *quitter.Quitter) *SvcLogger {
+func NewSvcLogger() *SvcLogger {
 	return &SvcLogger{
 		svcLogger: nil,
 		entries:   make(chan Entry),
-		quitter:   quitter,
 	}
 }
 
-func (l *SvcLogger) Run() {
+func (l *SvcLogger) Run(q *quitter.Quitter) {
 	quitCheckInSec := time.Duration(2)
 	if l.svcLogger == nil {
 		panic("service logger not set")
 	}
-	l.quitter.Add()
-	defer l.quitter.Done()
+	q.Add()
+	defer q.Done()
 
 	go func() {
 		for {
-			if l.quitter.ShouldQuit() {
+			if q.ShouldQuit() {
 				close(l.entries)
 			}
 			time.Sleep(quitCheckInSec * time.Second)
@@ -101,22 +100,20 @@ func (l *SvcLogger) Log(level Level, msg string) {
 
 type TestLogger struct {
 	entries []Entry
-	quitter *quitter.Quitter
 	sync.Mutex
 }
 
-func NewTestLogger(quitter *quitter.Quitter) *TestLogger {
+func NewTestLogger() *TestLogger {
 	return &TestLogger{
 		entries: make([]Entry, 0),
-		quitter: quitter,
 	}
 }
 
-func (l *TestLogger) Run() {
-	l.quitter.Add()
-	for !l.quitter.ShouldQuit() {
+func (l *TestLogger) Run(q *quitter.Quitter) {
+	q.Add()
+	for !q.ShouldQuit() {
 	}
-	l.quitter.Done()
+	q.Done()
 }
 
 func (l *TestLogger) SetSvcLogger(logger service.Logger) {
