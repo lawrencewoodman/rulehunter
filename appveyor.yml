@@ -14,10 +14,11 @@ install:
       if ($env:PLATFORM -eq "x64") {
         # pre-installed MinGW at C:\MinGW is 32bit only
         # but MSYS2 at C:\msys64 has mingw64
-        setx MINGWPATH "C:\msys64\mingw64\bin"
+        set MINGWPATH "C:\msys64\mingw64\bin"
       } else {
-        setx MINGWPATH "C:\mingw\bin"
+        set MINGWPATH "C:\mingw\bin"
       }
+  - echo %MINGWPATH%
   - set PATH="%MINGWPATH%;%PATH%"
   - echo %PATH%
   - go version
