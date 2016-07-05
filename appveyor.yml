@@ -10,16 +10,10 @@ environment:
   GOPATH: c:\gopath
 
 install:
-  - ps: |
-      if ($env:PLATFORM -eq "x64") {
-        # pre-installed MinGW at C:\MinGW is 32bit only
-        # but MSYS2 at C:\msys64 has mingw64
-        set MINGWPATH "C:\msys64\mingw64\bin"
-      } else {
-        set MINGWPATH "C:\mingw\bin"
-      }
-  - echo %MINGWPATH%
-  - set PATH="%MINGWPATH%;%PATH%"
+   # pre-installed MinGW at C:\MinGW is 32bit only
+   # but MSYS2 at C:\msys64 has mingw64
+  - IF %PLATFORM% == "x86" (set PATH "C:\mingw\bin;%PATH%")
+  - IF %PLATFORM% == "x64" (set PATH "C:\msys64\mingw64\bin;%PATH%")
   - echo %PATH%
   - go version
   - go env
