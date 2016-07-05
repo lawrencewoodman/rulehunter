@@ -15,7 +15,10 @@ install:
   - echo %PLATFORM%
   - IF %PLATFORM% == "x86" (set PATH "C:\mingw\bin;%PATH%")
   - IF %PLATFORM% == "x86" (echo "x86 here")
+  - IF %PLATFORM% == "x86" echo "x86 here"
+  - IF %PLATFORM% EQU "x86" echo "x86 here"
   - IF %PLATFORM% EQU "x86" (echo "x86 here")
+  - IF DEFINED PLATFORM (echo "x86 here")
   - IF %PLATFORM% == "x64" (set PATH "C:\msys64\mingw64\bin;%PATH%")
   - IF %PLATFORM% == "x64" (echo "x64 here")
   - echo %PATH%
