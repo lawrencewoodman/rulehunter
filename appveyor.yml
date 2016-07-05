@@ -10,8 +10,14 @@ environment:
   GOPATH: c:\gopath
 
 install:
-  - choco install mingw -y
-  - set PATH=%PATH%;C:\tools\mingw64\bin
+  - echo $PLATFORM
+  - ps: if ($env:PLATFORM -eq "x64") {
+      # pre-installed MinGW at C:\MinGW is 32bit only
+      # but MSYS2 at C:\msys64 has mingw64
+      set PATH=C:\msys64\mingw64\bin;%PATH%
+    } else {
+      set PATH=C:\mingw\bin;%PATH%
+    }
   - echo %PATH%
   - go version
   - go env
