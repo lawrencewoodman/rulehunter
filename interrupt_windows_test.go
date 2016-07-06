@@ -14,6 +14,7 @@ import (
 
 func interruptProcess() {
 	pid := os.Getpid()
+	fmt.Printf("interruptProcess() pid: %d\n", os.Getpid())
 	d, err := syscall.LoadDLL("kernel32.dll")
 	if err != nil {
 		panic(fmt.Sprintf("LoadDLL: %v", err))

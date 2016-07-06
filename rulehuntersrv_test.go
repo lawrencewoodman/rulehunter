@@ -103,7 +103,9 @@ func TestSubMain(t *testing.T) {
 		c.flags.configDir = configDir
 
 		l := logger.NewTestLogger()
+		fmt.Printf("before go func() pid: %d\n", os.Getpid())
 		go func() {
+			fmt.Printf("in go func() pid: %d\n", os.Getpid())
 			tryInSeconds := 4
 			for i := 0; i < tryInSeconds*5; i++ {
 				if reflect.DeepEqual(l.GetEntries(), c.wantEntries) {
