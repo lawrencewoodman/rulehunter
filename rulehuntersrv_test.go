@@ -103,9 +103,7 @@ func TestSubMain(t *testing.T) {
 		c.flags.configDir = configDir
 
 		l := logger.NewTestLogger()
-		fmt.Printf("before go func() pid: %d\n", os.Getpid())
 		go func() {
-			fmt.Printf("in go func() pid: %d\n", os.Getpid())
 			tryInSeconds := 4
 			for i := 0; i < tryInSeconds*5; i++ {
 				if reflect.DeepEqual(l.GetEntries(), c.wantEntries) {
@@ -115,6 +113,11 @@ func TestSubMain(t *testing.T) {
 				time.Sleep(200 * time.Millisecond)
 			}
 			interruptProcess()
+		}()
+
+		go func() {
+			<-time.After(6 * time.Second)
+			panic("Run() hasn't been stopped")
 		}()
 		if err := os.Chdir(configDir); err != nil {
 			t.Fatalf("Chdir() err: %s", err)
