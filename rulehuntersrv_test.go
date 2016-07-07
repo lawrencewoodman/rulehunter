@@ -14,6 +14,15 @@ import (
 	"time"
 )
 
+func init() {
+	runtime.LockOSThread()
+}
+
+func TestMain(m *testing.M) {
+	fmt.Printf("TestMain pid: %d\n", os.Getpid())
+	os.Exit(m.Run())
+}
+
 func TestSubMain_errors(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "rulehuntersrv")
 	if err != nil {
@@ -105,6 +114,7 @@ func TestSubMain(t *testing.T) {
 
 		l := logger.NewTestLogger()
 		go func() {
+			fmt.Printf("TestSubMain go func pid: %d\n", os.Getpid())
 			tryInSeconds := 4
 			for i := 0; i < tryInSeconds*5; i++ {
 				if reflect.DeepEqual(l.GetEntries(), c.wantEntries) {
