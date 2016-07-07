@@ -107,17 +107,21 @@ func TestSubMain(t *testing.T) {
 			tryInSeconds := 4
 			for i := 0; i < tryInSeconds*5; i++ {
 				if reflect.DeepEqual(l.GetEntries(), c.wantEntries) {
-					interruptProcess()
+					interruptProcess(t)
 					return
 				}
 				time.Sleep(200 * time.Millisecond)
 			}
-			interruptProcess()
+			interruptProcess(t)
 		}()
 
 		go func() {
 			<-time.After(6 * time.Second)
-			panic("Run() hasn't been stopped")
+			t.Fatal("Run() hasn't been stopped")
+			if runtime.GOOS == "windows" {
+				fmt.Fprintln(os.Stderr, "Run() hasn't been stopped")
+				os.Exit(1)
+			}
 		}()
 		if err := os.Chdir(configDir); err != nil {
 			t.Fatalf("Chdir() err: %s", err)

@@ -7,23 +7,23 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"syscall"
+	"testing"
 )
 
-func interruptProcess() {
+func interruptProcess(t *testing.T) {
 	pid := os.Getpid()
 	d, err := syscall.LoadDLL("kernel32.dll")
 	if err != nil {
-		panic(fmt.Sprintf("LoadDLL: %v", err))
+		t.Fatalf("LoadDLL: %v", err)
 	}
 	p, err := d.FindProc("GenerateConsoleCtrlEvent")
 	if err != nil {
-		panic(fmt.Sprintf("FindProc: %v", err))
+		t.Fatalf("FindProc: %v", err)
 	}
 	r, _, err := p.Call(syscall.CTRL_BREAK_EVENT, uintptr(pid))
 	if r == 0 {
-		panic(fmt.Sprintf("GenerateConsoleCtrlEvent: %v", err))
+		t.Fatalf("GenerateConsoleCtrlEvent: %v", err)
 	}
 }
