@@ -8,10 +8,12 @@ clone_folder: c:\gopath\src\github.com\vlifesystems\rulehuntersrv
 
 environment:
   GOPATH: c:\gopath
-  GOROOT: c:\go-x86
 
 install:
-  - IF "%PLATFORM%" == "x86" set PATH=%GOROOT%\bin;C:\MinGW\bin;%PATH%
+  - IF "%PLATFORM%" == "x86" (
+      set GOROOT=c:\go-x86
+      set PATH=%GOROOT%\bin;C:\MinGW\bin;%PATH%
+    )
   - IF "%PLATFORM%" == "x64" set PATH=C:\msys64\mingw64\bin;%PATH%
   - echo %PATH%
   - go version
