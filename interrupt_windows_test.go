@@ -1,9 +1,3 @@
-// Copyright 2012 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the GO_LICENSE file.
-//
-// This is based on code from the os/signal tests
-
 package main
 
 import (
@@ -13,17 +7,20 @@ import (
 )
 
 func interruptProcess(t *testing.T) {
+	dll, err := syscall.LoadDLL("kernel32.dll")
+	if err != nil {
+		t.Fatalf("LoadDLL(\"kernel32.dll\") err: %s", err)
+	}
+	p, err := dll.FindProc("GenerateConsoleCtrlEvent")
+	if err != nil {
+		t.Fatalf("FindProc(\"GenerateConsoleCtrlEvent\") err: %s", err)
+	}
+	// Send the CTRL_BREAK_EVENT to a console process group that shares
+	// the console associated with the calling process.
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms683155(v=vs.85).aspx
 	pid := os.Getpid()
-	d, err := syscall.LoadDLL("kernel32.dll")
-	if err != nil {
-		t.Fatalf("LoadDLL: %v", err)
-	}
-	p, err := d.FindProc("GenerateConsoleCtrlEvent")
-	if err != nil {
-		t.Fatalf("FindProc: %v", err)
-	}
-	r, _, err := p.Call(syscall.CTRL_BREAK_EVENT, uintptr(pid))
-	if r == 0 {
-		t.Fatalf("GenerateConsoleCtrlEvent: %v", err)
+	r1, _, err := p.Call(syscall.CTRL_BREAK_EVENT, uintptr(pid))
+	if r1 == 0 {
+		t.Fatalf("Call(CTRL_BREAK_EVENT, %d) err: %s", pid, err)
 	}
 }
