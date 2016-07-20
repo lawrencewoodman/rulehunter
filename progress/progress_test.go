@@ -251,7 +251,7 @@ func TestGetFinishStamp(t *testing.T) {
 			t.Errorf("GetFinishStamp(%s) gotIsFinished: %t, wantIsFinished: %t",
 				c.filename, gotIsFinished, c.wantIsFinished)
 		}
-		if gotIsFinished && gotStamp != c.wantStamp {
+		if gotIsFinished && !gotStamp.Equal(c.wantStamp) {
 			t.Errorf("GetFinishStamp(%s) gotStamp: %v, wantStamp: %v",
 				c.filename, gotStamp, c.wantStamp)
 		}
