@@ -84,14 +84,10 @@ func (p *program) run() {
 
 		for _, experimentFilename := range experimentFilenames {
 			logWaitingForExperiments = true
-			p.logger.Log(
-				logger.Info,
-				fmt.Sprintf("Processing experiment: %s", experimentFilename),
-			)
-
 			err := experiment.Process(
 				experimentFilename,
 				p.config,
+				p.logger,
 				p.progressMonitor,
 			)
 			if err != nil {
@@ -99,18 +95,6 @@ func (p *program) run() {
 					logger.Error,
 					fmt.Sprintf("Failed processing experiment: %s - %s",
 						experimentFilename, err),
-				)
-			} else {
-				p.logger.Log(
-					logger.Info,
-					fmt.Sprintf("Successfully processed experiment: %s",
-						experimentFilename),
-				)
-			}
-			if err := p.moveExperimentToProcessed(experimentFilename); err != nil {
-				p.logger.Log(
-					logger.Error,
-					fmt.Sprintf("Couldn't move experiment file: %s", err),
 				)
 			}
 		}

@@ -62,10 +62,13 @@ func subMain(
 	}
 
 	htmlCmds := make(chan cmd.Cmd)
-	pm := progress.NewMonitor(
+	pm, err := progress.NewMonitor(
 		filepath.Join(config.BuildDir, "progress"),
 		htmlCmds,
 	)
+	if err != nil {
+		return 1, err
+	}
 	prg := newProgram(config, pm, l, q)
 
 	s, err := newService(prg, flags)

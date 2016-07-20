@@ -26,13 +26,16 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"github.com/lawrencewoodman/ddataset/dsql"
+	"github.com/lawrencewoodman/dexpr"
 	"github.com/vlifesystems/rulehunter"
-	"github.com/vlifesystems/rulehunter/experiment"
+	rhexperiment "github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehuntersrv/config"
+	"github.com/vlifesystems/rulehuntersrv/logger"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"github.com/vlifesystems/rulehuntersrv/report"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type experimentFile struct {
@@ -43,9 +46,11 @@ type experimentFile struct {
 	Sql               *sqlDesc
 	FieldNames        []string
 	ExcludeFieldNames []string
-	Aggregators       []*experiment.AggregatorDesc
+	Aggregators       []*rhexperiment.AggregatorDesc
 	Goals             []string
-	SortOrder         []*experiment.SortDesc
+	SortOrder         []*rhexperiment.SortDesc
+	// An expression that works out whether to run the experiment
+	When string
 }
 
 type csvDesc struct {
@@ -60,9 +65,16 @@ type sqlDesc struct {
 	Query          string
 }
 
+type ErrInvalidWhenExpr string
+
+func (e ErrInvalidWhenExpr) Error() string {
+	return "When field invalid: " + string(e)
+}
+
 func Process(
 	experimentFilename string,
 	cfg *config.Config,
+	l logger.Logger,
 	progressMonitor *progress.ProgressMonitor,
 ) error {
 	epr, err :=
@@ -70,14 +82,24 @@ func Process(
 	if err != nil {
 		return err
 	}
-
 	experimentFullFilename :=
 		filepath.Join(cfg.ExperimentsDir, experimentFilename)
-	experiment, tags, err := loadExperiment(experimentFullFilename)
+	experiment, tags, whenExpr, err := loadExperiment(experimentFullFilename)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't load experiment file: %s", err)
 		return epr.ReportError(fullErr)
 	}
+
+	ok, err := shouldProcess(progressMonitor, experimentFilename, whenExpr)
+	if err != nil || !ok {
+		return err
+	}
+
+	l.Log(
+		logger.Info,
+		fmt.Sprintf("Processing experiment: %s", experimentFilename),
+	)
+
 	err = epr.UpdateDetails(experiment.Title, tags)
 	if err != nil {
 		return err
@@ -164,38 +186,48 @@ func Process(
 		return epr.ReportError(fullErr)
 	}
 
-	return epr.ReportSuccess()
+	if err := epr.ReportSuccess(); err != nil {
+		return err
+	}
+
+	l.Log(
+		logger.Info,
+		fmt.Sprintf("Successfully processed experiment: %s",
+			experimentFilename),
+	)
+	return nil
 }
 
 func loadExperiment(filename string) (
-	*experiment.Experiment,
-	[]string,
-	error,
+	experiment *rhexperiment.Experiment,
+	tags []string,
+	whenExpr *dexpr.Expr,
+	err error,
 ) {
 	var f *os.File
 	var e experimentFile
-	var err error
+	var noTags = []string{}
 
 	f, err = os.Open(filename)
 	if err != nil {
-		return nil, []string{}, err
+		return nil, noTags, nil, err
 	}
 	defer f.Close()
 
 	dec := json.NewDecoder(f)
 	if err = dec.Decode(&e); err != nil {
-		return nil, []string{}, err
+		return nil, noTags, nil, err
 	}
 
 	if err := e.checkValid(); err != nil {
-		return nil, []string{}, err
+		return nil, noTags, nil, err
 	}
 
 	dataset, err := makeDataset(&e)
 	if err != nil {
-		return nil, []string{}, err
+		return nil, noTags, nil, err
 	}
-	experimentDesc := &experiment.ExperimentDesc{
+	experimentDesc := &rhexperiment.ExperimentDesc{
 		Title:         e.Title,
 		Dataset:       dataset,
 		ExcludeFields: e.ExcludeFieldNames,
@@ -203,37 +235,39 @@ func loadExperiment(filename string) (
 		Goals:         e.Goals,
 		SortOrder:     e.SortOrder,
 	}
-	experiment, err := experiment.New(experimentDesc)
-	return experiment, e.Tags, err
+	experiment, err = rhexperiment.New(experimentDesc)
+	if err != nil {
+		return nil, noTags, nil, err
+	}
+
+	whenExpr, err = makeWhenExpr(e.When)
+	if err != nil {
+		return nil, noTags, nil, ErrInvalidWhenExpr(e.When)
+	}
+	return experiment, e.Tags, whenExpr, err
 }
 
-func makeDataset(e *experimentFile) (ddataset.Dataset, error) {
-	var dataset ddataset.Dataset
-	var err error
-
+func makeDataset(e *experimentFile) (d ddataset.Dataset, err error) {
 	switch e.Dataset {
 	case "csv":
-		dataset = dcsv.New(
+		d = dcsv.New(
 			e.Csv.Filename,
 			e.Csv.HasHeader,
 			rune(e.Csv.Separator[0]),
 			e.FieldNames,
 		)
-		if err != nil {
-			return nil, err
-		}
 	case "sql":
 		sqlHandler := newSQLHandler(
 			e.Sql.DriverName,
 			e.Sql.DataSourceName,
 			e.Sql.Query,
 		)
-		dataset = dsql.New(sqlHandler, e.FieldNames)
+		d = dsql.New(sqlHandler, e.FieldNames)
 	default:
 		return nil,
 			fmt.Errorf("Experiment field: dataset, has invalid type: %s", e.Dataset)
 	}
-	return dataset, nil
+	return
 }
 
 var validDrivers = []string{"sqlite3"}
@@ -278,7 +312,7 @@ func (e *experimentFile) checkValid() error {
 
 func assessRules(
 	rules []*rulehunter.Rule,
-	experiment *experiment.Experiment,
+	experiment *rhexperiment.Experiment,
 	epr *progress.ExperimentProgressReporter,
 	cfg *config.Config,
 ) (*rulehunter.Assessment, error) {
@@ -320,4 +354,14 @@ func inStringsSlice(needle string, haystack []string) bool {
 		}
 	}
 	return false
+}
+
+func shouldProcess(
+	pm *progress.ProgressMonitor,
+	experimentFilename string,
+	whenExpr *dexpr.Expr,
+) (bool, error) {
+	isFinished, stamp := pm.GetFinishStamp(experimentFilename)
+	ok, err := evalWhenExpr(time.Now(), isFinished, stamp, whenExpr)
+	return ok, err
 }

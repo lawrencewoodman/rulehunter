@@ -45,10 +45,7 @@ func generateProgressPage(
 		Html        map[string]template.HTML
 	}
 
-	experiments, err := progressMonitor.GetExperiments()
-	if err != nil {
-		return err
-	}
+	experiments := progressMonitor.GetExperiments()
 
 	tplExperiments := make([]*TplExperiment, len(experiments))
 

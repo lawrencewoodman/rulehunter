@@ -33,5 +33,6 @@
       "aggregatorName": "numMatches",
       "direction": "descending"
     }
-  ]
+  ],
+  "when": "!hasRunToday || sinceLastRun > 2 * day"
 }

@@ -4,9 +4,14 @@ import (
 	"errors"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
+	"github.com/lawrencewoodman/dexpr"
 	"github.com/vlifesystems/rulehunter/aggregators"
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehunter/goal"
+	"github.com/vlifesystems/rulehuntersrv/html/cmd"
+	"github.com/vlifesystems/rulehuntersrv/progress"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -17,6 +22,7 @@ func TestLoadExperiment(t *testing.T) {
 		filename       string
 		wantExperiment *experiment.Experiment
 		wantTags       []string
+		wantWhenExpr   *dexpr.Expr
 	}{
 		{filepath.Join("fixtures", "flow.json"),
 			&experiment.Experiment{
@@ -38,6 +44,7 @@ func TestLoadExperiment(t *testing.T) {
 				},
 			},
 			[]string{"test", "fred / ned"},
+			dexpr.MustNew("!hasRun"),
 		},
 		{filepath.Join("fixtures", "debt.json"),
 			&experiment.Experiment{
@@ -66,24 +73,28 @@ func TestLoadExperiment(t *testing.T) {
 				},
 			},
 			[]string{"debt"},
+			dexpr.MustNew("!hasRunToday || sinceLastRun > 2 * day"),
 		},
 	}
 	for _, c := range cases {
-		gotExperiment, gotTags, err := loadExperiment(c.filename)
+		gotExperiment, gotTags, gotWhenExpr, err := loadExperiment(c.filename)
 		if err != nil {
-			t.Errorf("loadExperiment(%s) err: %s", c.filename, err)
+			t.Fatalf("loadExperiment(%s) err: %s", c.filename, err)
 			return
 		}
 		err = checkExperimentMatch(gotExperiment, c.wantExperiment)
 		if err != nil {
-			t.Errorf("loadExperiment(%s) experiments don't match: %s\ngotExperiment: %s, wantExperiment: %s",
+			t.Errorf("loadExperiment(%s) experiments don't match: %s\n"+
+				"gotExperiment: %s, wantExperiment: %s",
 				c.filename, err, gotExperiment, c.wantExperiment)
-			return
+		}
+		if gotWhenExpr.String() != c.wantWhenExpr.String() {
+			t.Errorf("loadExperiment(%s) gotWhenExpr: %s, wantWhenExpr: %s",
+				c.filename, gotWhenExpr, c.wantWhenExpr)
 		}
 		if !reflect.DeepEqual(gotTags, c.wantTags) {
-			t.Errorf("loadExperiment(%s) gotTags: %s, wantTags",
+			t.Errorf("loadExperiment(%s) gotTags: %s, wantTags: %s",
 				c.filename, gotTags, c.wantTags)
-			return
 		}
 	}
 }
@@ -97,6 +108,8 @@ func TestLoadExperiment_error(t *testing.T) {
 			errors.New("Experiment field missing: title")},
 		{filepath.Join("fixtures", "flow_no_dataset.json"),
 			errors.New("Experiment field missing: dataset")},
+		{filepath.Join("fixtures", "flow_invalid_dataset.json"),
+			errors.New("Experiment field: dataset, has invalid type: llwyd")},
 		{filepath.Join("fixtures", "flow_no_csv.json"),
 			errors.New("Experiment field missing: csv")},
 		{filepath.Join("fixtures", "flow_no_csv_filename.json"),
@@ -113,18 +126,68 @@ func TestLoadExperiment_error(t *testing.T) {
 			errors.New("Experiment field missing: sql > dataSourceName")},
 		{filepath.Join("fixtures", "flow_no_sql_query.json"),
 			errors.New("Experiment field missing: sql > query")},
+		{filepath.Join("fixtures", "flow_invalid_when.json"),
+			ErrInvalidWhenExpr("has(twolegs")},
 	}
 	for _, c := range cases {
-		_, _, err := loadExperiment(c.filename)
+		_, _, _, err := loadExperiment(c.filename)
 		if err == nil {
 			t.Errorf("loadExperiment(%s) no error, wantErr:%s",
 				c.filename, c.wantErr)
-			return
+			continue
 		}
 		if err.Error() != c.wantErr.Error() {
 			t.Errorf("loadExperiment(%s) gotErr: %s, wantErr:%s",
 				c.filename, err, c.wantErr)
-			return
+		}
+	}
+}
+
+func TestErrInvalidWhenExprError(t *testing.T) {
+	e := ErrInvalidWhenExpr("has)nothing")
+	want := "When field invalid: has)nothing"
+	if got := e.Error(); got != want {
+		t.Errorf("Error() got: %v, want: %v", got, want)
+	}
+}
+
+func TestShouldProcess(t *testing.T) {
+	cases := []struct {
+		filename string
+		when     string
+		want     bool
+	}{
+		{"bank-bad.json", "!hasRun", false},
+		{"bank-divorced.json", "!hasRun", false},
+		{"bank-tiny.json", "!hasRun", false},
+		{"bank-full-divorced.json", "!hasRun", true},
+	}
+	tempDir := mustTempDir(t)
+	defer os.RemoveAll(tempDir)
+	mustCopyFile(
+		t,
+		filepath.Join("..", "progress", "fixtures", "progress.json"),
+		tempDir,
+	)
+
+	htmlCmds := make(chan cmd.Cmd)
+	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.run()
+	pm, err := progress.NewMonitor(tempDir, htmlCmds)
+	if err != nil {
+		t.Fatalf("NewMonitor() err: %v", err)
+	}
+
+	for _, c := range cases {
+		whenExpr := dexpr.MustNew(c.when)
+		got, err := shouldProcess(pm, c.filename, whenExpr)
+		if err != nil {
+			t.Errorf("shouldProcess(pm, %v, %v) err: %s", c.filename, c.when, err)
+			continue
+		}
+		if got != c.want {
+			t.Errorf("shouldProcess(pm, %v, %v) got: %t, want: %t",
+				c.filename, c.when, got, c.want)
 		}
 	}
 }
@@ -240,4 +303,47 @@ func areSortOrdersEqual(
 		}
 	}
 	return true
+}
+
+type htmlCmdMonitor struct {
+	htmlCmds     chan cmd.Cmd
+	cmdsReceived []cmd.Cmd
+}
+
+func newHtmlCmdMonitor(cmds chan cmd.Cmd) *htmlCmdMonitor {
+	return &htmlCmdMonitor{cmds, []cmd.Cmd{}}
+}
+
+func (h *htmlCmdMonitor) run() {
+	for c := range h.htmlCmds {
+		h.cmdsReceived = append(h.cmdsReceived, c)
+	}
+}
+
+func (h *htmlCmdMonitor) getCmdsReceived() []cmd.Cmd {
+	return h.cmdsReceived
+}
+
+func mustCopyFile(t *testing.T, srcFilename, dstDir string) {
+	contents, err := ioutil.ReadFile(srcFilename)
+	if err != nil {
+		t.Fatalf("ReadFile() err: %s", err)
+	}
+	info, err := os.Stat(srcFilename)
+	if err != nil {
+		t.Fatalf("Stat() err: %s", err)
+	}
+	mode := info.Mode()
+	dstFilename := filepath.Join(dstDir, filepath.Base(srcFilename))
+	if err := ioutil.WriteFile(dstFilename, contents, mode); err != nil {
+		t.Fatalf("WriteFile() err: %s", err)
+	}
+}
+
+func mustTempDir(t *testing.T) string {
+	tempDir, err := ioutil.TempDir("", "progress_test")
+	if err != nil {
+		t.Fatalf("TempDir() err: %s", err)
+	}
+	return tempDir
 }

@@ -204,12 +204,22 @@ func callFun(
 func evalUnaryExpr(rh *dlit.Literal, op token.Token) *dlit.Literal {
 	var r *dlit.Literal
 	switch op {
+	case token.NOT:
+		r = opNot(rh)
 	case token.SUB:
 		r = opNeg(rh)
 	default:
 		r, _ = dlit.New(ErrInvalidOp(op))
 	}
 	return r
+}
+
+func opNot(l *dlit.Literal) *dlit.Literal {
+	lBool, lIsBool := l.Bool()
+	if !lIsBool {
+		return dlit.MustNew(ErrIncompatibleTypes)
+	}
+	return dlit.MustNew(!lBool)
 }
 
 func opNeg(l *dlit.Literal) *dlit.Literal {

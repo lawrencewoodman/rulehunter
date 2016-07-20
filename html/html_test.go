@@ -34,10 +34,13 @@ func TestRun_quit(t *testing.T) {
 	defer os.Chdir(wd)
 	configDir, err := testhelpers.BuildConfigDirs()
 	defer os.RemoveAll(configDir)
-	pm := progress.NewMonitor(
+	pm, err := progress.NewMonitor(
 		filepath.Join(configDir, "build", "progress"),
 		htmlCmds,
 	)
+	if err != nil {
+		t.Fatalf("NewMonitor() err: %v", err)
+	}
 	go Run(config, pm, l, q, htmlCmds)
 	time.Sleep(1 * time.Second)
 	htmlCmds <- cmd.Flush
