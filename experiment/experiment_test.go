@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
+	"github.com/lawrencewoodman/ddataset/dtruncate"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/vlifesystems/rulehunter/aggregators"
 	"github.com/vlifesystems/rulehunter/experiment"
@@ -19,12 +20,13 @@ import (
 
 func TestLoadExperiment(t *testing.T) {
 	cases := []struct {
-		filename       string
-		wantExperiment *experiment.Experiment
-		wantTags       []string
-		wantWhenExpr   *dexpr.Expr
+		cfgMaxNumRecords int
+		filename         string
+		wantExperiment   *experiment.Experiment
+		wantTags         []string
+		wantWhenExpr     *dexpr.Expr
 	}{
-		{filepath.Join("fixtures", "flow.json"),
+		{-1, filepath.Join("fixtures", "flow.json"),
 			&experiment.Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dcsv.New(
@@ -46,7 +48,32 @@ func TestLoadExperiment(t *testing.T) {
 			[]string{"test", "fred / ned"},
 			dexpr.MustNew("!hasRun"),
 		},
-		{filepath.Join("fixtures", "debt.json"),
+		{4, filepath.Join("fixtures", "flow.json"),
+			&experiment.Experiment{
+				Title: "What would indicate good flow?",
+				Dataset: dtruncate.New(
+					dcsv.New(
+						filepath.Join("fixtures", "flow.csv"),
+						true,
+						rune(','),
+						[]string{"group", "district", "height", "flow"},
+					),
+					4,
+				),
+				ExcludeFieldNames: []string{"flow"},
+				Aggregators: []aggregators.Aggregator{
+					aggregators.MustNew("goodFlowAccuracy", "accuracy", "flow > 60"),
+				},
+				Goals: []*goal.Goal{goal.MustNew("goodFlowAccuracy > 10")},
+				SortOrder: []experiment.SortField{
+					experiment.SortField{"goodFlowAccuracy", experiment.DESCENDING},
+					experiment.SortField{"numMatches", experiment.DESCENDING},
+				},
+			},
+			[]string{"test", "fred / ned"},
+			dexpr.MustNew("!hasRun"),
+		},
+		{-1, filepath.Join("fixtures", "debt.json"),
 			&experiment.Experiment{
 				Title: "What would predict people being helped to be debt free?",
 				Dataset: dcsv.New(
@@ -77,7 +104,8 @@ func TestLoadExperiment(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		gotExperiment, gotTags, gotWhenExpr, err := loadExperiment(c.filename)
+		gotExperiment, gotTags, gotWhenExpr, err :=
+			loadExperiment(c.filename, c.cfgMaxNumRecords)
 		if err != nil {
 			t.Fatalf("loadExperiment(%s) err: %s", c.filename, err)
 			return
@@ -129,8 +157,9 @@ func TestLoadExperiment_error(t *testing.T) {
 		{filepath.Join("fixtures", "flow_invalid_when.json"),
 			ErrInvalidWhenExpr("has(twolegs")},
 	}
+	maxNumRecords := -1
 	for _, c := range cases {
-		_, _, _, err := loadExperiment(c.filename)
+		_, _, _, err := loadExperiment(c.filename, maxNumRecords)
 		if err == nil {
 			t.Errorf("loadExperiment(%s) no error, wantErr:%s",
 				c.filename, c.wantErr)

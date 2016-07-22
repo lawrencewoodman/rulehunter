@@ -34,6 +34,7 @@ type Config struct {
 	SourceURL        string
 	NumRulesInReport int
 	MaxNumProcesses  int
+	MaxNumRecords    int
 }
 
 // Load the configuration file from filename
@@ -53,12 +54,16 @@ func Load(filename string) (*Config, error) {
 		return nil, err
 	}
 
+	if c.NumRulesInReport < 1 {
+		c.NumRulesInReport = 100
+	}
+
 	if c.MaxNumProcesses < 1 {
 		c.MaxNumProcesses = runtime.NumCPU()
 	}
 
-	if c.NumRulesInReport < 1 {
-		c.NumRulesInReport = 100
+	if c.MaxNumRecords < 1 {
+		c.MaxNumRecords = -1
 	}
 
 	if c.SourceURL == "" {

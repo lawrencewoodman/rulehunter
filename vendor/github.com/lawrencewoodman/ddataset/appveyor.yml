@@ -4,20 +4,22 @@ platform:
   - x86
   - x64
 
-clone_folder: c:\gopath\src\github.com\LawrenceWoodman\ddataset
+clone_folder: c:\gopath\src\github.com\lawrencewoodman\ddataset
 
 environment:
   GOPATH: c:\gopath
 
 install:
-  - choco install mingw -y
-  - set PATH=%PATH%;C:\tools\mingw64\bin
+  - IF "%PLATFORM%" == "x86" set GOROOT=c:\go-x86
+  - IF "%PLATFORM%" == "x86" set PATH=%GOROOT%\bin;C:\MinGW\bin;%PATH%
+  - IF "%PLATFORM%" == "x64" set PATH=C:\msys64\mingw64\bin;%PATH%
   - echo %PATH%
   - go version
   - go env
+  - go get -v -t ./...
 
 build_script:
-  - go get -v -t ./...
+  - go install -v ./...
 
 test_script:
   - go test -v ./...

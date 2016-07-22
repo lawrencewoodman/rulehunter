@@ -120,10 +120,6 @@ func (cc *DCSVConn) getNumFields() int {
 	return cc.dataset.numFields
 }
 
-func (cc *DCSVConn) getFieldNames() []string {
-	return cc.dataset.fieldNames
-}
-
 func (cc *DCSVConn) makeRowCurrentRecord(row []string) error {
 	fieldNames := cc.dataset.GetFieldNames()
 	if len(row) != cc.getNumFields() {

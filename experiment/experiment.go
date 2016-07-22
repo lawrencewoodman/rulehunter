@@ -26,6 +26,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"github.com/lawrencewoodman/ddataset/dsql"
+	"github.com/lawrencewoodman/ddataset/dtruncate"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/vlifesystems/rulehunter"
 	rhexperiment "github.com/vlifesystems/rulehunter/experiment"
@@ -84,7 +85,8 @@ func Process(
 	}
 	experimentFullFilename :=
 		filepath.Join(cfg.ExperimentsDir, experimentFilename)
-	experiment, tags, whenExpr, err := loadExperiment(experimentFullFilename)
+	experiment, tags, whenExpr, err :=
+		loadExperiment(experimentFullFilename, cfg.MaxNumRecords)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't load experiment file: %s", err)
 		return epr.ReportError(fullErr)
@@ -198,7 +200,7 @@ func Process(
 	return nil
 }
 
-func loadExperiment(filename string) (
+func loadExperiment(filename string, maxNumRecords int) (
 	experiment *rhexperiment.Experiment,
 	tags []string,
 	whenExpr *dexpr.Expr,
@@ -227,6 +229,11 @@ func loadExperiment(filename string) (
 	if err != nil {
 		return nil, noTags, nil, err
 	}
+
+	if maxNumRecords >= 1 {
+		dataset = dtruncate.New(dataset, maxNumRecords)
+	}
+
 	experimentDesc := &rhexperiment.ExperimentDesc{
 		Title:         e.Title,
 		Dataset:       dataset,
