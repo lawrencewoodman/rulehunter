@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehuntersrv/quitter"
-	"sync"
 	"time"
 )
 
@@ -70,6 +69,7 @@ func (l *SvcLogger) Run(q *quitter.Quitter) {
 		for {
 			if q.ShouldQuit() {
 				close(l.entries)
+				return
 			}
 			time.Sleep(quitCheckInSec * time.Second)
 		}
@@ -96,41 +96,4 @@ func (l *SvcLogger) Log(level Level, msg string) {
 		Level: level,
 		Msg:   msg,
 	}
-}
-
-type TestLogger struct {
-	entries []Entry
-	sync.Mutex
-}
-
-func NewTestLogger() *TestLogger {
-	return &TestLogger{
-		entries: make([]Entry, 0),
-	}
-}
-
-func (l *TestLogger) Run(q *quitter.Quitter) {
-	q.Add()
-	for !q.ShouldQuit() {
-	}
-	q.Done()
-}
-
-func (l *TestLogger) SetSvcLogger(logger service.Logger) {
-}
-
-func (l *TestLogger) Log(level Level, msg string) {
-	e := Entry{
-		Level: level,
-		Msg:   msg,
-	}
-	l.Lock()
-	defer l.Unlock()
-	l.entries = append(l.entries, e)
-}
-
-func (t *TestLogger) GetEntries() []Entry {
-	t.Lock()
-	defer t.Unlock()
-	return t.entries
 }

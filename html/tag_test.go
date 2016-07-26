@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/vlifesystems/rulehuntersrv/config"
+	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
 	"golang.org/x/net/html"
 	"io/ioutil"
 	"os"
@@ -20,11 +21,7 @@ import (
 //  iii) That the shortest tag name is used if there are multiple ones that
 //       resolve to the same escaped tag
 func TestGenerateTagPages(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "tag_test")
-	if err != nil {
-		t.Errorf("TempDir() err: %s", err)
-		return
-	}
+	tempDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tempDir)
 	config := &config.Config{
 		WWWDir:   filepath.Join(tempDir),

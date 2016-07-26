@@ -25,6 +25,7 @@ import (
 )
 
 var errNoConfigDirArg = errors.New("no -configdir argument")
+var errInstallAndServeArg = errors.New("can't have -install and -serve argument")
 
 type errConfigLoad struct {
 	filename string

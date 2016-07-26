@@ -1,20 +1,53 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/vlifesystems/rulehuntersrv/config"
+	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
 	"github.com/vlifesystems/rulehuntersrv/logger"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"syscall"
 	"testing"
 )
 
-func TestSubMain_errors(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "rulehuntersrv")
-	if err != nil {
-		t.Fatal("TempDir() couldn't create dir")
+func TestSubMain(t *testing.T) {
+	wantEntries := []logger.Entry{
+		{Level: logger.Info, Msg: "Processing experiment: debt.json"},
+		{Level: logger.Info, Msg: "Successfully processed experiment: debt.json"},
 	}
+	cfgDir := testhelpers.BuildConfigDirs(t)
+	flags := &cmdFlags{configDir: cfgDir}
+	defer os.RemoveAll(cfgDir)
+	if testing.Short() {
+		mustWriteConfig(t, cfgDir, 100)
+	} else {
+		mustWriteConfig(t, cfgDir, 2000)
+	}
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "debt.json"),
+		filepath.Join(cfgDir, "experiments"),
+	)
+	l := testhelpers.NewLogger()
+	exitCode, err := subMain(flags, l)
+	if exitCode != 0 {
+		t.Errorf("subMain(%v, l) exitCode: %d, want: %d", flags, exitCode, 0)
+	}
+	if err != nil {
+		t.Errorf("subMain(%v, l) err: %s", flags, err)
+	}
+	if !reflect.DeepEqual(l.GetEntries(), wantEntries) {
+		t.Errorf("GetEntries() got: %v, want: %v", l.GetEntries(), wantEntries)
+	}
+	// TODO: Test files generated
+}
+
+func TestSubMain_errors(t *testing.T) {
+	tmpDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tmpDir)
 
 	cases := []struct {
@@ -50,7 +83,7 @@ func TestSubMain_errors(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		l := logger.NewTestLogger()
+		l := testhelpers.NewLogger()
 		exitCode, err := subMain(c.flags, l)
 		if exitCode != c.wantExitCode {
 			t.Errorf("subMain(%q) exitCode: %d, want: %d",
@@ -121,4 +154,22 @@ func checkErrConfigLoadMatch(checkErr error, wantErr errConfigLoad) error {
 			cerr.filename, wantErr.filename)
 	}
 	return checkPathErrorMatch(cerr.err, wantErr.err)
+}
+
+func mustWriteConfig(t *testing.T, baseDir string, maxNumRecords int) {
+	const mode = 0600
+	cfg := &config.Config{
+		ExperimentsDir: filepath.Join(baseDir, "experiments"),
+		WWWDir:         filepath.Join(baseDir, "www"),
+		BuildDir:       filepath.Join(baseDir, "build"),
+		MaxNumRecords:  maxNumRecords,
+	}
+	cfgFilename := filepath.Join(baseDir, "config.json")
+	j, err := json.Marshal(cfg)
+	if err != nil {
+		t.Fatalf("Marshal() err: %v", err)
+	}
+	if err := ioutil.WriteFile(cfgFilename, j, mode); err != nil {
+		t.Fatalf("WriteFile(%s, ...) err: %v", cfgFilename, err)
+	}
 }

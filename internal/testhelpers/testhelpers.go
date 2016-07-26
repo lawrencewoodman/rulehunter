@@ -2,14 +2,13 @@
 package testhelpers
 
 import (
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"testing"
 )
 
-func BuildConfigDirs() (string, error) {
+func BuildConfigDirs(t *testing.T) string {
 	// File mode permission:
 	// No special permission bits
 	// User: Read, Write Execute
@@ -17,38 +16,47 @@ func BuildConfigDirs() (string, error) {
 	// Other: None
 	const modePerm = 0700
 
-	tmpDir, err := ioutil.TempDir("", "rulehuntersrv")
-	if err != nil {
-		return "", errors.New("TempDir() couldn't create dir")
-	}
+	tmpDir := TempDir(t)
 
 	// TODO: Create the www/* and build/* subdirectories from rulehuntersrv code
 	subDirs := []string{
 		"experiments",
+		"datasets",
 		filepath.Join("www", "reports"),
 		filepath.Join("www", "progress"),
-		filepath.Join("build", "reports")}
+		filepath.Join("build", "progress"),
+		filepath.Join("build", "reports"),
+	}
 	for _, subDir := range subDirs {
 		fullSubDir := filepath.Join(tmpDir, subDir)
 		if err := os.MkdirAll(fullSubDir, modePerm); err != nil {
-			return "", fmt.Errorf("can't make directory: %s", subDir)
+			t.Fatalf("MkDirAll(%s, ...) err: %v", fullSubDir, err)
 		}
 	}
 
-	err = copyFile(filepath.Join("fixtures", "config.json"), tmpDir)
-	return tmpDir, err
+	return tmpDir
 }
 
-func copyFile(srcFilename, dstDir string) error {
+func CopyFile(t *testing.T, srcFilename, dstDir string) {
 	contents, err := ioutil.ReadFile(srcFilename)
 	if err != nil {
-		return err
+		t.Fatalf("ReadFile(%s) err: %v", srcFilename, err)
 	}
 	info, err := os.Stat(srcFilename)
 	if err != nil {
-		return err
+		t.Fatalf("Stat(%s) err: %v", srcFilename, err)
 	}
 	mode := info.Mode()
 	dstFilename := filepath.Join(dstDir, filepath.Base(srcFilename))
-	return ioutil.WriteFile(dstFilename, contents, mode)
+	if err := ioutil.WriteFile(dstFilename, contents, mode); err != nil {
+		t.Fatalf("WriteFile(%s, ...) err: %v", dstFilename, err)
+	}
+}
+
+func TempDir(t *testing.T) string {
+	tempDir, err := ioutil.TempDir("", "rulehuntersrv_test")
+	if err != nil {
+		t.Fatalf("TempDir() err: %s", err)
+	}
+	return tempDir
 }

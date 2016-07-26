@@ -27,6 +27,7 @@ type cmdFlags struct {
 	user      string
 	configDir string
 	install   bool
+	serve     bool
 }
 
 func parseFlags() *cmdFlags {
@@ -50,11 +51,20 @@ func parseFlags() *cmdFlags {
 		false,
 		"Install the server as a service",
 	)
+	flag.BoolVar(
+		&flags.serve,
+		"serve",
+		false,
+		"Run the program as a local server",
+	)
 	flag.Parse()
 	return flags
 }
 
 func handleFlags(flags *cmdFlags) error {
+	if flags.install && flags.serve {
+		return errInstallAndServeArg
+	}
 	if flags.install && flags.configDir == "" {
 		return errNoConfigDirArg
 	}

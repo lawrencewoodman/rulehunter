@@ -10,8 +10,8 @@ import (
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehunter/goal"
 	"github.com/vlifesystems/rulehuntersrv/html/cmd"
+	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
 	"github.com/vlifesystems/rulehuntersrv/progress"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -191,9 +191,9 @@ func TestShouldProcess(t *testing.T) {
 		{"bank-tiny.json", "!hasRun", false},
 		{"bank-full-divorced.json", "!hasRun", true},
 	}
-	tempDir := mustTempDir(t)
+	tempDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tempDir)
-	mustCopyFile(
+	testhelpers.CopyFile(
 		t,
 		filepath.Join("..", "progress", "fixtures", "progress.json"),
 		tempDir,
@@ -351,28 +351,4 @@ func (h *htmlCmdMonitor) run() {
 
 func (h *htmlCmdMonitor) getCmdsReceived() []cmd.Cmd {
 	return h.cmdsReceived
-}
-
-func mustCopyFile(t *testing.T, srcFilename, dstDir string) {
-	contents, err := ioutil.ReadFile(srcFilename)
-	if err != nil {
-		t.Fatalf("ReadFile() err: %s", err)
-	}
-	info, err := os.Stat(srcFilename)
-	if err != nil {
-		t.Fatalf("Stat() err: %s", err)
-	}
-	mode := info.Mode()
-	dstFilename := filepath.Join(dstDir, filepath.Base(srcFilename))
-	if err := ioutil.WriteFile(dstFilename, contents, mode); err != nil {
-		t.Fatalf("WriteFile() err: %s", err)
-	}
-}
-
-func mustTempDir(t *testing.T) string {
-	tempDir, err := ioutil.TempDir("", "progress_test")
-	if err != nil {
-		t.Fatalf("TempDir() err: %s", err)
-	}
-	return tempDir
 }

@@ -88,11 +88,14 @@ func subMain(
 		if err = s.Install(); err != nil {
 			return 1, err
 		}
-	} else {
+	} else if flags.serve {
 		if err = s.Run(); err != nil {
 			return 1, err
 		}
-
+	} else {
+		if _, ifLoggedError := prg.ProcessDir(); ifLoggedError {
+			return 1, fmt.Errorf("Errors while processing dir")
+		}
 	}
 	return 0, nil
 }

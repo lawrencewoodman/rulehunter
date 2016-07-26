@@ -3,7 +3,6 @@ package progress
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/vlifesystems/rulehuntersrv/html/cmd"
+	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
 )
 
 func TestGetExperiments(t *testing.T) {
@@ -51,9 +51,9 @@ func TestGetExperiments(t *testing.T) {
 		},
 	}
 
-	tempDir := mustTempDir(t)
+	tempDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tempDir)
-	mustCopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
@@ -69,7 +69,7 @@ func TestGetExperiments(t *testing.T) {
 }
 
 func TestGetExperiments_notExists(t *testing.T) {
-	tempDir := mustTempDir(t)
+	tempDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tempDir)
 
 	htmlCmds := make(chan cmd.Cmd)
@@ -122,9 +122,9 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		},
 	}
 
-	tempDir := mustTempDir(t)
+	tempDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tempDir)
-	mustCopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
@@ -182,9 +182,9 @@ func TestReportSuccess(t *testing.T) {
 	}
 	wantHtmlCmdsReceived := []cmd.Cmd{cmd.Progress, cmd.Progress, cmd.Reports}
 
-	tempDir := mustTempDir(t)
+	tempDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tempDir)
-	mustCopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
@@ -233,9 +233,9 @@ func TestGetFinishStamp(t *testing.T) {
 			mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 		},
 	}
-	tempDir := mustTempDir(t)
+	tempDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tempDir)
-	mustCopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
@@ -292,30 +292,6 @@ func (h *htmlCmdMonitor) run() {
 
 func (h *htmlCmdMonitor) getCmdsReceived() []cmd.Cmd {
 	return h.cmdsReceived
-}
-
-func mustCopyFile(t *testing.T, srcFilename, dstDir string) {
-	contents, err := ioutil.ReadFile(srcFilename)
-	if err != nil {
-		t.Fatalf("ReadFile() err: %s", err)
-	}
-	info, err := os.Stat(srcFilename)
-	if err != nil {
-		t.Fatalf("Stat() err: %s", err)
-	}
-	mode := info.Mode()
-	dstFilename := filepath.Join(dstDir, filepath.Base(srcFilename))
-	if err := ioutil.WriteFile(dstFilename, contents, mode); err != nil {
-		t.Fatalf("WriteFile() err: %s", err)
-	}
-}
-
-func mustTempDir(t *testing.T) string {
-	tempDir, err := ioutil.TempDir("", "progress_test")
-	if err != nil {
-		t.Fatalf("TempDir() err: %s", err)
-	}
-	return tempDir
 }
 
 func checkExperimentsMatch(experiments1, experiments2 []*Experiment) error {

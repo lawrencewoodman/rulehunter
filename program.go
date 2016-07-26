@@ -60,6 +60,39 @@ func (p *program) Start(s service.Service) error {
 	return nil
 }
 
+// Returns number of files processed and ifLoggedError
+func (p *program) ProcessDir() (int, bool) {
+	experimentFilenames, err := p.getExperimentFilenames()
+	if err != nil {
+		p.logger.Log(logger.Error, err.Error())
+		return 0, true
+	}
+	for _, experimentFilename := range experimentFilenames {
+		if err := p.progressMonitor.AddExperiment(experimentFilename); err != nil {
+			p.logger.Log(logger.Error, err.Error())
+			return 0, true
+		}
+	}
+
+	numProcessed := 0
+	ifLoggedError := false
+	for _, experimentFilename := range experimentFilenames {
+		err := experiment.Process(
+			experimentFilename,
+			p.config,
+			p.logger,
+			p.progressMonitor,
+		)
+		if err != nil {
+			msg := fmt.Sprintf("Failed processing experiment: %s - %s",
+				experimentFilename, err)
+			p.logger.Log(logger.Error, msg)
+			ifLoggedError = true
+		}
+	}
+	return numProcessed, ifLoggedError
+}
+
 func (p *program) run() {
 	sleepInSeconds := time.Duration(2)
 	logWaitingForExperiments := true
@@ -71,38 +104,14 @@ func (p *program) run() {
 			logWaitingForExperiments = false
 			p.logger.Log(logger.Info, "Waiting for experiments to process")
 		}
-		experimentFilenames, err := p.getExperimentFilenames()
-		if err != nil {
-			p.logger.Log(logger.Error, err.Error())
-		}
-		for _, experimentFilename := range experimentFilenames {
-			err := p.progressMonitor.AddExperiment(experimentFilename)
-			if err != nil {
-				p.logger.Log(logger.Error, err.Error())
-			}
-		}
 
-		for _, experimentFilename := range experimentFilenames {
+		if n, _ := p.ProcessDir(); n >= 1 {
 			logWaitingForExperiments = true
-			err := experiment.Process(
-				experimentFilename,
-				p.config,
-				p.logger,
-				p.progressMonitor,
-			)
-			if err != nil {
-				p.logger.Log(
-					logger.Error,
-					fmt.Sprintf("Failed processing experiment: %s - %s",
-						experimentFilename, err),
-				)
-			}
 		}
 
 		// Sleeping prevents 'excessive' cpu use and disk access
 		time.Sleep(sleepInSeconds * time.Second)
 	}
-	_ = "breakpoint"
 }
 
 func (p *program) getExperimentFilenames() ([]string, error) {

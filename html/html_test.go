@@ -5,10 +5,8 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/html/cmd"
 	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
-	"github.com/vlifesystems/rulehuntersrv/logger"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"github.com/vlifesystems/rulehuntersrv/quitter"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -18,28 +16,29 @@ import (
 
 // This checks if Run will quit properly when told to
 func TestRun_quit(t *testing.T) {
-	config := &config.Config{
-		ExperimentsDir:   "experiments",
-		WWWDir:           "www",
-		BuildDir:         "build",
-		NumRulesInReport: 100,
-	}
 	q := quitter.New()
-	l := logger.NewTestLogger()
+	l := testhelpers.NewLogger()
 	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
 	if err != nil {
 		t.Fatalf("Getwd() err: ", err)
 	}
 	defer os.Chdir(wd)
-	configDir, err := testhelpers.BuildConfigDirs()
-	defer os.RemoveAll(configDir)
+	cfgDir := testhelpers.BuildConfigDirs(t)
+	defer os.RemoveAll(cfgDir)
+
 	pm, err := progress.NewMonitor(
-		filepath.Join(configDir, "build", "progress"),
+		filepath.Join(cfgDir, "build", "progress"),
 		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %v", err)
+	}
+	config := &config.Config{
+		ExperimentsDir:   filepath.Join(cfgDir, "experiments"),
+		WWWDir:           filepath.Join(cfgDir, "www"),
+		BuildDir:         filepath.Join(cfgDir, "build"),
+		NumRulesInReport: 100,
 	}
 	go Run(config, pm, l, q, htmlCmds)
 	time.Sleep(1 * time.Second)
@@ -47,6 +46,7 @@ func TestRun_quit(t *testing.T) {
 	go func() {
 		const secsWait = 3.0
 		<-time.After(secsWait * time.Second)
+		q.Done()
 		t.Fatalf("Run() didn't quit within %v seconds", secsWait)
 	}()
 	q.Quit()
@@ -103,11 +103,7 @@ func TestGenReportURLDir(t *testing.T) {
 }
 
 func TestMakeReportURLDir(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "html_test")
-	if err != nil {
-		t.Errorf("TempDir() err: %s", err)
-		return
-	}
+	tempDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tempDir)
 	cases := []struct {
 		stamp         time.Time

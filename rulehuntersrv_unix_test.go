@@ -4,6 +4,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -23,6 +24,7 @@ func TestSubMain_interrupt(t *testing.T) {
 			flags: &cmdFlags{
 				user:    "fred",
 				install: false,
+				serve:   true,
 			},
 			wantErr:      nil,
 			wantExitCode: 0,
@@ -39,14 +41,12 @@ func TestSubMain_interrupt(t *testing.T) {
 	defer os.Chdir(wd)
 
 	for _, c := range cases {
-		configDir, err := testhelpers.BuildConfigDirs()
-		if err != nil {
-			t.Fatalf("buildConfigDirs() err: %s", err)
-		}
+		configDir := testhelpers.BuildConfigDirs(t)
 		defer os.RemoveAll(configDir)
+		testhelpers.CopyFile(t, filepath.Join("fixtures", "config.json"), configDir)
 		c.flags.configDir = configDir
 
-		l := logger.NewTestLogger()
+		l := testhelpers.NewLogger()
 		go func() {
 			tryInSeconds := 4
 			for i := 0; i < tryInSeconds*5; i++ {

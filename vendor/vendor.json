@@ -57,40 +57,40 @@
 			"revisionTime": "2016-05-14T12:23:48Z"
 		},
 		{
-			"checksumSHA1": "xAPXtiYOIFLa033851nWDb0GXvk=",
+			"checksumSHA1": "ffWQqHf349yu6vIUhEOkXeztLzU=",
 			"path": "github.com/vlifesystems/rulehunter",
-			"revision": "c712be1bf115a9ae4177e7317e21a32b0191cf5c",
-			"revisionTime": "2016-06-27T07:12:37Z"
+			"revision": "4ca28459cadb688c57c974fe0e27df72c0a9d6d4",
+			"revisionTime": "2016-07-21T09:29:30Z"
 		},
 		{
 			"checksumSHA1": "u5Rbu4mmM0BEsIyVqwOS0DrpHz8=",
 			"path": "github.com/vlifesystems/rulehunter/aggregators",
-			"revision": "c712be1bf115a9ae4177e7317e21a32b0191cf5c",
-			"revisionTime": "2016-06-27T07:12:37Z"
+			"revision": "4ca28459cadb688c57c974fe0e27df72c0a9d6d4",
+			"revisionTime": "2016-07-21T09:29:30Z"
 		},
 		{
 			"checksumSHA1": "adB07y4GgQZLX0T1azYvSLFfXp0=",
 			"path": "github.com/vlifesystems/rulehunter/experiment",
-			"revision": "c712be1bf115a9ae4177e7317e21a32b0191cf5c",
-			"revisionTime": "2016-06-27T07:12:37Z"
+			"revision": "4ca28459cadb688c57c974fe0e27df72c0a9d6d4",
+			"revisionTime": "2016-07-21T09:29:30Z"
 		},
 		{
 			"checksumSHA1": "bKK7X1VZaZZM3E84nPHPpznqgGQ=",
 			"path": "github.com/vlifesystems/rulehunter/goal",
-			"revision": "c712be1bf115a9ae4177e7317e21a32b0191cf5c",
-			"revisionTime": "2016-06-27T07:12:37Z"
+			"revision": "4ca28459cadb688c57c974fe0e27df72c0a9d6d4",
+			"revisionTime": "2016-07-21T09:29:30Z"
 		},
 		{
 			"checksumSHA1": "f4JlkOwo9K1JShQF+YYfLw81DnY=",
 			"path": "github.com/vlifesystems/rulehunter/internal",
-			"revision": "c712be1bf115a9ae4177e7317e21a32b0191cf5c",
-			"revisionTime": "2016-06-27T07:12:37Z"
+			"revision": "4ca28459cadb688c57c974fe0e27df72c0a9d6d4",
+			"revisionTime": "2016-07-21T09:29:30Z"
 		},
 		{
 			"checksumSHA1": "ig/7vNPA7MAGYrnPpyiHG1sUtx8=",
 			"path": "github.com/vlifesystems/rulehunter/internal/dexprfuncs",
-			"revision": "c712be1bf115a9ae4177e7317e21a32b0191cf5c",
-			"revisionTime": "2016-06-27T07:12:37Z"
+			"revision": "4ca28459cadb688c57c974fe0e27df72c0a9d6d4",
+			"revisionTime": "2016-07-21T09:29:30Z"
 		},
 		{
 			"checksumSHA1": "vqc3a+oTUGX8PmD0TS+qQ7gmN8I=",
