@@ -86,11 +86,11 @@ func TestSubMain_errors(t *testing.T) {
 		l := testhelpers.NewLogger()
 		exitCode, err := subMain(c.flags, l)
 		if exitCode != c.wantExitCode {
-			t.Errorf("subMain(%q) exitCode: %d, want: %d",
+			t.Errorf("subMain(%v) exitCode: %d, want: %d",
 				c.flags, exitCode, c.wantExitCode)
 		}
 		if err := checkErrorMatch(err, c.wantErr); err != nil {
-			t.Errorf("subMain(%q) %s", c.flags, err)
+			t.Errorf("subMain(%v) %s", c.flags, err)
 		}
 		if len(l.GetEntries()) != 0 {
 			t.Errorf("GetEntries() got: %s, want: {}", l.GetEntries())

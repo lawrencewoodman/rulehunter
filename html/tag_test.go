@@ -207,7 +207,6 @@ func getUrls(filename string) ([]string, error) {
 			}
 		}
 	}
-	return urls, nil
 }
 
 func getH1(filename string) (string, error) {
@@ -232,5 +231,4 @@ func getH1(filename string) (string, error) {
 			}
 		}
 	}
-	return "", nil
 }

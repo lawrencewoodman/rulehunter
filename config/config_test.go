@@ -101,8 +101,7 @@ func TestLoad(t *testing.T) {
 			continue
 		}
 		if !configsMatch(gotConfig, c.wantConfig) {
-			t.Errorf("Load(%s) got: %s, want: %s", c.filename, gotConfig, c.wantConfig)
-			continue
+			t.Errorf("Load(%s) got: %v, want: %v", c.filename, gotConfig, c.wantConfig)
 		}
 	}
 }

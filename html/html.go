@@ -245,15 +245,13 @@ func makeHtmlNav(menuItem string) template.HTML {
 
 	t, err := template.New("webpage").Parse(navTpl)
 	if err != nil {
-		panic(fmt.Sprintf("Couldn't create nav html: %s",
-			menuItem, err))
+		panic(fmt.Sprintf("Couldn't create nav html: %s", err))
 	}
 
 	tplData := struct{ MenuItem string }{menuItem}
 
 	if err := t.Execute(&doc, tplData); err != nil {
-		panic(fmt.Sprintf("Couldn't create nav html: %s",
-			menuItem, err))
+		panic(fmt.Sprintf("Couldn't create nav html: %s", err))
 	}
 	return template.HTML(doc.String())
 }

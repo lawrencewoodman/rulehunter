@@ -14,6 +14,6 @@ func interruptProcess(t *testing.T) {
 		t.Fatal("Can't find process to Quit")
 	}
 	if err := p.Signal(os.Interrupt); err != nil {
-		t.Fatal("Can't send os.Interrupt signal: %s", err)
+		t.Fatalf("Can't send os.Interrupt signal: %s", err)
 	}
 }

@@ -260,7 +260,7 @@ func checkDatasetsEqual(ds1, ds2 ddataset.Dataset) error {
 		conn1Next := conn1.Next()
 		conn2Next := conn2.Next()
 		if conn1Next != conn2Next {
-			errors.New("Datasets don't finish at same point")
+			return errors.New("Datasets don't finish at same point")
 		}
 		if !conn1Next {
 			break

@@ -36,7 +36,7 @@ func TestSubMain_interrupt(t *testing.T) {
 
 	wd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("Getwd() err: ", err)
+		t.Fatal("Getwd() err: ", err)
 	}
 	defer os.Chdir(wd)
 
@@ -68,14 +68,14 @@ func TestSubMain_interrupt(t *testing.T) {
 		}
 		exitCode, err := subMain(c.flags, l)
 		if exitCode != c.wantExitCode {
-			t.Errorf("subMain(%q) exitCode: %d, want: %d",
+			t.Errorf("subMain(%v) exitCode: %d, want: %d",
 				c.flags, exitCode, c.wantExitCode)
 		}
 		if err := checkErrorMatch(err, c.wantErr); err != nil {
-			t.Errorf("subMain(%q) %s", c.flags, err)
+			t.Errorf("subMain(%v) %s", c.flags, err)
 		}
 		if !reflect.DeepEqual(l.GetEntries(), c.wantEntries) {
-			t.Errorf("GetEntries() got: %s, want: %s", l.GetEntries(), c.wantEntries)
+			t.Errorf("GetEntries() got: %v, want: %v", l.GetEntries(), c.wantEntries)
 		}
 	}
 }
