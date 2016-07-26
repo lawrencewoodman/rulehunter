@@ -21,7 +21,7 @@ func TestRun_quit(t *testing.T) {
 	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("Getwd() err: ", err)
+		t.Fatal("Getwd() err: ", err)
 	}
 	defer os.Chdir(wd)
 	cfgDir := testhelpers.BuildConfigDirs(t)
