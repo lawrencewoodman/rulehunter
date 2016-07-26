@@ -42,9 +42,16 @@ func (l *Logger) Run(q *quitter.Quitter) {
 func (l *Logger) SetSvcLogger(logger service.Logger) {
 }
 
-func (l *Logger) Log(level logger.Level, msg string) {
+func (l *Logger) Error(msg string) {
 	l.entryCh <- logger.Entry{
-		Level: level,
+		Level: logger.Error,
+		Msg:   msg,
+	}
+}
+
+func (l *Logger) Info(msg string) {
+	l.entryCh <- logger.Entry{
+		Level: logger.Info,
 		Msg:   msg,
 	}
 }

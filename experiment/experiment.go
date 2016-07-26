@@ -97,10 +97,7 @@ func Process(
 		return err
 	}
 
-	l.Log(
-		logger.Info,
-		fmt.Sprintf("Processing experiment: %s", experimentFilename),
-	)
+	l.Info(fmt.Sprintf("Processing experiment: %s", experimentFilename))
 
 	err = epr.UpdateDetails(experiment.Title, tags)
 	if err != nil {
@@ -192,10 +189,8 @@ func Process(
 		return err
 	}
 
-	l.Log(
-		logger.Info,
-		fmt.Sprintf("Successfully processed experiment: %s",
-			experimentFilename),
+	l.Info(
+		fmt.Sprintf("Successfully processed experiment: %s", experimentFilename),
 	)
 	return nil
 }

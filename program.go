@@ -64,12 +64,12 @@ func (p *program) Start(s service.Service) error {
 func (p *program) ProcessDir() (int, bool) {
 	experimentFilenames, err := p.getExperimentFilenames()
 	if err != nil {
-		p.logger.Log(logger.Error, err.Error())
+		p.logger.Error(err.Error())
 		return 0, true
 	}
 	for _, experimentFilename := range experimentFilenames {
 		if err := p.progressMonitor.AddExperiment(experimentFilename); err != nil {
-			p.logger.Log(logger.Error, err.Error())
+			p.logger.Error(err.Error())
 			return 0, true
 		}
 	}
@@ -86,7 +86,7 @@ func (p *program) ProcessDir() (int, bool) {
 		if err != nil {
 			msg := fmt.Sprintf("Failed processing experiment: %s - %s",
 				experimentFilename, err)
-			p.logger.Log(logger.Error, msg)
+			p.logger.Error(msg)
 			ifLoggedError = true
 		}
 	}
@@ -102,7 +102,7 @@ func (p *program) run() {
 	for !p.quitter.ShouldQuit() {
 		if logWaitingForExperiments {
 			logWaitingForExperiments = false
-			p.logger.Log(logger.Info, "Waiting for experiments to process")
+			p.logger.Info("Waiting for experiments to process")
 		}
 
 		if n, _ := p.ProcessDir(); n >= 1 {

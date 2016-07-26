@@ -56,10 +56,7 @@ func Run(
 	lastCmd := cmd.Flush
 	lastTime := time.Now()
 	if err := generate(cmd.All, config, pm); err != nil {
-		l.Log(
-			logger.Error,
-			fmt.Sprintf("Couldn't generate report: %s", err),
-		)
+		l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
 	}
 
 	q.Add()
@@ -80,10 +77,7 @@ func Run(
 			}
 			lastTime = time.Now()
 			if err := generate(c, config, pm); err != nil {
-				l.Log(
-					logger.Error,
-					fmt.Sprintf("Couldn't generate report: %s", err),
-				)
+				l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
 			}
 		}
 	}

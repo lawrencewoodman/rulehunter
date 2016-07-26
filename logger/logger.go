@@ -40,7 +40,8 @@ const (
 
 type Logger interface {
 	Run(*quitter.Quitter)
-	Log(Level, string)
+	Info(string)
+	Error(string)
 	SetSvcLogger(service.Logger)
 }
 
@@ -91,9 +92,16 @@ func (l *SvcLogger) SetSvcLogger(logger service.Logger) {
 	l.svcLogger = logger
 }
 
-func (l *SvcLogger) Log(level Level, msg string) {
+func (l *SvcLogger) Error(msg string) {
 	l.entries <- Entry{
-		Level: level,
+		Level: Error,
+		Msg:   msg,
+	}
+}
+
+func (l *SvcLogger) Info(msg string) {
+	l.entries <- Entry{
+		Level: Info,
 		Msg:   msg,
 	}
 }
