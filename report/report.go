@@ -80,7 +80,7 @@ func WriteJson(
 		for _, aggregatorName := range aggregatorNames {
 			aggregator := ruleAssessment.Aggregators[aggregatorName]
 			difference :=
-				calcTrueAggregatorDifference(trueAggregators, aggregator, aggregatorName)
+				calcTrueAggregatorDiff(trueAggregators, aggregatorName, aggregator)
 			aggregators[j] = &Aggregator{
 				aggregatorName,
 				aggregator.String(),
@@ -152,10 +152,10 @@ func getTrueAggregators(
 	return trueAggregators, nil
 }
 
-func calcTrueAggregatorDifference(
+func calcTrueAggregatorDiff(
 	trueAggregators map[string]*dlit.Literal,
-	aggregatorValue *dlit.Literal,
 	aggregatorName string,
+	aggregatorValue *dlit.Literal,
 ) string {
 	diffExpr, err := dexpr.New("r - t")
 	if err != nil {
@@ -166,10 +166,10 @@ func calcTrueAggregatorDifference(
 		"r": aggregatorValue,
 		"t": trueAggregators[aggregatorName],
 	}
-	difference := "N/A"
 	differenceL := diffExpr.Eval(vars, funcs)
+	difference := differenceL.String()
 	if err := differenceL.Err(); err != nil {
-		difference = differenceL.String()
+		difference = "N/A"
 	}
 	return difference
 }
