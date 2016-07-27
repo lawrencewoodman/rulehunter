@@ -10,7 +10,7 @@ func TestCalcTrueAggregatorDiff(t *testing.T) {
 	trueAggregators := map[string]*dlit.Literal{
 		"numMatches": dlit.MustNew(176),
 		"profit":     dlit.MustNew(23),
-		"bigNum":     dlit.MustNew(math.MaxInt64),
+		"bigNum":     dlit.MustNew(int64(math.MaxInt64)),
 	}
 	cases := []struct {
 		name  string
@@ -19,7 +19,7 @@ func TestCalcTrueAggregatorDiff(t *testing.T) {
 	}{
 		{name: "numMatches", value: dlit.MustNew(192), want: "16"},
 		{name: "numMatches", value: dlit.MustNew(165), want: "-11"},
-		{name: "bigNum", value: dlit.MustNew(math.MinInt64), want: "N/A"},
+		{name: "bigNum", value: dlit.MustNew(int64(math.MinInt64)), want: "N/A"},
 	}
 
 	for _, c := range cases {

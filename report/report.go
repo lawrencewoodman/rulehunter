@@ -21,7 +21,6 @@ package report
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rulehunter"
@@ -157,10 +156,7 @@ func calcTrueAggregatorDiff(
 	aggregatorName string,
 	aggregatorValue *dlit.Literal,
 ) string {
-	diffExpr, err := dexpr.New("r - t")
-	if err != nil {
-		panic(fmt.Sprintf("Couldn't create difference expression: %s", err))
-	}
+	diffExpr := dexpr.MustNew("r - t")
 	funcs := map[string]dexpr.CallFun{}
 	vars := map[string]*dlit.Literal{
 		"r": aggregatorValue,
