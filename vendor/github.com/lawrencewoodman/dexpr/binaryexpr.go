@@ -196,7 +196,7 @@ func opAdd(lh *dlit.Literal, rh *dlit.Literal) *dlit.Literal {
 	if lhIsInt && rhIsInt {
 		r := lhInt + rhInt
 		if (r < lhInt) != (rhInt < 0) {
-			return dlit.MustNew(ErrUnderflowOverflow)
+			return dlit.MustNew(ErrOverflow)
 		}
 		return dlit.MustNew(r)
 	}
@@ -215,7 +215,7 @@ func opSub(lh *dlit.Literal, rh *dlit.Literal) *dlit.Literal {
 	if lhIsInt && rhIsInt {
 		r := lhInt - rhInt
 		if (r > lhInt) != (rhInt < 0) {
-			return dlit.MustNew(ErrUnderflowOverflow)
+			return dlit.MustNew(ErrOverflow)
 		}
 		return dlit.MustNew(r)
 	}
@@ -238,11 +238,11 @@ func opMul(lh *dlit.Literal, rh *dlit.Literal) *dlit.Literal {
 			return dlit.MustNew(lhInt * rhInt)
 		}
 		if lhInt == math.MinInt64 || rhInt == math.MinInt64 {
-			return dlit.MustNew(ErrUnderflowOverflow)
+			return dlit.MustNew(ErrOverflow)
 		}
 		r := lhInt * rhInt
 		if r/rhInt != lhInt {
-			return dlit.MustNew(ErrUnderflowOverflow)
+			return dlit.MustNew(ErrOverflow)
 		}
 		return dlit.MustNew(r)
 	}
