@@ -30,15 +30,35 @@ import (
 
 var CallFuncs = map[string]dexpr.CallFun{
 	"roundto": roundTo,
+	"sqrt":    sqrt,
 	"in":      in,
 	"ni":      ni,
 	"true":    alwaysTrue,
 }
 
-// This uses round half-up to tie-break
-func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
-	if len(args) > 2 {
-		err := errors.New("Too many arguments")
+type WrongNumOfArgsError struct {
+	Got  int
+	Want int
+}
+
+func (e WrongNumOfArgsError) Error() string {
+	return fmt.Sprintf("wrong number of arguments got: %d, expected: %d",
+		e.Got, e.Want)
+}
+
+type CantConvertToTypeError struct {
+	Kind  string
+	Value *dlit.Literal
+}
+
+func (e CantConvertToTypeError) Error() string {
+	return fmt.Sprintf("can't convert to %s: %s", e.Kind, e.Value)
+}
+
+// sqrt returns the square root of a number
+func sqrt(args []*dlit.Literal) (*dlit.Literal, error) {
+	if len(args) != 1 {
+		err := WrongNumOfArgsError{Got: len(args), Want: 1}
 		r := dlit.MustNew(err)
 		return r, err
 	}
@@ -47,7 +67,27 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 		if err := args[0].Err(); err != nil {
 			return args[0], err
 		}
-		err := errors.New(fmt.Sprintf("Can't convert to float: %s", args[0]))
+		err := CantConvertToTypeError{Kind: "float", Value: args[0]}
+		r := dlit.MustNew(err)
+		return r, err
+	}
+	r, err := dlit.New(math.Sqrt(x))
+	return r, err
+}
+
+// This uses round half-up to tie-break
+func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
+	if len(args) != 2 {
+		err := WrongNumOfArgsError{Got: len(args), Want: 2}
+		r := dlit.MustNew(err)
+		return r, err
+	}
+	x, isFloat := args[0].Float()
+	if !isFloat {
+		if err := args[0].Err(); err != nil {
+			return args[0], err
+		}
+		err := CantConvertToTypeError{Kind: "float", Value: args[0]}
 		r := dlit.MustNew(err)
 		return r, err
 	}
@@ -56,7 +96,7 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 		if err := args[1].Err(); err != nil {
 			return args[1], err
 		}
-		err := errors.New(fmt.Sprintf("Can't convert to int: %s", args[0]))
+		err := CantConvertToTypeError{Kind: "int", Value: args[0]}
 		r := dlit.MustNew(err)
 		return r, err
 	}
@@ -68,7 +108,7 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 // Is a string IN a list of strings
 func in(args []*dlit.Literal) (*dlit.Literal, error) {
 	if len(args) < 2 {
-		err := errors.New("Too few arguments")
+		err := errors.New("too few arguments")
 		r := dlit.MustNew(err)
 		return r, err
 	}
@@ -87,7 +127,7 @@ func in(args []*dlit.Literal) (*dlit.Literal, error) {
 // Is a string NI a list of strings
 func ni(args []*dlit.Literal) (*dlit.Literal, error) {
 	if len(args) < 2 {
-		err := errors.New("Too few arguments")
+		err := errors.New("too few arguments")
 		r := dlit.MustNew(err)
 		return r, err
 	}

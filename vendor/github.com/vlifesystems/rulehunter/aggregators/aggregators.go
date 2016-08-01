@@ -68,6 +68,11 @@ func New(name string, aggType string, args ...string) (Aggregator, error) {
 			return r, err
 		}
 		r, err = newCount(name, args[0])
+	case "mcc":
+		if err = checkArgs(1); err != nil {
+			return r, err
+		}
+		r, err = newMCC(name, args[0])
 	case "percent":
 		if err = checkArgs(1); err != nil {
 			return r, err
