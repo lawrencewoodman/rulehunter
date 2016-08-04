@@ -57,40 +57,40 @@
 			"revisionTime": "2016-05-14T12:23:48Z"
 		},
 		{
-			"checksumSHA1": "ffWQqHf349yu6vIUhEOkXeztLzU=",
+			"checksumSHA1": "vVJPYXXf+espzCUyv0pofAT5NUs=",
 			"path": "github.com/vlifesystems/rulehunter",
-			"revision": "6b9b16c935d8e765cb2b5fd42cf10f39c07331eb",
-			"revisionTime": "2016-07-30T06:26:14Z"
+			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
+			"revisionTime": "2016-08-04T06:58:14Z"
 		},
 		{
-			"checksumSHA1": "dS0DYzPpynbSfu0inb9t26kUW2o=",
+			"checksumSHA1": "YvCE1RRNqQAk6QDY26T89SAzLQA=",
 			"path": "github.com/vlifesystems/rulehunter/aggregators",
-			"revision": "6b9b16c935d8e765cb2b5fd42cf10f39c07331eb",
-			"revisionTime": "2016-07-30T06:26:14Z"
+			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
+			"revisionTime": "2016-08-04T06:58:14Z"
 		},
 		{
-			"checksumSHA1": "adB07y4GgQZLX0T1azYvSLFfXp0=",
+			"checksumSHA1": "1HDCTokFazHdTx+8TXT1Lwf4HeM=",
 			"path": "github.com/vlifesystems/rulehunter/experiment",
-			"revision": "6b9b16c935d8e765cb2b5fd42cf10f39c07331eb",
-			"revisionTime": "2016-07-30T06:26:14Z"
+			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
+			"revisionTime": "2016-08-04T06:58:14Z"
 		},
 		{
-			"checksumSHA1": "bKK7X1VZaZZM3E84nPHPpznqgGQ=",
+			"checksumSHA1": "Ax6k2siBQFHYmbj5m4P3ky3Hcqo=",
 			"path": "github.com/vlifesystems/rulehunter/goal",
-			"revision": "6b9b16c935d8e765cb2b5fd42cf10f39c07331eb",
-			"revisionTime": "2016-07-30T06:26:14Z"
+			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
+			"revisionTime": "2016-08-04T06:58:14Z"
 		},
 		{
 			"checksumSHA1": "f4JlkOwo9K1JShQF+YYfLw81DnY=",
 			"path": "github.com/vlifesystems/rulehunter/internal",
-			"revision": "6b9b16c935d8e765cb2b5fd42cf10f39c07331eb",
-			"revisionTime": "2016-07-30T06:26:14Z"
+			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
+			"revisionTime": "2016-08-04T06:58:14Z"
 		},
 		{
 			"checksumSHA1": "W+B9XFdCekMKzQE91SDvZJPr8K4=",
 			"path": "github.com/vlifesystems/rulehunter/internal/dexprfuncs",
-			"revision": "6b9b16c935d8e765cb2b5fd42cf10f39c07331eb",
-			"revisionTime": "2016-07-30T06:26:14Z"
+			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
+			"revisionTime": "2016-08-04T06:58:14Z"
 		},
 		{
 			"checksumSHA1": "vqc3a+oTUGX8PmD0TS+qQ7gmN8I=",

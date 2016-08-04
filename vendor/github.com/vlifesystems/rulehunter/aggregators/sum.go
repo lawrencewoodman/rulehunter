@@ -27,74 +27,82 @@ import (
 	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
 )
 
-type sum struct {
+type sumAggregator struct{}
+
+type sumSpec struct {
 	name string
-	sum  *dlit.Literal
 	expr *dexpr.Expr
+}
+
+type sumInstance struct {
+	spec *sumSpec
+	sum  *dlit.Literal
 }
 
 var sumExpr = dexpr.MustNew("sum+value")
 
-func newSum(name string, exprStr string) (*sum, error) {
-	expr, err := dexpr.New(exprStr)
+func init() {
+	Register("sum", &sumAggregator{})
+}
+
+func (a *sumAggregator) MakeSpec(
+	name string,
+	expr string,
+) (AggregatorSpec, error) {
+	dexpr, err := dexpr.New(expr)
 	if err != nil {
 		return nil, err
 	}
-	ca := &sum{
+	d := &sumSpec{
 		name: name,
-		sum:  dlit.MustNew(0),
-		expr: expr,
+		expr: dexpr,
 	}
-	return ca, nil
+	return d, nil
 }
 
-func (a *sum) CloneNew() Aggregator {
-	return &sum{
-		name: a.name,
+func (ad *sumSpec) New() AggregatorInstance {
+	return &sumInstance{
+		spec: ad,
 		sum:  dlit.MustNew(0),
-		expr: a.expr,
 	}
 }
 
-func (a *sum) GetName() string {
-	return a.name
+func (ad *sumSpec) GetName() string {
+	return ad.name
 }
 
-func (a *sum) GetArg() string {
-	return a.expr.String()
+func (ad *sumSpec) GetArg() string {
+	return ad.expr.String()
 }
 
-func (a *sum) NextRecord(
+func (ai *sumInstance) GetName() string {
+	return ai.spec.name
+}
+
+func (ai *sumInstance) NextRecord(
 	record map[string]*dlit.Literal,
 	isRuleTrue bool,
 ) error {
 	if isRuleTrue {
-		exprValue := a.expr.Eval(record, dexprfuncs.CallFuncs)
+		exprValue := ai.spec.expr.Eval(record, dexprfuncs.CallFuncs)
 		_, valueIsFloat := exprValue.Float()
 		if !valueIsFloat {
-			return fmt.Errorf("Value isn't a float: %s", exprValue)
+			return fmt.Errorf("sum aggregator: value isn't a float: %s", exprValue)
 		}
 
 		vars := map[string]*dlit.Literal{
-			"sum":   a.sum,
+			"sum":   ai.sum,
 			"value": exprValue,
 		}
-		a.sum = sumExpr.Eval(vars, dexprfuncs.CallFuncs)
+		ai.sum = sumExpr.Eval(vars, dexprfuncs.CallFuncs)
 	}
 	return nil
 }
 
-func (a *sum) GetResult(
-	aggregators []Aggregator,
+func (ai *sumInstance) GetResult(
+	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
-	return a.sum
-}
-
-func (a *sum) IsEqual(o Aggregator) bool {
-	if _, ok := o.(*sum); !ok {
-		return false
-	}
-	return a.name == o.GetName() && a.GetArg() == o.GetArg()
+	return ai.sum
 }

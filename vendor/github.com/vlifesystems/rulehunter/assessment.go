@@ -57,8 +57,8 @@ func newAssessment(
 	ruleAssessments := make([]*RuleAssessment, len(goodRuleAssessors))
 	for i, ruleAssessment := range goodRuleAssessors {
 		rule := ruleAssessment.Rule
-		aggregatorsMap, err :=
-			aggregators.AggregatorsToMap(
+		aggregatorInstancesMap, err :=
+			aggregators.InstancesToMap(
 				ruleAssessment.Aggregators,
 				ruleAssessment.Goals,
 				numRecords,
@@ -68,16 +68,16 @@ func newAssessment(
 		}
 		goalAssessments := make([]*GoalAssessment, len(ruleAssessment.Goals))
 		for j, goal := range ruleAssessment.Goals {
-			passed, err := goal.Assess(aggregatorsMap)
+			passed, err := goal.Assess(aggregatorInstancesMap)
 			if err != nil {
 				return &Assessment{}, err
 			}
 			goalAssessments[j] = &GoalAssessment{goal.String(), passed}
 		}
-		delete(aggregatorsMap, "numRecords")
+		delete(aggregatorInstancesMap, "numRecords")
 		ruleAssessments[i] = &RuleAssessment{
 			Rule:        rule,
-			Aggregators: aggregatorsMap,
+			Aggregators: aggregatorInstancesMap,
 			Goals:       goalAssessments,
 		}
 	}

@@ -24,48 +24,65 @@ import (
 	"github.com/vlifesystems/rulehunter/goal"
 )
 
-type goalsScore struct {
+type goalsScoreAggregator struct{}
+
+type goalsScoreSpec struct {
 	name string
 }
 
-func newGoalsScore(name string) (*goalsScore, error) {
-	a := &goalsScore{name: name}
-	return a, nil
+type goalsScoreInstance struct {
+	spec *goalsScoreSpec
 }
 
-func (a *goalsScore) CloneNew() Aggregator {
-	return &goalsScore{name: a.name}
+func init() {
+	Register("goalsscore", &goalsScoreAggregator{})
 }
 
-func (a *goalsScore) GetName() string {
-	return a.name
+func (a *goalsScoreAggregator) MakeSpec(
+	name string,
+	expr string,
+) (AggregatorSpec, error) {
+	d := &goalsScoreSpec{name: name}
+	return d, nil
 }
 
-func (a *goalsScore) GetArg() string {
+func (ad *goalsScoreSpec) New() AggregatorInstance {
+	return &goalsScoreInstance{spec: ad}
+}
+
+func (ad *goalsScoreSpec) GetName() string {
+	return ad.name
+}
+
+func (ad *goalsScoreSpec) GetArg() string {
 	return ""
 }
 
-func (a *goalsScore) NextRecord(
+func (ai *goalsScoreInstance) GetName() string {
+	return ai.spec.name
+}
+
+func (ai *goalsScoreInstance) NextRecord(
 	record map[string]*dlit.Literal,
 	isRuleTrue bool,
 ) error {
 	return nil
 }
 
-func (a *goalsScore) GetResult(
-	aggregators []Aggregator,
+func (ai *goalsScoreInstance) GetResult(
+	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
-	aggregatorsMap, err :=
-		AggregatorsToMap(aggregators, goals, numRecords, a.name)
+	instancesMap, err :=
+		InstancesToMap(aggregatorInstances, goals, numRecords, ai.GetName())
 	if err != nil {
 		return dlit.MustNew(err)
 	}
 	goalsScore := 0.0
 	increment := 1.0
 	for _, goal := range goals {
-		hasPassed, err := goal.Assess(aggregatorsMap)
+		hasPassed, err := goal.Assess(instancesMap)
 		if err != nil {
 			return dlit.MustNew(err)
 		}
@@ -79,9 +96,9 @@ func (a *goalsScore) GetResult(
 	return dlit.MustNew(goalsScore)
 }
 
-func (a *goalsScore) IsEqual(o Aggregator) bool {
-	if _, ok := o.(*goalsScore); !ok {
+func (ai *goalsScoreInstance) IsEqual(o AggregatorInstance) bool {
+	if _, ok := o.(*goalsScoreInstance); !ok {
 		return false
 	}
-	return a.name == o.GetName()
+	return ai.GetName() == o.GetName()
 }

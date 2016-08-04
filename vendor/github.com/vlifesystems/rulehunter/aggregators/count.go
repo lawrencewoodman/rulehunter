@@ -26,57 +26,74 @@ import (
 	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
 )
 
-type count struct {
-	name       string
-	numMatches int64
-	expr       *dexpr.Expr
+type countAggregator struct{}
+
+type countSpec struct {
+	name string
+	expr *dexpr.Expr
 }
 
-func newCount(name string, expr string) (*count, error) {
+type countInstance struct {
+	spec       *countSpec
+	numMatches int64
+}
+
+func init() {
+	Register("count", &countAggregator{})
+}
+
+func (a *countAggregator) MakeSpec(
+	name string,
+	expr string,
+) (AggregatorSpec, error) {
 	dexpr, err := dexpr.New(expr)
 	if err != nil {
 		return nil, err
 	}
-	ca := &count{name: name, numMatches: 0, expr: dexpr}
-	return ca, nil
+	d := &countSpec{
+		name: name,
+		expr: dexpr,
+	}
+	return d, nil
 }
 
-func (a *count) CloneNew() Aggregator {
-	return &count{name: a.name, numMatches: 0, expr: a.expr}
+func (ad *countSpec) New() AggregatorInstance {
+	return &countInstance{
+		spec:       ad,
+		numMatches: 0,
+	}
 }
 
-func (a *count) GetName() string {
-	return a.name
+func (ad *countSpec) GetName() string {
+	return ad.name
 }
 
-func (a *count) GetArg() string {
-	return a.expr.String()
+func (ad *countSpec) GetArg() string {
+	return ad.expr.String()
 }
 
-func (a *count) NextRecord(record map[string]*dlit.Literal,
-	isRuleTrue bool) error {
-	countExprIsTrue, err := a.expr.EvalBool(record, dexprfuncs.CallFuncs)
+func (ai *countInstance) GetName() string {
+	return ai.spec.name
+}
+
+func (ai *countInstance) NextRecord(
+	record map[string]*dlit.Literal,
+	isRuleTrue bool,
+) error {
+	countExprIsTrue, err := ai.spec.expr.EvalBool(record, dexprfuncs.CallFuncs)
 	if err != nil {
 		return err
 	}
 	if isRuleTrue && countExprIsTrue {
-		a.numMatches++
+		ai.numMatches++
 	}
 	return nil
 }
 
-func (a *count) GetResult(
-	aggregators []Aggregator,
+func (ai *countInstance) GetResult(
+	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
-	l := dlit.MustNew(a.numMatches)
-	return l
-}
-
-func (a *count) IsEqual(o Aggregator) bool {
-	if _, ok := o.(*count); !ok {
-		return false
-	}
-	return a.name == o.GetName() && a.GetArg() == o.GetArg()
+	return dlit.MustNew(ai.numMatches)
 }

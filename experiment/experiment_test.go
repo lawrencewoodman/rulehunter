@@ -36,7 +36,7 @@ func TestLoadExperiment(t *testing.T) {
 					[]string{"group", "district", "height", "flow"},
 				),
 				ExcludeFieldNames: []string{"flow"},
-				Aggregators: []aggregators.Aggregator{
+				Aggregators: []aggregators.AggregatorSpec{
 					aggregators.MustNew("goodFlowAccuracy", "accuracy", "flow > 60"),
 				},
 				Goals: []*goal.Goal{goal.MustNew("goodFlowAccuracy > 10")},
@@ -61,7 +61,7 @@ func TestLoadExperiment(t *testing.T) {
 					4,
 				),
 				ExcludeFieldNames: []string{"flow"},
-				Aggregators: []aggregators.Aggregator{
+				Aggregators: []aggregators.AggregatorSpec{
 					aggregators.MustNew("goodFlowAccuracy", "accuracy", "flow > 60"),
 				},
 				Goals: []*goal.Goal{goal.MustNew("goodFlowAccuracy > 10")},
@@ -90,7 +90,7 @@ func TestLoadExperiment(t *testing.T) {
 					},
 				),
 				ExcludeFieldNames: []string{"success"},
-				Aggregators: []aggregators.Aggregator{
+				Aggregators: []aggregators.AggregatorSpec{
 					aggregators.MustNew("helpedAccuracy", "accuracy", "success"),
 				},
 				Goals: []*goal.Goal{goal.MustNew("helpedAccuracy > 10")},
@@ -304,14 +304,16 @@ func areGoalExpressionsEqual(g1 []*goal.Goal, g2 []*goal.Goal) bool {
 }
 
 func areAggregatorsEqual(
-	a1 []aggregators.Aggregator,
-	a2 []aggregators.Aggregator,
+	a1 []aggregators.AggregatorSpec,
+	a2 []aggregators.AggregatorSpec,
 ) bool {
 	if len(a1) != len(a2) {
 		return false
 	}
-	for i, e := range a1 {
-		if !e.IsEqual(a2[i]) {
+	for i, a := range a1 {
+		if reflect.TypeOf(a) != reflect.TypeOf(a2[i]) ||
+			a.GetName() != a2[i].GetName() ||
+			a.GetArg() != a2[i].GetArg() {
 			return false
 		}
 	}

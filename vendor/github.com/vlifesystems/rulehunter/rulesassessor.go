@@ -32,18 +32,18 @@ func AssessRules(
 	rules []*Rule,
 	e *experiment.Experiment,
 ) (*Assessment, error) {
-	var allAggregators []aggregators.Aggregator
+	var allAggregatorSpecs []aggregators.AggregatorSpec
 	var numRecords int64
 	var err error
 
-	allAggregators, err = addDefaultAggregators(e.Aggregators)
+	allAggregatorSpecs, err = addDefaultAggregators(e.Aggregators)
 	if err != nil {
 		return &Assessment{}, err
 	}
 
 	ruleAssessors := make([]*ruleAssessor, len(rules))
 	for i, rule := range rules {
-		ruleAssessors[i] = newRuleAssessor(rule, allAggregators, e.Goals)
+		ruleAssessors[i] = newRuleAssessor(rule, allAggregatorSpecs, e.Goals)
 	}
 
 	numRecords, err = processDataset(e.Dataset, ruleAssessors)
@@ -216,28 +216,29 @@ func processDataset(
 	return numRecords, conn.Err()
 }
 
+// TODO: Do this when creating the experiment, not here
 func addDefaultAggregators(
-	_aggregators []aggregators.Aggregator,
-) ([]aggregators.Aggregator, error) {
-	newAggregators := make([]aggregators.Aggregator, 2)
-	numMatchesAggregator, err := aggregators.New("numMatches", "count", "1==1")
+	aggregatorSpecs []aggregators.AggregatorSpec,
+) ([]aggregators.AggregatorSpec, error) {
+	newAggregatorSpecs := make([]aggregators.AggregatorSpec, 2)
+	numMatchesAggregatorSpec, err := aggregators.New("numMatches", "count", "1==1")
 	if err != nil {
-		return newAggregators, err
+		return aggregatorSpecs, err
 	}
-	percentMatchesAggregator, err :=
+	percentMatchesAggregatorSpec, err :=
 		aggregators.New("percentMatches", "calc",
 			"roundto(100.0 * numMatches / numRecords, 2)")
 	if err != nil {
-		return newAggregators, err
+		return aggregatorSpecs, err
 	}
-	goalsScoreAggregator, err :=
+	goalsScoreAggregatorSpec, err :=
 		aggregators.New("goalsScore", "goalsscore")
 	if err != nil {
-		return newAggregators, err
+		return aggregatorSpecs, err
 	}
-	newAggregators[0] = numMatchesAggregator
-	newAggregators[1] = percentMatchesAggregator
-	newAggregators = append(newAggregators, _aggregators...)
-	newAggregators = append(newAggregators, goalsScoreAggregator)
-	return newAggregators, nil
+	newAggregatorSpecs[0] = numMatchesAggregatorSpec
+	newAggregatorSpecs[1] = percentMatchesAggregatorSpec
+	newAggregatorSpecs = append(newAggregatorSpecs, aggregatorSpecs...)
+	newAggregatorSpecs = append(newAggregatorSpecs, goalsScoreAggregatorSpec)
+	return newAggregatorSpecs, nil
 }

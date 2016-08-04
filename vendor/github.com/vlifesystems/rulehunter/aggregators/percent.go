@@ -26,76 +26,89 @@ import (
 	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
 )
 
-type percent struct {
-	name       string
+type percentAggregator struct{}
+
+type percentSpec struct {
+	name string
+	expr *dexpr.Expr
+}
+
+type percentInstance struct {
+	spec       *percentSpec
 	numRecords int64
 	numMatches int64
-	expr       *dexpr.Expr
 }
 
 var percentExpr = dexpr.MustNew("roundto(100*numMatches/numRecords,2)")
 
-func newPercent(name string, expr string) (*percent, error) {
+func init() {
+	Register("percent", &percentAggregator{})
+}
+
+func (a *percentAggregator) MakeSpec(
+	name string,
+	expr string,
+) (AggregatorSpec, error) {
 	dexpr, err := dexpr.New(expr)
 	if err != nil {
 		return nil, err
 	}
-	ca :=
-		&percent{name: name, numMatches: 0, numRecords: 0, expr: dexpr}
-	return ca, nil
+	d := &percentSpec{
+		name: name,
+		expr: dexpr,
+	}
+	return d, nil
 }
 
-func (a *percent) CloneNew() Aggregator {
-	return &percent{
-		name:       a.name,
-		numMatches: 0,
+func (ad *percentSpec) New() AggregatorInstance {
+	return &percentInstance{
+		spec:       ad,
 		numRecords: 0,
-		expr:       a.expr,
+		numMatches: 0,
 	}
 }
 
-func (a *percent) GetName() string {
-	return a.name
+func (ad *percentSpec) GetName() string {
+	return ad.name
 }
 
-func (a *percent) GetArg() string {
-	return a.expr.String()
+func (ad *percentSpec) GetArg() string {
+	return ad.expr.String()
 }
 
-func (a *percent) NextRecord(record map[string]*dlit.Literal,
-	isRuleTrue bool) error {
-	countExprIsTrue, err := a.expr.EvalBool(record, dexprfuncs.CallFuncs)
+func (ai *percentInstance) GetName() string {
+	return ai.spec.name
+}
+
+func (ai *percentInstance) NextRecord(
+	record map[string]*dlit.Literal,
+	isRuleTrue bool,
+) error {
+	countExprIsTrue, err := ai.spec.expr.EvalBool(record, dexprfuncs.CallFuncs)
 	if err != nil {
 		return err
 	}
 	if isRuleTrue {
-		a.numRecords++
+		ai.numRecords++
 		if countExprIsTrue {
-			a.numMatches++
+			ai.numMatches++
 		}
 	}
 	return nil
 }
 
-func (a *percent) GetResult(
-	aggregators []Aggregator,
+func (ai *percentInstance) GetResult(
+	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
-	if a.numRecords == 0 {
+	if ai.numRecords == 0 {
 		return dlit.MustNew(0)
 	}
 
 	vars := map[string]*dlit.Literal{
-		"numRecords": dlit.MustNew(a.numRecords),
-		"numMatches": dlit.MustNew(a.numMatches),
+		"numRecords": dlit.MustNew(ai.numRecords),
+		"numMatches": dlit.MustNew(ai.numMatches),
 	}
 	return percentExpr.Eval(vars, dexprfuncs.CallFuncs)
-}
-
-func (a *percent) IsEqual(o Aggregator) bool {
-	if _, ok := o.(*percent); !ok {
-		return false
-	}
-	return a.name == o.GetName() && a.GetArg() == o.GetArg()
 }

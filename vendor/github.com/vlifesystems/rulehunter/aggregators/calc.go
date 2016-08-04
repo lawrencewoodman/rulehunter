@@ -26,53 +26,68 @@ import (
 	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
 )
 
-type calc struct {
+type calcAggregator struct{}
+
+type calcSpec struct {
 	name string
 	expr *dexpr.Expr
 }
 
-func newCalc(name string, expr string) (*calc, error) {
+type calcInstance struct {
+	spec *calcSpec
+}
+
+func init() {
+	Register("calc", &calcAggregator{})
+}
+
+func (a *calcAggregator) MakeSpec(
+	name string,
+	expr string,
+) (AggregatorSpec, error) {
 	dexpr, err := dexpr.New(expr)
 	if err != nil {
 		return nil, err
 	}
-	ca := &calc{name: name, expr: dexpr}
-	return ca, nil
+	d := &calcSpec{
+		name: name,
+		expr: dexpr,
+	}
+	return d, nil
 }
 
-func (a *calc) CloneNew() Aggregator {
-	return &calc{name: a.name, expr: a.expr}
+func (ad *calcSpec) New() AggregatorInstance {
+	return &calcInstance{spec: ad}
 }
 
-func (a *calc) GetName() string {
-	return a.name
+func (ad *calcSpec) GetName() string {
+	return ad.name
 }
 
-func (a *calc) GetArg() string {
-	return a.expr.String()
+func (ad *calcSpec) GetArg() string {
+	return ad.expr.String()
 }
 
-func (a *calc) NextRecord(
-	record map[string]*dlit.Literal, isRuleTrue bool) error {
+func (ai *calcInstance) GetName() string {
+	return ai.spec.name
+}
+
+func (ai *calcInstance) NextRecord(
+	record map[string]*dlit.Literal,
+	isRuleTrue bool,
+) error {
 	return nil
 }
 
-func (a *calc) GetResult(
-	aggregators []Aggregator,
+func (ai *calcInstance) GetResult(
+	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
-	aggregatorsMap, err :=
-		AggregatorsToMap(aggregators, goals, numRecords, a.name)
+	instancesMap, err :=
+		InstancesToMap(aggregatorInstances, goals, numRecords, ai.GetName())
 	if err != nil {
 		return dlit.MustNew(err)
 	}
-	return a.expr.Eval(aggregatorsMap, dexprfuncs.CallFuncs)
-}
-
-func (a *calc) IsEqual(o Aggregator) bool {
-	if _, ok := o.(*calc); !ok {
-		return false
-	}
-	return a.name == o.GetName() && a.GetArg() == o.GetArg()
+	return ai.spec.expr.Eval(instancesMap, dexprfuncs.CallFuncs)
 }

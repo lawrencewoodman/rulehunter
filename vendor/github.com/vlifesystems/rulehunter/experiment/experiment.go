@@ -53,7 +53,7 @@ type Experiment struct {
 	Title             string
 	Dataset           ddataset.Dataset
 	ExcludeFieldNames []string
-	Aggregators       []aggregators.Aggregator
+	Aggregators       []aggregators.AggregatorSpec
 	Goals             []*goal.Goal
 	SortOrder         []SortField
 }
@@ -80,7 +80,7 @@ func (d direction) String() string {
 // Create a new Experiment from the description
 func New(e *ExperimentDesc) (*Experiment, error) {
 	var goals []*goal.Goal
-	var aggregators []aggregators.Aggregator
+	var aggregators []aggregators.AggregatorSpec
 	var sortOrder []SortField
 	var err error
 
@@ -214,9 +214,9 @@ func makeGoals(exprs []string) ([]*goal.Goal, error) {
 
 func makeAggregators(
 	eAggregators []*AggregatorDesc,
-) ([]aggregators.Aggregator, error) {
+) ([]aggregators.AggregatorSpec, error) {
 	var err error
-	r := make([]aggregators.Aggregator, len(eAggregators))
+	r := make([]aggregators.AggregatorSpec, len(eAggregators))
 	for i, ea := range eAggregators {
 		r[i], err = aggregators.New(ea.Name, ea.Function, ea.Arg)
 		if err != nil {

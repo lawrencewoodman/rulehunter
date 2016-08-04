@@ -21,84 +21,83 @@
 package aggregators
 
 import (
-	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rulehunter/goal"
+	"sync"
+)
+
+var (
+	aggregatorsMu sync.RWMutex
+	aggregators   = make(map[string]Aggregator)
 )
 
 type Aggregator interface {
-	CloneNew() Aggregator
+	MakeSpec(string, string) (AggregatorSpec, error)
+}
+
+type AggregatorSpec interface {
+	New() AggregatorInstance
 	GetName() string
 	GetArg() string
-	GetResult([]Aggregator, []*goal.Goal, int64) *dlit.Literal
+}
+
+type AggregatorInstance interface {
+	GetName() string
+	GetResult([]AggregatorInstance, []*goal.Goal, int64) *dlit.Literal
 	NextRecord(map[string]*dlit.Literal, bool) error
-	IsEqual(Aggregator) bool
+}
+
+// Register makes an Aggregator available by the provided aggType.
+// If Register is called twice with the same aggType or if
+// aggregator is nil, it panics.
+func Register(aggType string, aggregator Aggregator) {
+	aggregatorsMu.Lock()
+	defer aggregatorsMu.Unlock()
+	if aggregator == nil {
+		panic("aggregator.Register aggregator is nil")
+	}
+	if _, dup := aggregators[aggType]; dup {
+		panic("aggregator.Register called twice for aggregator: " + aggType)
+	}
+	aggregators[aggType] = aggregator
 }
 
 // Create a new Aggregator where 'name' is what the aggregator will be
-// known as, 'aggType' is the type of the Aggregator and 'args' are any
-// arguments to pass to the Aggregator.  The valid values for 'aggType'
-// are: accuracy, calc, count, percent, sum, goalsscore.
-func New(name string, aggType string, args ...string) (Aggregator, error) {
-	var r Aggregator
+// known as, 'aggType' is the name of the Aggregator as Registered,
+// 'args' are any arguments to pass to the Aggregator.
+func New(name string, aggType string, args ...string) (AggregatorSpec, error) {
+	var ad AggregatorSpec
 	var err error
-
-	checkArgs := func(validNumArgs int) error {
-		if len(args) != validNumArgs {
-			return fmt.Errorf("Invalid number of arguments for aggregator: %s",
-				aggType)
-		}
-		return nil
-
+	aggregatorsMu.RLock()
+	aggregator, ok := aggregators[aggType]
+	aggregatorsMu.RUnlock()
+	if !ok {
+		return nil, fmt.Errorf("unrecognized aggregator: %s", aggType)
 	}
-	switch aggType {
-	case "accuracy":
-		if err = checkArgs(1); err != nil {
-			return r, err
+
+	if aggType == "goalsscore" {
+		if len(args) != 0 {
+			return nil,
+				fmt.Errorf("invalid number of arguments for aggregator: %s", aggType)
 		}
-		r, err = newAccuracy(name, args[0])
-	case "calc":
-		if err = checkArgs(1); err != nil {
-			return r, err
+		ad, err = aggregator.MakeSpec(name, "")
+	} else {
+		if len(args) != 1 {
+			return nil,
+				fmt.Errorf("invalid number of arguments for aggregator: %s", aggType)
 		}
-		r, err = newCalc(name, args[0])
-	case "count":
-		if err = checkArgs(1); err != nil {
-			return r, err
-		}
-		r, err = newCount(name, args[0])
-	case "mcc":
-		if err = checkArgs(1); err != nil {
-			return r, err
-		}
-		r, err = newMCC(name, args[0])
-	case "percent":
-		if err = checkArgs(1); err != nil {
-			return r, err
-		}
-		r, err = newPercent(name, args[0])
-	case "sum":
-		if err = checkArgs(1); err != nil {
-			return r, err
-		}
-		r, err = newSum(name, args[0])
-	case "goalsscore":
-		if err = checkArgs(0); err != nil {
-			return r, err
-		}
-		r, err = newGoalsScore(name)
-	default:
-		err = fmt.Errorf("Unrecognized aggregator: %s", aggType)
+		ad, err = aggregator.MakeSpec(name, args[0])
 	}
 
 	if err != nil {
-		err = errors.New(fmt.Sprintf("Can't make aggregator: %s", err))
+		return nil,
+			fmt.Errorf("can't make aggregator: %s, error: %s", name, err)
 	}
-	return r, err
+	return ad, nil
 }
 
-func MustNew(name string, aggType string, args ...string) Aggregator {
+func MustNew(name string, aggType string, args ...string) AggregatorSpec {
 	a, err := New(name, aggType, args...)
 	if err != nil {
 		panic(err)
@@ -106,28 +105,28 @@ func MustNew(name string, aggType string, args ...string) Aggregator {
 	return a
 }
 
-// Get the results of each Aggregator and return
-// as a map with the aggregator name as the key
-func AggregatorsToMap(
-	aggregators []Aggregator,
+// InstancesToMap gets the results of each AggregatorInstance and
+// returns the results as a map with the aggregatorSpec name as the key
+func InstancesToMap(
+	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 	stopNames ...string,
 ) (map[string]*dlit.Literal, error) {
-	r := make(map[string]*dlit.Literal, len(aggregators))
+	r := make(map[string]*dlit.Literal, len(aggregatorInstances))
 	numRecordsL := dlit.MustNew(numRecords)
 	r["numRecords"] = numRecordsL
-	for _, aggregator := range aggregators {
+	for _, ai := range aggregatorInstances {
 		for _, stopName := range stopNames {
-			if stopName == aggregator.GetName() {
+			if stopName == ai.GetName() {
 				return r, nil
 			}
 		}
-		l := aggregator.GetResult(aggregators, goals, numRecords)
+		l := ai.GetResult(aggregatorInstances, goals, numRecords)
 		if err := l.Err(); err != nil {
 			return r, err
 		}
-		r[aggregator.GetName()] = l
+		r[ai.GetName()] = l
 	}
 	return r, nil
 }

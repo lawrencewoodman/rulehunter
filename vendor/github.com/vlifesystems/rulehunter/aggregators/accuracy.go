@@ -26,54 +26,72 @@ import (
 	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
 )
 
-type accuracy struct {
-	name       string
+type accuracyAggregator struct{}
+
+type accuracySpec struct {
+	name string
+	expr *dexpr.Expr
+}
+
+type accuracyInstance struct {
+	spec       *accuracySpec
 	numMatches int64
-	expr       *dexpr.Expr
 }
 
 var accuracyExpr = dexpr.MustNew("roundto(100*numMatches/numRecords,2)")
 
-func newAccuracy(name string, expr string) (*accuracy, error) {
+func init() {
+	Register("accuracy", &accuracyAggregator{})
+}
+
+func (a *accuracyAggregator) MakeSpec(
+	name string,
+	expr string,
+) (AggregatorSpec, error) {
 	dexpr, err := dexpr.New(expr)
 	if err != nil {
 		return nil, err
 	}
-	ca :=
-		&accuracy{name: name, numMatches: 0, expr: dexpr}
-	return ca, nil
+	d := &accuracySpec{
+		name: name,
+		expr: dexpr,
+	}
+	return d, nil
 }
 
-func (a *accuracy) CloneNew() Aggregator {
-	return &accuracy{
-		name:       a.name,
+func (ad *accuracySpec) New() AggregatorInstance {
+	return &accuracyInstance{
+		spec:       ad,
 		numMatches: 0,
-		expr:       a.expr,
 	}
 }
 
-func (a *accuracy) GetName() string {
-	return a.name
+func (ad *accuracySpec) GetName() string {
+	return ad.name
 }
 
-func (a *accuracy) GetArg() string {
-	return a.expr.String()
+func (ad *accuracySpec) GetArg() string {
+	return ad.expr.String()
 }
 
-func (a *accuracy) NextRecord(record map[string]*dlit.Literal,
+func (ai *accuracyInstance) GetName() string {
+	return ai.spec.name
+}
+
+func (ai *accuracyInstance) NextRecord(record map[string]*dlit.Literal,
 	isRuleTrue bool) error {
-	matchExprIsTrue, err := a.expr.EvalBool(record, dexprfuncs.CallFuncs)
+	matchExprIsTrue, err := ai.spec.expr.EvalBool(record, dexprfuncs.CallFuncs)
 	if err != nil {
 		return err
 	}
 	if isRuleTrue == matchExprIsTrue {
-		a.numMatches++
+		ai.numMatches++
 	}
 	return nil
 }
 
-func (a *accuracy) GetResult(
-	aggregators []Aggregator,
+func (ai *accuracyInstance) GetResult(
+	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
@@ -83,14 +101,7 @@ func (a *accuracy) GetResult(
 
 	vars := map[string]*dlit.Literal{
 		"numRecords": dlit.MustNew(numRecords),
-		"numMatches": dlit.MustNew(a.numMatches),
+		"numMatches": dlit.MustNew(ai.numMatches),
 	}
 	return accuracyExpr.Eval(vars, dexprfuncs.CallFuncs)
-}
-
-func (a *accuracy) IsEqual(o Aggregator) bool {
-	if _, ok := o.(*accuracy); !ok {
-		return false
-	}
-	return a.name == o.GetName() && a.GetArg() == o.GetArg()
 }

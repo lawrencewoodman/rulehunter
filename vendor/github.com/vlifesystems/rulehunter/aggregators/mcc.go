@@ -28,81 +28,95 @@ import (
 
 // mcc represents a Matthews correlation coefficient aggregator
 // see: https://en.wikipedia.org/wiki/Matthews_correlation_coefficient
-type mcc struct {
-	name              string
+type mccAggregator struct{}
+
+type mccSpec struct {
+	name string
+	expr *dexpr.Expr
+}
+
+type mccInstance struct {
+	spec              *mccSpec
 	numTruePositives  int64
 	numTrueNegatives  int64
 	numFalsePositives int64
 	numFalseNegatives int64
-	expr              *dexpr.Expr
 }
 
+// This is calculated using a dexpr because this easily handles errors and
+// overflow/underflow errors
 var mccExpr = dexpr.MustNew(
 	"((tp*tn)-(fp*fn))/sqrt((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))",
 )
 
-func newMCC(name string, expr string) (*mcc, error) {
+func init() {
+	Register("mcc", &mccAggregator{})
+}
+
+func (a *mccAggregator) MakeSpec(
+	name string,
+	expr string,
+) (AggregatorSpec, error) {
 	dexpr, err := dexpr.New(expr)
 	if err != nil {
 		return nil, err
 	}
-	a := &mcc{
-		name:              name,
+	d := &mccSpec{
+		name: name,
+		expr: dexpr,
+	}
+	return d, nil
+}
+
+func (ad *mccSpec) New() AggregatorInstance {
+	return &mccInstance{
+		spec:              ad,
 		numTruePositives:  0,
 		numTrueNegatives:  0,
 		numFalsePositives: 0,
 		numFalseNegatives: 0,
-		expr:              dexpr,
-	}
-	return a, nil
-}
-
-func (a *mcc) CloneNew() Aggregator {
-	return &mcc{
-		name:              a.name,
-		numTruePositives:  0,
-		numTrueNegatives:  0,
-		numFalsePositives: 0,
-		numFalseNegatives: 0,
-		expr:              a.expr,
 	}
 }
 
-func (a *mcc) GetName() string {
-	return a.name
+func (ad *mccSpec) GetName() string {
+	return ad.name
 }
 
-func (a *mcc) GetArg() string {
-	return a.expr.String()
+func (ad *mccSpec) GetArg() string {
+	return ad.expr.String()
 }
 
-func (a *mcc) NextRecord(
+func (ai *mccInstance) GetName() string {
+	return ai.spec.name
+}
+
+func (ai *mccInstance) NextRecord(
 	record map[string]*dlit.Literal,
 	isRuleTrue bool,
 ) error {
-	matchExprIsTrue, err := a.expr.EvalBool(record, dexprfuncs.CallFuncs)
+	matchExprIsTrue, err := ai.spec.expr.EvalBool(record, dexprfuncs.CallFuncs)
 	if err != nil {
 		return err
 	}
 	if matchExprIsTrue {
 		if isRuleTrue {
-			a.numTruePositives++
+			ai.numTruePositives++
 		} else {
-			a.numFalseNegatives++
+			ai.numFalseNegatives++
 		}
 	} else {
 		if isRuleTrue {
-			a.numFalsePositives++
+			ai.numFalsePositives++
 		} else {
-			a.numTrueNegatives++
+			ai.numTrueNegatives++
 		}
 	}
 
 	return nil
 }
 
-func (a *mcc) GetResult(
-	aggregators []Aggregator,
+func (ai *mccInstance) GetResult(
+	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
@@ -111,24 +125,17 @@ func (a *mcc) GetResult(
 	}
 
 	vars := map[string]*dlit.Literal{
-		"tp": dlit.MustNew(a.numTruePositives),
-		"tn": dlit.MustNew(a.numTrueNegatives),
-		"fp": dlit.MustNew(a.numFalsePositives),
-		"fn": dlit.MustNew(a.numFalseNegatives),
+		"tp": dlit.MustNew(ai.numTruePositives),
+		"tn": dlit.MustNew(ai.numTrueNegatives),
+		"fp": dlit.MustNew(ai.numFalsePositives),
+		"fn": dlit.MustNew(ai.numFalseNegatives),
 	}
-	sums := (a.numTruePositives + a.numFalsePositives) *
-		(a.numTruePositives + a.numFalseNegatives) *
-		(a.numTrueNegatives + a.numFalsePositives) *
-		(a.numTrueNegatives + a.numFalseNegatives)
+	sums := (ai.numTruePositives + ai.numFalsePositives) *
+		(ai.numTruePositives + ai.numFalseNegatives) *
+		(ai.numTrueNegatives + ai.numFalsePositives) *
+		(ai.numTrueNegatives + ai.numFalseNegatives)
 	if sums == 0 {
 		return dlit.MustNew(0)
 	}
 	return mccExpr.Eval(vars, dexprfuncs.CallFuncs)
-}
-
-func (a *mcc) IsEqual(o Aggregator) bool {
-	if _, ok := o.(*mcc); !ok {
-		return false
-	}
-	return a.name == o.GetName() && a.GetArg() == o.GetArg()
 }
