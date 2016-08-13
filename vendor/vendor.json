@@ -57,40 +57,46 @@
 			"revisionTime": "2016-05-14T12:23:48Z"
 		},
 		{
-			"checksumSHA1": "vVJPYXXf+espzCUyv0pofAT5NUs=",
+			"checksumSHA1": "akQBtsDTQ/6eVtcyqIpXihMq7Pw=",
 			"path": "github.com/vlifesystems/rulehunter",
-			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
-			"revisionTime": "2016-08-04T06:58:14Z"
+			"revision": "cb48fb197e7638995336443f82647adbaf644977",
+			"revisionTime": "2016-08-13T05:58:27Z"
 		},
 		{
 			"checksumSHA1": "YvCE1RRNqQAk6QDY26T89SAzLQA=",
 			"path": "github.com/vlifesystems/rulehunter/aggregators",
-			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
-			"revisionTime": "2016-08-04T06:58:14Z"
+			"revision": "cb48fb197e7638995336443f82647adbaf644977",
+			"revisionTime": "2016-08-13T05:58:27Z"
 		},
 		{
 			"checksumSHA1": "1HDCTokFazHdTx+8TXT1Lwf4HeM=",
 			"path": "github.com/vlifesystems/rulehunter/experiment",
-			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
-			"revisionTime": "2016-08-04T06:58:14Z"
+			"revision": "cb48fb197e7638995336443f82647adbaf644977",
+			"revisionTime": "2016-08-13T05:58:27Z"
 		},
 		{
 			"checksumSHA1": "Ax6k2siBQFHYmbj5m4P3ky3Hcqo=",
 			"path": "github.com/vlifesystems/rulehunter/goal",
-			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
-			"revisionTime": "2016-08-04T06:58:14Z"
+			"revision": "cb48fb197e7638995336443f82647adbaf644977",
+			"revisionTime": "2016-08-13T05:58:27Z"
 		},
 		{
 			"checksumSHA1": "f4JlkOwo9K1JShQF+YYfLw81DnY=",
 			"path": "github.com/vlifesystems/rulehunter/internal",
-			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
-			"revisionTime": "2016-08-04T06:58:14Z"
+			"revision": "cb48fb197e7638995336443f82647adbaf644977",
+			"revisionTime": "2016-08-13T05:58:27Z"
 		},
 		{
 			"checksumSHA1": "W+B9XFdCekMKzQE91SDvZJPr8K4=",
 			"path": "github.com/vlifesystems/rulehunter/internal/dexprfuncs",
-			"revision": "4fef987a23fa78066828575c7118a86f837ce1d1",
-			"revisionTime": "2016-08-04T06:58:14Z"
+			"revision": "cb48fb197e7638995336443f82647adbaf644977",
+			"revisionTime": "2016-08-13T05:58:27Z"
+		},
+		{
+			"checksumSHA1": "i4wnX3k6XMkpvDprV1VVVP2tf1A=",
+			"path": "github.com/vlifesystems/rulehunter/rule",
+			"revision": "cb48fb197e7638995336443f82647adbaf644977",
+			"revisionTime": "2016-08-13T05:58:27Z"
 		},
 		{
 			"checksumSHA1": "vqc3a+oTUGX8PmD0TS+qQ7gmN8I=",

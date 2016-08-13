@@ -25,16 +25,17 @@ import (
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rulehunter/aggregators"
 	"github.com/vlifesystems/rulehunter/goal"
+	"github.com/vlifesystems/rulehunter/rule"
 )
 
 type ruleAssessor struct {
-	Rule        *Rule
+	Rule        rule.Rule
 	Aggregators []aggregators.AggregatorInstance
 	Goals       []*goal.Goal
 }
 
 func newRuleAssessor(
-	rule *Rule,
+	rule rule.Rule,
 	aggregatorSpecs []aggregators.AggregatorSpec,
 	goals []*goal.Goal,
 ) *ruleAssessor {
@@ -54,7 +55,7 @@ func (ra *ruleAssessor) NextRecord(record ddataset.Record) error {
 	var ruleIsTrue bool
 	var err error
 	for _, aggregator := range ra.Aggregators {
-		ruleIsTrue, err = ra.Rule.isTrue(record)
+		ruleIsTrue, err = ra.Rule.IsTrue(record)
 		if err != nil {
 			return err
 		}

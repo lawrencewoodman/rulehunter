@@ -26,6 +26,7 @@ import (
 	"github.com/vlifesystems/rulehunter/aggregators"
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehunter/goal"
+	"github.com/vlifesystems/rulehunter/rule"
 	"sort"
 	"strings"
 )
@@ -37,7 +38,7 @@ type Assessment struct {
 }
 
 type RuleAssessment struct {
-	Rule        *Rule
+	Rule        rule.Rule
 	Aggregators map[string]*dlit.Literal
 	Goals       []*GoalAssessment
 }
@@ -46,8 +47,6 @@ type GoalAssessment struct {
 	Expr   string
 	Passed bool
 }
-
-type ErrNameConflict string
 
 func newAssessment(
 	numRecords int64,
@@ -139,7 +138,7 @@ func (r *RuleAssessment) String() string {
 }
 
 // Tidy up rule assessments by removing poor and poorer similar rules
-// For example this removes all rules poorer than the 'true()' rule
+// For example this removes all rules poorer than the True rule
 func (sortedAssessment *Assessment) Refine(numSimilarRules int) {
 	if !sortedAssessment.IsSorted() {
 		panic("Assessment isn't sorted")
@@ -148,10 +147,6 @@ func (sortedAssessment *Assessment) Refine(numSimilarRules int) {
 	sortedAssessment.excludePoorerInNiRules(numSimilarRules)
 	sortedAssessment.excludePoorerTweakableRules(numSimilarRules)
 	sortedAssessment.flags["refined"] = true
-}
-
-func (e ErrNameConflict) Error() string {
-	return string(e)
 }
 
 func (a *Assessment) Merge(o *Assessment) (*Assessment, error) {
@@ -190,8 +185,8 @@ func (a *Assessment) TruncateRuleAssessments(
 
 	if numRuleAssessments > 0 {
 		trueRuleAssessment := a.RuleAssessments[len(a.RuleAssessments)-1]
-		if trueRuleAssessment.Rule.String() != "true()" {
-			panic("Assessment doesn't have 'true()' rule last")
+		if _, isTrueRule := trueRuleAssessment.Rule.(rule.True); !isTrueRule {
+			panic("Assessment doesn't have True rule last")
 		}
 
 		ruleAssessments[numNonTrueRuleAssessments] = trueRuleAssessment
@@ -205,7 +200,7 @@ func (a *Assessment) TruncateRuleAssessments(
 }
 
 // Can optionally pass maximum number of rules to return
-func (a *Assessment) GetRules(args ...int) []*Rule {
+func (a *Assessment) GetRules(args ...int) []rule.Rule {
 	var numRules int
 	switch len(args) {
 	case 0:
@@ -219,7 +214,7 @@ func (a *Assessment) GetRules(args ...int) []*Rule {
 		panic(fmt.Sprintf("incorrect number of arguments passed: %d", len(args)))
 	}
 
-	r := make([]*Rule, numRules)
+	r := make([]rule.Rule, numRules)
 	for i, ruleAssessment := range a.RuleAssessments {
 		if i >= numRules {
 			break
@@ -240,13 +235,13 @@ func (sortedAssessment *Assessment) excludePoorRules() {
 		if numMatches > 1 {
 			goodRuleAssessments = append(goodRuleAssessments, a)
 		}
-		if a.Rule.String() == "true()" {
+		if _, isTrueRule := a.Rule.(rule.True); isTrueRule {
 			trueFound = true
 			break
 		}
 	}
 	if !trueFound {
-		panic("No 'true()' rule found")
+		panic("No True rule found")
 	}
 	sortedAssessment.RuleAssessments = goodRuleAssessments
 }
@@ -259,7 +254,7 @@ func (sortedAssessment *Assessment) excludePoorerInNiRules(
 	niFields := make(map[string]int)
 	for _, a := range sortedAssessment.RuleAssessments {
 		rule := a.Rule
-		isInNiRule, operator, field := rule.getInNiParts()
+		isInNiRule, operator, field := rule.GetInNiParts()
 		if !isInNiRule {
 			goodRuleAssessments = append(goodRuleAssessments, a)
 		} else if operator == "in" {
@@ -291,11 +286,8 @@ func (sortedAssessment *Assessment) excludePoorerTweakableRules(
 	goodRuleAssessments := make([]*RuleAssessment, 0)
 	fieldOperatorIDs := make(map[string]int)
 	for _, a := range sortedAssessment.RuleAssessments {
-		rule := a.Rule
-		isTweakable, field, operator, _ := rule.getTweakableParts()
-		if !isTweakable {
-			goodRuleAssessments = append(goodRuleAssessments, a)
-		} else {
+		if tRule, isTweakable := a.Rule.(rule.TweakableRule); isTweakable {
+			field, operator, _ := tRule.GetTweakableParts()
 			fieldOperatorID := fmt.Sprintf("%s^%s", field, operator)
 			n, ok := fieldOperatorIDs[fieldOperatorID]
 			if !ok {
@@ -305,6 +297,8 @@ func (sortedAssessment *Assessment) excludePoorerTweakableRules(
 				goodRuleAssessments = append(goodRuleAssessments, a)
 				fieldOperatorIDs[fieldOperatorID]++
 			}
+		} else {
+			goodRuleAssessments = append(goodRuleAssessments, a)
 		}
 	}
 	sortedAssessment.RuleAssessments = goodRuleAssessments

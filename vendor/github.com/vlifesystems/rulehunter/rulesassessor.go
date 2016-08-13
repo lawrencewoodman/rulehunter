@@ -25,11 +25,12 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/vlifesystems/rulehunter/aggregators"
 	"github.com/vlifesystems/rulehunter/experiment"
+	"github.com/vlifesystems/rulehunter/rule"
 )
 
 // Assess the rules using a single thread
 func AssessRules(
-	rules []*Rule,
+	rules []rule.Rule,
 	e *experiment.Experiment,
 ) (*Assessment, error) {
 	var allAggregatorSpecs []aggregators.AggregatorSpec
@@ -69,7 +70,7 @@ type AssessRulesMPOutcome struct {
 // Goroutine to assess the rules using multiple processes and report on
 // progress through 'ec' channel
 func AssessRulesMP(
-	rules []*Rule,
+	rules []rule.Rule,
 	e *experiment.Experiment,
 	maxProcesses int,
 	ec chan *AssessRulesMPOutcome,
@@ -157,7 +158,8 @@ type assessRulesCOutcome struct {
 	err        error
 }
 
-func assessRulesC(rules []*Rule,
+func assessRulesC(
+	rules []rule.Rule,
 	experiment *experiment.Experiment,
 	c chan *assessRulesCOutcome,
 ) {

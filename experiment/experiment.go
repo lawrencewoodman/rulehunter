@@ -30,6 +30,7 @@ import (
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/vlifesystems/rulehunter"
 	rhexperiment "github.com/vlifesystems/rulehunter/experiment"
+	"github.com/vlifesystems/rulehunter/rule"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/logger"
 	"github.com/vlifesystems/rulehuntersrv/progress"
@@ -313,7 +314,7 @@ func (e *experimentFile) checkValid() error {
 }
 
 func assessRules(
-	rules []*rulehunter.Rule,
+	rules []rule.Rule,
 	experiment *rhexperiment.Experiment,
 	epr *progress.ExperimentProgressReporter,
 	cfg *config.Config,
