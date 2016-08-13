@@ -67,9 +67,9 @@ type sqlDesc struct {
 	Query          string
 }
 
-type ErrInvalidWhenExpr string
+type InvalidWhenExprError string
 
-func (e ErrInvalidWhenExpr) Error() string {
+func (e InvalidWhenExprError) Error() string {
 	return "When field invalid: " + string(e)
 }
 
@@ -245,7 +245,7 @@ func loadExperiment(filename string, maxNumRecords int) (
 
 	whenExpr, err = makeWhenExpr(e.When)
 	if err != nil {
-		return nil, noTags, nil, ErrInvalidWhenExpr(e.When)
+		return nil, noTags, nil, InvalidWhenExprError(e.When)
 	}
 	return experiment, e.Tags, whenExpr, err
 }

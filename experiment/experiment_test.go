@@ -155,7 +155,7 @@ func TestLoadExperiment_error(t *testing.T) {
 		{filepath.Join("fixtures", "flow_no_sql_query.json"),
 			errors.New("Experiment field missing: sql > query")},
 		{filepath.Join("fixtures", "flow_invalid_when.json"),
-			ErrInvalidWhenExpr("has(twolegs")},
+			InvalidWhenExprError("has(twolegs")},
 	}
 	maxNumRecords := -1
 	for _, c := range cases {
@@ -172,8 +172,8 @@ func TestLoadExperiment_error(t *testing.T) {
 	}
 }
 
-func TestErrInvalidWhenExprError(t *testing.T) {
-	e := ErrInvalidWhenExpr("has)nothing")
+func TestInvalidWhenExprErrorError(t *testing.T) {
+	e := InvalidWhenExprError("has)nothing")
 	want := "When field invalid: has)nothing"
 	if got := e.Error(); got != want {
 		t.Errorf("Error() got: %v, want: %v", got, want)
