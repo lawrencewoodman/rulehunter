@@ -38,7 +38,10 @@ func NewExperimentProgressReporter(
 	pm *ProgressMonitor,
 	experimentFilename string,
 ) (*ExperimentProgressReporter, error) {
-	epr := &ExperimentProgressReporter{pm, experimentFilename}
+	epr := &ExperimentProgressReporter{
+		pm:                 pm,
+		experimentFilename: experimentFilename,
+	}
 	return epr, pm.AddExperiment(experimentFilename)
 }
 
