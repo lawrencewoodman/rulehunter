@@ -73,14 +73,21 @@ func (e InvalidWhenExprError) Error() string {
 	return "When field invalid: " + string(e)
 }
 
+var assessRulesStage = 1
+var assessRulesNumStages = 3
+
 func Process(
 	experimentFilename string,
 	cfg *config.Config,
 	l logger.Logger,
 	progressMonitor *progress.ProgressMonitor,
 ) error {
-	epr, err :=
-		progress.NewExperimentProgressReporter(progressMonitor, experimentFilename)
+	assessRulesStage = 1
+	assessRulesNumStages = 3
+	epr, err := progress.NewExperimentProgressReporter(
+		progressMonitor,
+		experimentFilename,
+	)
 	if err != nil {
 		return err
 	}
@@ -319,13 +326,11 @@ func assessRules(
 	epr *progress.ExperimentProgressReporter,
 	cfg *config.Config,
 ) (*rulehunter.Assessment, error) {
+	if assessRulesStage > assessRulesNumStages {
+		panic("assessRules: assessRulesStage > assessRulesNumStages")
+	}
 	var assessment *rulehunter.Assessment
 	c := make(chan *rulehunter.AssessRulesMPOutcome)
-
-	msg := fmt.Sprintf("Assessing rules using %d CPUs...\n", cfg.MaxNumProcesses)
-	if err := epr.ReportInfo(msg); err != nil {
-		return nil, err
-	}
 
 	go rulehunter.AssessRulesMP(
 		rules,
@@ -337,16 +342,19 @@ func assessRules(
 		if o.Err != nil {
 			return nil, o.Err
 		}
-		msg := fmt.Sprintf("Assessment progress: %.2f%%", o.Progress*100)
+		msg := fmt.Sprintf("Assessment progress %d/%d: %.2f%%",
+			assessRulesStage, assessRulesNumStages, o.Progress*100)
 		if err := epr.ReportInfo(msg); err != nil {
 			return nil, err
 		}
 		assessment = o.Assessment
 	}
-	msg = fmt.Sprintf("Assessment progress: 100%%")
+	msg := fmt.Sprintf("Assessment progress %d/%d: 100%%",
+		assessRulesStage, assessRulesNumStages)
 	if err := epr.ReportInfo(msg); err != nil {
 		return nil, err
 	}
+	assessRulesStage++
 	return assessment, nil
 }
 
