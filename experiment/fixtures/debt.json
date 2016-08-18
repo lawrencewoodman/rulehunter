@@ -34,5 +34,5 @@
       "direction": "descending"
     }
   ],
-  "when": "!hasRunToday || sinceLastRun > 2 * day"
+  "when": "!hasRunToday || sinceLastRunHours > 2"
 }

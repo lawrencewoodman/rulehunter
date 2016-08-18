@@ -37,6 +37,8 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/report"
 	"os"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -73,8 +75,7 @@ func (e InvalidWhenExprError) Error() string {
 	return "When field invalid: " + string(e)
 }
 
-var assessRulesStage = 1
-var assessRulesNumStages = 3
+const assessRulesNumStages = 3
 
 func Process(
 	experimentFilename string,
@@ -82,8 +83,6 @@ func Process(
 	l logger.Logger,
 	progressMonitor *progress.ProgressMonitor,
 ) error {
-	assessRulesStage = 1
-	assessRulesNumStages = 3
 	epr, err := progress.NewExperimentProgressReporter(
 		progressMonitor,
 		experimentFilename,
@@ -99,7 +98,6 @@ func Process(
 		fullErr := fmt.Errorf("Couldn't load experiment file: %s", err)
 		return epr.ReportError(fullErr)
 	}
-
 	ok, err := shouldProcess(progressMonitor, experimentFilename, whenExpr)
 	if err != nil || !ok {
 		return err
@@ -131,7 +129,7 @@ func Process(
 		return epr.ReportError(fullErr)
 	}
 
-	assessment, err := assessRules(rules, experiment, epr, cfg)
+	assessment, err := assessRules(1, rules, experiment, epr, cfg)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
@@ -146,7 +144,7 @@ func Process(
 	}
 	tweakableRules := rulehunter.TweakRules(sortedRules, fieldDescriptions)
 
-	assessment2, err := assessRules(tweakableRules, experiment, epr, cfg)
+	assessment2, err := assessRules(2, tweakableRules, experiment, epr, cfg)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
@@ -164,7 +162,7 @@ func Process(
 	bestNonCombinedRules := assessment3.GetRules(numRulesToCombine)
 	combinedRules := rulehunter.CombineRules(bestNonCombinedRules)
 
-	assessment4, err := assessRules(combinedRules, experiment, epr, cfg)
+	assessment4, err := assessRules(3, combinedRules, experiment, epr, cfg)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
@@ -178,7 +176,6 @@ func Process(
 
 	assessment5.Sort(experiment.SortOrder)
 	assessment5.Refine(1)
-
 	assessment6 := assessment5.TruncateRuleAssessments(cfg.NumRulesInReport)
 
 	err = report.WriteJson(
@@ -321,41 +318,107 @@ func (e *experimentFile) checkValid() error {
 }
 
 func assessRules(
+	stage int,
 	rules []rule.Rule,
 	experiment *rhexperiment.Experiment,
 	epr *progress.ExperimentProgressReporter,
 	cfg *config.Config,
 ) (*rulehunter.Assessment, error) {
-	if assessRulesStage > assessRulesNumStages {
-		panic("assessRules: assessRulesStage > assessRulesNumStages")
-	}
-	var assessment *rulehunter.Assessment
-	c := make(chan *rulehunter.AssessRulesMPOutcome)
+	var wg sync.WaitGroup
+	var rulesProcessed uint64 = 0
 
-	go rulehunter.AssessRulesMP(
-		rules,
-		experiment,
-		cfg.MaxNumProcesses,
-		c,
-	)
-	for o := range c {
-		if o.Err != nil {
-			return nil, o.Err
-		}
-		msg := fmt.Sprintf("Assessment progress %d/%d: %.2f%%",
-			assessRulesStage, assessRulesNumStages, o.Progress*100)
-		if err := epr.ReportInfo(msg); err != nil {
-			return nil, err
-		}
-		assessment = o.Assessment
+	if stage > assessRulesNumStages {
+		panic("assessRules: stage > assessRulesNumStages")
 	}
-	msg := fmt.Sprintf("Assessment progress %d/%d: 100%%",
-		assessRulesStage, assessRulesNumStages)
+
+	msg := fmt.Sprintf("Assessing rules %d/%d", stage, assessRulesNumStages)
 	if err := epr.ReportInfo(msg); err != nil {
 		return nil, err
 	}
-	assessRulesStage++
+
+	numRules := len(rules)
+	if numRules < 2 {
+		assessment, err := rulehunter.AssessRules(rules, experiment)
+		if err != nil {
+			return nil, err
+		}
+		return assessment, err
+	}
+
+	progressIntervals := 1000
+	if numRules < progressIntervals {
+		progressIntervals = numRules
+	}
+
+	assessJobs := make(chan assessJob, progressIntervals)
+	assessJobResults := make(chan assessJobOutcome, progressIntervals)
+
+	for i := 0; i < cfg.MaxNumProcesses; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := range assessJobs {
+				rulesPartial := rules[j.startRuleNum:j.endRuleNum]
+				assessment, err := rulehunter.AssessRules(rulesPartial, experiment)
+				if err != nil {
+					assessJobResults <- assessJobOutcome{assessment: nil, err: err}
+					return
+				}
+				atomic.AddUint64(&rulesProcessed, uint64(len(assessment.RuleAssessments)))
+				progress :=
+					float64(atomic.LoadUint64(&rulesProcessed)) / float64(numRules) * 100.0
+				msg := fmt.Sprintf("Assessing rules %d/%d: %.2f%%",
+					stage, assessRulesNumStages, progress)
+				if err := epr.ReportInfo(msg); err != nil {
+					assessJobResults <- assessJobOutcome{assessment: nil, err: err}
+					return
+				}
+				assessJobResults <- assessJobOutcome{assessment: assessment, err: nil}
+			}
+		}()
+	}
+
+	step := numRules / progressIntervals
+	for i := 0; i < numRules; i += step {
+		nextI := i + step
+		if nextI > numRules {
+			nextI = numRules
+		}
+		assessJobs <- assessJob{startRuleNum: i, endRuleNum: nextI}
+	}
+	close(assessJobs)
+
+	go func() {
+		wg.Wait()
+		close(assessJobResults)
+	}()
+
+	var assessment *rulehunter.Assessment
+	var err error
+	for r := range assessJobResults {
+		if r.err != nil {
+			return nil, r.err
+		}
+		if assessment == nil {
+			assessment = r.assessment
+		} else {
+			assessment, err = assessment.Merge(r.assessment)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	return assessment, nil
+}
+
+type assessJob struct {
+	startRuleNum int
+	endRuleNum   int
+}
+
+type assessJobOutcome struct {
+	assessment *rulehunter.Assessment
+	err        error
 }
 
 func inStringsSlice(needle string, haystack []string) bool {

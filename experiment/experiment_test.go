@@ -9,13 +9,18 @@ import (
 	"github.com/vlifesystems/rulehunter/aggregators"
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehunter/goal"
+	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/html/cmd"
+	"github.com/vlifesystems/rulehuntersrv/internal/progresstest"
 	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
+	"github.com/vlifesystems/rulehuntersrv/logger"
 	"github.com/vlifesystems/rulehuntersrv/progress"
+	"github.com/vlifesystems/rulehuntersrv/quitter"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestLoadExperiment(t *testing.T) {
@@ -100,7 +105,7 @@ func TestLoadExperiment(t *testing.T) {
 				},
 			},
 			[]string{"debt"},
-			dexpr.MustNew("!hasRunToday || sinceLastRun > 2 * day"),
+			dexpr.MustNew("!hasRunToday || sinceLastRunHours > 2"),
 		},
 	}
 	for _, c := range cases {
@@ -200,8 +205,8 @@ func TestShouldProcess(t *testing.T) {
 	)
 
 	htmlCmds := make(chan cmd.Cmd)
-	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.run()
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(tempDir, htmlCmds)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %v", err)
@@ -219,6 +224,98 @@ func TestShouldProcess(t *testing.T) {
 				c.filename, c.when, got, c.want)
 		}
 	}
+}
+
+func TestProcess(t *testing.T) {
+	cfgDir := testhelpers.BuildConfigDirs(t)
+	defer os.RemoveAll(cfgDir)
+	cfg := &config.Config{
+		ExperimentsDir:   filepath.Join(cfgDir, "experiments"),
+		WWWDir:           filepath.Join(cfgDir, "www"),
+		BuildDir:         filepath.Join(cfgDir, "build"),
+		MaxNumRecords:    100,
+		MaxNumProcesses:  4,
+		NumRulesInReport: 100,
+	}
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "flow.json"),
+		cfg.ExperimentsDir,
+	)
+	wantLogEntries := []logger.Entry{
+		{Level: logger.Info, Msg: "Processing experiment: flow.json"},
+		{Level: logger.Info, Msg: "Successfully processed experiment: flow.json"},
+	}
+	wantPMExperiments := []*progress.Experiment{
+		&progress.Experiment{
+			Title:              "What would indicate good flow?",
+			Tags:               []string{"test", "fred / ned"},
+			Stamp:              time.Now(),
+			ExperimentFilename: "flow.json",
+			Msg:                "Finished processing successfully",
+			Status:             progress.Success,
+		},
+	}
+
+	q := quitter.New()
+	l := testhelpers.NewLogger()
+	go l.Run(q)
+	htmlCmds := make(chan cmd.Cmd)
+	defer close(htmlCmds)
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
+	pm, err := progress.NewMonitor(
+		filepath.Join(cfg.BuildDir, "progress"),
+		htmlCmds,
+	)
+	if err != nil {
+		t.Fatalf("progress.NewMonitor: err: %v", err)
+	}
+	if err = Process("flow.json", cfg, l, pm); err != nil {
+		t.Fatalf("Process: err: %v", err)
+	}
+
+	testStart := time.Now()
+	gotCorrectLogEntries := false
+	for !gotCorrectLogEntries && time.Since(testStart).Seconds() < 5 {
+		if reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
+			gotCorrectLogEntries = true
+		}
+	}
+	if !gotCorrectLogEntries {
+		t.Errorf("l.GetEntries() got: %v, want: %v", l.GetEntries(), wantLogEntries)
+	}
+
+	err = progresstest.CheckExperimentsMatch(
+		pm.GetExperiments(),
+		wantPMExperiments,
+	)
+	if err != nil {
+		t.Errorf("checkExperimentsMatch() err: %s", err)
+	}
+
+	/*
+	 *	Check html commands received == {Progress,Progress,Progress,...,Reports}
+	 */
+	htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
+	numCmds := len(htmlCmdsReceived)
+	if numCmds < 2 {
+		t.Errorf("GetCmdsRecevied() received less than 2 commands")
+	}
+	lastCmd := htmlCmdsReceived[numCmds-1]
+	if lastCmd != cmd.Reports {
+		t.Errorf("GetCmdsRecevied() last command got: %s, want: %s",
+			lastCmd, cmd.Reports)
+	}
+	for _, c := range htmlCmdsReceived[:numCmds-1] {
+		if c != cmd.Progress {
+			t.Errorf(
+				"GetCmdsRecevied() rest of commands not all equal to Progress, found: %s",
+				c,
+			)
+		}
+	}
+	// TODO: Test files generated
 }
 
 /***********************
@@ -334,23 +431,4 @@ func areSortOrdersEqual(
 		}
 	}
 	return true
-}
-
-type htmlCmdMonitor struct {
-	htmlCmds     chan cmd.Cmd
-	cmdsReceived []cmd.Cmd
-}
-
-func newHtmlCmdMonitor(cmds chan cmd.Cmd) *htmlCmdMonitor {
-	return &htmlCmdMonitor{cmds, []cmd.Cmd{}}
-}
-
-func (h *htmlCmdMonitor) run() {
-	for c := range h.htmlCmds {
-		h.cmdsReceived = append(h.cmdsReceived, c)
-	}
-}
-
-func (h *htmlCmdMonitor) getCmdsReceived() []cmd.Cmd {
-	return h.cmdsReceived
 }

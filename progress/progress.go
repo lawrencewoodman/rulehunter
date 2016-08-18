@@ -138,7 +138,6 @@ func NewMonitor(
 ) (*ProgressMonitor, error) {
 	var progress progressFile
 	experiments := []*Experiment{}
-
 	filename := filepath.Join(progressDir, "progress.json")
 
 	f, err := os.Open(filename)

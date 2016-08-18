@@ -56,8 +56,8 @@ func TestGetExperiments(t *testing.T) {
 	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
 
 	htmlCmds := make(chan cmd.Cmd)
-	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.run()
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
 	pm, err := NewMonitor(tempDir, htmlCmds)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %s", err)
@@ -73,8 +73,8 @@ func TestGetExperiments_notExists(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	htmlCmds := make(chan cmd.Cmd)
-	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.run()
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
 	pm, err := NewMonitor(tempDir, htmlCmds)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %s", err)
@@ -127,8 +127,8 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
 
 	htmlCmds := make(chan cmd.Cmd)
-	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.run()
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
 	pm, err := NewMonitor(tempDir, htmlCmds)
 	if err != nil {
 		t.Errorf("NewMonitor() err: %s", err)
@@ -187,8 +187,8 @@ func TestReportSuccess(t *testing.T) {
 	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
 
 	htmlCmds := make(chan cmd.Cmd)
-	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.run()
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
 	pm, err := NewMonitor(tempDir, htmlCmds)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %v", err)
@@ -205,9 +205,9 @@ func TestReportSuccess(t *testing.T) {
 	}
 	sleep(1)
 	close(htmlCmds)
-	htmlCmdsReceived := cmdMonitor.getCmdsReceived()
+	htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
 	if !reflect.DeepEqual(htmlCmdsReceived, wantHtmlCmdsReceived) {
-		t.Errorf("getCmdsRecevied() received commands - got: %s, want: %s",
+		t.Errorf("GetCmdsRecevied() received commands - got: %s, want: %s",
 			htmlCmdsReceived, wantHtmlCmdsReceived)
 	}
 }
@@ -253,8 +253,8 @@ func TestReportInfo(t *testing.T) {
 	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
 
 	htmlCmds := make(chan cmd.Cmd)
-	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.run()
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
 	pm, err := NewMonitor(tempDir, htmlCmds)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %v", err)
@@ -306,8 +306,8 @@ func TestGetFinishStamp(t *testing.T) {
 	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
 
 	htmlCmds := make(chan cmd.Cmd)
-	cmdMonitor := newHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.run()
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
 	pm, err := NewMonitor(tempDir, htmlCmds)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %s", err)
@@ -343,26 +343,10 @@ func sleep(s int) {
 	time.Sleep(sleepInSeconds * time.Second)
 }
 
-type htmlCmdMonitor struct {
-	htmlCmds     chan cmd.Cmd
-	cmdsReceived []cmd.Cmd
-}
-
-func newHtmlCmdMonitor(cmds chan cmd.Cmd) *htmlCmdMonitor {
-	return &htmlCmdMonitor{cmds, []cmd.Cmd{}}
-}
-
-func (h *htmlCmdMonitor) run() {
-	for c := range h.htmlCmds {
-		h.cmdsReceived = append(h.cmdsReceived, c)
-	}
-}
-
-func (h *htmlCmdMonitor) getCmdsReceived() []cmd.Cmd {
-	return h.cmdsReceived
-}
-
-func checkExperimentsMatch(experiments1, experiments2 []*Experiment) error {
+func checkExperimentsMatch(
+	experiments1 []*Experiment,
+	experiments2 []*Experiment,
+) error {
 	if len(experiments1) != len(experiments2) {
 		return errors.New("Lengths of experiments don't match")
 	}
