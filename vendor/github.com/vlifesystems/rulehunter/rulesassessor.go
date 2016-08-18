@@ -28,7 +28,8 @@ import (
 	"github.com/vlifesystems/rulehunter/rule"
 )
 
-// Assess the rules using a single thread
+// AssessRules runs the rules against the experiment and returns an
+// Assessment along with any errors
 func AssessRules(
 	rules []rule.Rule,
 	e *experiment.Experiment,
@@ -58,113 +59,6 @@ func AssessRules(
 
 	assessment, err := newAssessment(numRecords, goodRuleAssessors, e.Goals)
 	return assessment, err
-}
-
-type AssessRulesMPOutcome struct {
-	Assessment *Assessment
-	Err        error
-	Progress   float64
-	Finished   bool
-}
-
-// Goroutine to assess the rules using multiple processes and report on
-// progress through 'ec' channel
-func AssessRulesMP(
-	rules []rule.Rule,
-	e *experiment.Experiment,
-	maxProcesses int,
-	ec chan *AssessRulesMPOutcome,
-) {
-	var assessment *Assessment
-	var isError bool
-	ic := make(chan *assessRulesCOutcome)
-	numRules := len(rules)
-	if numRules < 2 {
-		assessment, err := AssessRules(rules, e)
-		ec <- &AssessRulesMPOutcome{assessment, err, 1.0, true}
-		close(ec)
-		return
-	}
-	progressIntervals := 1000
-	numProcesses := 0
-	if numRules < progressIntervals {
-		progressIntervals = numRules
-	}
-	step := numRules / progressIntervals
-	collectedI := 0
-	for i := 0; i < numRules; i += step {
-		progress := float64(collectedI) / float64(numRules)
-		nextI := i + step
-		if nextI > numRules {
-			nextI = numRules
-		}
-		rulesPartial := rules[i:nextI]
-		go assessRulesC(rulesPartial, e, ic)
-		numProcesses++
-
-		if numProcesses >= maxProcesses {
-			assessment, isError = getCOutcome(ic, ec, assessment, progress)
-			if isError {
-				return
-			}
-			collectedI += step
-			numProcesses--
-		}
-	}
-
-	for p := 0; p < numProcesses; p++ {
-		progress := float64(collectedI) / float64(numRules)
-		assessment, isError = getCOutcome(ic, ec, assessment, progress)
-		if isError {
-			return
-		}
-		collectedI += step
-	}
-
-	ec <- &AssessRulesMPOutcome{assessment, nil, 1.0, true}
-	close(ec)
-}
-
-func getCOutcome(
-	ic chan *assessRulesCOutcome,
-	ec chan *AssessRulesMPOutcome,
-	_assessment *Assessment,
-	progress float64,
-) (*Assessment, bool) {
-	var retAssessment *Assessment
-	var err error
-	ec <- &AssessRulesMPOutcome{nil, nil, progress, false}
-	assessmentOutcome := <-ic
-	if assessmentOutcome.err != nil {
-		ec <- &AssessRulesMPOutcome{nil, assessmentOutcome.err, progress, false}
-		close(ec)
-		return nil, true
-	}
-	if _assessment == nil {
-		retAssessment = assessmentOutcome.assessment
-	} else {
-		retAssessment, err = _assessment.Merge(assessmentOutcome.assessment)
-		if err != nil {
-			ec <- &AssessRulesMPOutcome{nil, err, progress, false}
-			close(ec)
-			return nil, true
-		}
-	}
-	return retAssessment, false
-}
-
-type assessRulesCOutcome struct {
-	assessment *Assessment
-	err        error
-}
-
-func assessRulesC(
-	rules []rule.Rule,
-	experiment *experiment.Experiment,
-	c chan *assessRulesCOutcome,
-) {
-	assessment, err := AssessRules(rules, experiment)
-	c <- &assessRulesCOutcome{assessment, err}
 }
 
 func filterGoodRuleAssessors(
