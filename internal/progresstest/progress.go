@@ -36,7 +36,7 @@ func checkExperimentMatch(e1, e2 *progress.Experiment) error {
 	if e1.Status != e2.Status {
 		return errors.New("Status doesn't match")
 	}
-	if !timesClose(e1.Stamp, e2.Stamp, 2) {
+	if !timesClose(e1.Stamp, e2.Stamp, 3) {
 		return errors.New("Stamp not close in time")
 	}
 	if len(e1.Tags) != len(e2.Tags) {
