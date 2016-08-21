@@ -22,6 +22,7 @@ package experiment
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"sync"

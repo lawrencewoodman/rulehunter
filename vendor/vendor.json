@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "pA/IgZAUBy3vrKT2z+7v7xHw/N8=",
+			"path": "github.com/denisenkom/go-mssqldb",
+			"revision": "fbf0a491e5ec011522c8870da9b0553135e2f9da",
+			"revisionTime": "2016-08-14T16:33:24Z"
+		},
+		{
 			"checksumSHA1": "6nmAJBw2phU9MUmkUnqFvbO5urg=",
 			"path": "github.com/kardianos/osext",
 			"revision": "29ae4ffbc9a6fe9fb2bc5029050ce6996ea1d3bc",
@@ -97,6 +103,12 @@
 			"path": "github.com/vlifesystems/rulehunter/rule",
 			"revision": "4a8fb0360954e21907daed8618b90a687028a8aa",
 			"revisionTime": "2016-08-18T07:20:11Z"
+		},
+		{
+			"checksumSHA1": "MCeXr2RNeiG1XG6V+er1OR0qyeo=",
+			"path": "golang.org/x/crypto/md4",
+			"revision": "88d0005bf4c3ec17306ecaca4281a8d8efd73e91",
+			"revisionTime": "2016-08-11T18:32:03Z"
 		},
 		{
 			"checksumSHA1": "vqc3a+oTUGX8PmD0TS+qQ7gmN8I=",

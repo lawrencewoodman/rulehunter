@@ -2,6 +2,7 @@ package experiment
 
 import (
 	"errors"
+	"fmt"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"github.com/lawrencewoodman/ddataset/dtruncate"
@@ -318,6 +319,69 @@ func TestProcess(t *testing.T) {
 	// TODO: Test files generated
 }
 
+func TestMakeDataset(t *testing.T) {
+	cases := []struct {
+		dataSourceName string
+		query          string
+		fieldNames     []string
+		want           ddataset.Dataset
+	}{
+		{dataSourceName: filepath.Join("fixtures", "flow.db"),
+			query:      "select * from flow",
+			fieldNames: []string{"grp", "district", "height", "flow"},
+			want: dcsv.New(
+				filepath.Join("fixtures", "flow.csv"),
+				true,
+				rune(','),
+				[]string{"grp", "district", "height", "flow"},
+			),
+		},
+		{dataSourceName: filepath.Join("fixtures", "flow.db"),
+			query:      "select grp,district,flow from flow",
+			fieldNames: []string{"grp", "district", "flow"},
+			want: dcsv.New(
+				filepath.Join("fixtures", "flow_three_columns.csv"),
+				true,
+				rune(','),
+				[]string{"grp", "district", "flow"},
+			),
+		},
+	}
+	for _, c := range cases {
+		e := &experimentFile{
+			Dataset:    "sql",
+			FieldNames: c.fieldNames,
+			Sql: &sqlDesc{
+				DriverName:     "sqlite3",
+				DataSourceName: c.dataSourceName,
+				Query:          c.query,
+			},
+		}
+		got, err := makeDataset(e)
+		if err != nil {
+			t.Errorf("makeDataset(%v) query: %s, err: %v",
+				c.query, e, err)
+			continue
+		}
+		if err := checkDatasetsEqual(got, c.want); err != nil {
+			t.Errorf("checkDatasetsEqual: query: %s, err: %v",
+				c.query, err)
+		}
+	}
+}
+
+func TestMakeDataset_errors(t *testing.T) {
+	ef := &experimentFile{
+		Dataset:    "fred",
+		FieldNames: []string{},
+	}
+	wantErr := errors.New("Experiment field: dataset, has invalid type: fred")
+	_, err := makeDataset(ef)
+	if err == nil || err.Error() != wantErr.Error() {
+		t.Errorf("makeDataset(%s): gotErr: %v, wantErr: %v", ef, err, wantErr)
+	}
+}
+
 /***********************
    Helper functions
 ************************/
@@ -366,7 +430,7 @@ func checkDatasetsEqual(ds1, ds2 ddataset.Dataset) error {
 		conn1Record := conn1.Read()
 		conn2Record := conn2.Read()
 		if !reflect.DeepEqual(conn1Record, conn2Record) {
-			return errors.New("Datasets don't match")
+			return fmt.Errorf("Rows don't match %s != %s", conn1Record, conn2Record)
 		}
 	}
 	if conn1.Err() != conn2.Err() {

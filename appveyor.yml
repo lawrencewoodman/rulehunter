@@ -4,6 +4,12 @@ platform:
   - x86
   - x64
 
+services:
+  - mssql2008r2sp2
+  - mssql2012sp1
+  - mssql2014
+  #- mssql2016
+
 clone_folder: c:\gopath\src\github.com\vlifesystems\rulehuntersrv
 
 environment:
@@ -18,8 +24,18 @@ install:
   - go env
   - go get -v -t ./...
 
+before_build:
+  - sqlcmd -S (local)\SQL2008R2SP2 -P Password12! -U sa -i appveyor\createflow.sql
+  - sqlcmd -S (local)\SQL2012SP1 -P Password12! -U sa -i appveyor\createflow.sql
+  - sqlcmd -S (local)\SQL2014 -P Password12! -U sa -i appveyor\createflow.sql
+  #- sqlcmd -S (local)\SQL2016 -P Password12! -U sa -i appveyor\createflow.sql
+  - "powershell appveyor\\sql-server-activate-tcp-fixed-port.ps1 SQL2008R2SP2 12008"
+  - "powershell appveyor\\sql-server-activate-tcp-fixed-port.ps1 SQL2012SP1 12012"
+  - "powershell appveyor\\sql-server-activate-tcp-fixed-port.ps1 SQL2014 12014"
+
+
 build_script:
   - go install -v ./...
 
 test_script:
-  - go test -v ./...
+  - go test -v -tags appveyor ./...

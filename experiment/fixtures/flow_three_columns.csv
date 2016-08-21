@@ -1,0 +1,12 @@
+group,district,flow
+a,northcal,16.5
+a,midcal,19
+a,southcal,5
+
+b,northcal,19.25
+b,midcal,10
+b,southcal,7
+
+c,northcal,20.73
+c,midcal,82.4
+c,southcal,1
