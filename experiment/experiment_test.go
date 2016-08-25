@@ -370,18 +370,6 @@ func TestMakeDataset(t *testing.T) {
 	}
 }
 
-func TestMakeDataset_errors(t *testing.T) {
-	ef := &experimentFile{
-		Dataset:    "fred",
-		FieldNames: []string{},
-	}
-	wantErr := errors.New("Experiment field: dataset, has invalid type: fred")
-	_, err := makeDataset(ef)
-	if err == nil || err.Error() != wantErr.Error() {
-		t.Errorf("makeDataset(%s): gotErr: %v, wantErr: %v", ef, err, wantErr)
-	}
-}
-
 /***********************
    Helper functions
 ************************/
