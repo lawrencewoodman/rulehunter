@@ -21,12 +21,15 @@ package experiment
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"sync"
 )
+
+var errDatabaseNotOpen = errors.New("connection to database not open")
 
 type sqlHandler struct {
 	driverName     string
@@ -60,7 +63,9 @@ func (s *sqlHandler) Open() error {
 		}
 		db, err := sql.Open(s.driverName, s.dataSourceName)
 		s.db = db
-		return err
+		if err != nil {
+			return err
+		}
 	}
 	s.openConn++
 	return nil
@@ -79,6 +84,11 @@ func (s *sqlHandler) Close() error {
 }
 
 func (s *sqlHandler) Rows() (*sql.Rows, error) {
+	s.Lock()
+	defer s.Unlock()
+	if s.openConn < 1 {
+		return nil, errDatabaseNotOpen
+	}
 	rows, err := s.db.Query(s.query)
 	if err != nil {
 		s.Close()
