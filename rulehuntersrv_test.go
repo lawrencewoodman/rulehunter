@@ -18,6 +18,8 @@ func TestSubMain(t *testing.T) {
 	wantEntries := []logger.Entry{
 		{Level: logger.Info, Msg: "Processing experiment: debt.json"},
 		{Level: logger.Info, Msg: "Successfully processed experiment: debt.json"},
+		{Level: logger.Info, Msg: "Processing experiment: debt2.json"},
+		{Level: logger.Info, Msg: "Successfully processed experiment: debt2.json"},
 	}
 	cfgDir := testhelpers.BuildConfigDirs(t)
 	flags := &cmdFlags{configDir: cfgDir}
@@ -30,6 +32,16 @@ func TestSubMain(t *testing.T) {
 	testhelpers.CopyFile(
 		t,
 		filepath.Join("fixtures", "debt.json"),
+		filepath.Join(cfgDir, "experiments"),
+	)
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "debt.jso"),
+		filepath.Join(cfgDir, "experiments"),
+	)
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "debt2.json"),
 		filepath.Join(cfgDir, "experiments"),
 	)
 	l := testhelpers.NewLogger()
