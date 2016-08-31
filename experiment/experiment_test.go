@@ -231,12 +231,12 @@ func TestProcess(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t)
 	defer os.RemoveAll(cfgDir)
 	cfg := &config.Config{
-		ExperimentsDir:   filepath.Join(cfgDir, "experiments"),
-		WWWDir:           filepath.Join(cfgDir, "www"),
-		BuildDir:         filepath.Join(cfgDir, "build"),
-		MaxNumRecords:    100,
-		MaxNumProcesses:  4,
-		NumRulesInReport: 100,
+		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+		WWWDir:            filepath.Join(cfgDir, "www"),
+		BuildDir:          filepath.Join(cfgDir, "build"),
+		MaxNumRecords:     100,
+		MaxNumProcesses:   4,
+		MaxNumReportRules: 100,
 	}
 	testhelpers.CopyFile(
 		t,

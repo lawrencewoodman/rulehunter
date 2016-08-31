@@ -176,7 +176,7 @@ func Process(
 
 	assessment5.Sort(experiment.SortOrder)
 	assessment5.Refine(1)
-	assessment6 := assessment5.TruncateRuleAssessments(cfg.NumRulesInReport)
+	assessment6 := assessment5.TruncateRuleAssessments(cfg.MaxNumReportRules)
 
 	err = report.WriteJson(
 		assessment6,

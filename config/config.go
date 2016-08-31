@@ -28,13 +28,13 @@ import (
 )
 
 type Config struct {
-	ExperimentsDir   string
-	WWWDir           string
-	BuildDir         string
-	SourceURL        string
-	NumRulesInReport int
-	MaxNumProcesses  int
-	MaxNumRecords    int
+	ExperimentsDir    string
+	WWWDir            string
+	BuildDir          string
+	SourceURL         string
+	MaxNumReportRules int
+	MaxNumProcesses   int
+	MaxNumRecords     int
 }
 
 // Load the configuration file from filename
@@ -54,8 +54,8 @@ func Load(filename string) (*Config, error) {
 		return nil, err
 	}
 
-	if c.NumRulesInReport < 1 {
-		c.NumRulesInReport = 100
+	if c.MaxNumReportRules < 1 {
+		c.MaxNumReportRules = 100
 	}
 
 	if c.MaxNumProcesses < 1 {

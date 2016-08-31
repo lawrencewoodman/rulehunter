@@ -35,10 +35,10 @@ func TestRun_quit(t *testing.T) {
 		t.Fatalf("NewMonitor() err: %v", err)
 	}
 	config := &config.Config{
-		ExperimentsDir:   filepath.Join(cfgDir, "experiments"),
-		WWWDir:           filepath.Join(cfgDir, "www"),
-		BuildDir:         filepath.Join(cfgDir, "build"),
-		NumRulesInReport: 100,
+		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+		WWWDir:            filepath.Join(cfgDir, "www"),
+		BuildDir:          filepath.Join(cfgDir, "build"),
+		MaxNumReportRules: 100,
 	}
 	go Run(config, pm, l, q, htmlCmds)
 	time.Sleep(1 * time.Second)

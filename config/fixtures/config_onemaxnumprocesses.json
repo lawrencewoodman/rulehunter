@@ -3,6 +3,6 @@
   "wwwDir": "www",
   "buildDir": "build",
   "sourceUrl": "https://example.com/rulehuntersrv/src",
-  "numRulesInReport": 100,
+  "maxNumReportRules": 2000,
   "maxNumProcesses": 1
 }

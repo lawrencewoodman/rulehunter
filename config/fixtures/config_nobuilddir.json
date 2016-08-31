@@ -2,6 +2,6 @@
   "experimentsDir": "experiments",
   "wwwDir": "www",
   "sourceUrl": "https://example.com/rulehuntersrv/src",
-  "numRulesInReport": 100,
+  "maxNumReportRules": 2000,
   "maxNumProcesses": 4
 }
