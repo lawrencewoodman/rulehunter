@@ -11,7 +11,7 @@ before_install:
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/lawrencewoodman/roveralls
-  - mysql < ci/createflow.sql
+  - mysql < ci/createflow_travis.sql
 
 script:
   - go test -v -tags travis ./...
