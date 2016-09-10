@@ -3,10 +3,20 @@
 	"ignore": "test",
 	"package": [
 		{
+			"path": "appengine/cloudsql",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "pA/IgZAUBy3vrKT2z+7v7xHw/N8=",
 			"path": "github.com/denisenkom/go-mssqldb",
 			"revision": "fbf0a491e5ec011522c8870da9b0553135e2f9da",
 			"revisionTime": "2016-08-14T16:33:24Z"
+		},
+		{
+			"checksumSHA1": "jEXpLrWXoQvH/zk1lW5Si0swr6Y=",
+			"path": "github.com/go-sql-driver/mysql",
+			"revision": "0b58b37b664c21f3010e836f1b931e1d0b0b0685",
+			"revisionTime": "2016-08-02T11:38:42Z"
 		},
 		{
 			"checksumSHA1": "6nmAJBw2phU9MUmkUnqFvbO5urg=",

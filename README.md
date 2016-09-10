@@ -12,6 +12,9 @@ These have all be vendored into the `vendor/` directory using the
 * [rulehunter](https://github.com/vlifesystems/rulehunter) package
 * [osext](https://github.com/kardianos/osext) package
 * [service](https://github.com/kardianos/service) package
+* [go-mssqldb](https://github.com/denisenkom/go-mssqldb) package
+* [go-sqlite3](https://github.com/mattn/go-sqlite3) package
+* [mysql](https://github.com/go-sql-driver/mysql) package
 
 
 To format the html pages properly [Twitter Boostrap](http://getbootstrap.com) is used and hence has been included in the `support/` directory.
