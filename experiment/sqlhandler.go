@@ -86,10 +86,11 @@ func (s *sqlHandler) Close() error {
 
 func (s *sqlHandler) Rows() (*sql.Rows, error) {
 	s.Lock()
-	defer s.Unlock()
 	if s.openConn < 1 {
+		s.Unlock()
 		return nil, errDatabaseNotOpen
 	}
+	s.Unlock()
 	rows, err := s.db.Query(s.query)
 	if err != nil {
 		s.Close()
