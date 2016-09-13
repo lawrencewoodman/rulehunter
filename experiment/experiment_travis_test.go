@@ -4,7 +4,6 @@
 package experiment
 
 import (
-	"fmt"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"path/filepath"
@@ -13,11 +12,9 @@ import (
 
 func TestMakeDataset_travis(t *testing.T) {
 	cases := []struct {
-		instanceName string
-		port         int
-		query        string
-		fieldNames   []string
-		want         ddataset.Dataset
+		query      string
+		fieldNames []string
+		want       ddataset.Dataset
 	}{
 		{query: "select * from flow",
 			fieldNames: []string{"grp", "district", "height", "flow"},
@@ -43,12 +40,9 @@ func TestMakeDataset_travis(t *testing.T) {
 			Dataset:    "sql",
 			FieldNames: c.fieldNames,
 			Sql: &sqlDesc{
-				DriverName: "mysql",
-				DataSourceName: fmt.Sprintf(
-					"travis@tcp(127.0.0.1)/master",
-					c.port,
-				),
-				Query: c.query,
+				DriverName:     "mysql",
+				DataSourceName: "travis@/master",
+				Query:          c.query,
 			},
 		}
 		got, err := makeDataset(e)
@@ -58,8 +52,7 @@ func TestMakeDataset_travis(t *testing.T) {
 			continue
 		}
 		if err := checkDatasetsEqual(got, c.want); err != nil {
-			t.Errorf("checkDatasetsEqual: instanceName: %s, err: %v",
-				c.instanceName, err)
+			t.Errorf("checkDatasetsEqual: err: %v", err)
 		}
 	}
 }

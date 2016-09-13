@@ -370,6 +370,27 @@ func TestMakeDataset(t *testing.T) {
 	}
 }
 
+func TestMakeDataset_err(t *testing.T) {
+	e := &experimentFile{
+		Dataset:    "sql",
+		FieldNames: []string{},
+		Sql: &sqlDesc{
+			DriverName:     "mysql",
+			DataSourceName: "invalid:invalid@tcp(127.0.0.1:9999)/master",
+			Query:          "select * from invalid",
+		},
+	}
+	ds, err := makeDataset(e)
+	if err != nil {
+		t.Fatalf("makeDataset(%v) err: %v", e, err)
+	}
+	wantErr := "dial tcp 127.0.0.1:9999: getsockopt: connection refused"
+	_, err = ds.Open()
+	if err.Error() != wantErr {
+		t.Fatalf("ds.Open() gotErr: %v, wantErr: %v", err, wantErr)
+	}
+}
+
 /***********************
    Helper functions
 ************************/
