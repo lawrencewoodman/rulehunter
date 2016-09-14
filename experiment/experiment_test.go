@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"testing"
 	"time"
 )
@@ -384,10 +385,11 @@ func TestMakeDataset_err(t *testing.T) {
 	if err != nil {
 		t.Fatalf("makeDataset(%v) err: %v", e, err)
 	}
-	wantErr := "dial tcp 127.0.0.1:9999: getsockopt: connection refused"
+	wantErrRegexp :=
+		regexp.MustCompile("^dial tcp 127.0.0.1:9999.*?connection.*?refused.*$")
 	_, err = ds.Open()
-	if err.Error() != wantErr {
-		t.Fatalf("ds.Open() gotErr: %v, wantErr: %v", err, wantErr)
+	if !wantErrRegexp.MatchString(err.Error()) {
+		t.Fatalf("ds.Open() gotErr: %v, wantErr: %v", err, wantErrRegexp)
 	}
 }
 
