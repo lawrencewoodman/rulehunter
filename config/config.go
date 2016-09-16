@@ -21,36 +21,37 @@
 package config
 
 import (
-	"encoding/json"
 	"errors"
-	"os"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"path/filepath"
 	"runtime"
 )
 
 type Config struct {
-	ExperimentsDir    string
-	WWWDir            string
-	BuildDir          string
-	SourceURL         string
-	MaxNumReportRules int
-	MaxNumProcesses   int
-	MaxNumRecords     int
+	ExperimentsDir    string `yaml:"experimentsDir"`
+	WWWDir            string `yaml:"wwwDir"`
+	BuildDir          string `yaml:"buildDir"`
+	SourceURL         string `yaml:"sourceURL"`
+	MaxNumReportRules int    `yaml:"maxNumReportRules"`
+	MaxNumProcesses   int    `yaml:"maxNumProcesses"`
+	MaxNumRecords     int    `yaml:"maxNumRecords"`
+}
+
+// InvalidExtError indicates that a config file has an invalid extension
+type InvalidExtError string
+
+func (e InvalidExtError) Error() string {
+	return "invalid extension: " + string(e)
 }
 
 // Load the configuration file from filename
 func Load(filename string) (*Config, error) {
-	var c Config
-	var f *os.File
+	var c *Config
 	var err error
 
-	f, err = os.Open(filename)
+	c, err = loadYAML(filename)
 	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	dec := json.NewDecoder(f)
-	if err = dec.Decode(&c); err != nil {
 		return nil, err
 	}
 
@@ -70,9 +71,27 @@ func Load(filename string) (*Config, error) {
 		c.SourceURL = "https://github.com/vlifesystems/rulehuntersrv"
 	}
 
-	if err := checkConfigValid(&c); err != nil {
+	if err := checkConfigValid(c); err != nil {
 		return nil, err
 	}
+	return c, nil
+}
+
+func loadYAML(filename string) (*Config, error) {
+	var c Config
+
+	if ext := filepath.Ext(filename); ext != ".yaml" {
+		return nil, InvalidExtError(ext)
+	}
+
+	yamlFile, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(yamlFile, &c); err != nil {
+		return nil, err
+	}
+
 	return &c, nil
 }
 

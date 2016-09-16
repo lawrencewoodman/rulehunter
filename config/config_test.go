@@ -15,7 +15,7 @@ func TestLoad(t *testing.T) {
 		filename   string
 		wantConfig *Config
 	}{
-		{filepath.Join("fixtures", "config_onemaxnumprocesses.json"),
+		{filepath.Join("fixtures", "config_onemaxnumprocesses.yaml"),
 			&Config{
 				ExperimentsDir:    "experiments",
 				WWWDir:            "www",
@@ -26,7 +26,7 @@ func TestLoad(t *testing.T) {
 				MaxNumRecords:     -1,
 			},
 		},
-		{filepath.Join("fixtures", "config_somemaxnumrecords.json"),
+		{filepath.Join("fixtures", "config_somemaxnumrecords.yaml"),
 			&Config{
 				ExperimentsDir:    "experiments",
 				WWWDir:            "www",
@@ -37,7 +37,7 @@ func TestLoad(t *testing.T) {
 				MaxNumRecords:     150,
 			},
 		},
-		{filepath.Join("fixtures", "config_zeromaxnumrecords.json"),
+		{filepath.Join("fixtures", "config_zeromaxnumrecords.yaml"),
 			&Config{
 				ExperimentsDir:    "experiments",
 				WWWDir:            "www",
@@ -48,7 +48,7 @@ func TestLoad(t *testing.T) {
 				MaxNumRecords:     -1,
 			},
 		},
-		{filepath.Join("fixtures", "config.json"),
+		{filepath.Join("fixtures", "config.yaml"),
 			&Config{
 				ExperimentsDir:    "experiments",
 				WWWDir:            "www",
@@ -59,7 +59,7 @@ func TestLoad(t *testing.T) {
 				MaxNumRecords:     -1,
 			},
 		},
-		{filepath.Join("fixtures", "config_nomaxnumprocesses.json"),
+		{filepath.Join("fixtures", "config_nomaxnumprocesses.yaml"),
 			&Config{
 				ExperimentsDir:    "experiments",
 				WWWDir:            "www",
@@ -70,7 +70,7 @@ func TestLoad(t *testing.T) {
 				MaxNumRecords:     -1,
 			},
 		},
-		{filepath.Join("fixtures", "config_nomaxnumreportrules.json"),
+		{filepath.Join("fixtures", "config_nomaxnumreportrules.yaml"),
 			&Config{
 				ExperimentsDir:    "experiments",
 				WWWDir:            "www",
@@ -81,12 +81,23 @@ func TestLoad(t *testing.T) {
 				MaxNumRecords:     -1,
 			},
 		},
-		{filepath.Join("fixtures", "config_nosourceurl.json"),
+		{filepath.Join("fixtures", "config_nosourceurl.yaml"),
 			&Config{
 				ExperimentsDir:    "experiments",
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://github.com/vlifesystems/rulehuntersrv",
+				MaxNumReportRules: 2000,
+				MaxNumProcesses:   4,
+				MaxNumRecords:     -1,
+			},
+		},
+		{filepath.Join("fixtures", "config.yaml"),
+			&Config{
+				ExperimentsDir:    "experiments",
+				WWWDir:            "www",
+				BuildDir:          "build",
+				SourceURL:         "https://example.com/rulehuntersrv/src",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   4,
 				MaxNumRecords:     -1,
@@ -111,21 +122,29 @@ func TestLoad_errors(t *testing.T) {
 		filename string
 		wantErr  error
 	}{
-		{filepath.Join("fixtures", "config_nonexistant.json"),
+		{filepath.Join("fixtures", "config_nonexistant.yaml"),
 			&os.PathError{
 				"open",
-				filepath.Join("fixtures", "config_nonexistant.json"),
+				filepath.Join("fixtures", "config_nonexistant.yaml"),
 				syscall.ENOENT,
 			},
 		},
-		{filepath.Join("fixtures", "config_noexperimentsdir.json"),
+		{filepath.Join("fixtures", "config_noexperimentsdir.yaml"),
 			errors.New("missing field: experimentsDir")},
-		{filepath.Join("fixtures", "config_nowwwdir.json"),
+		{filepath.Join("fixtures", "config_nowwwdir.yaml"),
 			errors.New("missing field: wwwDir")},
-		{filepath.Join("fixtures", "config_nobuilddir.json"),
+		{filepath.Join("fixtures", "config_nobuilddir.yaml"),
 			errors.New("missing field: buildDir")},
-		{filepath.Join("fixtures", "config_invalidjson.json"),
-			errors.New("invalid character '\"' after object key:value pair")},
+		{filepath.Join("fixtures", "config.json"), InvalidExtError(".json")},
+		{filepath.Join("fixtures", "config_nonexistant.yaml"),
+			&os.PathError{
+				"open",
+				filepath.Join("fixtures", "config_nonexistant.yaml"),
+				syscall.ENOENT,
+			},
+		},
+		{filepath.Join("fixtures", "config_invalidyaml.yaml"),
+			errors.New("yaml: line 2: did not find expected key")},
 	}
 
 	for _, c := range cases {
@@ -134,6 +153,15 @@ func TestLoad_errors(t *testing.T) {
 			t.Errorf("Load(%s) %s", c.filename, err)
 			return
 		}
+	}
+}
+
+func TestInvalidExtErrorError(t *testing.T) {
+	ext := ".exe"
+	err := InvalidExtError(ext)
+	want := "invalid extension: " + ext
+	if got := err.Error(); got != want {
+		t.Errorf("Error() got: %v, want: %v", got, want)
 	}
 }
 
@@ -153,16 +181,29 @@ func checkErrorMatch(got, want error) error {
 	if perr, ok := want.(*os.PathError); ok {
 		return checkPathErrorMatch(got, perr)
 	}
+	if ieErr, ok := want.(InvalidExtError); ok {
+		return checkInvalidExtErrorMatch(got, ieErr)
+	}
 	if got.Error() != want.Error() {
 		return fmt.Errorf("got err: %v, want err: %v", got, want)
 	}
 	return nil
 }
 
-func checkPathErrorMatch(
-	checkErr error,
-	wantErr *os.PathError,
-) error {
+func checkInvalidExtErrorMatch(checkErr error, wantErr InvalidExtError) error {
+	ieErr, ok := checkErr.(InvalidExtError)
+	if !ok {
+		return fmt.Errorf("got err type: %T, want error type: InvalidExtError",
+			checkErr)
+	}
+	if string(ieErr) != string(wantErr) {
+		return fmt.Errorf("InvalidExtError got ext: %s, want: %s",
+			string(ieErr), string(wantErr))
+	}
+	return nil
+}
+
+func checkPathErrorMatch(checkErr error, wantErr *os.PathError) error {
 	perr, ok := checkErr.(*os.PathError)
 	if !ok {
 		return fmt.Errorf("got err type: %T, want error type: os.PathError",

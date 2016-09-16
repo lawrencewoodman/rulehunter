@@ -1,0 +1,4 @@
+experimentsDir: "experiments"
+wwwDir: "www"
+buildDir: "build"
+maxNumReportRules: 100

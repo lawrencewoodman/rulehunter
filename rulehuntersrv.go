@@ -55,7 +55,7 @@ func subMain(
 	q := quitter.New()
 	defer q.Quit()
 
-	configFilename := filepath.Join(flags.configDir, "config.json")
+	configFilename := filepath.Join(flags.configDir, "config.yaml")
 	config, err := config.Load(configFilename)
 	if err != nil {
 		return 1, errConfigLoad{filename: configFilename, err: err}

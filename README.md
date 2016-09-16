@@ -34,23 +34,23 @@ There are several files needed to render the html properly these are located in 
 
 ### Twitter Bootstrap
 
-Copy directories from `support/bootstrap` to the `wwwDir` directory specified in `config.json`.
+Copy directories from `support/bootstrap` to the `wwwDir` directory specified in `config.yaml`.
 
 ### jQuery
 
-Copy directory `support/jquery/js` to the `wwwDir` directory specified in `config.json`.
+Copy directory `support/jquery/js` to the `wwwDir` directory specified in `config.yaml`.
 
 ### Html5 Shiv
 
-Copy directory `support/html5shiv/js` to the `wwwDir` directory specified in `config.json`.
+Copy directory `support/html5shiv/js` to the `wwwDir` directory specified in `config.yaml`.
 
 ### Rulehuntersrv
 
-Copy directories from `support/rulehuntersrv` to the `wwwDir` directory specified in `config.json`.
+Copy directories from `support/rulehuntersrv` to the `wwwDir` directory specified in `config.yaml`.
 
 Testing
 -------
-To test the output of the server you can create a simple static webserver using something like the following from the `wwwDir` directory specified in the `config.json`:
+To test the output of the server you can create a simple static webserver using something like the following from the `wwwDir` directory specified in the `config.yaml`:
 
     ruby -run -ehttpd . -p8000
 

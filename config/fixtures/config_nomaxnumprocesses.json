@@ -1,7 +1,0 @@
-{
-  "experimentsDir": "experiments",
-  "wwwDir": "www",
-  "buildDir": "build",
-  "sourceUrl": "https://example.com/rulehuntersrv/src",
-  "maxNumReportRules": 2000
-}

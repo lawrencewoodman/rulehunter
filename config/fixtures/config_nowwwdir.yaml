@@ -1,0 +1,5 @@
+experimentsDir: "experiments"
+buildDir: "build"
+sourceUrl: "https://example.com/rulehuntersrv/src"
+maxNumReportRules: 2000
+maxNumProcesses: 4

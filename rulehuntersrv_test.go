@@ -1,11 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
 	"github.com/vlifesystems/rulehuntersrv/logger"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -83,10 +83,10 @@ func TestSubMain_errors(t *testing.T) {
 				install:   true,
 			},
 			wantErr: errConfigLoad{
-				filename: filepath.Join(tmpDir, "config.json"),
+				filename: filepath.Join(tmpDir, "config.yaml"),
 				err: &os.PathError{
 					"open",
-					filepath.Join(tmpDir, "config.json"),
+					filepath.Join(tmpDir, "config.yaml"),
 					syscall.ENOENT,
 				},
 			},
@@ -176,12 +176,12 @@ func mustWriteConfig(t *testing.T, baseDir string, maxNumRecords int) {
 		BuildDir:       filepath.Join(baseDir, "build"),
 		MaxNumRecords:  maxNumRecords,
 	}
-	cfgFilename := filepath.Join(baseDir, "config.json")
-	j, err := json.Marshal(cfg)
+	cfgFilename := filepath.Join(baseDir, "config.yaml")
+	y, err := yaml.Marshal(cfg)
 	if err != nil {
 		t.Fatalf("Marshal() err: %v", err)
 	}
-	if err := ioutil.WriteFile(cfgFilename, j, mode); err != nil {
+	if err := ioutil.WriteFile(cfgFilename, y, mode); err != nil {
 		t.Fatalf("WriteFile(%s, ...) err: %v", cfgFilename, err)
 	}
 }

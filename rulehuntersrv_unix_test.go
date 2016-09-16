@@ -43,7 +43,7 @@ func TestSubMain_interrupt(t *testing.T) {
 	for _, c := range cases {
 		configDir := testhelpers.BuildConfigDirs(t)
 		defer os.RemoveAll(configDir)
-		testhelpers.CopyFile(t, filepath.Join("fixtures", "config.json"), configDir)
+		testhelpers.CopyFile(t, filepath.Join("fixtures", "config.yaml"), configDir)
 		c.flags.configDir = configDir
 
 		l := testhelpers.NewLogger()
