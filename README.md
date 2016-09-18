@@ -15,6 +15,7 @@ These have all be vendored into the `vendor/` directory using the
 * [go-mssqldb](https://github.com/denisenkom/go-mssqldb) package
 * [go-sqlite3](https://github.com/mattn/go-sqlite3) package
 * [mysql](https://github.com/go-sql-driver/mysql) package
+* [yaml.v2](https://gopkg.in/yaml.v2) package
 
 
 To format the html pages properly [Twitter Boostrap](http://getbootstrap.com) is used and hence has been included in the `support/` directory.
