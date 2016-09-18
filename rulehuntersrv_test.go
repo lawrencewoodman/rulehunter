@@ -18,6 +18,8 @@ func TestSubMain(t *testing.T) {
 	wantEntries := []logger.Entry{
 		{Level: logger.Info, Msg: "Processing experiment: debt.json"},
 		{Level: logger.Info, Msg: "Successfully processed experiment: debt.json"},
+		{Level: logger.Info, Msg: "Processing experiment: debt.yaml"},
+		{Level: logger.Info, Msg: "Successfully processed experiment: debt.yaml"},
 		{Level: logger.Info, Msg: "Processing experiment: debt2.json"},
 		{Level: logger.Info, Msg: "Successfully processed experiment: debt2.json"},
 	}
@@ -32,6 +34,11 @@ func TestSubMain(t *testing.T) {
 	testhelpers.CopyFile(
 		t,
 		filepath.Join("fixtures", "debt.json"),
+		filepath.Join(cfgDir, "experiments"),
+	)
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "debt.yaml"),
 		filepath.Join(cfgDir, "experiments"),
 	)
 	testhelpers.CopyFile(

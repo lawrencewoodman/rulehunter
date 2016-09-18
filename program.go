@@ -122,7 +122,8 @@ func (p *program) getExperimentFilenames() ([]string, error) {
 	}
 
 	for _, file := range files {
-		if !file.IsDir() && filepath.Ext(file.Name()) == ".json" {
+		ext := filepath.Ext(file.Name())
+		if !file.IsDir() && (ext == ".json" || ext == ".yaml") {
 			experimentFilenames = append(experimentFilenames, file.Name())
 		}
 	}

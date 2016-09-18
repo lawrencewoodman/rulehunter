@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -109,6 +110,28 @@ func TestLoadExperiment(t *testing.T) {
 			[]string{"debt"},
 			dexpr.MustNew("!hasRunToday || sinceLastRunHours > 2"),
 		},
+		{-1, filepath.Join("fixtures", "flow.yaml"),
+			&experiment.Experiment{
+				Title: "What would indicate good flow?",
+				Dataset: dcsv.New(
+					filepath.Join("fixtures", "flow.csv"),
+					true,
+					rune(','),
+					[]string{"group", "district", "height", "flow"},
+				),
+				ExcludeFieldNames: []string{"flow"},
+				Aggregators: []aggregators.AggregatorSpec{
+					aggregators.MustNew("goodFlowAccuracy", "accuracy", "flow > 60"),
+				},
+				Goals: []*goal.Goal{goal.MustNew("goodFlowAccuracy > 10")},
+				SortOrder: []experiment.SortField{
+					experiment.SortField{"goodFlowAccuracy", experiment.DESCENDING},
+					experiment.SortField{"numMatches", experiment.DESCENDING},
+				},
+			},
+			[]string{"test", "fred / ned"},
+			dexpr.MustNew("!hasRun"),
+		},
 	}
 	for _, c := range cases {
 		gotExperiment, gotTags, gotWhenExpr, err :=
@@ -163,6 +186,27 @@ func TestLoadExperiment_error(t *testing.T) {
 			errors.New("Experiment field missing: sql > query")},
 		{filepath.Join("fixtures", "flow_invalid_when.json"),
 			InvalidWhenExprError("has(twolegs")},
+		{filepath.Join("fixtures", "flow_invalid.json"),
+			errors.New("invalid character '\\n' in string literal")},
+		{filepath.Join("fixtures", "flow.bob"),
+			InvalidExtError(".bob")},
+		{filepath.Join("fixtures", "flow_nonexistant.json"),
+			&os.PathError{
+				"open",
+				filepath.Join("fixtures", "flow_nonexistant.json"),
+				syscall.ENOENT,
+			},
+		},
+		{filepath.Join("fixtures", "flow_nonexistant.yaml"),
+			&os.PathError{
+				"open",
+				filepath.Join("fixtures", "flow_nonexistant.yaml"),
+				syscall.ENOENT,
+			},
+		},
+		{filepath.Join("fixtures", "flow_invalid.yaml"),
+			errors.New("yaml: line 3: did not find expected key"),
+		},
 	}
 	maxNumRecords := -1
 	for _, c := range cases {
@@ -183,6 +227,15 @@ func TestInvalidWhenExprErrorError(t *testing.T) {
 	e := InvalidWhenExprError("has)nothing")
 	want := "When field invalid: has)nothing"
 	if got := e.Error(); got != want {
+		t.Errorf("Error() got: %v, want: %v", got, want)
+	}
+}
+
+func TestInvalidExtErrorError(t *testing.T) {
+	ext := ".exe"
+	err := InvalidExtError(ext)
+	want := "invalid extension: " + ext
+	if got := err.Error(); got != want {
 		t.Errorf("Error() got: %v, want: %v", got, want)
 	}
 }

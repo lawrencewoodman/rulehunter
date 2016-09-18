@@ -35,6 +35,8 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/logger"
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"github.com/vlifesystems/rulehuntersrv/report"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -43,36 +45,48 @@ import (
 )
 
 type experimentFile struct {
-	Title             string
-	Tags              []string
-	Dataset           string
-	Csv               *csvDesc
-	Sql               *sqlDesc
-	FieldNames        []string
-	ExcludeFieldNames []string
-	Aggregators       []*rhexperiment.AggregatorDesc
-	Goals             []string
-	SortOrder         []*rhexperiment.SortDesc
+	Title             string                         `yaml:"title"`
+	Tags              []string                       `yaml:"tags"`
+	Dataset           string                         `yaml:"dataset"`
+	Csv               *csvDesc                       `yaml:"csv"`
+	Sql               *sqlDesc                       `yaml:"sql"`
+	FieldNames        []string                       `yaml:"fieldNames"`
+	ExcludeFieldNames []string                       `yaml:"excludeFieldNames"`
+	Aggregators       []*rhexperiment.AggregatorDesc `yaml:"aggregators"`
+	Goals             []string                       `yaml:"goals"`
+	SortOrder         []*sortDesc                    `yaml:"sortOrder"`
 	// An expression that works out whether to run the experiment
-	When string
+	When string `yaml:"when"`
 }
 
 type csvDesc struct {
-	Filename  string
-	HasHeader bool
-	Separator string
+	Filename  string `yaml:"filename"`
+	HasHeader bool   `yaml:"hasHeader"`
+	Separator string `yaml:"separator"`
 }
 
 type sqlDesc struct {
-	DriverName     string
-	DataSourceName string
-	Query          string
+	DriverName     string `yaml:"driverName"`
+	DataSourceName string `yaml:"dataSourceName"`
+	Query          string `yaml:"query"`
+}
+
+type sortDesc struct {
+	AggregatorName string `yaml:"aggregatorName"`
+	Direction      string `yaml:"direction"`
 }
 
 type InvalidWhenExprError string
 
 func (e InvalidWhenExprError) Error() string {
 	return "When field invalid: " + string(e)
+}
+
+// InvalidExtError indicates that a config file has an invalid extension
+type InvalidExtError string
+
+func (e InvalidExtError) Error() string {
+	return "invalid extension: " + string(e)
 }
 
 const assessRulesNumStages = 3
@@ -206,18 +220,19 @@ func loadExperiment(filename string, maxNumRecords int) (
 	whenExpr *dexpr.Expr,
 	err error,
 ) {
-	var f *os.File
-	var e experimentFile
+	var e *experimentFile
 	var noTags = []string{}
 
-	f, err = os.Open(filename)
-	if err != nil {
-		return nil, noTags, nil, err
+	ext := filepath.Ext(filename)
+	switch ext {
+	case ".json":
+		e, err = loadJSON(filename)
+	case ".yaml":
+		e, err = loadYAML(filename)
+	default:
+		return nil, noTags, nil, InvalidExtError(ext)
 	}
-	defer f.Close()
-
-	dec := json.NewDecoder(f)
-	if err = dec.Decode(&e); err != nil {
+	if err != nil {
 		return nil, noTags, nil, err
 	}
 
@@ -225,7 +240,7 @@ func loadExperiment(filename string, maxNumRecords int) (
 		return nil, noTags, nil, err
 	}
 
-	dataset, err := makeDataset(&e)
+	dataset, err := makeDataset(e)
 	if err != nil {
 		return nil, noTags, nil, err
 	}
@@ -240,7 +255,7 @@ func loadExperiment(filename string, maxNumRecords int) (
 		ExcludeFields: e.ExcludeFieldNames,
 		Aggregators:   e.Aggregators,
 		Goals:         e.Goals,
-		SortOrder:     e.SortOrder,
+		SortOrder:     makeRHSortOrder(e.SortOrder),
 	}
 	experiment, err = rhexperiment.New(experimentDesc)
 	if err != nil {
@@ -252,6 +267,44 @@ func loadExperiment(filename string, maxNumRecords int) (
 		return nil, noTags, nil, InvalidWhenExprError(e.When)
 	}
 	return experiment, e.Tags, whenExpr, err
+}
+
+func makeRHSortOrder(sortOrder []*sortDesc) []*rhexperiment.SortDesc {
+	r := make([]*rhexperiment.SortDesc, len(sortOrder))
+	for i, sd := range sortOrder {
+		r[i] = &rhexperiment.SortDesc{
+			AggregatorName: sd.AggregatorName,
+			Direction:      sd.Direction,
+		}
+	}
+	return r
+}
+
+func loadJSON(filename string) (*experimentFile, error) {
+	var e experimentFile
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	dec := json.NewDecoder(f)
+	if err = dec.Decode(&e); err != nil {
+		return nil, err
+	}
+	return &e, nil
+}
+
+func loadYAML(filename string) (*experimentFile, error) {
+	var e experimentFile
+	yamlFile, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(yamlFile, &e); err != nil {
+		return nil, err
+	}
+	return &e, nil
 }
 
 func makeDataset(e *experimentFile) (d ddataset.Dataset, err error) {
