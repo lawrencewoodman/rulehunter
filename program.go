@@ -28,7 +28,6 @@ import (
 	"github.com/vlifesystems/rulehuntersrv/progress"
 	"github.com/vlifesystems/rulehuntersrv/quitter"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"time"
 )
@@ -128,14 +127,6 @@ func (p *program) getExperimentFilenames() ([]string, error) {
 		}
 	}
 	return experimentFilenames, nil
-}
-
-func (p *program) moveExperimentToProcessed(experimentFilename string) error {
-	experimentFullFilename :=
-		filepath.Join(p.config.ExperimentsDir, experimentFilename)
-	experimentProcessedFullFilename :=
-		filepath.Join(p.config.ExperimentsDir, "processed", experimentFilename)
-	return os.Rename(experimentFullFilename, experimentProcessedFullFilename)
 }
 
 func (p *program) Stop(s service.Service) error {
