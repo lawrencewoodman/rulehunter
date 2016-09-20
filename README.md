@@ -2,24 +2,6 @@ Rulehuntersrv
 =============
 A server to find rules in data based on user specified goals
 
-Requirements
-------------
-These have all be vendored into the `vendor/` directory using the
-[govendor](https://github.com/kardianos/govendor) tool.
-
-* [dexpr](https://github.com/lawrencewoodman/dexpr) package
-* [dlit](https://github.com/lawrencewoodman/dlit) package
-* [rulehunter](https://github.com/vlifesystems/rulehunter) package
-* [osext](https://github.com/kardianos/osext) package
-* [service](https://github.com/kardianos/service) package
-* [go-mssqldb](https://github.com/denisenkom/go-mssqldb) package
-* [go-sqlite3](https://github.com/mattn/go-sqlite3) package
-* [mysql](https://github.com/go-sql-driver/mysql) package
-* [yaml.v2](https://gopkg.in/yaml.v2) package
-
-
-To format the html pages properly [Twitter Boostrap](http://getbootstrap.com) is used and hence has been included in the `support/` directory.
-
 Contributing
 ------------
 [![Build Status](https://travis-ci.org/vlifesystems/rulehuntersrv.svg?branch=master)](https://travis-ci.org/vlifesystems/rulehuntersrv)
@@ -108,6 +90,23 @@ To test the output of the server you can create a simple static webserver using 
 
 If you don't like ruby there is this [list of one-liner static webservers](https://gist.github.com/willurd/5720255).
 
+Requirements
+------------
+These have all be vendored into the `vendor/` directory using the
+[govendor](https://github.com/kardianos/govendor) tool.
+
+* [dexpr](https://github.com/lawrencewoodman/dexpr) package
+* [dlit](https://github.com/lawrencewoodman/dlit) package
+* [rulehunter](https://github.com/vlifesystems/rulehunter) package
+* [osext](https://github.com/kardianos/osext) package
+* [service](https://github.com/kardianos/service) package
+* [go-mssqldb](https://github.com/denisenkom/go-mssqldb) package
+* [go-sqlite3](https://github.com/mattn/go-sqlite3) package
+* [mysql](https://github.com/go-sql-driver/mysql) package
+* [yaml.v2](https://gopkg.in/yaml.v2) package
+
+
+To format the html pages properly [Twitter Boostrap](http://getbootstrap.com) is used and hence has been included in the `support/` directory.
 
 Licence
 -------
