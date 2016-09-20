@@ -2,14 +2,10 @@ Rulehuntersrv
 =============
 A server to find rules in data based on user specified goals
 
-Contributing
-------------
 [![Build Status](https://travis-ci.org/vlifesystems/rulehuntersrv.svg?branch=master)](https://travis-ci.org/vlifesystems/rulehuntersrv)
 [![Build status](https://ci.appveyor.com/api/projects/status/8tds5r4dk6163es0?svg=true)](https://ci.appveyor.com/project/LawrenceWoodman/rulehuntersrv)
 [![Coverage Status](https://coveralls.io/repos/vlifesystems/rulehuntersrv/badge.svg?branch=master)](https://coveralls.io/r/vlifesystems/rulehuntersrv?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/vlifesystems/rulehuntersrv)](https://goreportcard.com/report/github.com/vlifesystems/rulehuntersrv)
-
-If you want to improve this program make a pull request to the [repo](https://github.com/vlifesystems/rulehuntersrv) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/vlifesystems/rulehuntersrv/issues) also on github.
 
 Installation
 ------------
@@ -107,6 +103,10 @@ These have all be vendored into the `vendor/` directory using the
 
 
 To format the html pages properly [Twitter Boostrap](http://getbootstrap.com) is used and hence has been included in the `support/` directory.
+
+Contributing
+------------
+If you want to improve this program make a pull request to the [repo](https://github.com/vlifesystems/rulehuntersrv) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/vlifesystems/rulehuntersrv/issues) also on github.
 
 Licence
 -------
