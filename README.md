@@ -49,6 +49,52 @@ Copy directory `support/html5shiv/js` to the `wwwDir` directory specified in `co
 
 Copy directories from `support/rulehuntersrv` to the `wwwDir` directory specified in `config.yaml`.
 
+Usage
+-----
+rulehuntersrv is run using the `rulehuntersrv` executable created by `go install`.  You can use this command in a number of ways:
+
+To processes the experiments in the `experimentsDir` directory specified in `config.yaml` located in the current directory:
+
+    $ rulehuntersrv
+
+To run `rulehuntersrv` as a server continually checking and processing experiments
+
+    $ rulehuntersrv -serve
+
+To install `rulehuntersrv` as a service (which then needs starting separately) with `config.yaml` located in `/usr/local/rulehuntersrv` and using `rhuser` as the user:
+
+    $ rulehuntersrv -install -configdir=/usr/local/rulehuntersrv -user=rhuser
+
+Configuration
+-------------
+rulehuntersrv is configured using a `config.yaml` file as follows:
+
+    # The location of the experiment files
+    experimentsDir: "/usr/local/rulehuntersrv/experiments"
+
+    # The location of the html files produced
+    wwwDir: "/var/www/rulehuntersrv"
+
+    # The location of the build files created while running
+    buildDir: "/usr/local/rulehuntersrv/build"
+
+    # The source URL for the code to comply with the requirements of the AGPL
+    # (default: https://github.com/vlifesystems/rulehuntersrv)
+    sourceURL: https://example.com/somecode/rulehuntersrv"
+
+    # The maximum number of rules in a report
+    # (default: 100)
+    maxNumReportRuels: 50
+
+    # The maximum number of processes used to process the experiments
+    # (default: -1, indicating the number of cpu's in the machine)
+    maxNumProcesses: 4
+
+    # The maximum number of records used from the data source.  This is
+    # useful when creating and testing experiment files
+    # (default: -1, indicating all the records)
+    maxNumRecords 150
+
 Testing
 -------
 To test the output of the server you can create a simple static webserver using something like the following from the `wwwDir` directory specified in the `config.yaml`:
