@@ -31,6 +31,10 @@ If you want to improve this program make a pull request to the [repo](https://gi
 
 Installation
 ------------
+rulehuntersrv is compiled and installed from the root of the repository with:
+
+  $ go install
+
 There are several files needed to render the html properly these are located in the `support/` directory.
 
 ### Twitter Bootstrap
