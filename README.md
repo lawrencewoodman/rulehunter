@@ -10,9 +10,9 @@ A server to find rules in data based on user specified goals
 Installation
 ------------
 rulehuntersrv is compiled and installed from the root of the repository with:
-
-  $ go install
-
+```Shell
+go install
+```
 There are several files needed to render the html properly these are located in the `support/` directory.
 
 ### Twitter Bootstrap
@@ -36,16 +36,19 @@ Usage
 rulehuntersrv is run using the `rulehuntersrv` executable created by `go install`.  You can use this command in a number of ways:
 
 To processes the experiments in the `experimentsDir` directory specified in `config.yaml` located in the current directory:
-
-    $ rulehuntersrv
+```Shell
+rulehuntersrv
+```
 
 To run `rulehuntersrv` as a server continually checking and processing experiments
-
-    $ rulehuntersrv -serve
+```Shell
+rulehuntersrv -serve
+```
 
 To install `rulehuntersrv` as a service (which then needs starting separately) with `config.yaml` located in `/usr/local/rulehuntersrv` and using `rhuser` as the user:
-
-    $ rulehuntersrv -install -configdir=/usr/local/rulehuntersrv -user=rhuser
+```Shell
+rulehuntersrv -install -configdir=/usr/local/rulehuntersrv -user=rhuser
+```
 
 Configuration
 -------------
@@ -161,9 +164,9 @@ The rules in the report are sorted in the order of the entries for the `sortOrde
 Testing
 -------
 To test the output of the server you can create a simple static webserver using something like the following from the `wwwDir` directory specified in the `config.yaml`:
-
-    ruby -run -ehttpd . -p8000
-
+```Shell
+ruby -run -ehttpd . -p8000
+```
 
 If you don't like ruby there is this [list of one-liner static webservers](https://gist.github.com/willurd/5720255).
 
