@@ -77,6 +77,91 @@ rulehuntersrv is configured using a `config.yaml` file as follows:
     # (default: -1, indicating all the records)
     maxNumRecords 150
 
+Experiments
+-----------
+Each experiment is described by a `.yaml` or a `.json` file located in the `experimentsDir` of `config.yaml`.  This will look as follows:
+```YAML
+# The title of the report
+title: "What would indicate good flow?"
+# The tags associated with the report
+tags:
+  - test
+  - "fred / ned"
+# The type of the dataset (csv or sql)
+dataset: "csv"
+# Describe the CSV file
+csv:
+  # The name of the CSV file
+  filename: "fixtures/flow.csv"
+  # Whether the CSV file contains a header line
+  hasHeader: true
+  # What separator the CSV file is using
+  separator:  ","
+# The names of the fields to be used by rulehuntersrv
+fieldNames:
+  - group
+  - district
+  - height
+  - flow
+# Exclude the following fields from rule generation
+excludeFieldNames:
+  - flow
+# Describe aggregators
+aggregators:
+    # The name of the aggregator
+  - name: "goodFlowMCC"
+    # The function to use (calc, count, mcc, mean, precision, recall, sum)
+    function: "mcc"
+    # The argument to pass to the aggregator function
+    arg: "flow > 60"
+# What goals to try to achieve
+goals:
+  - "goodFlowMCC > 0"
+# The order to sort the rules in
+sortOrder:
+  - aggregatorName: "goodFlowMCC"
+    direction: "descending"
+  - aggregatorName: "numMatches"
+    direction: "descending"
+# When to run the experiment (default: !hasRun)
+when: "!hasRunToday || sinceLastRunHours > 2"
+```
+
+### sql
+To connect to a database using SQL you can replace the `csv` field above with something like this:
+
+  sql:
+    # The name of the driver to use (mssql, mysql, sqlite3)
+    driverName: "mssql"
+    # The details of the data source
+    dataSourceName: "Server=127.0.0.1;Port=1433;Database=master;UID=sa,PWD=letmein"
+    # An SQL query to run on the data source to create the dataset
+    query: "select * from flow"
+
+For more information about dataSourceName see the following for each driver:
+
+* mssql - MS SQL Server - [README](https://github.com/denisenkom/go-mssqldb/blob/master/README.md).
+* mysql - MySQL - [README](https://github.com/go-sql-driver/mysql#dsn-data-source-name).
+* sqlite3 - sqlite3 - This just uses the filename of the database.
+
+### aggregators
+The aggregators are used to collect data on the records that match against a rule.  There are the following functions:
+
+* `calc` when supplied with an expression will calculate the result of that expression using as variables any aggregatorNames used in the expression.
+* `count` will count the number of records that match a rule and the supplied expression.
+* `mcc` calculates the [Matthews correlation coefficient](https://en.wikipedia.org/wiki/Matthews_correlation_coefficient) of a rule to match against the expression passed.
+* `mean` calculates the mean value for an expression calculated on records that match a rule.
+* `precision` calculates the [precision](https://en.wikipedia.org/wiki/Precision_and_recall) of a rule to match against the expression passed.
+* `recall` calculates the [recall](https://en.wikipedia.org/wiki/Precision_and_recall) of a rule to match against the expression passed.
+* `sum` calculates the sum for an expression calculated on records that match a rule.
+
+### sortOrder
+The rules in the report are sorted in the order of the entries for the `sortOrder` field.  The aggregators that can be used are the names specified in the `aggregators` field as well as the following built-in aggregators.
+
+* `numMatches` is the number of records that a rule matches against.
+* `percentMatches` is the percent of records in the dataset that a rule matches against.
+* `goalsScore` reflects how well a rule passes the goals.  The higher the number the better the match.
+
 Testing
 -------
 To test the output of the server you can create a simple static webserver using something like the following from the `wwwDir` directory specified in the `config.yaml`:
