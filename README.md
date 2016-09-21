@@ -139,9 +139,9 @@ sql:
 
 For more information about dataSourceName see the following for each driver:
 
-* mssql - MS SQL Server - [README](https://github.com/denisenkom/go-mssqldb/blob/master/README.md).
-* mysql - MySQL - [README](https://github.com/go-sql-driver/mysql#dsn-data-source-name).
-* sqlite3 - sqlite3 - This just uses the filename of the database.
+* `mssql` - MS SQL Server - [README](https://github.com/denisenkom/go-mssqldb/blob/master/README.md).
+* `mysql` - MySQL - [README](https://github.com/go-sql-driver/mysql#dsn-data-source-name).
+* `sqlite3` - sqlite3 - This just uses the filename of the database.
 
 ### aggregators
 The aggregators are used to collect data on the records that match against a rule.  There are the following functions:
