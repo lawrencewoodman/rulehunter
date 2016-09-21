@@ -50,32 +50,27 @@ To install `rulehuntersrv` as a service (which then needs starting separately) w
 Configuration
 -------------
 rulehuntersrv is configured using a `config.yaml` file as follows:
-
-    # The location of the experiment files
-    experimentsDir: "/usr/local/rulehuntersrv/experiments"
-
-    # The location of the html files produced
-    wwwDir: "/var/www/rulehuntersrv"
-
-    # The location of the build files created while running
-    buildDir: "/usr/local/rulehuntersrv/build"
-
-    # The source URL for the code to comply with the requirements of the AGPL
-    # (default: https://github.com/vlifesystems/rulehuntersrv)
-    sourceURL: https://example.com/somecode/rulehuntersrv"
-
-    # The maximum number of rules in a report
-    # (default: 100)
-    maxNumReportRuels: 50
-
-    # The maximum number of processes used to process the experiments
-    # (default: -1, indicating the number of cpu's in the machine)
-    maxNumProcesses: 4
-
-    # The maximum number of records used from the data source.  This is
-    # useful when creating and testing experiment files
-    # (default: -1, indicating all the records)
-    maxNumRecords 150
+```YAML
+# The location of the experiment files
+experimentsDir: "/usr/local/rulehuntersrv/experiments"
+# The location of the html files produced
+wwwDir: "/var/www/rulehuntersrv"
+# The location of the build files created while running
+buildDir: "/usr/local/rulehuntersrv/build"
+# The source URL for the code to comply with the requirements of the AGPL
+# (default: https://github.com/vlifesystems/rulehuntersrv)
+sourceURL: https://example.com/somecode/rulehuntersrv"
+# The maximum number of rules in a report
+# (default: 100)
+maxNumReportRuels: 50
+# The maximum number of processes used to process the experiments
+# (default: -1, indicating the number of cpu's in the machine)
+maxNumProcesses: 4
+# The maximum number of records used from the data source.  This is
+# useful when creating and testing experiment files
+# (default: -1, indicating all the records)
+maxNumRecords 150
+```
 
 Experiments
 -----------
@@ -129,14 +124,15 @@ when: "!hasRunToday || sinceLastRunHours > 2"
 
 ### sql
 To connect to a database using SQL you can replace the `csv` field above with something like this:
-
-  sql:
-    # The name of the driver to use (mssql, mysql, sqlite3)
-    driverName: "mssql"
-    # The details of the data source
-    dataSourceName: "Server=127.0.0.1;Port=1433;Database=master;UID=sa,PWD=letmein"
-    # An SQL query to run on the data source to create the dataset
-    query: "select * from flow"
+```YAML
+sql:
+  # The name of the driver to use (mssql, mysql, sqlite3)
+  driverName: "mssql"
+  # The details of the data source
+  dataSourceName: "Server=127.0.0.1;Port=1433;Database=master;UID=sa,PWD=letmein"
+  # An SQL query to run on the data source to create the dataset
+  query: "select * from flow"
+```
 
 For more information about dataSourceName see the following for each driver:
 
