@@ -270,6 +270,7 @@ func TestReportInfo(t *testing.T) {
 	}
 
 	epr1.ReportInfo("Describing dataset")
+	time.Sleep(time.Second)
 	epr2.ReportInfo("Tweaking rules")
 	epr2.ReportInfo("Assessing rules")
 	got := pm.GetExperiments()
