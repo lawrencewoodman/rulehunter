@@ -161,6 +161,21 @@ The rules in the report are sorted in the order of the entries for the `sortOrde
 * `percentMatches` is the percent of records in the dataset that a rule matches against.
 * `goalsScore` reflects how well a rule passes the goals.  The higher the number the better the match.
 
+### when
+The `when` field determines when the experiment is to be run and how often.  It is an expression that supports the following variables:
+
+* `hasRun` - whether the experiment has been ever been run
+* `hasRunToday` - whether the experiment has been run today
+* `hasRunThisWeek` - whether the experiment has been run this week
+* `hasRunThisMonth` - whether the experiment has been run this month
+* `hasRunThisYear` - whether the experiment has been run this year
+* `sinceLastRunMinutes` - the number of minutes since the experiment was last run
+* `sinceLastRunHours` - the number of hours since the experiment was last run
+* `isWeekday` - whether today is a weekday
+
+### expressions
+Any expressions used in the experiment file conform to fairly standard Go expressions.
+
 Testing
 -------
 To test the output of the server you can create a simple static webserver using something like the following from the `wwwDir` directory specified in the `config.yaml`:
