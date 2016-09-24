@@ -44,7 +44,7 @@ func TestRun_quit(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	htmlCmds <- cmd.Flush
 	go func() {
-		const secsWait = 3.0
+		const secsWait = 5.0
 		<-time.After(secsWait * time.Second)
 		q.Done()
 		t.Fatalf("Run() didn't quit within %v seconds", secsWait)
