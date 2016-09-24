@@ -45,9 +45,9 @@ To run `rulehuntersrv` as a server continually checking and processing experimen
 rulehuntersrv -serve
 ```
 
-To install `rulehuntersrv` as a service (which then needs starting separately) with `config.yaml` located in `/usr/local/rulehuntersrv` and using `rhuser` as the user:
+To install `rulehuntersrv` as a service (which then needs starting separately) with `config.yaml` located in `/usr/local/rulehuntersrv`:
 ```Shell
-rulehuntersrv -install -configdir=/usr/local/rulehuntersrv -user=rhuser
+rulehuntersrv -install -configdir=/usr/local/rulehuntersrv
 ```
 
 Configuration
@@ -62,7 +62,9 @@ wwwDir: "/var/www/rulehuntersrv"
 buildDir: "/usr/local/rulehuntersrv/build"
 # The source URL for the code to comply with the requirements of the AGPL
 # (default: https://github.com/vlifesystems/rulehuntersrv)
-sourceURL: https://example.com/somecode/rulehuntersrv"
+sourceUrl: https://example.com/somecode/rulehuntersrv"
+# The user to use when running as a service
+user: rhuser
 # The maximum number of rules in a report
 # (default: 100)
 maxNumReportRuels: 50

@@ -32,7 +32,8 @@ type Config struct {
 	ExperimentsDir    string `yaml:"experimentsDir"`
 	WWWDir            string `yaml:"wwwDir"`
 	BuildDir          string `yaml:"buildDir"`
-	SourceURL         string `yaml:"sourceURL"`
+	SourceURL         string `yaml:"sourceUrl"`
+	User              string `yaml:"user"`
 	MaxNumReportRules int    `yaml:"maxNumReportRules"`
 	MaxNumProcesses   int    `yaml:"maxNumProcesses"`
 	MaxNumRecords     int    `yaml:"maxNumRecords"`

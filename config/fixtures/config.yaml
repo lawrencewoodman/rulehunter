@@ -2,5 +2,6 @@ experimentsDir: "experiments"
 wwwDir: "www"
 buildDir: "build"
 sourceUrl: "https://example.com/rulehuntersrv/src"
+user: "rhuser"
 maxNumReportRules: 2000
 maxNumProcesses: 4

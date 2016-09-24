@@ -76,7 +76,6 @@ func TestSubMain_errors(t *testing.T) {
 	}{
 		{
 			flags: &cmdFlags{
-				user:      "fred",
 				configDir: "",
 				install:   true,
 			},
@@ -85,7 +84,6 @@ func TestSubMain_errors(t *testing.T) {
 		},
 		{
 			flags: &cmdFlags{
-				user:      "fred",
 				configDir: tmpDir,
 				install:   true,
 			},

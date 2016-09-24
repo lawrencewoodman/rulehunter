@@ -22,7 +22,6 @@ func TestSubMain_interrupt(t *testing.T) {
 	}{
 		{
 			flags: &cmdFlags{
-				user:    "fred",
 				install: false,
 				serve:   true,
 			},

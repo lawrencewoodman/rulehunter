@@ -24,7 +24,6 @@ import (
 )
 
 type cmdFlags struct {
-	user      string
 	configDir string
 	install   bool
 	serve     bool
@@ -33,12 +32,6 @@ type cmdFlags struct {
 func parseFlags() *cmdFlags {
 	flags := &cmdFlags{}
 
-	flag.StringVar(
-		&flags.user,
-		"user",
-		"",
-		"The user to run the server as",
-	)
 	flag.StringVar(
 		&flags.configDir,
 		"configdir",

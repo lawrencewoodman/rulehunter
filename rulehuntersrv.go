@@ -71,7 +71,7 @@ func subMain(
 	}
 	prg := newProgram(config, pm, l, q)
 
-	s, err := newService(prg, flags)
+	s, err := newService(prg, config, flags)
 	if err != nil {
 		return 1, err
 	}
@@ -100,15 +100,19 @@ func subMain(
 	return 0, nil
 }
 
-func newService(prg *program, flags *cmdFlags) (service.Service, error) {
+func newService(
+	prg *program,
+	cfg *config.Config,
+	flags *cmdFlags,
+) (service.Service, error) {
 	svcConfig := &service.Config{
 		Name:        "RulehunterSrv",
 		DisplayName: "Rulehunter server",
 		Description: "Finds rules in data based on user specified goals.",
 	}
 
-	if flags.user != "" {
-		svcConfig.UserName = flags.user
+	if cfg.User != "" {
+		svcConfig.UserName = cfg.User
 	}
 
 	if flags.configDir != "" {

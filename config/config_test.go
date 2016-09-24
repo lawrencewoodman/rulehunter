@@ -21,6 +21,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://example.com/rulehuntersrv/src",
+				User:              "",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   1,
 				MaxNumRecords:     -1,
@@ -32,6 +33,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://example.com/rulehuntersrv/src",
+				User:              "",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   4,
 				MaxNumRecords:     150,
@@ -54,6 +56,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://example.com/rulehuntersrv/src",
+				User:              "rhuser",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   4,
 				MaxNumRecords:     -1,
@@ -98,6 +101,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://example.com/rulehuntersrv/src",
+				User:              "rhuser",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   4,
 				MaxNumRecords:     -1,
@@ -172,6 +176,8 @@ func configsMatch(c1, c2 *Config) bool {
 	return c1.ExperimentsDir == c2.ExperimentsDir &&
 		c1.WWWDir == c2.WWWDir &&
 		c1.BuildDir == c2.BuildDir &&
+		c1.SourceURL == c2.SourceURL &&
+		c1.User == c2.User &&
 		c1.MaxNumReportRules == c2.MaxNumReportRules &&
 		c1.MaxNumProcesses == c2.MaxNumProcesses &&
 		c1.MaxNumRecords == c2.MaxNumRecords
