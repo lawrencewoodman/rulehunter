@@ -106,9 +106,9 @@ func newService(
 	flags *cmdFlags,
 ) (service.Service, error) {
 	svcConfig := &service.Config{
-		Name:        "RulehunterSrv",
+		Name:        "rulehuntersrv",
 		DisplayName: "Rulehunter server",
-		Description: "Finds rules in data based on user specified goals.",
+		Description: "Rulehunter finds rules in data based on user specified goals.",
 	}
 
 	if cfg.User != "" {
