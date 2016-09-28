@@ -10,8 +10,6 @@ services:
   - mysql
 
 before_install:
-  - echo $PATH
-  - ls /usr/bin/s*
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/lawrencewoodman/roveralls
@@ -19,6 +17,6 @@ before_install:
 
 script:
   - chmod +x linux-test-su.sh
-  - sudo ./linux-test-su.sh $GOPATH `which go`
+  - sudo ./linux-test-su.sh $GOPATH `which go` upstart
   - $HOME/gopath/bin/roveralls
   - $HOME/gopath/bin/goveralls -coverprofile=roveralls.coverprofile -service=travis-ci
