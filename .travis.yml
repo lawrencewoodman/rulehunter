@@ -1,4 +1,6 @@
 language: go
+go_import_path: github.com/vlifesystems/rulehuntersrv
+sudo: required
 
 go:
   - 1.6
@@ -9,7 +11,7 @@ services:
 
 before_install:
   - echo $PATH
-  - ls /usr/bin/systemctl
+  - ls /usr/bin/s*
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/lawrencewoodman/roveralls
