@@ -14,6 +14,7 @@ before_install:
   - mysql < ci/createflow_travis.sql
 
 script:
-  - go test -v -tags travis ./...
+  - chmod +x linux-test-su.sh
+  - sudo ./linux-test-su.sh $GOPATH `which go`
   - $HOME/gopath/bin/roveralls
   - $HOME/gopath/bin/goveralls -coverprofile=roveralls.coverprofile -service=travis-ci

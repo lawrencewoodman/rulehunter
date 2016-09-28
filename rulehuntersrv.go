@@ -85,6 +85,7 @@ func subMain(
 	go html.Run(config, prg.progressMonitor, l, q, htmlCmds)
 
 	if flags.install {
+		s.Uninstall()
 		if err = s.Install(); err != nil {
 			return 1, err
 		}
@@ -117,7 +118,7 @@ func newService(
 
 	if flags.configDir != "" {
 		svcConfig.Arguments =
-			[]string{fmt.Sprintf("-configdir=%s", flags.configDir)}
+			[]string{fmt.Sprintf("-configdir=%s", flags.configDir), "-serve"}
 	}
 	s, err := service.New(prg, svcConfig)
 	return s, err

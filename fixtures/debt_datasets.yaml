@@ -1,0 +1,25 @@
+fileFormatVersion: "0.1"
+title: "What is most likely to indicate success"
+fieldNames:
+  - "name"
+  - "balance"
+  - "num_cards"
+  - "marital_status"
+  - "tertiary_educated"
+  - "success"
+excludeFieldNames:
+  - "success"
+dataset: "csv"
+csv:
+  filename: "datasets/debt.csv"
+  hasHeader: true
+  separator:  ","
+aggregators:
+  - name: "accuracySuccess"
+    function: "accuracy"
+    arg: "success"
+goals:
+  - "accuracySuccess > 10"
+sortOrder:
+  - aggregatorName: "accuracySuccess"
+    direction: "descending"

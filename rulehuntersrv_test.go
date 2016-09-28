@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/vlifesystems/rulehuntersrv/config"
 	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
@@ -8,6 +9,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"syscall"
@@ -188,5 +190,14 @@ func mustWriteConfig(t *testing.T, baseDir string, maxNumRecords int) {
 	}
 	if err := ioutil.WriteFile(cfgFilename, y, mode); err != nil {
 		t.Fatalf("WriteFile(%s, ...) err: %v", cfgFilename, err)
+	}
+}
+
+func runCmd(t *testing.T, name string, arg ...string) {
+	cmd := exec.Command(name, arg...)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("runCmd(%v...), err: %v, out: %v", name, err, out.String())
 	}
 }
