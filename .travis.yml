@@ -8,6 +8,8 @@ services:
   - mysql
 
 before_install:
+  - echo $PATH
+  - ls /usr/bin/systemctl
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/lawrencewoodman/roveralls
