@@ -19,41 +19,8 @@ func TestMakeDataset_appveyor(t *testing.T) {
 		fieldNames   []string
 		want         ddataset.Dataset
 	}{
-		{instanceName: "SQL2008R2SP2",
-			port:       12008,
-			query:      "select * from flow",
-			fieldNames: []string{"grp", "district", "height", "flow"},
-			want: dcsv.New(
-				filepath.Join("fixtures", "flow.csv"),
-				true,
-				rune(','),
-				[]string{"grp", "district", "height", "flow"},
-			),
-		},
-		{instanceName: "SQL2008R2SP2",
-			port:       12008,
-			query:      "select grp,district,flow from flow",
-			fieldNames: []string{"grp", "district", "flow"},
-			want: dcsv.New(
-				filepath.Join("fixtures", "flow_three_columns.csv"),
-				true,
-				rune(','),
-				[]string{"grp", "district", "flow"},
-			),
-		},
-		{instanceName: "SQL2012SP1",
-			port:       12012,
-			query:      "select * from flow",
-			fieldNames: []string{"grp", "district", "height", "flow"},
-			want: dcsv.New(
-				filepath.Join("fixtures", "flow.csv"),
-				true,
-				rune(','),
-				[]string{"grp", "district", "height", "flow"},
-			),
-		},
 		{instanceName: "SQL2014",
-			port:       12014,
+			port:       1433,
 			query:      "select * from flow",
 			fieldNames: []string{"grp", "district", "height", "flow"},
 			want: dcsv.New(
