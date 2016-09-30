@@ -182,6 +182,11 @@ Any expressions used in the experiment file conform to fairly standard Go expres
 
 Testing
 -------
+To make testing simpler under Linux, where root is needed, you can use the following (replace _systemd_ with _upstart_ if using the latter init system):
+```
+sudo ./linux-test-su.sh $GOPATH `which go` systemd
+```
+
 To test the output of the server you can create a simple static webserver using something like the following from the `wwwDir` directory specified in the `config.yaml`:
 ```Shell
 ruby -run -ehttpd . -p8000

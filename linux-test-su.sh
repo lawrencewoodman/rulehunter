@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# This script is used to run the tests under linux as root on travis-ci
+# This script is used to run the tests under linux as root
 #
 # Usage:
 #    linux-test-su.sh goPath goBinPath initSystem
