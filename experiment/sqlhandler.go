@@ -45,14 +45,20 @@ func newSQLHandler(
 	driverName string,
 	dataSourceName string,
 	query string,
-) *sqlHandler {
-	return &sqlHandler{
-		driverName:     driverName,
-		dataSourceName: dataSourceName,
-		query:          query,
-		db:             nil,
-		openConn:       0,
+) (*sqlHandler, error) {
+	validSQLDriverNames := []string{"sqlite3", "mysql", "mssql"}
+	for _, name := range validSQLDriverNames {
+		if name == driverName {
+			return &sqlHandler{
+				driverName:     driverName,
+				dataSourceName: dataSourceName,
+				query:          query,
+				db:             nil,
+				openConn:       0,
+			}, nil
+		}
 	}
+	return nil, fmt.Errorf("invalid driverName: %s", driverName)
 }
 
 func (s *sqlHandler) Open() error {

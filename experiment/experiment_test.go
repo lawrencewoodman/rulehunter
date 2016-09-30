@@ -179,7 +179,7 @@ func TestLoadExperiment_error(t *testing.T) {
 		{filepath.Join("fixtures", "flow_no_sql_drivername.json"),
 			errors.New("Experiment field missing: sql > driverName")},
 		{filepath.Join("fixtures", "flow_invalid_sql_drivername.json"),
-			errors.New("Experiment has invalid sql > driverName")},
+			errors.New("Experiment field: sql, has invalid driverName: bob")},
 		{filepath.Join("fixtures", "flow_no_sql_datasourcename.json"),
 			errors.New("Experiment field missing: sql > dataSourceName")},
 		{filepath.Join("fixtures", "flow_no_sql_query.json"),

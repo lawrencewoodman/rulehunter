@@ -5,7 +5,7 @@
   "sql": {
     "driverName": "bob",
     "dataSourceName": "fred",
-    "tableName": "people"
+    "query": "select * from flow"
   },
   "fieldNames": ["group","district","height","flow"],
   "excludeFieldNames": ["flow"],

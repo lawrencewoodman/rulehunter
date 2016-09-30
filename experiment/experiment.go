@@ -317,11 +317,14 @@ func makeDataset(e *experimentFile) (d ddataset.Dataset, err error) {
 			e.FieldNames,
 		)
 	case "sql":
-		sqlHandler := newSQLHandler(
+		sqlHandler, err := newSQLHandler(
 			e.Sql.DriverName,
 			e.Sql.DataSourceName,
 			e.Sql.Query,
 		)
+		if err != nil {
+			return nil, fmt.Errorf("Experiment field: sql, has %s", err)
+		}
 		d = dsql.New(sqlHandler, e.FieldNames)
 	default:
 		return nil,
@@ -329,8 +332,6 @@ func makeDataset(e *experimentFile) (d ddataset.Dataset, err error) {
 	}
 	return
 }
-
-var validDrivers = []string{"sqlite3"}
 
 func (e *experimentFile) checkValid() error {
 	if len(e.Title) == 0 {
@@ -356,9 +357,6 @@ func (e *experimentFile) checkValid() error {
 		}
 		if len(e.Sql.DriverName) == 0 {
 			return errors.New("Experiment field missing: sql > driverName")
-		}
-		if !inStringsSlice(e.Sql.DriverName, validDrivers) {
-			return errors.New("Experiment has invalid sql > driverName")
 		}
 		if len(e.Sql.DataSourceName) == 0 {
 			return errors.New("Experiment field missing: sql > dataSourceName")
@@ -472,15 +470,6 @@ type assessJob struct {
 type assessJobOutcome struct {
 	assessment *rulehunter.Assessment
 	err        error
-}
-
-func inStringsSlice(needle string, haystack []string) bool {
-	for _, v := range haystack {
-		if v == needle {
-			return true
-		}
-	}
-	return false
 }
 
 func shouldProcess(

@@ -28,7 +28,10 @@ func TestOpenRowsClose(t *testing.T) {
 	}
 
 	filename := filepath.Join("fixtures", "flow.db")
-	h := newSQLHandler("sqlite3", filename, "select * from flow")
+	h, err := newSQLHandler("sqlite3", filename, "select * from flow")
+	if err != nil {
+		t.Fatalf("newSQLHandler: err: %v", err)
+	}
 
 	if err := h.Close(); err != nil {
 		t.Fatalf("Close: err: %v", err)
@@ -67,7 +70,10 @@ func TestOpenRowsClose(t *testing.T) {
 
 func TestOpenRowsClose_errors(t *testing.T) {
 	filename := filepath.Join("fixtures", "flow.db")
-	h := newSQLHandler("sqlite3", filename, "select * from flow")
+	h, err := newSQLHandler("sqlite3", filename, "select * from flow")
+	if err != nil {
+		t.Fatalf("newSQLHandler: err: %v", err)
+	}
 
 	if _, err := h.Rows(); err != errDatabaseNotOpen {
 		t.Fatalf("Rows: gotErr: %v, want: %v", err, errDatabaseNotOpen)
