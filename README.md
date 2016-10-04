@@ -152,7 +152,7 @@ The aggregators are used to collect data on the records that match against a rul
 
 * `calc` when supplied with an expression will calculate the result of that expression using as variables any aggregatorNames used in the expression.
 * `count` will count the number of records that match a rule and the supplied expression.
-* `mcc` calculates the [Matthews correlation coefficient](https://en.wikipedia.org/wiki/Matthews_correlation_coefficient) of a rule to match against the expression passed.
+* `mcc` calculates the [Matthews correlation coefficient](https://en.wikipedia.org/wiki/Matthews_correlation_coefficient) of a rule to match against the expression passed.  A coefficient of +1 represents a perfect prediction, 0 no better than random prediction and −1 indicates total disagreement between prediction and observation.
 * `mean` calculates the mean value for an expression calculated on records that match a rule.
 * `precision` calculates the [precision](https://en.wikipedia.org/wiki/Precision_and_recall) of a rule to match against the expression passed.
 * `recall` calculates the [recall](https://en.wikipedia.org/wiki/Precision_and_recall) of a rule to match against the expression passed.
