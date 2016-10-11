@@ -9,8 +9,9 @@ A server to find rules in data based on user specified goals
 
 Installation
 ------------
-rulehuntersrv is compiled and installed from the root of the repository with:
+rulehuntersrv is downloaded, compiled and installed with:
 ```Shell
+go get github.com/vlifesystems/rulehuntersrv
 go install
 ```
 There are several files needed to render the html properly these are located in the `support/` directory.
