@@ -3,8 +3,8 @@ package html
 import (
 	"bytes"
 	"fmt"
-	"github.com/vlifesystems/rulehuntersrv/config"
-	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"golang.org/x/net/html"
 	"io/ioutil"
 	"os"

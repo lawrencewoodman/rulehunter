@@ -20,32 +20,28 @@
 package aggregators
 
 import (
-	"fmt"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/goal"
-	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
+	"github.com/vlifesystems/rhkit/goal"
+	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 )
 
-type sumAggregator struct{}
+type calcAggregator struct{}
 
-type sumSpec struct {
+type calcSpec struct {
 	name string
 	expr *dexpr.Expr
 }
 
-type sumInstance struct {
-	spec *sumSpec
-	sum  *dlit.Literal
+type calcInstance struct {
+	spec *calcSpec
 }
-
-var sumExpr = dexpr.MustNew("sum+value")
 
 func init() {
-	Register("sum", &sumAggregator{})
+	Register("calc", &calcAggregator{})
 }
 
-func (a *sumAggregator) MakeSpec(
+func (a *calcAggregator) MakeSpec(
 	name string,
 	expr string,
 ) (AggregatorSpec, error) {
@@ -53,56 +49,45 @@ func (a *sumAggregator) MakeSpec(
 	if err != nil {
 		return nil, err
 	}
-	d := &sumSpec{
+	d := &calcSpec{
 		name: name,
 		expr: dexpr,
 	}
 	return d, nil
 }
 
-func (ad *sumSpec) New() AggregatorInstance {
-	return &sumInstance{
-		spec: ad,
-		sum:  dlit.MustNew(0),
-	}
+func (ad *calcSpec) New() AggregatorInstance {
+	return &calcInstance{spec: ad}
 }
 
-func (ad *sumSpec) GetName() string {
+func (ad *calcSpec) GetName() string {
 	return ad.name
 }
 
-func (ad *sumSpec) GetArg() string {
+func (ad *calcSpec) GetArg() string {
 	return ad.expr.String()
 }
 
-func (ai *sumInstance) GetName() string {
+func (ai *calcInstance) GetName() string {
 	return ai.spec.name
 }
 
-func (ai *sumInstance) NextRecord(
+func (ai *calcInstance) NextRecord(
 	record map[string]*dlit.Literal,
 	isRuleTrue bool,
 ) error {
-	if isRuleTrue {
-		exprValue := ai.spec.expr.Eval(record, dexprfuncs.CallFuncs)
-		_, valueIsFloat := exprValue.Float()
-		if !valueIsFloat {
-			return fmt.Errorf("sum aggregator: value isn't a float: %s", exprValue)
-		}
-
-		vars := map[string]*dlit.Literal{
-			"sum":   ai.sum,
-			"value": exprValue,
-		}
-		ai.sum = sumExpr.Eval(vars, dexprfuncs.CallFuncs)
-	}
 	return nil
 }
 
-func (ai *sumInstance) GetResult(
+func (ai *calcInstance) GetResult(
 	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
-	return ai.sum
+	instancesMap, err :=
+		InstancesToMap(aggregatorInstances, goals, numRecords, ai.GetName())
+	if err != nil {
+		return dlit.MustNew(err)
+	}
+	return ai.spec.expr.Eval(instancesMap, dexprfuncs.CallFuncs)
 }

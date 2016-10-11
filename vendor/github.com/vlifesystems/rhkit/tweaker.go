@@ -17,12 +17,12 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rulehunter
+package rhkit
 
 import (
 	"fmt"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/rule"
+	"github.com/vlifesystems/rhkit/rule"
 	"sort"
 	"strings"
 )

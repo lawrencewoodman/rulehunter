@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vlifesystems/rulehuntersrv/html/cmd"
-	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
+	"github.com/vlifesystems/rulehunter/html/cmd"
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 )
 
 func TestGetExperiments(t *testing.T) {

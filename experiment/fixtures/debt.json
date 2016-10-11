@@ -18,15 +18,15 @@
   "excludeFieldNames": ["success"],
   "aggregators": [
     {
-      "name": "helpedAccuracy",
-      "function": "accuracy",
+      "name": "helpedMcc",
+      "function": "mcc",
       "arg": "success"
     }
   ],
-  "goals": ["helpedAccuracy > 10"],
+  "goals": ["helpedMcc > 0"],
   "sortOrder": [
     {
-      "aggregatorName": "helpedAccuracy",
+      "aggregatorName": "helpedMcc",
       "direction": "descending"
     },
     {

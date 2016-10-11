@@ -17,15 +17,15 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rulehunter
+package rhkit
 
 import (
 	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
-	"github.com/vlifesystems/rulehunter/aggregators"
-	"github.com/vlifesystems/rulehunter/experiment"
-	"github.com/vlifesystems/rulehunter/rule"
+	"github.com/vlifesystems/rhkit/aggregators"
+	"github.com/vlifesystems/rhkit/experiment"
+	"github.com/vlifesystems/rhkit/rule"
 )
 
 // AssessRules runs the rules against the experiment and returns an

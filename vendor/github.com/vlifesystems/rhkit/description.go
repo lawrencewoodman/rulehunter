@@ -17,7 +17,7 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rulehunter
+package rhkit
 
 import (
 	"fmt"

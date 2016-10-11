@@ -20,28 +20,34 @@
 package aggregators
 
 import (
+	"fmt"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/goal"
-	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
+	"github.com/vlifesystems/rhkit/goal"
+	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 )
 
-type calcAggregator struct{}
+type meanAggregator struct{}
 
-type calcSpec struct {
+type meanSpec struct {
 	name string
 	expr *dexpr.Expr
 }
 
-type calcInstance struct {
-	spec *calcSpec
+type meanInstance struct {
+	spec       *meanSpec
+	sum        *dlit.Literal
+	numRecords int64
 }
+
+var meanExpr = dexpr.MustNew("sum/n")
+var meanSumExpr = dexpr.MustNew("sum+value")
 
 func init() {
-	Register("calc", &calcAggregator{})
+	Register("mean", &meanAggregator{})
 }
 
-func (a *calcAggregator) MakeSpec(
+func (a *meanAggregator) MakeSpec(
 	name string,
 	expr string,
 ) (AggregatorSpec, error) {
@@ -49,45 +55,66 @@ func (a *calcAggregator) MakeSpec(
 	if err != nil {
 		return nil, err
 	}
-	d := &calcSpec{
+	d := &meanSpec{
 		name: name,
 		expr: dexpr,
 	}
 	return d, nil
 }
 
-func (ad *calcSpec) New() AggregatorInstance {
-	return &calcInstance{spec: ad}
+func (ad *meanSpec) New() AggregatorInstance {
+	return &meanInstance{
+		spec:       ad,
+		sum:        dlit.MustNew(0),
+		numRecords: 0,
+	}
 }
 
-func (ad *calcSpec) GetName() string {
+func (ad *meanSpec) GetName() string {
 	return ad.name
 }
 
-func (ad *calcSpec) GetArg() string {
+func (ad *meanSpec) GetArg() string {
 	return ad.expr.String()
 }
 
-func (ai *calcInstance) GetName() string {
+func (ai *meanInstance) GetName() string {
 	return ai.spec.name
 }
 
-func (ai *calcInstance) NextRecord(
+func (ai *meanInstance) NextRecord(
 	record map[string]*dlit.Literal,
 	isRuleTrue bool,
 ) error {
+	if isRuleTrue {
+		ai.numRecords++
+		exprValue := ai.spec.expr.Eval(record, dexprfuncs.CallFuncs)
+		_, valueIsFloat := exprValue.Float()
+		if !valueIsFloat {
+			return fmt.Errorf("mean aggregator: value isn't a float: %s", exprValue)
+		}
+
+		vars := map[string]*dlit.Literal{
+			"sum":   ai.sum,
+			"value": exprValue,
+		}
+		ai.sum = meanSumExpr.Eval(vars, dexprfuncs.CallFuncs)
+	}
 	return nil
 }
 
-func (ai *calcInstance) GetResult(
+func (ai *meanInstance) GetResult(
 	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
-	instancesMap, err :=
-		InstancesToMap(aggregatorInstances, goals, numRecords, ai.GetName())
-	if err != nil {
-		return dlit.MustNew(err)
+	if ai.numRecords == 0 {
+		return dlit.MustNew(0)
 	}
-	return ai.spec.expr.Eval(instancesMap, dexprfuncs.CallFuncs)
+
+	vars := map[string]*dlit.Literal{
+		"sum": ai.sum,
+		"n":   dlit.MustNew(ai.numRecords),
+	}
+	return meanExpr.Eval(vars, dexprfuncs.CallFuncs)
 }

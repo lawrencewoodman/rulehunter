@@ -17,15 +17,32 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rulehunter
+package rhkit
 
-import "strings"
+import "fmt"
 
-func numDecPlaces(s string) int {
-	i := strings.IndexByte(s, '.')
-	if i > -1 {
-		s = strings.TrimRight(s, "0")
-		return len(s) - i - 1
+type fieldType int
+
+const (
+	ftUnknown fieldType = iota
+	ftIgnore
+	ftInt
+	ftFloat
+	ftString
+)
+
+func (ft fieldType) String() string {
+	switch ft {
+	case ftUnknown:
+		return "Unknown"
+	case ftIgnore:
+		return "Ignore"
+	case ftInt:
+		return "Int"
+	case ftFloat:
+		return "Float"
+	case ftString:
+		return "String"
 	}
-	return 0
+	panic(fmt.Sprintf("Unsupported type: %d", ft))
 }

@@ -1,5 +1,5 @@
 /*
-	rulehuntersrv - A server to find rules in data based on user specified goals
+	rulehunter - A server to find rules in data based on user specified goals
 	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
@@ -23,9 +23,9 @@ import (
 	"errors"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter"
-	"github.com/vlifesystems/rulehunter/experiment"
-	"github.com/vlifesystems/rulehuntersrv/config"
+	"github.com/vlifesystems/rhkit"
+	"github.com/vlifesystems/rhkit/experiment"
+	"github.com/vlifesystems/rulehunter/config"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -42,7 +42,7 @@ type Aggregator struct {
 type Assessment struct {
 	Rule        string
 	Aggregators []*Aggregator
-	Goals       []*rulehunter.GoalAssessment
+	Goals       []*rhkit.GoalAssessment
 }
 
 type Report struct {
@@ -56,7 +56,7 @@ type Report struct {
 }
 
 func WriteJson(
-	assessment *rulehunter.Assessment,
+	assessment *rhkit.Assessment,
 	experiment *experiment.Experiment,
 	experimentFilename string,
 	tags []string,
@@ -140,7 +140,7 @@ func getSortedAggregatorNames(aggregators map[string]*dlit.Literal) []string {
 }
 
 func getTrueAggregators(
-	assessment *rulehunter.Assessment,
+	assessment *rhkit.Assessment,
 ) (map[string]*dlit.Literal, error) {
 	trueRuleAssessment :=
 		assessment.RuleAssessments[len(assessment.RuleAssessments)-1]

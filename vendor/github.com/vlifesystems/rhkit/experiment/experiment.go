@@ -24,9 +24,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
-	"github.com/vlifesystems/rulehunter/aggregators"
-	"github.com/vlifesystems/rulehunter/goal"
-	"github.com/vlifesystems/rulehunter/internal"
+	"github.com/vlifesystems/rhkit/aggregators"
+	"github.com/vlifesystems/rhkit/goal"
+	"github.com/vlifesystems/rhkit/internal"
 )
 
 type ExperimentDesc struct {

@@ -17,16 +17,16 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rulehunter
+package rhkit
 
 import (
 	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/aggregators"
-	"github.com/vlifesystems/rulehunter/experiment"
-	"github.com/vlifesystems/rulehunter/goal"
-	"github.com/vlifesystems/rulehunter/rule"
+	"github.com/vlifesystems/rhkit/aggregators"
+	"github.com/vlifesystems/rhkit/experiment"
+	"github.com/vlifesystems/rhkit/goal"
+	"github.com/vlifesystems/rhkit/rule"
 	"sort"
 	"strings"
 )

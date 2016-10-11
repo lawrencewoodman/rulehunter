@@ -4,7 +4,7 @@ platform:
   - x86
   - x64
 
-clone_folder: c:\gopath\src\github.com\vlifesystems\rulehunter
+clone_folder: c:\gopath\src\github.com\vlifesystems\rhkit
 
 environment:
   GOPATH: c:\gopath

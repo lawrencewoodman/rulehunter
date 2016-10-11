@@ -1,5 +1,5 @@
 /*
-	rulehuntersrv - A server to find rules in data based on user specified goals
+	rulehunter - A server to find rules in data based on user specified goals
 	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
@@ -28,13 +28,13 @@ import (
 	"github.com/lawrencewoodman/ddataset/dsql"
 	"github.com/lawrencewoodman/ddataset/dtruncate"
 	"github.com/lawrencewoodman/dexpr"
-	"github.com/vlifesystems/rulehunter"
-	rhexperiment "github.com/vlifesystems/rulehunter/experiment"
-	"github.com/vlifesystems/rulehunter/rule"
-	"github.com/vlifesystems/rulehuntersrv/config"
-	"github.com/vlifesystems/rulehuntersrv/logger"
-	"github.com/vlifesystems/rulehuntersrv/progress"
-	"github.com/vlifesystems/rulehuntersrv/report"
+	"github.com/vlifesystems/rhkit"
+	rhexperiment "github.com/vlifesystems/rhkit/experiment"
+	"github.com/vlifesystems/rhkit/rule"
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/logger"
+	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/report"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -127,7 +127,7 @@ func Process(
 	if err := epr.ReportInfo("Describing dataset"); err != nil {
 		return err
 	}
-	fieldDescriptions, err := rulehunter.DescribeDataset(experiment.Dataset)
+	fieldDescriptions, err := rhkit.DescribeDataset(experiment.Dataset)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't describe dataset: %s", err)
 		return epr.ReportError(fullErr)
@@ -137,7 +137,7 @@ func Process(
 		return err
 	}
 	rules, err :=
-		rulehunter.GenerateRules(fieldDescriptions, experiment.ExcludeFieldNames)
+		rhkit.GenerateRules(fieldDescriptions, experiment.ExcludeFieldNames)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't generate rules: %s", err)
 		return epr.ReportError(fullErr)
@@ -156,7 +156,7 @@ func Process(
 	if err := epr.ReportInfo("Tweaking rules"); err != nil {
 		return err
 	}
-	tweakableRules := rulehunter.TweakRules(sortedRules, fieldDescriptions)
+	tweakableRules := rhkit.TweakRules(sortedRules, fieldDescriptions)
 
 	assessment2, err := assessRules(2, tweakableRules, experiment, epr, cfg)
 	if err != nil {
@@ -174,7 +174,7 @@ func Process(
 
 	numRulesToCombine := 50
 	bestNonCombinedRules := assessment3.GetRules(numRulesToCombine)
-	combinedRules := rulehunter.CombineRules(bestNonCombinedRules)
+	combinedRules := rhkit.CombineRules(bestNonCombinedRules)
 
 	assessment4, err := assessRules(3, combinedRules, experiment, epr, cfg)
 	if err != nil {
@@ -374,7 +374,7 @@ func assessRules(
 	experiment *rhexperiment.Experiment,
 	epr *progress.ExperimentProgressReporter,
 	cfg *config.Config,
-) (*rulehunter.Assessment, error) {
+) (*rhkit.Assessment, error) {
 	var wg sync.WaitGroup
 	var rulesProcessed uint64 = 0
 
@@ -389,7 +389,7 @@ func assessRules(
 
 	numRules := len(rules)
 	if numRules < 2 {
-		assessment, err := rulehunter.AssessRules(rules, experiment)
+		assessment, err := rhkit.AssessRules(rules, experiment)
 		if err != nil {
 			return nil, err
 		}
@@ -410,7 +410,7 @@ func assessRules(
 			defer wg.Done()
 			for j := range assessJobs {
 				rulesPartial := rules[j.startRuleNum:j.endRuleNum]
-				assessment, err := rulehunter.AssessRules(rulesPartial, experiment)
+				assessment, err := rhkit.AssessRules(rulesPartial, experiment)
 				if err != nil {
 					assessJobResults <- assessJobOutcome{assessment: nil, err: err}
 					return
@@ -444,7 +444,7 @@ func assessRules(
 		close(assessJobResults)
 	}()
 
-	var assessment *rulehunter.Assessment
+	var assessment *rhkit.Assessment
 	var err error
 	for r := range assessJobResults {
 		if r.err != nil {
@@ -468,7 +468,7 @@ type assessJob struct {
 }
 
 type assessJobOutcome struct {
-	assessment *rulehunter.Assessment
+	assessment *rhkit.Assessment
 	err        error
 }
 

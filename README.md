@@ -1,17 +1,17 @@
-Rulehuntersrv
-=============
+Rulehunter
+==========
 A server to find rules in data based on user specified goals
 
-[![Build Status](https://travis-ci.org/vlifesystems/rulehuntersrv.svg?branch=master)](https://travis-ci.org/vlifesystems/rulehuntersrv)
-[![Build status](https://ci.appveyor.com/api/projects/status/8tds5r4dk6163es0?svg=true)](https://ci.appveyor.com/project/LawrenceWoodman/rulehuntersrv)
-[![Coverage Status](https://coveralls.io/repos/vlifesystems/rulehuntersrv/badge.svg?branch=master)](https://coveralls.io/r/vlifesystems/rulehuntersrv?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/vlifesystems/rulehuntersrv)](https://goreportcard.com/report/github.com/vlifesystems/rulehuntersrv)
+[![Build Status](https://travis-ci.org/vlifesystems/rulehunter.svg?branch=master)](https://travis-ci.org/vlifesystems/rulehunter)
+[![Build status](https://ci.appveyor.com/api/projects/status/8tds5r4dk6163es0?svg=true)](https://ci.appveyor.com/project/LawrenceWoodman/rulehunter)
+[![Coverage Status](https://coveralls.io/repos/vlifesystems/rulehunter/badge.svg?branch=master)](https://coveralls.io/r/vlifesystems/rulehunter?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/vlifesystems/rulehunter)](https://goreportcard.com/report/github.com/vlifesystems/rulehunter)
 
 Installation
 ------------
-rulehuntersrv is downloaded, compiled and installed with:
+rulehunter is downloaded, compiled and installed with:
 ```Shell
-go get github.com/vlifesystems/rulehuntersrv
+go get github.com/vlifesystems/rulehunter
 go install
 ```
 There are several files needed to render the html properly these are located in the `support/` directory.
@@ -28,42 +28,42 @@ Copy directory `support/jquery/js` to the `wwwDir` directory specified in `confi
 
 Copy directory `support/html5shiv/js` to the `wwwDir` directory specified in `config.yaml`.
 
-### Rulehuntersrv
+### Rulehunter
 
-Copy directories from `support/rulehuntersrv` to the `wwwDir` directory specified in `config.yaml`.
+Copy directories from `support/rulehunter` to the `wwwDir` directory specified in `config.yaml`.
 
 Usage
 -----
-rulehuntersrv is run using the `rulehuntersrv` executable created by `go install`.  You can use this command in a number of ways:
+rulehunter is run using the `rulehunter` executable created by `go install`.  You can use this command in a number of ways:
 
 To processes the experiments in the `experimentsDir` directory specified in `config.yaml` located in the current directory:
 ```Shell
-rulehuntersrv
+rulehunter
 ```
 
-To run `rulehuntersrv` as a server continually checking and processing experiments
+To run `rulehunter` as a server continually checking and processing experiments
 ```Shell
-rulehuntersrv -serve
+rulehunter -serve
 ```
 
-To install `rulehuntersrv` as a service (which then needs starting separately) with `config.yaml` located in `/usr/local/rulehuntersrv`:
+To install `rulehunter` as a service (which then needs starting separately) with `config.yaml` located in `/usr/local/rulehunter`:
 ```Shell
-rulehuntersrv -install -configdir=/usr/local/rulehuntersrv
+rulehunter -install -configdir=/usr/local/rulehunter
 ```
 
 Configuration
 -------------
-rulehuntersrv is configured using a `config.yaml` file as follows:
+rulehunter is configured using a `config.yaml` file as follows:
 ```YAML
 # The location of the experiment files
-experimentsDir: "/usr/local/rulehuntersrv/experiments"
+experimentsDir: "/usr/local/rulehunter/experiments"
 # The location of the html files produced
-wwwDir: "/var/www/rulehuntersrv"
+wwwDir: "/var/www/rulehunter"
 # The location of the build files created while running
-buildDir: "/usr/local/rulehuntersrv/build"
+buildDir: "/usr/local/rulehunter/build"
 # The source URL for the code to comply with the requirements of the AGPL
-# (default: https://github.com/vlifesystems/rulehuntersrv)
-sourceUrl: https://example.com/somecode/rulehuntersrv"
+# (default: https://github.com/vlifesystems/rulehunter)
+sourceUrl: https://example.com/somecode/rulehunter"
 # The user to use when running as a service
 user: rhuser
 # The maximum number of rules in a report
@@ -98,7 +98,7 @@ csv:
   hasHeader: true
   # What separator the CSV file is using
   separator:  ","
-# The names of the fields to be used by rulehuntersrv
+# The names of the fields to be used by rulehunter
 fieldNames:
   - group
   - district
@@ -215,11 +215,11 @@ To format the html pages properly [Twitter Boostrap](http://getbootstrap.com) is
 
 Contributing
 ------------
-If you want to improve this program make a pull request to the [repo](https://github.com/vlifesystems/rulehuntersrv) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/vlifesystems/rulehuntersrv/issues) also on github.
+If you want to improve this program make a pull request to the [repo](https://github.com/vlifesystems/rulehunter) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/vlifesystems/rulehunter/issues) also on github.
 
 Licence
 -------
-Rulehuntersrv - A server to find rules in data based on user specified goals
+Rulehunter - A server to find rules in data based on user specified goals
 
 Copyright (C) 2016 [vLife Systems Ltd](http://vlifesystems.com)
 
@@ -262,7 +262,7 @@ Licensed under the MIT license.  For details see [https://jquery.org/license/](h
 
 Copyright (c) 2014 Alexander Farkas (aFarkas).
 
-This is dual licensed under the MIT and GPL version 2 licence.  For the sake of Rulehuntersrv we will take it to be the MIT license as this makes it easier to combine with the Affero GPL version 3 license that Rulehuntersrv is licenced under.  For details see the licence file in `support/html5shiv`.
+This is dual licensed under the MIT and GPL version 2 licence.  For the sake of Rulehunter we will take it to be the MIT license as this makes it easier to combine with the Affero GPL version 3 license that Rulehunter is licenced under.  For details see the licence file in `support/html5shiv`.
 
 ### Respond
 

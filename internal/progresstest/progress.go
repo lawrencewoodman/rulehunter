@@ -3,7 +3,7 @@ package progresstest
 import (
 	"errors"
 	"fmt"
-	"github.com/vlifesystems/rulehuntersrv/progress"
+	"github.com/vlifesystems/rulehunter/progress"
 	"math"
 	"time"
 )

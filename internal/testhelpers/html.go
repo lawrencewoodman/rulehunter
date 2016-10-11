@@ -1,6 +1,6 @@
 package testhelpers
 
-import "github.com/vlifesystems/rulehuntersrv/html/cmd"
+import "github.com/vlifesystems/rulehunter/html/cmd"
 
 type htmlCmdMonitor struct {
 	htmlCmds     chan cmd.Cmd

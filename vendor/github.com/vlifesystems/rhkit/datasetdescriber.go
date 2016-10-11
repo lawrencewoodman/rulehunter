@@ -17,32 +17,26 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rulehunter
+package rhkit
 
-import "fmt"
-
-type fieldType int
-
-const (
-	ftUnknown fieldType = iota
-	ftIgnore
-	ftInt
-	ftFloat
-	ftString
+import (
+	"github.com/lawrencewoodman/ddataset"
 )
 
-func (ft fieldType) String() string {
-	switch ft {
-	case ftUnknown:
-		return "Unknown"
-	case ftIgnore:
-		return "Ignore"
-	case ftInt:
-		return "Int"
-	case ftFloat:
-		return "Float"
-	case ftString:
-		return "String"
+func DescribeDataset(
+	dataset ddataset.Dataset,
+) (*Description, error) {
+	description := newDescription()
+	conn, err := dataset.Open()
+	if err != nil {
+		return nil, err
 	}
-	panic(fmt.Sprintf("Unsupported type: %d", ft))
+	defer conn.Close()
+
+	for conn.Next() {
+		record := conn.Read()
+		description.NextRecord(record)
+	}
+
+	return description, conn.Err()
 }

@@ -1,5 +1,5 @@
 language: go
-go_import_path: github.com/vlifesystems/rulehuntersrv
+go_import_path: github.com/vlifesystems/rulehunter
 sudo: required
 
 go:

@@ -11,15 +11,15 @@
   "excludeFieldNames": ["flow"],
   "aggregators": [
     {
-      "name": "goodFlowAccuracy",
-      "function": "accuracy",
+      "name": "goodFlowMcc",
+      "function": "mcc",
       "arg": "flow > 60"
     }
   ],
-  "goals": ["goodFlowAccuracy > 10"],
+  "goals": ["goodFlowMcc > 10"],
   "sortOrder": [
     {
-      "aggregatorName": "goodFlowAccuracy",
+      "aggregatorName": "goodFlowMcc",
       "direction": "descending"
     },
     {

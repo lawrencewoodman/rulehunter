@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
-	"github.com/vlifesystems/rulehuntersrv/logger"
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
+	"github.com/vlifesystems/rulehunter/logger"
 )
 
 func TestMain(m *testing.M) {
@@ -44,7 +44,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestRulehuntersrv_service(t *testing.T) {
+func TestRulehunter_service(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t)
 	defer os.RemoveAll(cfgDir)
 	mustWriteConfig(t, cfgDir, 10)
@@ -54,8 +54,8 @@ func TestRulehuntersrv_service(t *testing.T) {
 		fmt.Sprintf("-configdir=%s", cfgDir),
 		"-install",
 	)
-	startService(t, "rulehuntersrv")
-	defer stopService(t, "rulehuntersrv")
+	startService(t, "rulehunter")
+	defer stopService(t, "rulehunter")
 
 	testhelpers.CopyFile(
 		t,

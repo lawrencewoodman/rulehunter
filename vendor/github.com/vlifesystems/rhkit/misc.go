@@ -17,26 +17,15 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rulehunter
+package rhkit
 
-import (
-	"github.com/lawrencewoodman/ddataset"
-)
+import "strings"
 
-func DescribeDataset(
-	dataset ddataset.Dataset,
-) (*Description, error) {
-	description := newDescription()
-	conn, err := dataset.Open()
-	if err != nil {
-		return nil, err
+func numDecPlaces(s string) int {
+	i := strings.IndexByte(s, '.')
+	if i > -1 {
+		s = strings.TrimRight(s, "0")
+		return len(s) - i - 1
 	}
-	defer conn.Close()
-
-	for conn.Next() {
-		record := conn.Read()
-		description.NextRecord(record)
-	}
-
-	return description, conn.Err()
+	return 0
 }

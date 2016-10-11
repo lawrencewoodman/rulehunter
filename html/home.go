@@ -1,5 +1,5 @@
 /*
-	rulehuntersrv - A server to find rules in data based on user specified goals
+	rulehunter - A server to find rules in data based on user specified goals
 	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
@@ -20,8 +20,8 @@
 package html
 
 import (
-	"github.com/vlifesystems/rulehuntersrv/config"
-	"github.com/vlifesystems/rulehuntersrv/progress"
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/progress"
 	"html/template"
 	"path/filepath"
 )

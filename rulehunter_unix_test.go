@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
-	"github.com/vlifesystems/rulehuntersrv/logger"
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
+	"github.com/vlifesystems/rulehunter/logger"
 )
 
 func TestSubMain_interrupt(t *testing.T) {

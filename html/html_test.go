@@ -2,11 +2,11 @@ package html
 
 import (
 	"fmt"
-	"github.com/vlifesystems/rulehuntersrv/config"
-	"github.com/vlifesystems/rulehuntersrv/html/cmd"
-	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
-	"github.com/vlifesystems/rulehuntersrv/progress"
-	"github.com/vlifesystems/rulehuntersrv/quitter"
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/html/cmd"
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
+	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/quitter"
 	"os"
 	"path/filepath"
 	"strconv"

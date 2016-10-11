@@ -22,30 +22,30 @@ package aggregators
 import (
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/goal"
-	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
+	"github.com/vlifesystems/rhkit/goal"
+	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 )
 
-type percentAggregator struct{}
+type recallAggregator struct{}
 
-type percentSpec struct {
+type recallSpec struct {
 	name string
 	expr *dexpr.Expr
 }
 
-type percentInstance struct {
-	spec       *percentSpec
-	numRecords int64
-	numMatches int64
+type recallInstance struct {
+	spec  *recallSpec
+	numTP int64
+	numFN int64
 }
 
-var percentExpr = dexpr.MustNew("roundto(100*numMatches/numRecords,2)")
+var recallExpr = dexpr.MustNew("roundto(numTP/(numTP+numFN),4)")
 
 func init() {
-	Register("percent", &percentAggregator{})
+	Register("recall", &recallAggregator{})
 }
 
-func (a *percentAggregator) MakeSpec(
+func (a *recallAggregator) MakeSpec(
 	name string,
 	expr string,
 ) (AggregatorSpec, error) {
@@ -53,62 +53,63 @@ func (a *percentAggregator) MakeSpec(
 	if err != nil {
 		return nil, err
 	}
-	d := &percentSpec{
+	d := &recallSpec{
 		name: name,
 		expr: dexpr,
 	}
 	return d, nil
 }
 
-func (ad *percentSpec) New() AggregatorInstance {
-	return &percentInstance{
-		spec:       ad,
-		numRecords: 0,
-		numMatches: 0,
+func (ad *recallSpec) New() AggregatorInstance {
+	return &recallInstance{
+		spec:  ad,
+		numTP: 0,
+		numFN: 0,
 	}
 }
 
-func (ad *percentSpec) GetName() string {
+func (ad *recallSpec) GetName() string {
 	return ad.name
 }
 
-func (ad *percentSpec) GetArg() string {
+func (ad *recallSpec) GetArg() string {
 	return ad.expr.String()
 }
 
-func (ai *percentInstance) GetName() string {
+func (ai *recallInstance) GetName() string {
 	return ai.spec.name
 }
 
-func (ai *percentInstance) NextRecord(
-	record map[string]*dlit.Literal,
-	isRuleTrue bool,
-) error {
-	countExprIsTrue, err := ai.spec.expr.EvalBool(record, dexprfuncs.CallFuncs)
+func (ai *recallInstance) NextRecord(record map[string]*dlit.Literal,
+	isRuleTrue bool) error {
+	matchExprIsTrue, err := ai.spec.expr.EvalBool(record, dexprfuncs.CallFuncs)
 	if err != nil {
 		return err
 	}
 	if isRuleTrue {
-		ai.numRecords++
-		if countExprIsTrue {
-			ai.numMatches++
+		if matchExprIsTrue {
+			ai.numTP++
+		}
+	} else {
+		if matchExprIsTrue {
+			ai.numFN++
 		}
 	}
 	return nil
 }
 
-func (ai *percentInstance) GetResult(
+func (ai *recallInstance) GetResult(
 	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
-	if ai.numRecords == 0 {
+	if ai.numTP == 0 && ai.numFN == 0 {
 		return dlit.MustNew(0)
 	}
 
 	vars := map[string]*dlit.Literal{
-		"numRecords": dlit.MustNew(ai.numRecords),
-		"numMatches": dlit.MustNew(ai.numMatches),
+		"numTP": dlit.MustNew(ai.numTP),
+		"numFN": dlit.MustNew(ai.numFN),
 	}
-	return percentExpr.Eval(vars, dexprfuncs.CallFuncs)
+	return recallExpr.Eval(vars, dexprfuncs.CallFuncs)
 }

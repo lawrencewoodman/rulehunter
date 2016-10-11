@@ -7,16 +7,16 @@ import (
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"github.com/lawrencewoodman/ddataset/dtruncate"
 	"github.com/lawrencewoodman/dexpr"
-	"github.com/vlifesystems/rulehunter/aggregators"
-	"github.com/vlifesystems/rulehunter/experiment"
-	"github.com/vlifesystems/rulehunter/goal"
-	"github.com/vlifesystems/rulehuntersrv/config"
-	"github.com/vlifesystems/rulehuntersrv/html/cmd"
-	"github.com/vlifesystems/rulehuntersrv/internal/progresstest"
-	"github.com/vlifesystems/rulehuntersrv/internal/testhelpers"
-	"github.com/vlifesystems/rulehuntersrv/logger"
-	"github.com/vlifesystems/rulehuntersrv/progress"
-	"github.com/vlifesystems/rulehuntersrv/quitter"
+	"github.com/vlifesystems/rhkit/aggregators"
+	"github.com/vlifesystems/rhkit/experiment"
+	"github.com/vlifesystems/rhkit/goal"
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/html/cmd"
+	"github.com/vlifesystems/rulehunter/internal/progresstest"
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
+	"github.com/vlifesystems/rulehunter/logger"
+	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/quitter"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -45,11 +45,11 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				ExcludeFieldNames: []string{"flow"},
 				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("goodFlowAccuracy", "accuracy", "flow > 60"),
+					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
 				},
-				Goals: []*goal.Goal{goal.MustNew("goodFlowAccuracy > 10")},
+				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
 				SortOrder: []experiment.SortField{
-					experiment.SortField{"goodFlowAccuracy", experiment.DESCENDING},
+					experiment.SortField{"goodFlowMcc", experiment.DESCENDING},
 					experiment.SortField{"numMatches", experiment.DESCENDING},
 				},
 			},
@@ -70,11 +70,11 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				ExcludeFieldNames: []string{"flow"},
 				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("goodFlowAccuracy", "accuracy", "flow > 60"),
+					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
 				},
-				Goals: []*goal.Goal{goal.MustNew("goodFlowAccuracy > 10")},
+				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
 				SortOrder: []experiment.SortField{
-					experiment.SortField{"goodFlowAccuracy", experiment.DESCENDING},
+					experiment.SortField{"goodFlowMcc", experiment.DESCENDING},
 					experiment.SortField{"numMatches", experiment.DESCENDING},
 				},
 			},
@@ -99,11 +99,11 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				ExcludeFieldNames: []string{"success"},
 				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("helpedAccuracy", "accuracy", "success"),
+					aggregators.MustNew("helpedMcc", "mcc", "success"),
 				},
-				Goals: []*goal.Goal{goal.MustNew("helpedAccuracy > 10")},
+				Goals: []*goal.Goal{goal.MustNew("helpedMcc > 0")},
 				SortOrder: []experiment.SortField{
-					experiment.SortField{"helpedAccuracy", experiment.DESCENDING},
+					experiment.SortField{"helpedMcc", experiment.DESCENDING},
 					experiment.SortField{"numMatches", experiment.DESCENDING},
 				},
 			},
@@ -121,11 +121,11 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				ExcludeFieldNames: []string{"flow"},
 				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("goodFlowAccuracy", "accuracy", "flow > 60"),
+					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
 				},
-				Goals: []*goal.Goal{goal.MustNew("goodFlowAccuracy > 10")},
+				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
 				SortOrder: []experiment.SortField{
-					experiment.SortField{"goodFlowAccuracy", experiment.DESCENDING},
+					experiment.SortField{"goodFlowMcc", experiment.DESCENDING},
 					experiment.SortField{"numMatches", experiment.DESCENDING},
 				},
 			},

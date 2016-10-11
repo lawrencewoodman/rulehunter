@@ -12,15 +12,15 @@
   },
   "aggregators": [
     {
-      "name": "accuracySuccess",
-      "function": "accuracy",
+      "name": "successMcc",
+      "function": "mcc",
       "arg": "success"
     }
   ],
-  "goals": ["accuracySuccess > 10"],
+  "goals": ["successMcc > 0"],
   "sortOrder": [
     {
-      "aggregatorName": "accuracySuccess",
+      "aggregatorName": "successMcc",
       "direction": "descending"
     }
   ]

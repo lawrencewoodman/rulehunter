@@ -1,4 +1,4 @@
-// Package testhelpers contains routines to help test rulehuntersrv
+// Package testhelpers contains routines to help test rulehunter
 package testhelpers
 
 import (
@@ -18,7 +18,7 @@ func BuildConfigDirs(t *testing.T) string {
 
 	tmpDir := TempDir(t)
 
-	// TODO: Create the www/* and build/* subdirectories from rulehuntersrv code
+	// TODO: Create the www/* and build/* subdirectories from rulehunter code
 	subDirs := []string{
 		"experiments",
 		"datasets",
@@ -54,7 +54,7 @@ func CopyFile(t *testing.T, srcFilename, dstDir string) {
 }
 
 func TempDir(t *testing.T) string {
-	tempDir, err := ioutil.TempDir("", "rulehuntersrv_test")
+	tempDir, err := ioutil.TempDir("", "rulehunter_test")
 	if err != nil {
 		t.Fatalf("TempDir() err: %s", err)
 	}

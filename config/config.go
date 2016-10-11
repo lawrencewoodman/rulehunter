@@ -1,5 +1,5 @@
 /*
-	rulehuntersrv - A server to find rules in data based on user specified goals
+	rulehunter - A server to find rules in data based on user specified goals
 	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
@@ -69,7 +69,7 @@ func Load(filename string) (*Config, error) {
 	}
 
 	if c.SourceURL == "" {
-		c.SourceURL = "https://github.com/vlifesystems/rulehuntersrv"
+		c.SourceURL = "https://github.com/vlifesystems/rulehunter"
 	}
 
 	if err := checkConfigValid(c); err != nil {

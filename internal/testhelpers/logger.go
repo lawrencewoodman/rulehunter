@@ -2,8 +2,8 @@ package testhelpers
 
 import (
 	"github.com/kardianos/service"
-	"github.com/vlifesystems/rulehuntersrv/logger"
-	"github.com/vlifesystems/rulehuntersrv/quitter"
+	"github.com/vlifesystems/rulehunter/logger"
+	"github.com/vlifesystems/rulehunter/quitter"
 	"time"
 )
 

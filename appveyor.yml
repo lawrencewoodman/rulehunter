@@ -7,7 +7,7 @@ platform:
 services:
   - mssql2014
 
-clone_folder: c:\gopath\src\github.com\vlifesystems\rulehuntersrv
+clone_folder: c:\gopath\src\github.com\vlifesystems\rulehunter
 
 environment:
   GOPATH: c:\gopath

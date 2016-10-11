@@ -23,7 +23,7 @@ package aggregators
 import (
 	"fmt"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/goal"
+	"github.com/vlifesystems/rhkit/goal"
 	"sync"
 )
 

@@ -22,29 +22,30 @@ package aggregators
 import (
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rulehunter/goal"
-	"github.com/vlifesystems/rulehunter/internal/dexprfuncs"
+	"github.com/vlifesystems/rhkit/goal"
+	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 )
 
-type accuracyAggregator struct{}
+type precisionAggregator struct{}
 
-type accuracySpec struct {
+type precisionSpec struct {
 	name string
 	expr *dexpr.Expr
 }
 
-type accuracyInstance struct {
-	spec       *accuracySpec
-	numMatches int64
+type precisionInstance struct {
+	spec  *precisionSpec
+	numTP int64
+	numFP int64
 }
 
-var accuracyExpr = dexpr.MustNew("roundto(100*numMatches/numRecords,2)")
+var precisionExpr = dexpr.MustNew("roundto(numTP/(numTP+numFP),4)")
 
 func init() {
-	Register("accuracy", &accuracyAggregator{})
+	Register("precision", &precisionAggregator{})
 }
 
-func (a *accuracyAggregator) MakeSpec(
+func (a *precisionAggregator) MakeSpec(
 	name string,
 	expr string,
 ) (AggregatorSpec, error) {
@@ -52,56 +53,61 @@ func (a *accuracyAggregator) MakeSpec(
 	if err != nil {
 		return nil, err
 	}
-	d := &accuracySpec{
+	d := &precisionSpec{
 		name: name,
 		expr: dexpr,
 	}
 	return d, nil
 }
 
-func (ad *accuracySpec) New() AggregatorInstance {
-	return &accuracyInstance{
-		spec:       ad,
-		numMatches: 0,
+func (ad *precisionSpec) New() AggregatorInstance {
+	return &precisionInstance{
+		spec:  ad,
+		numTP: 0,
+		numFP: 0,
 	}
 }
 
-func (ad *accuracySpec) GetName() string {
+func (ad *precisionSpec) GetName() string {
 	return ad.name
 }
 
-func (ad *accuracySpec) GetArg() string {
+func (ad *precisionSpec) GetArg() string {
 	return ad.expr.String()
 }
 
-func (ai *accuracyInstance) GetName() string {
+func (ai *precisionInstance) GetName() string {
 	return ai.spec.name
 }
 
-func (ai *accuracyInstance) NextRecord(record map[string]*dlit.Literal,
+func (ai *precisionInstance) NextRecord(record map[string]*dlit.Literal,
 	isRuleTrue bool) error {
 	matchExprIsTrue, err := ai.spec.expr.EvalBool(record, dexprfuncs.CallFuncs)
 	if err != nil {
 		return err
 	}
-	if isRuleTrue == matchExprIsTrue {
-		ai.numMatches++
+	if isRuleTrue {
+		if matchExprIsTrue {
+			ai.numTP++
+		} else {
+			ai.numFP++
+		}
 	}
 	return nil
 }
 
-func (ai *accuracyInstance) GetResult(
+func (ai *precisionInstance) GetResult(
 	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
-	if numRecords == 0 {
+	if ai.numTP == 0 && ai.numFP == 0 {
 		return dlit.MustNew(0)
 	}
 
 	vars := map[string]*dlit.Literal{
-		"numRecords": dlit.MustNew(numRecords),
-		"numMatches": dlit.MustNew(ai.numMatches),
+		"numTP": dlit.MustNew(ai.numTP),
+		"numFP": dlit.MustNew(ai.numFP),
 	}
-	return accuracyExpr.Eval(vars, dexprfuncs.CallFuncs)
+	return precisionExpr.Eval(vars, dexprfuncs.CallFuncs)
 }

@@ -15,13 +15,13 @@ fieldNames:
 excludeFieldNames:
   - flow
 aggregators:
-  - name: "goodFlowAccuracy"
-    function: "accuracy"
+  - name: "goodFlowMcc"
+    function: "mcc"
     arg: "flow > 60"
 goals:
-  - "goodFlowAccuracy > 10"
+  - "goodFlowMcc > 0"
 sortOrder:
-  - aggregatorName: "goodFlowAccuracy"
+  - aggregatorName: "goodFlowMcc"
     direction: "descending"
   - aggregatorName: "numMatches"
     direction: "descending"
