@@ -73,46 +73,46 @@
 			"revisionTime": "2016-05-14T12:23:48Z"
 		},
 		{
-			"checksumSHA1": "6Xh1qdLBiDSGEHJ3vjlkfCOtVzc=",
+			"checksumSHA1": "8zDSNnqCAoEB636w+9NGPKBIAzw=",
 			"path": "github.com/vlifesystems/rhkit",
-			"revision": "e775c022b0900c2c374ffbdc423b14d21f62cfcf",
-			"revisionTime": "2016-10-11T10:29:44Z"
+			"revision": "8cdc0e179e4a30ad4f29c288f9f80d144b4ac403",
+			"revisionTime": "2016-10-12T06:11:42Z"
 		},
 		{
-			"checksumSHA1": "qHusyWTXKt8xx68SjG7IaR/d5fc=",
+			"checksumSHA1": "CLsyGnx52roOvVEkpQrMFY52Y98=",
 			"path": "github.com/vlifesystems/rhkit/aggregators",
-			"revision": "e775c022b0900c2c374ffbdc423b14d21f62cfcf",
-			"revisionTime": "2016-10-11T10:29:44Z"
+			"revision": "8cdc0e179e4a30ad4f29c288f9f80d144b4ac403",
+			"revisionTime": "2016-10-12T06:11:42Z"
 		},
 		{
-			"checksumSHA1": "5vaRIKKEJ2l3cC/ef9fJlLlMpYg=",
+			"checksumSHA1": "M26m7O2xjZPuAYgixn/q6tbw39g=",
 			"path": "github.com/vlifesystems/rhkit/experiment",
-			"revision": "e775c022b0900c2c374ffbdc423b14d21f62cfcf",
-			"revisionTime": "2016-10-11T10:29:44Z"
+			"revision": "8cdc0e179e4a30ad4f29c288f9f80d144b4ac403",
+			"revisionTime": "2016-10-12T06:11:42Z"
 		},
 		{
-			"checksumSHA1": "Fr2wtMPBnm/h3H122giJJG4e7cQ=",
+			"checksumSHA1": "QXUOHRe861r7tzGp7kJBssqCwA0=",
 			"path": "github.com/vlifesystems/rhkit/goal",
-			"revision": "e775c022b0900c2c374ffbdc423b14d21f62cfcf",
-			"revisionTime": "2016-10-11T10:29:44Z"
+			"revision": "8cdc0e179e4a30ad4f29c288f9f80d144b4ac403",
+			"revisionTime": "2016-10-12T06:11:42Z"
 		},
 		{
-			"checksumSHA1": "ybTfaojBGHT+MmrYxe6B59e3qIw=",
+			"checksumSHA1": "tpL0KMtuA0eI+CD1V6NM+yH8FaM=",
 			"path": "github.com/vlifesystems/rhkit/internal",
-			"revision": "e775c022b0900c2c374ffbdc423b14d21f62cfcf",
-			"revisionTime": "2016-10-11T10:29:44Z"
+			"revision": "8cdc0e179e4a30ad4f29c288f9f80d144b4ac403",
+			"revisionTime": "2016-10-12T06:11:42Z"
 		},
 		{
-			"checksumSHA1": "OgMtUXUS5uMYZYFJIR5R9nycteg=",
+			"checksumSHA1": "TjoTQWE/EbBdgtK8++pME8RuPOc=",
 			"path": "github.com/vlifesystems/rhkit/internal/dexprfuncs",
-			"revision": "e775c022b0900c2c374ffbdc423b14d21f62cfcf",
-			"revisionTime": "2016-10-11T10:29:44Z"
+			"revision": "8cdc0e179e4a30ad4f29c288f9f80d144b4ac403",
+			"revisionTime": "2016-10-12T06:11:42Z"
 		},
 		{
-			"checksumSHA1": "SfKhQirbKDvQ7w6nHi376CTY7Rs=",
+			"checksumSHA1": "Fyv5uB03P+FtRc4tw1utpZFuigs=",
 			"path": "github.com/vlifesystems/rhkit/rule",
-			"revision": "e775c022b0900c2c374ffbdc423b14d21f62cfcf",
-			"revisionTime": "2016-10-11T10:29:44Z"
+			"revision": "8cdc0e179e4a30ad4f29c288f9f80d144b4ac403",
+			"revisionTime": "2016-10-12T06:11:42Z"
 		},
 		{
 			"checksumSHA1": "MCeXr2RNeiG1XG6V+er1OR0qyeo=",
