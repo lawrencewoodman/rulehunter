@@ -10,7 +10,7 @@ A server to find rules in data based on user specified goals
 Getting Started
 ---------------
 * Download and install [Go](https://golang.org/)
-* Follow the [installation](http://rulehunter.com/docs/installation/) instructions
+* Follow the Rulehunter [installation](http://rulehunter.com/docs/installation/) instructions
 * Read about its [configuration](http://rulehunter.com/docs/configuration/) and [usage](http://rulehunter.com/docs/usage/)
 * Start creating [experiments](http://rulehunter.com/docs/experiments/)
 * See the [Rulehunter](http://rulehunter.com) website for more information
