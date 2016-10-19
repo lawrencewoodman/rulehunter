@@ -31,7 +31,7 @@ const navTpl = `
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand" href="/">RuleHunter</a>
+			<a class="navbar-brand" href="/">Rulehunter</a>
 		</div>
 
 		<div id="navbar" class="collapse navbar-collapse">
