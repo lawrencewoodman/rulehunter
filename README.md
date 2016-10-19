@@ -36,7 +36,7 @@ These have all be vendored into the `vendor/` directory using the
 
 * [dexpr](https://github.com/lawrencewoodman/dexpr) package
 * [dlit](https://github.com/lawrencewoodman/dlit) package
-* [rulehunter](https://github.com/vlifesystems/rulehunter) package
+* [rhkit](https://github.com/vlifesystems/rhkit) package
 * [osext](https://github.com/kardianos/osext) package
 * [service](https://github.com/kardianos/service) package
 * [go-mssqldb](https://github.com/denisenkom/go-mssqldb) package
