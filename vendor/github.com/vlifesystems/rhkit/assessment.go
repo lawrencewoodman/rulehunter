@@ -144,7 +144,8 @@ func (sortedAssessment *Assessment) Refine(numSimilarRules int) {
 		panic("Assessment isn't sorted")
 	}
 	sortedAssessment.excludePoorRules()
-	sortedAssessment.excludePoorerInNiRules(numSimilarRules)
+	sortedAssessment.excludeSameRecordsRules()
+	sortedAssessment.excludePoorerInRules(numSimilarRules)
 	sortedAssessment.excludePoorerTweakableRules(numSimilarRules)
 	sortedAssessment.flags["refined"] = true
 }
@@ -224,6 +225,40 @@ func (a *Assessment) GetRules(args ...int) []rule.Rule {
 	return r
 }
 
+func (sortedAssessment *Assessment) excludeSameRecordsRules() {
+	if len(sortedAssessment.RuleAssessments) < 2 {
+		return
+	}
+	lastAggregators := sortedAssessment.RuleAssessments[1].Aggregators
+	if len(lastAggregators) <= 3 {
+		return
+	}
+
+	goodRuleAssessments := make([]*RuleAssessment, 1)
+	goodRuleAssessments[0] = sortedAssessment.RuleAssessments[0]
+	for _, a := range sortedAssessment.RuleAssessments[1:] {
+		aggregatorsMatch := true
+		for k, v := range lastAggregators {
+			if a.Aggregators[k].String() != v.String() {
+				aggregatorsMatch = false
+			}
+		}
+		_, isTrueRule := a.Rule.(rule.True)
+		if isTrueRule {
+			if aggregatorsMatch {
+				goodRuleAssessments[len(goodRuleAssessments)-1] = a
+			} else {
+				goodRuleAssessments = append(goodRuleAssessments, a)
+			}
+			break
+		} else if !aggregatorsMatch {
+			goodRuleAssessments = append(goodRuleAssessments, a)
+		}
+		lastAggregators = a.Aggregators
+	}
+	sortedAssessment.RuleAssessments = goodRuleAssessments
+}
+
 func (sortedAssessment *Assessment) excludePoorRules() {
 	trueFound := false
 	goodRuleAssessments := make([]*RuleAssessment, 0)
@@ -246,18 +281,18 @@ func (sortedAssessment *Assessment) excludePoorRules() {
 	sortedAssessment.RuleAssessments = goodRuleAssessments
 }
 
-func (sortedAssessment *Assessment) excludePoorerInNiRules(
+func (sortedAssessment *Assessment) excludePoorerInRules(
 	numSimilarRules int,
 ) {
 	goodRuleAssessments := make([]*RuleAssessment, 0)
 	inFields := make(map[string]int)
-	niFields := make(map[string]int)
 	for _, a := range sortedAssessment.RuleAssessments {
-		rule := a.Rule
-		isInNiRule, operator, field := rule.GetInNiParts()
-		if !isInNiRule {
+		r := a.Rule
+		inRule, isInRule := r.(*rule.InFV)
+		if !isInRule {
 			goodRuleAssessments = append(goodRuleAssessments, a)
-		} else if operator == "in" {
+		} else {
+			field := inRule.GetFields()[0]
 			n, ok := inFields[field]
 			if !ok {
 				goodRuleAssessments = append(goodRuleAssessments, a)
@@ -265,15 +300,6 @@ func (sortedAssessment *Assessment) excludePoorerInNiRules(
 			} else if n < numSimilarRules {
 				goodRuleAssessments = append(goodRuleAssessments, a)
 				inFields[field]++
-			}
-		} else if operator == "ni" {
-			n, ok := niFields[field]
-			if !ok {
-				goodRuleAssessments = append(goodRuleAssessments, a)
-				niFields[field] = 1
-			} else if n < numSimilarRules {
-				goodRuleAssessments = append(goodRuleAssessments, a)
-				niFields[field]++
 			}
 		}
 	}

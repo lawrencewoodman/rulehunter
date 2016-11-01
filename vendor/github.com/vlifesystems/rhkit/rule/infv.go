@@ -31,7 +31,7 @@ type InFV struct {
 	values []*dlit.Literal
 }
 
-func NewInFV(field string, values []*dlit.Literal) Rule {
+func NewInFV(field string, values []*dlit.Literal) *InFV {
 	if len(values) == 0 {
 		panic("NewInFV: Must contain at least one value")
 	}
@@ -46,8 +46,8 @@ func (r *InFV) String() string {
 	return makeInFVString(r.field, r.values)
 }
 
-func (r *InFV) GetInNiParts() (bool, string, string) {
-	return true, "in", r.field
+func (r *InFV) GetFields() []string {
+	return []string{r.field}
 }
 
 func (r *InFV) IsTrue(record ddataset.Record) (bool, error) {

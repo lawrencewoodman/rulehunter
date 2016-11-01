@@ -37,10 +37,6 @@ func (r *GEFF) String() string {
 	return r.fieldA + " >= " + r.fieldB
 }
 
-func (r *GEFF) GetInNiParts() (bool, string, string) {
-	return false, "", ""
-}
-
 func (r *GEFF) IsTrue(record ddataset.Record) (bool, error) {
 	lh, ok := record[r.fieldA]
 	if !ok {

@@ -42,10 +42,6 @@ func (r *LEFVI) GetTweakableParts() (string, string, string) {
 	return r.field, "<=", fmt.Sprintf("%d", r.value)
 }
 
-func (r *LEFVI) GetInNiParts() (bool, string, string) {
-	return false, "", ""
-}
-
 func (r *LEFVI) IsTrue(record ddataset.Record) (bool, error) {
 	lh, ok := record[r.field]
 	if !ok {

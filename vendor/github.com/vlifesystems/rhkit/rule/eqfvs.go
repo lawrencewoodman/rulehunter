@@ -38,10 +38,6 @@ func (r *EQFVS) String() string {
 	return fmt.Sprintf("%s == \"%s\"", r.field, r.value)
 }
 
-func (r *EQFVS) GetInNiParts() (bool, string, string) {
-	return false, "", ""
-}
-
 func (r *EQFVS) IsTrue(record ddataset.Record) (bool, error) {
 	lh, ok := record[r.field]
 	if !ok {

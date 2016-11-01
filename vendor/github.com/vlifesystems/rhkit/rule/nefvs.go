@@ -38,10 +38,6 @@ func (r *NEFVS) String() string {
 	return fmt.Sprintf("%s != \"%s\"", r.field, r.value)
 }
 
-func (r *NEFVS) GetInNiParts() (bool, string, string) {
-	return false, "", ""
-}
-
 func (r *NEFVS) IsTrue(record ddataset.Record) (bool, error) {
 	lh, ok := record[r.field]
 	if !ok {

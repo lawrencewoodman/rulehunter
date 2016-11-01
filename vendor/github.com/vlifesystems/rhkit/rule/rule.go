@@ -28,7 +28,6 @@ import (
 
 type Rule interface {
 	fmt.Stringer
-	GetInNiParts() (bool, string, string)
 	IsTrue(record ddataset.Record) (bool, error)
 }
 

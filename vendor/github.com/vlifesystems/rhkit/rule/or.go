@@ -39,10 +39,6 @@ func (r *Or) String() string {
 	return fmt.Sprintf("%s || %s", r.ruleA, r.ruleB)
 }
 
-func (r *Or) GetInNiParts() (bool, string, string) {
-	return false, "", ""
-}
-
 func (r *Or) IsTrue(record ddataset.Record) (bool, error) {
 	lh, err := r.ruleA.IsTrue(record)
 	if err != nil {

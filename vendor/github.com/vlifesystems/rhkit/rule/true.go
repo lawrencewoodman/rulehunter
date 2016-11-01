@@ -35,10 +35,6 @@ func (r True) String() string {
 	return "true()"
 }
 
-func (r True) GetInNiParts() (bool, string, string) {
-	return false, "", ""
-}
-
 func (r True) IsTrue(record ddataset.Record) (bool, error) {
 	return true, nil
 }

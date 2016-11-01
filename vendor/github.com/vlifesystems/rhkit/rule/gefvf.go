@@ -43,10 +43,6 @@ func (r *GEFVF) GetTweakableParts() (string, string, string) {
 	return r.field, ">=", strconv.FormatFloat(r.value, 'f', -1, 64)
 }
 
-func (r *GEFVF) GetInNiParts() (bool, string, string) {
-	return false, "", ""
-}
-
 func (r *GEFVF) IsTrue(record ddataset.Record) (bool, error) {
 	lh, ok := record[r.field]
 	if !ok {

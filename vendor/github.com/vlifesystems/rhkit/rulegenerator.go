@@ -45,7 +45,7 @@ func GenerateRules(
 	ruleGenerators := []ruleGeneratorFunc{
 		generateIntRules, generateFloatRules, generateStringRules,
 		generateCompareNumericRules, generateCompareStringRules,
-		generateInNiRules,
+		generateInRules,
 	}
 	rules[0] = rule.NewTrue()
 	for field, _ := range inputDescription.fields {
@@ -345,7 +345,7 @@ func rulesMapToArray(rulesMap map[string]rule.Rule) []rule.Rule {
 	return rules
 }
 
-func generateInNiRules(
+func generateInRules(
 	inputDescription *Description,
 	excludeFields []string,
 	field string,
@@ -359,10 +359,6 @@ func generateInNiRules(
 		return []rule.Rule{}, nil
 	}
 	rulesMap := make(map[string]rule.Rule)
-	ruleNewFuncs := []func(string, []*dlit.Literal) rule.Rule{
-		rule.NewInFV,
-		rule.NewNiFV,
-	}
 	for i := 3; ; i++ {
 		numOnBits := calcNumOnBits(i)
 		if numOnBits >= numValues {
@@ -370,10 +366,8 @@ func generateInNiRules(
 		}
 		if numOnBits >= 2 && numOnBits <= 5 && numOnBits < (numValues-1) {
 			compareValues := makeCompareValues(fd.values, i)
-			for _, ruleNewFunc := range ruleNewFuncs {
-				r := ruleNewFunc(field, compareValues)
-				rulesMap[r.String()] = r
-			}
+			r := rule.NewInFV(field, compareValues)
+			rulesMap[r.String()] = r
 		}
 	}
 	rules := rulesMapToArray(rulesMap)
