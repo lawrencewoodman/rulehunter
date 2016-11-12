@@ -43,7 +43,7 @@ func TestLoadExperiment(t *testing.T) {
 					rune(','),
 					[]string{"group", "district", "height", "flow"},
 				),
-				ExcludeFieldNames: []string{"flow"},
+				RuleFieldNames: []string{"group", "district", "height"},
 				Aggregators: []aggregators.AggregatorSpec{
 					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
 				},
@@ -68,7 +68,7 @@ func TestLoadExperiment(t *testing.T) {
 					),
 					4,
 				),
-				ExcludeFieldNames: []string{"flow"},
+				RuleFieldNames: []string{"group", "district", "height"},
 				Aggregators: []aggregators.AggregatorSpec{
 					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
 				},
@@ -97,7 +97,13 @@ func TestLoadExperiment(t *testing.T) {
 						"success",
 					},
 				),
-				ExcludeFieldNames: []string{"success"},
+				RuleFieldNames: []string{
+					"name",
+					"balance",
+					"numCards",
+					"martialStatus",
+					"tertiaryEducated",
+				},
 				Aggregators: []aggregators.AggregatorSpec{
 					aggregators.MustNew("helpedMcc", "mcc", "success"),
 				},
@@ -119,7 +125,7 @@ func TestLoadExperiment(t *testing.T) {
 					rune(','),
 					[]string{"group", "district", "height", "flow"},
 				),
-				ExcludeFieldNames: []string{"flow"},
+				RuleFieldNames: []string{"group", "district", "height"},
 				Aggregators: []aggregators.AggregatorSpec{
 					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
 				},
@@ -373,6 +379,98 @@ func TestProcess(t *testing.T) {
 	// TODO: Test files generated
 }
 
+func TestProcess_errors(t *testing.T) {
+	cfgDir := testhelpers.BuildConfigDirs(t)
+	defer os.RemoveAll(cfgDir)
+	cfg := &config.Config{
+		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+		WWWDir:            filepath.Join(cfgDir, "www"),
+		BuildDir:          filepath.Join(cfgDir, "build"),
+		MaxNumRecords:     100,
+		MaxNumProcesses:   4,
+		MaxNumReportRules: 100,
+	}
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "flow_div_zero.yaml"),
+		cfg.ExperimentsDir,
+	)
+	wantLogEntries := []logger.Entry{
+		{Level: logger.Info,
+			Msg: "Processing experiment: flow_div_zero.yaml",
+		},
+		{Level: logger.Error,
+			Msg: "Failed processing experiment: flow_div_zero.yaml - invalid expression: numMatches / 0 (divide by zero)",
+		},
+	}
+	wantPMExperiments := []*progress.Experiment{
+		&progress.Experiment{
+			Title:              "What would indicate good flow?",
+			Tags:               []string{"test", "fred / ned"},
+			Stamp:              time.Now(),
+			ExperimentFilename: "flow_div_zero.yaml",
+			Msg:                "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)",
+			Status:             progress.Failure,
+		},
+	}
+
+	q := quitter.New()
+	l := testhelpers.NewLogger()
+	go l.Run(q)
+	htmlCmds := make(chan cmd.Cmd)
+	defer close(htmlCmds)
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
+	pm, err := progress.NewMonitor(
+		filepath.Join(cfg.BuildDir, "progress"),
+		htmlCmds,
+	)
+	if err != nil {
+		t.Fatalf("progress.NewMonitor: err: %v", err)
+	}
+	wantErr := "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)"
+	if err := Process("flow_div_zero.yaml", cfg, l, pm); err.Error() != wantErr {
+		t.Fatalf("Process: got err: %v, wantErr: %v", err, wantErr)
+	}
+
+	testStart := time.Now()
+	gotCorrectLogEntries := false
+	for !gotCorrectLogEntries && time.Since(testStart).Seconds() < 5 {
+		if reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
+			gotCorrectLogEntries = true
+		}
+	}
+	if !gotCorrectLogEntries {
+		t.Errorf("l.GetEntries() got: %v, want: %v", l.GetEntries(), wantLogEntries)
+	}
+
+	err = progresstest.CheckExperimentsMatch(
+		pm.GetExperiments(),
+		wantPMExperiments,
+	)
+	if err != nil {
+		t.Errorf("checkExperimentsMatch() err: %s", err)
+	}
+
+	/*
+	 *	Check html commands received == {Progress,Progress,Progress,...}
+	 */
+	htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
+	numCmds := len(htmlCmdsReceived)
+	if numCmds < 2 {
+		t.Errorf("GetCmdsRecevied() received less than 2 commands")
+	}
+	for _, c := range htmlCmdsReceived {
+		if c != cmd.Progress {
+			t.Errorf(
+				"GetCmdsRecevied() commands not all equal to Progress, found: %s",
+				c,
+			)
+		}
+	}
+	// TODO: Test files generated
+}
+
 func TestMakeDataset(t *testing.T) {
 	cases := []struct {
 		dataSourceName string
@@ -457,8 +555,8 @@ func checkExperimentMatch(
 	if e1.Title != e2.Title {
 		return errors.New("Titles don't match")
 	}
-	if !areStringArraysEqual(e1.ExcludeFieldNames, e2.ExcludeFieldNames) {
-		return errors.New("ExcludeFieldNames don't match")
+	if !areStringArraysEqual(e1.RuleFieldNames, e2.RuleFieldNames) {
+		return errors.New("RuleFieldNames don't match")
 	}
 	if !areGoalExpressionsEqual(e1.Goals, e2.Goals) {
 		return errors.New("Goals don't match")

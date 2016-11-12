@@ -20,7 +20,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/experiment"
@@ -76,6 +75,7 @@ func (p *program) ProcessDir() (int, bool) {
 	numProcessed := 0
 	ifLoggedError := false
 	for _, experimentFilename := range experimentFilenames {
+		numProcessed++
 		err := experiment.Process(
 			experimentFilename,
 			p.config,
@@ -83,9 +83,6 @@ func (p *program) ProcessDir() (int, bool) {
 			p.progressMonitor,
 		)
 		if err != nil {
-			msg := fmt.Sprintf("Failed processing experiment: %s - %s",
-				experimentFilename, err)
-			p.logger.Error(msg)
 			ifLoggedError = true
 		}
 	}

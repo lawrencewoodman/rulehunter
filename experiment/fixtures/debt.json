@@ -15,7 +15,13 @@
 		"tertiaryEducated",
 		"success"
   ],
-  "excludeFieldNames": ["success"],
+  "ruleFieldNames": [
+		"name",
+		"balance",
+		"numCards",
+		"martialStatus",
+		"tertiaryEducated"
+  ],
   "aggregators": [
     {
       "name": "helpedMcc",

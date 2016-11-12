@@ -37,24 +37,24 @@ import (
 	"github.com/vlifesystems/rulehunter/report"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
 type experimentFile struct {
-	Title             string                         `yaml:"title"`
-	Tags              []string                       `yaml:"tags"`
-	Dataset           string                         `yaml:"dataset"`
-	Csv               *csvDesc                       `yaml:"csv"`
-	Sql               *sqlDesc                       `yaml:"sql"`
-	FieldNames        []string                       `yaml:"fieldNames"`
-	ExcludeFieldNames []string                       `yaml:"excludeFieldNames"`
-	Aggregators       []*rhexperiment.AggregatorDesc `yaml:"aggregators"`
-	Goals             []string                       `yaml:"goals"`
-	SortOrder         []*sortDesc                    `yaml:"sortOrder"`
+	Title          string                         `yaml:"title"`
+	Tags           []string                       `yaml:"tags"`
+	Dataset        string                         `yaml:"dataset"`
+	Csv            *csvDesc                       `yaml:"csv"`
+	Sql            *sqlDesc                       `yaml:"sql"`
+	FieldNames     []string                       `yaml:"fieldNames"`
+	RuleFieldNames []string                       `yaml:"ruleFieldNames"`
+	Aggregators    []*rhexperiment.AggregatorDesc `yaml:"aggregators"`
+	Goals          []string                       `yaml:"goals"`
+	SortOrder      []*sortDesc                    `yaml:"sortOrder"`
 	// An expression that works out whether to run the experiment
 	When string `yaml:"when"`
 }
@@ -118,33 +118,44 @@ func Process(
 	}
 
 	l.Info(fmt.Sprintf("Processing experiment: %s", experimentFilename))
-
 	err = epr.UpdateDetails(experiment.Title, tags)
 	if err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		return err
 	}
 
 	if err := epr.ReportInfo("Describing dataset"); err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		return err
 	}
 	fieldDescriptions, err := rhkit.DescribeDataset(experiment.Dataset)
 	if err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		fullErr := fmt.Errorf("Couldn't describe dataset: %s", err)
 		return epr.ReportError(fullErr)
 	}
 
 	if err := epr.ReportInfo("Generating rules"); err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		return err
 	}
 	rules, err :=
-		rhkit.GenerateRules(fieldDescriptions, experiment.ExcludeFieldNames)
+		rhkit.GenerateRules(fieldDescriptions, experiment.RuleFieldNames)
 	if err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		fullErr := fmt.Errorf("Couldn't generate rules: %s", err)
 		return epr.ReportError(fullErr)
 	}
 
 	assessment, err := assessRules(1, rules, experiment, epr, cfg)
 	if err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
 	}
@@ -154,18 +165,24 @@ func Process(
 	sortedRules := assessment.GetRules()
 
 	if err := epr.ReportInfo("Tweaking rules"); err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		return err
 	}
 	tweakableRules := rhkit.TweakRules(sortedRules, fieldDescriptions)
 
 	assessment2, err := assessRules(2, tweakableRules, experiment, epr, cfg)
 	if err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
 	}
 
 	assessment3, err := assessment.Merge(assessment2)
 	if err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
 		return epr.ReportError(fullErr)
 	}
@@ -178,12 +195,16 @@ func Process(
 
 	assessment4, err := assessRules(3, combinedRules, experiment, epr, cfg)
 	if err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
 	}
 
 	assessment5, err := assessment3.Merge(assessment4)
 	if err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
 		return epr.ReportError(fullErr)
 	}
@@ -200,11 +221,15 @@ func Process(
 		cfg,
 	)
 	if err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		fullErr := fmt.Errorf("Couldn't write json report: %s", err)
 		return epr.ReportError(fullErr)
 	}
 
 	if err := epr.ReportSuccess(); err != nil {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFilename, err))
 		return err
 	}
 
@@ -250,12 +275,12 @@ func loadExperiment(filename string, maxNumRecords int) (
 	}
 
 	experimentDesc := &rhexperiment.ExperimentDesc{
-		Title:         e.Title,
-		Dataset:       dataset,
-		ExcludeFields: e.ExcludeFieldNames,
-		Aggregators:   e.Aggregators,
-		Goals:         e.Goals,
-		SortOrder:     makeRHSortOrder(e.SortOrder),
+		Title:       e.Title,
+		Dataset:     dataset,
+		RuleFields:  e.RuleFieldNames,
+		Aggregators: e.Aggregators,
+		Goals:       e.Goals,
+		SortOrder:   makeRHSortOrder(e.SortOrder),
 	}
 	experiment, err = rhexperiment.New(experimentDesc)
 	if err != nil {
@@ -368,6 +393,73 @@ func (e *experimentFile) checkValid() error {
 	return nil
 }
 
+func assessRulesWorker(
+	wg *sync.WaitGroup,
+	rules []rule.Rule,
+	experiment *rhexperiment.Experiment,
+	jobs <-chan assessJob,
+	results chan<- assessJobResult,
+) {
+	defer wg.Done()
+	for j := range jobs {
+		rulesPartial := rules[j.startRuleNum:j.endRuleNum]
+		assessment, err := rhkit.AssessRules(rulesPartial, experiment)
+		if err != nil {
+			results <- assessJobResult{assessment: nil, err: err}
+			return
+		}
+		results <- assessJobResult{assessment: assessment, err: nil}
+	}
+}
+
+func assessCollectResults(
+	epr *progress.ExperimentProgressReporter,
+	stage int,
+	numJobs int,
+	results <-chan assessJobResult,
+	assessmentC chan<- *rhkit.Assessment,
+	errC chan<- error,
+) {
+	var assessment *rhkit.Assessment
+	var err error
+	jobNum := 0
+	for r := range results {
+		jobNum++
+		if r.err != nil {
+			errC <- r.err
+			return
+		}
+		if assessment == nil {
+			assessment = r.assessment
+		} else {
+			assessment, err = assessment.Merge(r.assessment)
+			if err != nil {
+				errC <- err
+				return
+			}
+		}
+		progress := jobNum / numJobs
+		msg := fmt.Sprintf("Assessing rules %d/%d: %.2f%%",
+			stage, assessRulesNumStages, progress)
+		if err := epr.ReportInfo(msg); err != nil {
+			errC <- err
+			return
+		}
+	}
+	assessmentC <- assessment
+}
+
+func assessCreateJobs(numRules int, step int, jobs chan<- assessJob) {
+	for i := 0; i < numRules; i += step {
+		nextI := i + step
+		if nextI > numRules {
+			nextI = numRules
+		}
+		jobs <- assessJob{startRuleNum: i, endRuleNum: nextI}
+	}
+	close(jobs)
+}
+
 func assessRules(
 	stage int,
 	rules []rule.Rule,
@@ -376,7 +468,12 @@ func assessRules(
 	cfg *config.Config,
 ) (*rhkit.Assessment, error) {
 	var wg sync.WaitGroup
-	var rulesProcessed uint64 = 0
+	progressIntervals := 1000
+	numRules := len(rules)
+	jobs := make(chan assessJob, 100)
+	results := make(chan assessJobResult, 100)
+	assessmentC := make(chan *rhkit.Assessment, 1)
+	errC := make(chan error, 1)
 
 	if stage > assessRulesNumStages {
 		panic("assessRules: stage > assessRulesNumStages")
@@ -387,79 +484,39 @@ func assessRules(
 		return nil, err
 	}
 
-	numRules := len(rules)
-	if numRules < 2 {
-		assessment, err := rhkit.AssessRules(rules, experiment)
-		if err != nil {
-			return nil, err
-		}
-		return assessment, err
+	for i := 0; i < cfg.MaxNumProcesses; i++ {
+		wg.Add(1)
+		go assessRulesWorker(&wg, rules, experiment, jobs, results)
 	}
 
-	progressIntervals := 1000
 	if numRules < progressIntervals {
 		progressIntervals = numRules
 	}
-
-	assessJobs := make(chan assessJob, progressIntervals)
-	assessJobResults := make(chan assessJobOutcome, progressIntervals)
-
-	for i := 0; i < cfg.MaxNumProcesses; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for j := range assessJobs {
-				rulesPartial := rules[j.startRuleNum:j.endRuleNum]
-				assessment, err := rhkit.AssessRules(rulesPartial, experiment)
-				if err != nil {
-					assessJobResults <- assessJobOutcome{assessment: nil, err: err}
-					return
-				}
-				atomic.AddUint64(&rulesProcessed, uint64(len(assessment.RuleAssessments)))
-				progress :=
-					float64(atomic.LoadUint64(&rulesProcessed)) / float64(numRules) * 100.0
-				msg := fmt.Sprintf("Assessing rules %d/%d: %.2f%%",
-					stage, assessRulesNumStages, progress)
-				if err := epr.ReportInfo(msg); err != nil {
-					assessJobResults <- assessJobOutcome{assessment: nil, err: err}
-					return
-				}
-				assessJobResults <- assessJobOutcome{assessment: assessment, err: nil}
-			}
-		}()
-	}
-
 	step := numRules / progressIntervals
-	for i := 0; i < numRules; i += step {
-		nextI := i + step
-		if nextI > numRules {
-			nextI = numRules
-		}
-		assessJobs <- assessJob{startRuleNum: i, endRuleNum: nextI}
+	if step < 10 {
+		step = 10
 	}
-	close(assessJobs)
-
+	numJobs := int(math.Ceil(float64(numRules) / float64(step)))
+	go assessCollectResults(
+		epr,
+		stage,
+		numJobs,
+		results,
+		assessmentC,
+		errC,
+	)
+	go assessCreateJobs(numRules, step, jobs)
 	go func() {
 		wg.Wait()
-		close(assessJobResults)
+		close(results)
 	}()
 
-	var assessment *rhkit.Assessment
-	var err error
-	for r := range assessJobResults {
-		if r.err != nil {
-			return nil, r.err
-		}
-		if assessment == nil {
-			assessment = r.assessment
-		} else {
-			assessment, err = assessment.Merge(r.assessment)
-			if err != nil {
-				return nil, err
-			}
-		}
+	select {
+	case assessment := <-assessmentC:
+		return assessment, nil
+	case err := <-errC:
+		return nil, err
 	}
-	return assessment, nil
 }
 
 type assessJob struct {
@@ -467,7 +524,7 @@ type assessJob struct {
 	endRuleNum   int
 }
 
-type assessJobOutcome struct {
+type assessJobResult struct {
 	assessment *rhkit.Assessment
 	err        error
 }

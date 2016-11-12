@@ -30,12 +30,12 @@ import (
 )
 
 type ExperimentDesc struct {
-	Title         string
-	Dataset       ddataset.Dataset
-	ExcludeFields []string
-	Aggregators   []*AggregatorDesc
-	Goals         []string
-	SortOrder     []*SortDesc
+	Title       string
+	Dataset     ddataset.Dataset
+	RuleFields  []string
+	Aggregators []*AggregatorDesc
+	Goals       []string
+	SortOrder   []*SortDesc
 }
 
 type AggregatorDesc struct {
@@ -50,12 +50,12 @@ type SortDesc struct {
 }
 
 type Experiment struct {
-	Title             string
-	Dataset           ddataset.Dataset
-	ExcludeFieldNames []string
-	Aggregators       []aggregators.AggregatorSpec
-	Goals             []*goal.Goal
-	SortOrder         []SortField
+	Title          string
+	Dataset        ddataset.Dataset
+	RuleFieldNames []string
+	Aggregators    []aggregators.AggregatorSpec
+	Goals          []*goal.Goal
+	SortOrder      []SortField
 }
 
 type SortField struct {
@@ -103,12 +103,12 @@ func New(e *ExperimentDesc) (*Experiment, error) {
 	}
 
 	return &Experiment{
-		Title:             e.Title,
-		Dataset:           e.Dataset,
-		ExcludeFieldNames: e.ExcludeFields,
-		Aggregators:       aggregators,
-		Goals:             goals,
-		SortOrder:         sortOrder,
+		Title:          e.Title,
+		Dataset:        e.Dataset,
+		RuleFieldNames: e.RuleFields,
+		Aggregators:    aggregators,
+		Goals:          goals,
+		SortOrder:      sortOrder,
 	}, nil
 }
 
@@ -117,7 +117,7 @@ func checkExperimentDescValid(e *ExperimentDesc) error {
 		return err
 	}
 
-	if err := checkExcludeFieldsValid(e); err != nil {
+	if err := checkRuleFieldsValid(e); err != nil {
 		return err
 	}
 
@@ -151,14 +151,17 @@ func checkSortDescsValid(e *ExperimentDesc) error {
 	return nil
 }
 
-func checkExcludeFieldsValid(e *ExperimentDesc) error {
+func checkRuleFieldsValid(e *ExperimentDesc) error {
+	if len(e.RuleFields) == 0 {
+		return fmt.Errorf("No rule fields specified")
+	}
 	fieldNames := e.Dataset.GetFieldNames()
-	for _, excludeField := range e.ExcludeFields {
-		if !internal.IsIdentifierValid(excludeField) {
-			return fmt.Errorf("Invalid exclude field: %s", excludeField)
+	for _, ruleField := range e.RuleFields {
+		if !internal.IsIdentifierValid(ruleField) {
+			return fmt.Errorf("Invalid rule field: %s", ruleField)
 		}
-		if !isStringInSlice(excludeField, fieldNames) {
-			return fmt.Errorf("Invalid exclude field: %s", excludeField)
+		if !isStringInSlice(ruleField, fieldNames) {
+			return fmt.Errorf("Invalid rule field: %s", ruleField)
 		}
 	}
 	return nil

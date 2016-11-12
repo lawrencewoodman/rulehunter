@@ -7,7 +7,7 @@
     "query": "select * from \"people\""
   },
   "fieldNames": ["group","district","height","flow"],
-  "excludeFieldNames": ["flow"],
+  "ruleFieldNames": ["group","district","height"],
   "aggregators": [
     {
       "name": "goodFlowAccuracy",

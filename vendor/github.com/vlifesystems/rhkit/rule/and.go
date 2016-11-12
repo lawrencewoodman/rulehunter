@@ -36,7 +36,21 @@ func NewAnd(ruleA Rule, ruleB Rule) Rule {
 
 func (r *And) String() string {
 	// TODO: Consider making this AND rather than &&
-	return fmt.Sprintf("%s && %s", r.ruleA, r.ruleB)
+	aStr := r.ruleA.String()
+	bStr := r.ruleB.String()
+	switch r.ruleA.(type) {
+	case *And:
+		aStr = "(" + aStr + ")"
+	case *Or:
+		aStr = "(" + aStr + ")"
+	}
+	switch r.ruleB.(type) {
+	case *And:
+		bStr = "(" + bStr + ")"
+	case *Or:
+		bStr = "(" + bStr + ")"
+	}
+	return fmt.Sprintf("%s && %s", aStr, bStr)
 }
 
 func (r *And) IsTrue(record ddataset.Record) (bool, error) {

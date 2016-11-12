@@ -17,13 +17,11 @@ ruleFieldNames:
   - district
   - height
 aggregators:
-  - name: "goodFlowMcc"
-    function: "mcc"
-    arg: "flow > 60"
+  - name: "badToTheBone"
+    function: "calc"
+    arg: "numMatches / 0"
 goals:
   - "goodFlowMcc > 0"
 sortOrder:
-  - aggregatorName: "goodFlowMcc"
-    direction: "descending"
   - aggregatorName: "numMatches"
     direction: "descending"

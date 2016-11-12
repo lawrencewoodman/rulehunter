@@ -7,8 +7,12 @@ fieldNames:
   - "marital_status"
   - "tertiary_educated"
   - "success"
-excludeFieldNames:
-  - "success"
+ruleFieldNames:
+  - "name"
+  - "balance"
+  - "num_cards"
+  - "marital_status"
+  - "tertiary_educated"
 dataset: "csv"
 csv:
   filename: "fixtures/debt.csv"
