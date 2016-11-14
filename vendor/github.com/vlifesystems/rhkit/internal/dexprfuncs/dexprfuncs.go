@@ -29,10 +29,11 @@ import (
 )
 
 var CallFuncs = map[string]dexpr.CallFun{
-	"roundto": roundTo,
-	"sqrt":    sqrt,
 	"in":      in,
 	"ni":      ni,
+	"pow":     pow,
+	"roundto": roundTo,
+	"sqrt":    sqrt,
 	"true":    alwaysTrue,
 }
 
@@ -72,6 +73,33 @@ func sqrt(args []*dlit.Literal) (*dlit.Literal, error) {
 		return r, err
 	}
 	r, err := dlit.New(math.Sqrt(x))
+	return r, err
+}
+
+// Pow returns the base raised to the power of the exponent
+func pow(args []*dlit.Literal) (*dlit.Literal, error) {
+	if len(args) != 2 {
+		err := WrongNumOfArgsError{Got: len(args), Want: 2}
+		r := dlit.MustNew(err)
+		return r, err
+	}
+	x, isFloat := args[0].Float()
+	if !isFloat {
+		if err := args[0].Err(); err != nil {
+			return args[0], err
+		}
+		err := CantConvertToTypeError{Kind: "float", Value: args[0]}
+		return dlit.MustNew(err), err
+	}
+	y, isFloat := args[1].Float()
+	if !isFloat {
+		if err := args[1].Err(); err != nil {
+			return args[1], err
+		}
+		err := CantConvertToTypeError{Kind: "float", Value: args[1]}
+		return dlit.MustNew(err), err
+	}
+	r, err := dlit.New(math.Pow(x, y))
 	return r, err
 }
 
