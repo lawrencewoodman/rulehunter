@@ -252,7 +252,6 @@ func TestShouldProcess(t *testing.T) {
 		when     string
 		want     bool
 	}{
-		{"bank-bad.json", "!hasRun", false},
 		{"bank-divorced.json", "!hasRun", false},
 		{"bank-tiny.json", "!hasRun", false},
 		{"bank-full-divorced.json", "!hasRun", true},

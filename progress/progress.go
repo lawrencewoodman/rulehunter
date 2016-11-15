@@ -269,7 +269,13 @@ func (pm *ProgressMonitor) findExperiment(
 
 func (pm *ProgressMonitor) writeJson() error {
 	sort.Sort(pm)
-	progress := &progressFile{pm.experiments}
+	successfulExperiments := []*Experiment{}
+	for _, e := range pm.experiments {
+		if e.Status == Success {
+			successfulExperiments = append(successfulExperiments, e)
+		}
+	}
+	progress := &progressFile{successfulExperiments}
 	json, err := json.Marshal(progress)
 	if err != nil {
 		return err

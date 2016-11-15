@@ -27,27 +27,11 @@ func TestGetExperiments(t *testing.T) {
 		},
 		&Experiment{
 			Title:              "Who is more likely to be divorced",
-			Tags:               []string{},
-			Stamp:              mustNewTime("2016-05-05T09:36:59.762587932+01:00"),
-			ExperimentFilename: "bank-full-divorced.json",
-			Msg:                "Waiting to be processed",
-			Status:             Waiting,
-		},
-		&Experiment{
-			Title:              "Who is more likely to be divorced",
 			Tags:               []string{"test", "bank"},
 			Stamp:              mustNewTime("2016-05-04T14:53:00.570347516+01:00"),
 			ExperimentFilename: "bank-divorced.json",
 			Msg:                "Finished processing successfully",
 			Status:             Success,
-		},
-		&Experiment{
-			Title:              "",
-			Tags:               []string{},
-			Stamp:              mustNewTime("2016-05-04T14:52:08.993750731+01:00"),
-			ExperimentFilename: "bank-bad.json",
-			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
-			Status:             Failure,
 		},
 	}
 
@@ -112,14 +96,6 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 			Msg:                "Finished processing successfully",
 			Status:             Success,
 		},
-		&Experiment{
-			Title:              "",
-			Tags:               []string{},
-			Stamp:              mustNewTime("2016-05-04T14:52:08.993750731+01:00"),
-			ExperimentFilename: "bank-bad.json",
-			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
-			Status:             Failure,
-		},
 	}
 
 	tempDir := testhelpers.TempDir(t)
@@ -171,49 +147,54 @@ func TestReportSuccess(t *testing.T) {
 			Msg:                "Finished processing successfully",
 			Status:             Success,
 		},
-		&Experiment{
-			Title:              "",
-			Tags:               []string{},
-			Stamp:              mustNewTime("2016-05-04T14:52:08.993750731+01:00"),
-			ExperimentFilename: "bank-bad.json",
-			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
-			Status:             Failure,
+	}
+	cases := []struct {
+		run                  int
+		wantHtmlCmdsReceived []cmd.Cmd
+	}{
+		{run: 0,
+			wantHtmlCmdsReceived: []cmd.Cmd{cmd.Progress, cmd.Progress, cmd.Reports},
+		},
+		{run: 1,
+			wantHtmlCmdsReceived: []cmd.Cmd{},
 		},
 	}
-	wantHtmlCmdsReceived := []cmd.Cmd{cmd.Progress, cmd.Progress, cmd.Reports}
-
 	tempDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tempDir)
 	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
 
-	htmlCmds := make(chan cmd.Cmd)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
-	pm, err := NewMonitor(tempDir, htmlCmds)
-	if err != nil {
-		t.Fatalf("NewMonitor() err: %v", err)
-	}
-	epr, err := NewExperimentProgressReporter(pm, "bank-full-divorced.json")
-	if err != nil {
-		t.Fatalf("NewExperimentProgressReporter(pm, \"bank-full-divorced.json\") err: %s", err)
-	}
+	for _, c := range cases {
+		htmlCmds := make(chan cmd.Cmd)
+		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+		go cmdMonitor.Run()
+		pm, err := NewMonitor(tempDir, htmlCmds)
+		if err != nil {
+			t.Fatalf("NewMonitor() err: %v", err)
+		}
+		if c.run == 0 {
+			epr, err := NewExperimentProgressReporter(pm, "bank-full-divorced.json")
+			if err != nil {
+				t.Fatalf("NewExperimentProgressReporter(pm, \"bank-full-divorced.json\") err: %s", err)
+			}
+			epr.ReportSuccess()
+		}
 
-	epr.ReportSuccess()
-	got := pm.GetExperiments()
-	if err := checkExperimentsMatch(got, wantExperiments); err != nil {
-		t.Errorf("checkExperimentsMatch() err: %s", err)
-	}
-	sleep(1)
-	close(htmlCmds)
-	htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
-	if !reflect.DeepEqual(htmlCmdsReceived, wantHtmlCmdsReceived) {
-		t.Errorf("GetCmdsRecevied() received commands - got: %s, want: %s",
-			htmlCmdsReceived, wantHtmlCmdsReceived)
+		got := pm.GetExperiments()
+		if err := checkExperimentsMatch(got, wantExperiments); err != nil {
+			t.Errorf("checkExperimentsMatch() err: %s", err)
+		}
+		sleep(1)
+		close(htmlCmds)
+		htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
+		if !reflect.DeepEqual(htmlCmdsReceived, c.wantHtmlCmdsReceived) {
+			t.Errorf("GetCmdsRecevied() received commands - got: %s, want: %s",
+				htmlCmdsReceived, c.wantHtmlCmdsReceived)
+		}
 	}
 }
 
 func TestReportInfo(t *testing.T) {
-	wantExperiments := []*Experiment{
+	wantExperimentsMemory := []*Experiment{
 		&Experiment{
 			Title:              "",
 			Tags:               []string{},
@@ -238,49 +219,133 @@ func TestReportInfo(t *testing.T) {
 			Msg:                "Finished processing successfully",
 			Status:             Success,
 		},
+	}
+	wantExperimentsFile := []*Experiment{
 		&Experiment{
-			Title:              "",
-			Tags:               []string{},
-			Stamp:              mustNewTime("2016-05-04T14:52:08.993750731+01:00"),
-			ExperimentFilename: "bank-bad.json",
-			Msg:                "Couldn't load experiment file: open csv/bank-tiny.cs: no such file or directory",
-			Status:             Failure,
+			Title:              "This is a jolly nice title",
+			Tags:               []string{"test", "bank", "fred / ned"},
+			Stamp:              mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
+			ExperimentFilename: "bank-tiny.json",
+			Msg:                "Finished processing successfully",
+			Status:             Success,
 		},
 	}
-
+	cases := []struct {
+		run             int
+		wantExperiments []*Experiment
+	}{
+		{run: 0,
+			wantExperiments: wantExperimentsMemory,
+		},
+		{run: 1,
+			wantExperiments: wantExperimentsFile,
+		},
+	}
 	tempDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tempDir)
 	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
 
-	htmlCmds := make(chan cmd.Cmd)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
-	pm, err := NewMonitor(tempDir, htmlCmds)
-	if err != nil {
-		t.Fatalf("NewMonitor() err: %v", err)
-	}
-	epr1, err := NewExperimentProgressReporter(pm, "bank-divorced.json")
-	if err != nil {
-		t.Fatalf("NewExperimentProgressReporter(pm, \"bank-divorced.json\") err: %s", err)
-	}
+	for _, c := range cases {
+		htmlCmds := make(chan cmd.Cmd)
+		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+		go cmdMonitor.Run()
+		pm, err := NewMonitor(tempDir, htmlCmds)
+		if err != nil {
+			t.Fatalf("NewMonitor() err: %v", err)
+		}
+		if c.run == 0 {
+			epr1, err := NewExperimentProgressReporter(pm, "bank-divorced.json")
+			if err != nil {
+				t.Fatalf("NewExperimentProgressReporter(pm, \"bank-divorced.json\") err: %s", err)
+			}
 
-	epr2, err := NewExperimentProgressReporter(pm, "bank-full-divorced.json")
-	if err != nil {
-		t.Fatalf("NewExperimentProgressReporter(pm, \"bank-full-divorced.json\") err: %s", err)
-	}
+			epr2, err := NewExperimentProgressReporter(pm, "bank-full-divorced.json")
+			if err != nil {
+				t.Fatalf("NewExperimentProgressReporter(pm, \"bank-full-divorced.json\") err: %s", err)
+			}
 
-	epr1.ReportInfo("Describing dataset")
-	time.Sleep(time.Second)
-	epr2.ReportInfo("Tweaking rules")
-	epr2.ReportInfo("Assessing rules")
-	got := pm.GetExperiments()
-	if err := checkExperimentsMatch(got, wantExperiments); err != nil {
-		t.Errorf("checkExperimentsMatch() err: %s", err)
+			epr1.ReportInfo("Describing dataset")
+			time.Sleep(time.Second)
+			epr2.ReportInfo("Tweaking rules")
+			epr2.ReportInfo("Assessing rules")
+		}
+		got := pm.GetExperiments()
+		if err := checkExperimentsMatch(got, c.wantExperiments); err != nil {
+			t.Errorf("checkExperimentsMatch() err: %s", err)
+		}
+		sleep(1)
+		close(htmlCmds)
 	}
-	sleep(1)
-	close(htmlCmds)
 }
 
+func TestReportError(t *testing.T) {
+	wantExperimentsMemory := []*Experiment{
+		&Experiment{
+			Title:              "Who is more likely to be divorced",
+			Tags:               []string{"test", "bank"},
+			Stamp:              time.Now(),
+			ExperimentFilename: "bank-divorced.json",
+			Msg:                "Couldn't load experiment file: open csv/bank-divorced.cs: no such file or directory",
+			Status:             Failure,
+		},
+		&Experiment{
+			Title:              "This is a jolly nice title",
+			Tags:               []string{"test", "bank", "fred / ned"},
+			Stamp:              mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
+			ExperimentFilename: "bank-tiny.json",
+			Msg:                "Finished processing successfully",
+			Status:             Success,
+		},
+	}
+	wantExperimentsFile := []*Experiment{
+		&Experiment{
+			Title:              "This is a jolly nice title",
+			Tags:               []string{"test", "bank", "fred / ned"},
+			Stamp:              mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
+			ExperimentFilename: "bank-tiny.json",
+			Msg:                "Finished processing successfully",
+			Status:             Success,
+		},
+	}
+	cases := []struct {
+		run             int
+		wantExperiments []*Experiment
+	}{
+		{run: 0,
+			wantExperiments: wantExperimentsMemory,
+		},
+		{run: 1,
+			wantExperiments: wantExperimentsFile,
+		},
+	}
+	tempDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tempDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+
+	for _, c := range cases {
+		htmlCmds := make(chan cmd.Cmd)
+		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+		go cmdMonitor.Run()
+		pm, err := NewMonitor(tempDir, htmlCmds)
+		if err != nil {
+			t.Fatalf("NewMonitor() err: %v", err)
+		}
+		if c.run == 0 {
+			epr, err := NewExperimentProgressReporter(pm, "bank-divorced.json")
+			if err != nil {
+				t.Fatalf("NewExperimentProgressReporter(pm, \"bank-divorced.json\") err: %s", err)
+			}
+
+			epr.ReportError(errors.New("Couldn't load experiment file: open csv/bank-divorced.cs: no such file or directory"))
+		}
+		got := pm.GetExperiments()
+		if err := checkExperimentsMatch(got, c.wantExperiments); err != nil {
+			t.Errorf("checkExperimentsMatch() err: %s", err)
+		}
+		sleep(1)
+		close(htmlCmds)
+	}
+}
 func TestGetFinishStamp(t *testing.T) {
 	cases := []struct {
 		filename       string
@@ -288,7 +353,7 @@ func TestGetFinishStamp(t *testing.T) {
 		wantStamp      time.Time
 	}{
 		{"bank-bad.json",
-			true,
+			false,
 			mustNewTime("2016-05-04T14:52:08.993750731+01:00"),
 		},
 		{"bank-divorced.json",
@@ -349,7 +414,8 @@ func checkExperimentsMatch(
 	experiments2 []*Experiment,
 ) error {
 	if len(experiments1) != len(experiments2) {
-		return errors.New("Lengths of experiments don't match")
+		return fmt.Errorf("Lengths of experiments don't match: %d != %d",
+			len(experiments1), len(experiments2))
 	}
 	for i, e := range experiments1 {
 		if err := checkExperimentMatch(e, experiments2[i]); err != nil {
