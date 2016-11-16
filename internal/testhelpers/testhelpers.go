@@ -37,7 +37,7 @@ func BuildConfigDirs(t *testing.T) string {
 	return tmpDir
 }
 
-func CopyFile(t *testing.T, srcFilename, dstDir string) {
+func CopyFile(t *testing.T, srcFilename, dstDir string, args ...string) {
 	contents, err := ioutil.ReadFile(srcFilename)
 	if err != nil {
 		t.Fatalf("ReadFile(%s) err: %v", srcFilename, err)
@@ -48,6 +48,9 @@ func CopyFile(t *testing.T, srcFilename, dstDir string) {
 	}
 	mode := info.Mode()
 	dstFilename := filepath.Join(dstDir, filepath.Base(srcFilename))
+	if len(args) == 1 {
+		dstFilename = filepath.Join(dstDir, args[0])
+	}
 	if err := ioutil.WriteFile(dstFilename, contents, mode); err != nil {
 		t.Fatalf("WriteFile(%s, ...) err: %v", dstFilename, err)
 	}

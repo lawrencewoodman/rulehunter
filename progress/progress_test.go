@@ -14,6 +14,44 @@ import (
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 )
 
+func TestExperimentString(t *testing.T) {
+	cases := []struct {
+		status StatusKind
+		want   string
+	}{
+		{status: Waiting, want: "waiting"},
+		{status: Processing, want: "processing"},
+		{status: Success, want: "success"},
+		{status: Failure, want: "failure"},
+	}
+	for _, c := range cases {
+		got := c.status.String()
+		if got != c.want {
+			t.Errorf("String() got: %s, want: %s", got, c.want)
+		}
+	}
+}
+
+func TestNewMonitor_errors(t *testing.T) {
+	tempDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tempDir)
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "progress_invalid.json"),
+		tempDir,
+		"progress.json",
+	)
+	htmlCmds := make(chan cmd.Cmd)
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
+
+	wantErr := errors.New("invalid character '[' after object key")
+	_, gotErr := NewMonitor(tempDir, htmlCmds)
+	if gotErr == nil || gotErr.Error() != wantErr.Error() {
+		t.Errorf("NewMonitor: gotErr: %s, wantErr: %s", gotErr, wantErr)
+	}
+}
+
 func TestGetExperiments(t *testing.T) {
 	/* This sorts in reverse order of date */
 	expected := []*Experiment{
@@ -76,6 +114,14 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 			Title:              "",
 			Tags:               []string{},
 			Stamp:              time.Now(),
+			ExperimentFilename: "bank-married.json",
+			Msg:                "Waiting to be processed",
+			Status:             Waiting,
+		},
+		&Experiment{
+			Title:              "",
+			Tags:               []string{},
+			Stamp:              time.Now(),
 			ExperimentFilename: "bank-full-divorced.json",
 			Msg:                "Waiting to be processed",
 			Status:             Waiting,
@@ -113,6 +159,17 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		t.Fatalf("AddExperiment() err: %s", err)
 	}
 	if err := pm.AddExperiment("bank-full-divorced.json"); err != nil {
+		t.Fatalf("AddExperiment() err: %s", err)
+	}
+	if err := pm.AddExperiment("bank-married.json"); err != nil {
+		t.Fatalf("AddExperiment() err: %s", err)
+	}
+	epr, err := NewExperimentProgressReporter(pm, "bank-married.json")
+	if err != nil {
+		t.Fatalf("NewExperimentProgressReporter: %s", err)
+	}
+	epr.ReportInfo("something is happening")
+	if err := pm.AddExperiment("bank-married.json"); err != nil {
 		t.Fatalf("AddExperiment() err: %s", err)
 	}
 	got := pm.GetExperiments()
