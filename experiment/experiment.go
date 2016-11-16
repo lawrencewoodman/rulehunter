@@ -438,7 +438,7 @@ func assessCollectResults(
 				return
 			}
 		}
-		progress := jobNum / numJobs
+		progress := 100.0 * float64(jobNum) / float64(numJobs)
 		msg := fmt.Sprintf("Assessing rules %d/%d: %.2f%%",
 			stage, assessRulesNumStages, progress)
 		if err := epr.ReportInfo(msg); err != nil {
