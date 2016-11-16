@@ -121,6 +121,68 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 	}
 }
 
+func TestUpdateDetails(t *testing.T) {
+	wantExperiments := []*Experiment{
+		&Experiment{
+			Title:              "this is my title",
+			Tags:               []string{"big", "little"},
+			Stamp:              time.Now(),
+			ExperimentFilename: "bank-full-divorced.json",
+			Msg:                "Waiting to be processed",
+			Status:             Waiting,
+		},
+		&Experiment{
+			Title:              "This is a jolly nice title",
+			Tags:               []string{"test", "bank", "fred / ned"},
+			Stamp:              mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
+			ExperimentFilename: "bank-tiny.json",
+			Msg:                "Finished processing successfully",
+			Status:             Success,
+		},
+		&Experiment{
+			Title:              "Who is more likely to be divorced",
+			Tags:               []string{"test", "bank"},
+			Stamp:              mustNewTime("2016-05-04T14:53:00.570347516+01:00"),
+			ExperimentFilename: "bank-divorced.json",
+			Msg:                "Finished processing successfully",
+			Status:             Success,
+		},
+	}
+
+	wantHtmlCmdsReceived := []cmd.Cmd{cmd.Progress, cmd.Progress}
+	tempDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tempDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+
+	htmlCmds := make(chan cmd.Cmd)
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
+	pm, err := NewMonitor(tempDir, htmlCmds)
+	if err != nil {
+		t.Fatalf("NewMonitor() err: %v", err)
+	}
+	epr, err := NewExperimentProgressReporter(pm, "bank-full-divorced.json")
+	if err != nil {
+		t.Fatalf("NewExperimentProgressReporter(pm, \"bank-full-divorced.json\") err: %s", err)
+	}
+	err = epr.UpdateDetails("this is my title", []string{"big", "little"})
+	if err != nil {
+		t.Fatalf("UpdateDetails: %s", err)
+	}
+
+	got := pm.GetExperiments()
+	if err := checkExperimentsMatch(got, wantExperiments); err != nil {
+		t.Errorf("checkExperimentsMatch() err: %s", err)
+	}
+	sleep(1)
+	close(htmlCmds)
+	htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
+	if !reflect.DeepEqual(htmlCmdsReceived, wantHtmlCmdsReceived) {
+		t.Errorf("GetCmdsRecevied() received commands - got: %s, want: %s",
+			htmlCmdsReceived, wantHtmlCmdsReceived)
+	}
+}
+
 func TestReportSuccess(t *testing.T) {
 	wantExperiments := []*Experiment{
 		&Experiment{

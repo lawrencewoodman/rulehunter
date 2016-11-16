@@ -49,11 +49,19 @@ func (epr *ExperimentProgressReporter) UpdateDetails(
 	title string,
 	tags []string,
 ) error {
-	return epr.pm.updateExperimentDetails(
-		epr.experimentFilename,
-		title,
-		tags,
-	)
+	e := epr.pm.findExperiment(epr.experimentFilename)
+	if e == nil {
+		return fmt.Errorf("Can't update experiment details for: %s",
+			epr.experimentFilename)
+	}
+	e.Title = title
+	e.Tags = tags
+	e.Stamp = time.Now()
+	if err := epr.pm.writeJson(); err != nil {
+		return err
+	}
+	epr.pm.htmlCmds <- cmd.Progress
+	return nil
 }
 
 func (epr *ExperimentProgressReporter) ReportInfo(msg string) error {
@@ -166,9 +174,6 @@ func (pm *ProgressMonitor) AddExperiment(
 	experimentFilename string,
 ) error {
 	e := pm.findExperiment(experimentFilename)
-	if e != nil && isFinished(e) {
-		return nil
-	}
 	if e == nil {
 		newExperiment := &Experiment{
 			"",
@@ -180,6 +185,9 @@ func (pm *ProgressMonitor) AddExperiment(
 		}
 		pm.experiments = append(pm.experiments, newExperiment)
 	} else {
+		if isFinished(e) {
+			return nil
+		}
 		e.Title = ""
 		e.Tags = []string{}
 		e.Stamp = time.Now()
@@ -211,28 +219,6 @@ func (pm *ProgressMonitor) GetFinishStamp(
 		return true, e.Stamp
 	}
 	return false, time.Now()
-}
-
-func (pm *ProgressMonitor) updateExperimentDetails(
-	experimentFilename string,
-	title string,
-	tags []string,
-) error {
-	e := pm.findExperiment(experimentFilename)
-	if e == nil {
-		return fmt.Errorf("Can't update experiment details for: %s",
-			experimentFilename)
-	}
-	e.Title = title
-	e.Tags = tags
-	e.Stamp = time.Now()
-	e.Msg = "Waiting to be processed"
-	e.Status = Waiting
-	if err := pm.writeJson(); err != nil {
-		return err
-	}
-	pm.htmlCmds <- cmd.Progress
-	return nil
 }
 
 func (pm *ProgressMonitor) updateExperiment(
