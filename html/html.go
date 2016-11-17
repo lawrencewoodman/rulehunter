@@ -64,11 +64,10 @@ func Run(
 	go pulse(cmds)
 
 	for c := range cmds {
-		if q.ShouldQuit() {
-			break
-		}
 		durationSinceLast := time.Since(lastTime)
-		if c != lastCmd || durationSinceLast.Seconds() > minWaitSeconds {
+		if q.ShouldQuit() ||
+			c != lastCmd ||
+			durationSinceLast.Seconds() > minWaitSeconds {
 			if c == cmd.Flush {
 				c = lastCmd
 				lastCmd = cmd.Flush
@@ -79,6 +78,9 @@ func Run(
 			if err := generate(c, config, pm); err != nil {
 				l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
 			}
+		}
+		if q.ShouldQuit() {
+			break
 		}
 	}
 }
