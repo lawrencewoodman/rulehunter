@@ -14,9 +14,7 @@ import (
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal/progresstest"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
-	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
-	"github.com/vlifesystems/rulehunter/quitter"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -302,9 +300,11 @@ func TestProcess(t *testing.T) {
 		filepath.Join("fixtures", "flow.json"),
 		cfg.ExperimentsDir,
 	)
-	wantLogEntries := []logger.Entry{
-		{Level: logger.Info, Msg: "Processing experiment: flow.json"},
-		{Level: logger.Info, Msg: "Successfully processed experiment: flow.json"},
+	wantLogEntries := []testhelpers.Entry{
+		{Level: testhelpers.Info,
+			Msg: "Processing experiment: flow.json"},
+		{Level: testhelpers.Info,
+			Msg: "Successfully processed experiment: flow.json"},
 	}
 	wantPMExperiments := []*progress.Experiment{
 		&progress.Experiment{
@@ -317,9 +317,10 @@ func TestProcess(t *testing.T) {
 		},
 	}
 
-	q := quitter.New()
+	quit := make(chan struct{})
+	defer close(quit)
 	l := testhelpers.NewLogger()
-	go l.Run(q)
+	go l.Run(quit)
 	htmlCmds := make(chan cmd.Cmd)
 	defer close(htmlCmds)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
@@ -394,11 +395,11 @@ func TestProcess_errors(t *testing.T) {
 		filepath.Join("fixtures", "flow_div_zero.yaml"),
 		cfg.ExperimentsDir,
 	)
-	wantLogEntries := []logger.Entry{
-		{Level: logger.Info,
+	wantLogEntries := []testhelpers.Entry{
+		{Level: testhelpers.Info,
 			Msg: "Processing experiment: flow_div_zero.yaml",
 		},
-		{Level: logger.Error,
+		{Level: testhelpers.Error,
 			Msg: "Failed processing experiment: flow_div_zero.yaml - invalid expression: numMatches / 0 (divide by zero)",
 		},
 	}
@@ -413,9 +414,10 @@ func TestProcess_errors(t *testing.T) {
 		},
 	}
 
-	q := quitter.New()
+	quit := make(chan struct{})
+	defer close(quit)
 	l := testhelpers.NewLogger()
-	go l.Run(q)
+	go l.Run(quit)
 	htmlCmds := make(chan cmd.Cmd)
 	defer close(htmlCmds)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)

@@ -2,40 +2,36 @@ package testhelpers
 
 import (
 	"github.com/kardianos/service"
-	"github.com/vlifesystems/rulehunter/logger"
-	"github.com/vlifesystems/rulehunter/quitter"
-	"time"
 )
 
 type Logger struct {
-	entries []logger.Entry
-	entryCh chan logger.Entry
+	entries []Entry
 }
+
+type Entry struct {
+	Level Level
+	Msg   string
+}
+
+type Level int
+
+const (
+	Info Level = iota
+	Error
+)
 
 func NewLogger() *Logger {
 	return &Logger{
-		entries: make([]logger.Entry, 0),
-		entryCh: make(chan logger.Entry),
+		entries: make([]Entry, 0),
 	}
 }
 
-func (l *Logger) Run(q *quitter.Quitter) {
-	quitCheckInSec := time.Duration(2)
-	q.Add()
-	defer q.Done()
-
-	go func() {
-		for {
-			if q.ShouldQuit() {
-				close(l.entryCh)
-				return
-			}
-			time.Sleep(quitCheckInSec * time.Second)
+func (l *Logger) Run(quit <-chan struct{}) {
+	for {
+		select {
+		case <-quit:
+			return
 		}
-	}()
-
-	for e := range l.entryCh {
-		l.entries = append(l.entries, e)
 	}
 }
 
@@ -43,19 +39,21 @@ func (l *Logger) SetSvcLogger(logger service.Logger) {
 }
 
 func (l *Logger) Error(msg string) {
-	l.entryCh <- logger.Entry{
-		Level: logger.Error,
+	entry := Entry{
+		Level: Error,
 		Msg:   msg,
 	}
+	l.entries = append(l.entries, entry)
 }
 
 func (l *Logger) Info(msg string) {
-	l.entryCh <- logger.Entry{
-		Level: logger.Info,
+	entry := Entry{
+		Level: Info,
 		Msg:   msg,
 	}
+	l.entries = append(l.entries, entry)
 }
 
-func (l *Logger) GetEntries() []logger.Entry {
+func (l *Logger) GetEntries() []Entry {
 	return l.entries
 }

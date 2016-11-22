@@ -6,7 +6,6 @@ import (
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"github.com/vlifesystems/rulehunter/progress"
-	"github.com/vlifesystems/rulehunter/quitter"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,7 +15,7 @@ import (
 
 // This checks if Run will quit properly when told to
 func TestRun_quit(t *testing.T) {
-	q := quitter.New()
+	quit := make(chan struct{})
 	l := testhelpers.NewLogger()
 	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
@@ -40,16 +39,29 @@ func TestRun_quit(t *testing.T) {
 		BuildDir:          filepath.Join(cfgDir, "build"),
 		MaxNumReportRules: 100,
 	}
-	go Run(config, pm, l, q, htmlCmds)
+	go func() {
+		const secsWait = 2.0
+		time.Sleep(secsWait * time.Second)
+		close(quit)
+	}()
+	isQuit := false
+	go func() {
+		Run(config, pm, l, quit, htmlCmds)
+		isQuit = true
+	}()
 	time.Sleep(1 * time.Second)
 	htmlCmds <- cmd.Flush
-	go func() {
-		const secsWait = 5.0
-		<-time.After(secsWait * time.Second)
-		q.Done()
+
+	startTime := time.Now()
+	const secsWait = 5.0
+	for d := time.Since(startTime); d.Seconds() <= secsWait; {
+		if isQuit {
+			break
+		}
+	}
+	if !isQuit {
 		t.Fatalf("Run() didn't quit within %v seconds", secsWait)
-	}()
-	q.Quit()
+	}
 }
 
 func TestGenReportFilename(t *testing.T) {

@@ -26,7 +26,6 @@ import (
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
-	"github.com/vlifesystems/rulehunter/quitter"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -49,50 +48,22 @@ func Run(
 	config *config.Config,
 	pm *progress.ProgressMonitor,
 	l logger.Logger,
-	q *quitter.Quitter,
-	cmds chan cmd.Cmd,
+	quit <-chan struct{},
+	cmds <-chan cmd.Cmd,
 ) {
-	const minWaitSeconds = 4.0
-	lastCmd := cmd.Flush
-	lastTime := time.Now()
 	if err := generate(cmd.All, config, pm); err != nil {
 		l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
 	}
 
-	q.Add()
-	defer q.Done()
-	go pulse(cmds)
-
-	for c := range cmds {
-		durationSinceLast := time.Since(lastTime)
-		if q.ShouldQuit() ||
-			c != lastCmd ||
-			durationSinceLast.Seconds() > minWaitSeconds {
-			if c == cmd.Flush {
-				c = lastCmd
-				lastCmd = cmd.Flush
-			} else {
-				lastCmd = c
-			}
-			lastTime = time.Now()
+	for {
+		select {
+		case c := <-cmds:
 			if err := generate(c, config, pm); err != nil {
 				l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
 			}
+		case <-quit:
+			return
 		}
-		if q.ShouldQuit() {
-			break
-		}
-	}
-}
-
-// This is used where a command has been received such as when a report has
-// finished, but the correct time hasn't elapsed before generating html.
-// Therefore a pulse is periodically sent to flush the command.
-func pulse(cmds chan cmd.Cmd) {
-	sleepInSeconds := time.Duration(4)
-	for {
-		cmds <- cmd.Flush
-		time.Sleep(sleepInSeconds * time.Second)
 	}
 }
 

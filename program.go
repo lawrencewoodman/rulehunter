@@ -25,7 +25,6 @@ import (
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
-	"github.com/vlifesystems/rulehunter/quitter"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -36,20 +35,22 @@ type program struct {
 	cmdFlags        cmdFlags
 	progressMonitor *progress.ProgressMonitor
 	logger          logger.Logger
-	quitter         *quitter.Quitter
+	quit            <-chan struct{}
+	shouldStop      bool
 }
 
 func newProgram(
 	c *config.Config,
 	p *progress.ProgressMonitor,
 	l logger.Logger,
-	q *quitter.Quitter,
+	q <-chan struct{},
 ) *program {
 	return &program{
 		config:          c,
 		progressMonitor: p,
-		quitter:         q,
 		logger:          l,
+		quit:            q,
+		shouldStop:      false,
 	}
 }
 
@@ -90,23 +91,28 @@ func (p *program) ProcessDir() (int, bool) {
 }
 
 func (p *program) run() {
-	sleepInSeconds := time.Duration(2)
 	logWaitingForExperiments := true
-	p.quitter.Add()
-	defer p.quitter.Done()
 
-	for !p.quitter.ShouldQuit() {
-		if logWaitingForExperiments {
-			logWaitingForExperiments = false
-			p.logger.Info("Waiting for experiments to process")
+	for {
+		select {
+		case <-p.quit:
+			return
+		default:
+			if p.shouldStop {
+				return
+			}
+			if logWaitingForExperiments {
+				logWaitingForExperiments = false
+				p.logger.Info("Waiting for experiments to process")
+			}
+
+			if n, _ := p.ProcessDir(); n >= 1 {
+				logWaitingForExperiments = true
+			}
+
+			// Sleeping prevents 'excessive' cpu use and disk access
+			time.Sleep(2.0 * time.Second)
 		}
-
-		if n, _ := p.ProcessDir(); n >= 1 {
-			logWaitingForExperiments = true
-		}
-
-		// Sleeping prevents 'excessive' cpu use and disk access
-		time.Sleep(sleepInSeconds * time.Second)
 	}
 }
 
@@ -127,6 +133,6 @@ func (p *program) getExperimentFilenames() ([]string, error) {
 }
 
 func (p *program) Stop(s service.Service) error {
-	p.quitter.Quit()
+	p.shouldStop = true
 	return nil
 }

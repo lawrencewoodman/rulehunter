@@ -20,26 +20,11 @@
 package logger
 
 import (
-	"fmt"
 	"github.com/kardianos/service"
-	"github.com/vlifesystems/rulehunter/quitter"
-	"time"
-)
-
-type Entry struct {
-	Level Level
-	Msg   string
-}
-
-type Level int
-
-const (
-	Info Level = iota
-	Error
 )
 
 type Logger interface {
-	Run(*quitter.Quitter)
+	Run(<-chan struct{})
 	Info(string)
 	Error(string)
 	SetSvcLogger(service.Logger)
@@ -47,43 +32,23 @@ type Logger interface {
 
 type SvcLogger struct {
 	svcLogger service.Logger
-	entries   chan Entry
-	quitter   *quitter.Quitter
 }
 
 func NewSvcLogger() *SvcLogger {
 	return &SvcLogger{
 		svcLogger: nil,
-		entries:   make(chan Entry),
 	}
 }
 
-func (l *SvcLogger) Run(q *quitter.Quitter) {
-	quitCheckInSec := time.Duration(2)
+func (l *SvcLogger) Run(quit <-chan struct{}) {
 	if l.svcLogger == nil {
 		panic("service logger not set")
 	}
-	q.Add()
-	defer q.Done()
 
-	go func() {
-		for {
-			if q.ShouldQuit() {
-				close(l.entries)
-				return
-			}
-			time.Sleep(quitCheckInSec * time.Second)
-		}
-	}()
-
-	for e := range l.entries {
-		switch e.Level {
-		case Info:
-			l.svcLogger.Info(e.Msg)
-		case Error:
-			l.svcLogger.Error(e.Msg)
-		default:
-			panic(fmt.Sprintf("Unknown log level: %d", e.Level))
+	for {
+		select {
+		case <-quit:
+			return
 		}
 	}
 }
@@ -93,15 +58,9 @@ func (l *SvcLogger) SetSvcLogger(logger service.Logger) {
 }
 
 func (l *SvcLogger) Error(msg string) {
-	l.entries <- Entry{
-		Level: Error,
-		Msg:   msg,
-	}
+	l.svcLogger.Error(msg)
 }
 
 func (l *SvcLogger) Info(msg string) {
-	l.entries <- Entry{
-		Level: Info,
-		Msg:   msg,
-	}
+	l.svcLogger.Info(msg)
 }

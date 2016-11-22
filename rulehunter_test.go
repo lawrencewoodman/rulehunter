@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
-	"github.com/vlifesystems/rulehunter/logger"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -17,13 +16,19 @@ import (
 )
 
 func TestSubMain(t *testing.T) {
-	wantEntries := []logger.Entry{
-		{Level: logger.Info, Msg: "Processing experiment: debt.json"},
-		{Level: logger.Info, Msg: "Successfully processed experiment: debt.json"},
-		{Level: logger.Info, Msg: "Processing experiment: debt.yaml"},
-		{Level: logger.Info, Msg: "Successfully processed experiment: debt.yaml"},
-		{Level: logger.Info, Msg: "Processing experiment: debt2.json"},
-		{Level: logger.Info, Msg: "Successfully processed experiment: debt2.json"},
+	wantEntries := []testhelpers.Entry{
+		{Level: testhelpers.Info,
+			Msg: "Processing experiment: debt.json"},
+		{Level: testhelpers.Info,
+			Msg: "Successfully processed experiment: debt.json"},
+		{Level: testhelpers.Info,
+			Msg: "Processing experiment: debt.yaml"},
+		{Level: testhelpers.Info,
+			Msg: "Successfully processed experiment: debt.yaml"},
+		{Level: testhelpers.Info,
+			Msg: "Processing experiment: debt2.json"},
+		{Level: testhelpers.Info,
+			Msg: "Successfully processed experiment: debt2.json"},
 	}
 	cfgDir := testhelpers.BuildConfigDirs(t)
 	flags := &cmdFlags{configDir: cfgDir}

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
-	"github.com/vlifesystems/rulehunter/logger"
 )
 
 func TestSubMain_interrupt(t *testing.T) {
@@ -18,7 +17,7 @@ func TestSubMain_interrupt(t *testing.T) {
 		flags        *cmdFlags
 		wantErr      error
 		wantExitCode int
-		wantEntries  []logger.Entry
+		wantEntries  []testhelpers.Entry
 	}{
 		{
 			flags: &cmdFlags{
@@ -27,8 +26,8 @@ func TestSubMain_interrupt(t *testing.T) {
 			},
 			wantErr:      nil,
 			wantExitCode: 0,
-			wantEntries: []logger.Entry{
-				{logger.Info, "Waiting for experiments to process"},
+			wantEntries: []testhelpers.Entry{
+				{testhelpers.Info, "Waiting for experiments to process"},
 			},
 		},
 	}

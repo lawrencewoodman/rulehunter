@@ -26,7 +26,6 @@ import (
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
-	"github.com/vlifesystems/rulehunter/quitter"
 	"log"
 	"os"
 	"path/filepath"
@@ -52,8 +51,8 @@ func subMain(
 		return 1, err
 	}
 
-	q := quitter.New()
-	defer q.Quit()
+	quit := make(chan struct{})
+	defer close(quit)
 
 	configFilename := filepath.Join(flags.configDir, "config.yaml")
 	config, err := config.Load(configFilename)
@@ -69,7 +68,7 @@ func subMain(
 	if err != nil {
 		return 1, err
 	}
-	prg := newProgram(config, pm, l, q)
+	prg := newProgram(config, pm, l, quit)
 
 	s, err := newService(prg, config, flags)
 	if err != nil {
@@ -81,8 +80,8 @@ func subMain(
 	}
 
 	l.SetSvcLogger(svcLogger)
-	go l.Run(q)
-	go html.Run(config, prg.progressMonitor, l, q, htmlCmds)
+	go l.Run(quit)
+	go html.Run(config, prg.progressMonitor, l, quit, htmlCmds)
 
 	if flags.install {
 		s.Uninstall()
