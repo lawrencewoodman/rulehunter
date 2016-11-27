@@ -25,9 +25,7 @@ import (
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
-	"io/ioutil"
-	"path/filepath"
-	"time"
+	"github.com/vlifesystems/rulehunter/watcher"
 )
 
 type program struct {
@@ -36,7 +34,8 @@ type program struct {
 	progressMonitor *progress.ProgressMonitor
 	logger          logger.Logger
 	quit            <-chan struct{}
-	shouldStop      bool
+	filenames       chan string
+	shouldStop      chan struct{}
 }
 
 func newProgram(
@@ -50,89 +49,42 @@ func newProgram(
 		progressMonitor: p,
 		logger:          l,
 		quit:            q,
-		shouldStop:      false,
+		filenames:       make(chan string, 100),
+		shouldStop:      make(chan struct{}),
 	}
 }
 
 func (p *program) Start(s service.Service) error {
+	go watcher.Watch(p.config.ExperimentsDir, p.logger, p.quit, p.filenames)
 	go p.run()
 	return nil
 }
 
-// Returns number of files processed and ifLoggedError
-func (p *program) ProcessDir() (int, bool) {
-	experimentFilenames, err := p.getExperimentFilenames()
-	if err != nil {
-		p.logger.Error(err.Error())
-		return 0, true
-	}
-	for _, experimentFilename := range experimentFilenames {
-		if err := p.progressMonitor.AddExperiment(experimentFilename); err != nil {
-			p.logger.Error(err.Error())
-			return 0, true
-		}
-	}
-
-	numProcessed := 0
-	ifLoggedError := false
-	for _, experimentFilename := range experimentFilenames {
-		numProcessed++
-		err := experiment.Process(
-			experimentFilename,
-			p.config,
-			p.logger,
-			p.progressMonitor,
-		)
-		if err != nil {
-			ifLoggedError = true
-		}
-	}
-	return numProcessed, ifLoggedError
-}
-
 func (p *program) run() {
-	logWaitingForExperiments := true
-
 	for {
 		select {
 		case <-p.quit:
 			return
-		default:
-			if p.shouldStop {
-				return
+		case <-p.shouldStop:
+			return
+		case filename := <-p.filenames:
+			if err := p.progressMonitor.AddExperiment(filename); err != nil {
+				p.logger.Error(err.Error())
 			}
-			if logWaitingForExperiments {
-				logWaitingForExperiments = false
-				p.logger.Info("Waiting for experiments to process")
+			err := experiment.Process(
+				filename,
+				p.config,
+				p.logger,
+				p.progressMonitor,
+			)
+			if err != nil {
+				p.logger.Error(err.Error())
 			}
-
-			if n, _ := p.ProcessDir(); n >= 1 {
-				logWaitingForExperiments = true
-			}
-
-			// Sleeping prevents 'excessive' cpu use and disk access
-			time.Sleep(2.0 * time.Second)
 		}
 	}
-}
-
-func (p *program) getExperimentFilenames() ([]string, error) {
-	experimentFilenames := make([]string, 0)
-	files, err := ioutil.ReadDir(p.config.ExperimentsDir)
-	if err != nil {
-		return experimentFilenames, err
-	}
-
-	for _, file := range files {
-		ext := filepath.Ext(file.Name())
-		if !file.IsDir() && (ext == ".json" || ext == ".yaml") {
-			experimentFilenames = append(experimentFilenames, file.Name())
-		}
-	}
-	return experimentFilenames, nil
 }
 
 func (p *program) Stop(s service.Service) error {
-	p.shouldStop = true
+	close(p.shouldStop)
 	return nil
 }

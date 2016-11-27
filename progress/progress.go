@@ -100,7 +100,7 @@ func (epr *ExperimentProgressReporter) ReportSuccess() error {
 
 type ProgressMonitor struct {
 	filename    string
-	htmlCmds    chan cmd.Cmd
+	htmlCmds    chan<- cmd.Cmd
 	experiments []*Experiment
 }
 
@@ -142,7 +142,7 @@ func (s StatusKind) String() string {
 
 func NewMonitor(
 	progressDir string,
-	htmlCmds chan cmd.Cmd,
+	htmlCmds chan<- cmd.Cmd,
 ) (*ProgressMonitor, error) {
 	var progress progressFile
 	experiments := []*Experiment{}

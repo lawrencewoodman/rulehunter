@@ -3,11 +3,11 @@ package testhelpers
 import "github.com/vlifesystems/rulehunter/html/cmd"
 
 type htmlCmdMonitor struct {
-	htmlCmds     chan cmd.Cmd
+	htmlCmds     <-chan cmd.Cmd
 	cmdsReceived []cmd.Cmd
 }
 
-func NewHtmlCmdMonitor(cmds chan cmd.Cmd) *htmlCmdMonitor {
+func NewHtmlCmdMonitor(cmds <-chan cmd.Cmd) *htmlCmdMonitor {
 	return &htmlCmdMonitor{cmds, []cmd.Cmd{}}
 }
 

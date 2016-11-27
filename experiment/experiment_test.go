@@ -332,7 +332,7 @@ func TestProcess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: err: %v", err)
 	}
-	if err = Process("flow.json", cfg, l, pm); err != nil {
+	if err := Process("flow.json", cfg, l, pm); err != nil {
 		t.Fatalf("Process: err: %v", err)
 	}
 
