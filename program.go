@@ -26,6 +26,7 @@ import (
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/watcher"
+	"time"
 )
 
 type program struct {
@@ -55,7 +56,14 @@ func newProgram(
 }
 
 func (p *program) Start(s service.Service) error {
-	go watcher.Watch(p.config.ExperimentsDir, p.logger, p.quit, p.filenames)
+	watchPeriod := 2.0 * time.Second
+	go watcher.Watch(
+		p.config.ExperimentsDir,
+		watchPeriod,
+		p.logger,
+		p.quit,
+		p.filenames,
+	)
 	go p.run()
 	return nil
 }

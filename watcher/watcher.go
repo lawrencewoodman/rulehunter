@@ -35,15 +35,19 @@ type FileStats struct {
 }
 
 // Watch sends experiment filenames that need processing
-// to the filenames channel
+// to the filenames channel.  It checks every period of time.
 func Watch(
 	dir string,
+	period time.Duration,
 	l logger.Logger,
 	quit <-chan struct{},
 	filenames chan<- string,
 ) {
+	lastLogMsg := ""
+	ticker := time.NewTicker(period).C
 	allFileStats, err := getFileStats(dir)
 	if err != nil {
+		lastLogMsg = err.Error()
 		l.Error(err.Error())
 	}
 
@@ -56,11 +60,16 @@ func Watch(
 		case <-quit:
 			close(filenames)
 			return
-		default:
+		case <-ticker:
 			newFileStats, err := getFileStats(dir)
 			if err != nil {
-				l.Error(err.Error())
+				if lastLogMsg != err.Error() {
+					lastLogMsg = err.Error()
+					l.Error(err.Error())
+				}
+				break
 			}
+			lastLogMsg = ""
 
 			for filename, fileStats := range newFileStats {
 				if lastFileStats, ok := allFileStats[filename]; ok {
@@ -74,11 +83,7 @@ func Watch(
 				}
 			}
 			allFileStats = newFileStats
-
 		}
-
-		// Sleeping prevents 'excessive' cpu use and disk access
-		time.Sleep(2.0 * time.Second)
 	}
 }
 
