@@ -34,6 +34,20 @@ type FileStats struct {
 	modTime time.Time
 }
 
+// DirError indicates that there was an error reading the directory
+type DirError string
+
+func (e DirError) Error() string {
+	return "can not watch directory: " + string(e)
+}
+
+// FileError indicates that there is a problem watching a file
+type FileError string
+
+func (e FileError) Error() string {
+	return "can not watch file: " + string(e)
+}
+
 // Watch sends experiment filenames that need processing
 // to the filenames channel.  It checks every period of time.
 func Watch(
@@ -91,7 +105,7 @@ func GetExperimentFilenames(dir string) ([]string, error) {
 	experimentFilenames := make([]string, 0)
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return []string{}, err
+		return []string{}, DirError(dir)
 	}
 
 	for _, file := range files {
@@ -122,7 +136,7 @@ func getFileStats(dir string) (map[string]*FileStats, error) {
 func newFileStats(filename string) (*FileStats, error) {
 	fi, err := os.Stat(filename)
 	if err != nil {
-		return nil, err
+		return nil, FileError(filename)
 	}
 	return &FileStats{
 		size:    fi.Size(),

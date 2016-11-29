@@ -1,7 +1,6 @@
 package watcher
 
 import (
-	"errors"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"os"
 	"path/filepath"
@@ -112,7 +111,7 @@ func TestWatch_3(t *testing.T) {
 
 func TestWatch_errors(t *testing.T) {
 	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
+	os.RemoveAll(tempDir)
 	dir := filepath.Join(tempDir, "non")
 	filenames := make(chan string, 100)
 	logger := testhelpers.NewLogger()
@@ -120,19 +119,53 @@ func TestWatch_errors(t *testing.T) {
 	period := 50 * time.Millisecond
 	go logger.Run(quit)
 	go Watch(dir, period, logger, quit, filenames)
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	close(quit)
 
-	pe := &os.PathError{
-		Op:   "open",
-		Path: dir,
-		Err:  errors.New("no such file or directory"),
-	}
 	wantFilenames := []string{}
 	wantLogEntries := []testhelpers.Entry{
 		testhelpers.Entry{
 			Level: testhelpers.Error,
-			Msg:   pe.Error(),
+			Msg:   DirError(dir).Error(),
+		},
+	}
+
+	gotFilenames := []string{}
+	for f := range filenames {
+		gotFilenames = append(gotFilenames, f)
+	}
+	sort.Strings(gotFilenames)
+	sort.Strings(wantFilenames)
+	if !reflect.DeepEqual(gotFilenames, wantFilenames) {
+		t.Errorf("Watch: gotFilenames: %v, wantFilenames: %v",
+			gotFilenames, wantFilenames)
+	}
+	if !reflect.DeepEqual(wantLogEntries, logger.GetEntries()) {
+		t.Errorf("Watch: gotLogEntries: %v, want: %v",
+			logger.GetEntries(), wantLogEntries)
+	}
+}
+
+// Test a directory being removed part way through watching
+func TestWatch_errors2(t *testing.T) {
+	tempDir := testhelpers.TempDir(t)
+	filenames := make(chan string, 100)
+	logger := testhelpers.NewLogger()
+	quit := make(chan struct{})
+	period := 50 * time.Millisecond
+	go logger.Run(quit)
+	go Watch(tempDir, period, logger, quit, filenames)
+	time.Sleep(100 * time.Millisecond)
+
+	os.RemoveAll(tempDir)
+	time.Sleep(100 * time.Millisecond)
+	close(quit)
+
+	wantFilenames := []string{}
+	wantLogEntries := []testhelpers.Entry{
+		testhelpers.Entry{
+			Level: testhelpers.Error,
+			Msg:   DirError(tempDir).Error(),
 		},
 	}
 
@@ -184,11 +217,7 @@ func TestGetExperimentFilenames_errors(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 	dir := filepath.Join(tempDir, "non")
 	wantFilenames := []string{}
-	wantErr := &os.PathError{
-		Op:   "open",
-		Path: dir,
-		Err:  errors.New("no such file or directory"),
-	}
+	wantErr := DirError(dir)
 	gotFilenames, err := GetExperimentFilenames(dir)
 	if err == nil || err.Error() != wantErr.Error() {
 		t.Fatalf("GetExperimentFilenames: gotErr: %v, wantErr: %v", err, wantErr)
@@ -197,5 +226,23 @@ func TestGetExperimentFilenames_errors(t *testing.T) {
 	if !reflect.DeepEqual(gotFilenames, wantFilenames) {
 		t.Errorf("GetExperimentFilenames: gotFilenames: %v, wantFilenames: %v",
 			gotFilenames, wantFilenames)
+	}
+}
+
+func TestDirErrorError(t *testing.T) {
+	dir := "/tmp/someplace"
+	want := "can not watch directory: /tmp/someplace"
+	got := DirError(dir).Error()
+	if got != want {
+		t.Errorf("Error: got: %s, want: %s", got, want)
+	}
+}
+
+func TestFileErrorError(t *testing.T) {
+	dir := "/tmp/someplace/something"
+	want := "can not watch file: /tmp/someplace/something"
+	got := FileError(dir).Error()
+	if got != want {
+		t.Errorf("Error: got: %s, want: %s", got, want)
 	}
 }
