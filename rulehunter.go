@@ -62,7 +62,7 @@ func subMain(
 		return 1, errConfigLoad{filename: configFilename, err: err}
 	}
 
-	htmlCmds := make(chan cmd.Cmd)
+	htmlCmds := make(chan cmd.Cmd, 100)
 	pm, err := progress.NewMonitor(
 		filepath.Join(config.BuildDir, "progress"),
 		htmlCmds,
