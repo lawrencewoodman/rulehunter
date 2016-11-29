@@ -12,7 +12,6 @@ import (
 	"go/token"
 )
 
-var ErrOverflow = errors.New("overflow")
 var ErrDivByZero = errors.New("divide by zero")
 var ErrIncompatibleTypes = errors.New("incompatible types")
 var ErrInvalidCompositeType = errors.New("invalid composite type")
