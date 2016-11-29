@@ -545,8 +545,50 @@ func TestMakeDataset_err(t *testing.T) {
 	}
 }
 
+/*************************
+       Benchmarks
+*************************/
+func BenchmarkProgress(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		b.StopTimer()
+		cfgDir := testhelpers.BuildConfigDirs(b)
+		defer os.RemoveAll(cfgDir)
+		cfg := &config.Config{
+			ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+			WWWDir:            filepath.Join(cfgDir, "www"),
+			BuildDir:          filepath.Join(cfgDir, "build"),
+			MaxNumProcesses:   4,
+			MaxNumReportRules: 100,
+		}
+		testhelpers.CopyFile(
+			b,
+			filepath.Join("fixtures", "flow_big.yaml"),
+			cfg.ExperimentsDir,
+		)
+		quit := make(chan struct{})
+		defer close(quit)
+		l := testhelpers.NewLogger()
+		go l.Run(quit)
+		htmlCmds := make(chan cmd.Cmd)
+		defer close(htmlCmds)
+		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+		go cmdMonitor.Run()
+		pm, err := progress.NewMonitor(
+			filepath.Join(cfg.BuildDir, "progress"),
+			htmlCmds,
+		)
+		if err != nil {
+			b.Fatalf("progress.NewMonitor: err: %v", err)
+		}
+		b.StartTimer()
+		if err := Process("flow_big.yaml", cfg, l, pm); err != nil {
+			b.Fatalf("Process: err: %v", err)
+		}
+	}
+}
+
 /***********************
-   Helper functions
+    Helper functions
 ************************/
 
 func checkExperimentMatch(

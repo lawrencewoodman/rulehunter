@@ -1,0 +1,35 @@
+title: "What would indicate good flow?"
+tags:
+  - test
+  - "fred / ned"
+dataset: "csv"
+csv:
+  filename: "fixtures/flow_big.csv"
+  hasHeader: true
+  separator:  ","
+fieldNames:
+  - group
+  - district
+  - height
+  - flow
+ruleFieldNames:
+  - group
+  - district
+  - height
+aggregators:
+  - name: "goodFlowMcc"
+    function: "mcc"
+    arg: "flow > 60"
+  - name: "totalFlow"
+    function: "sum"
+    arg: "flow"
+  - name: "totalFlowTimesHeight"
+    function: "sum"
+    arg: "flow*height"
+goals:
+  - "goodFlowMcc > 0"
+sortOrder:
+  - aggregatorName: "goodFlowMcc"
+    direction: "descending"
+  - aggregatorName: "numMatches"
+    direction: "descending"

@@ -417,36 +417,31 @@ func assessCollectResults(
 	stage int,
 	numJobs int,
 	results <-chan assessJobResult,
-	assessmentC chan<- *rhkit.Assessment,
-	errC chan<- error,
-) {
+) (*rhkit.Assessment, error) {
 	var assessment *rhkit.Assessment
 	var err error
 	jobNum := 0
 	for r := range results {
 		jobNum++
 		if r.err != nil {
-			errC <- r.err
-			return
+			return nil, r.err
 		}
 		if assessment == nil {
 			assessment = r.assessment
 		} else {
 			assessment, err = assessment.Merge(r.assessment)
 			if err != nil {
-				errC <- err
-				return
+				return nil, err
 			}
 		}
 		progress := 100.0 * float64(jobNum) / float64(numJobs)
 		msg := fmt.Sprintf("Assessing rules %d/%d: %.2f%%",
 			stage, assessRulesNumStages, progress)
 		if err := epr.ReportInfo(msg); err != nil {
-			errC <- err
-			return
+			return nil, err
 		}
 	}
-	assessmentC <- assessment
+	return assessment, nil
 }
 
 func assessCreateJobs(numRules int, step int, jobs chan<- assessJob) {
@@ -472,8 +467,6 @@ func assessRules(
 	numRules := len(rules)
 	jobs := make(chan assessJob, 100)
 	results := make(chan assessJobResult, 100)
-	assessmentC := make(chan *rhkit.Assessment, 1)
-	errC := make(chan error, 1)
 
 	if stage > assessRulesNumStages {
 		panic("assessRules: stage > assessRulesNumStages")
@@ -497,26 +490,19 @@ func assessRules(
 		step = 10
 	}
 	numJobs := int(math.Ceil(float64(numRules) / float64(step)))
-	go assessCollectResults(
-		epr,
-		stage,
-		numJobs,
-		results,
-		assessmentC,
-		errC,
-	)
 	go assessCreateJobs(numRules, step, jobs)
 	go func() {
 		wg.Wait()
 		close(results)
 	}()
 
-	select {
-	case assessment := <-assessmentC:
-		return assessment, nil
-	case err := <-errC:
-		return nil, err
-	}
+	assessment, err := assessCollectResults(
+		epr,
+		stage,
+		numJobs,
+		results,
+	)
+	return assessment, err
 }
 
 type assessJob struct {
