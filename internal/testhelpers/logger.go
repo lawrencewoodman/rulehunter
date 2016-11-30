@@ -2,6 +2,7 @@ package testhelpers
 
 import (
 	"github.com/kardianos/service"
+	"github.com/vlifesystems/rulehunter/quitter"
 )
 
 type Logger struct {
@@ -26,10 +27,12 @@ func NewLogger() *Logger {
 	}
 }
 
-func (l *Logger) Run(quit <-chan struct{}) {
+func (l *Logger) Run(quit *quitter.Quitter) {
+	quit.Add()
+	defer quit.Done()
 	for {
 		select {
-		case <-quit:
+		case <-quit.C:
 			return
 		}
 	}

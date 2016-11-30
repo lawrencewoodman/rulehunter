@@ -27,6 +27,7 @@ import (
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/quitter"
 	"github.com/vlifesystems/rulehunter/watcher"
 	"log"
 	"os"
@@ -53,8 +54,8 @@ func subMain(
 		return 1, err
 	}
 
-	quit := make(chan struct{})
-	defer close(quit)
+	quit := quitter.New()
+	defer quit.Quit()
 
 	configFilename := filepath.Join(flags.configDir, "config.yaml")
 	config, err := config.Load(configFilename)
@@ -91,6 +92,8 @@ func subMain(
 			return 1, err
 		}
 	} else if flags.serve {
+		quit.Add()
+		defer quit.Done()
 		if err = s.Run(); err != nil {
 			return 1, err
 		}

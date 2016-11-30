@@ -15,6 +15,7 @@ import (
 	"github.com/vlifesystems/rulehunter/internal/progresstest"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/quitter"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -317,8 +318,8 @@ func TestProcess(t *testing.T) {
 		},
 	}
 
-	quit := make(chan struct{})
-	defer close(quit)
+	quit := quitter.New()
+	defer quit.Quit()
 	l := testhelpers.NewLogger()
 	go l.Run(quit)
 	htmlCmds := make(chan cmd.Cmd)
@@ -414,8 +415,8 @@ func TestProcess_errors(t *testing.T) {
 		},
 	}
 
-	quit := make(chan struct{})
-	defer close(quit)
+	quit := quitter.New()
+	defer quit.Quit()
 	l := testhelpers.NewLogger()
 	go l.Run(quit)
 	htmlCmds := make(chan cmd.Cmd)
@@ -565,8 +566,8 @@ func BenchmarkProgress(b *testing.B) {
 			filepath.Join("fixtures", "flow_big.yaml"),
 			cfg.ExperimentsDir,
 		)
-		quit := make(chan struct{})
-		defer close(quit)
+		quit := quitter.New()
+		defer quit.Quit()
 		l := testhelpers.NewLogger()
 		go l.Run(quit)
 		htmlCmds := make(chan cmd.Cmd)

@@ -25,6 +25,7 @@ import (
 	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/quitter"
 	"github.com/vlifesystems/rulehunter/watcher"
 	"time"
 )
@@ -34,7 +35,7 @@ type program struct {
 	cmdFlags        cmdFlags
 	progressMonitor *progress.ProgressMonitor
 	logger          logger.Logger
-	quit            <-chan struct{}
+	quit            *quitter.Quitter
 	filenames       chan string
 	shouldStop      chan struct{}
 }
@@ -43,7 +44,7 @@ func newProgram(
 	c *config.Config,
 	p *progress.ProgressMonitor,
 	l logger.Logger,
-	q <-chan struct{},
+	q *quitter.Quitter,
 ) *program {
 	return &program{
 		config:          c,
@@ -71,7 +72,7 @@ func (p *program) Start(s service.Service) error {
 func (p *program) run() {
 	for {
 		select {
-		case <-p.quit:
+		case <-p.quit.C:
 			return
 		case <-p.shouldStop:
 			return

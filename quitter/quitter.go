@@ -17,53 +17,32 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package logger
+package quitter
 
-import (
-	"github.com/kardianos/service"
-	"github.com/vlifesystems/rulehunter/quitter"
-)
+import "sync"
 
-type Logger interface {
-	Run(*quitter.Quitter)
-	Info(string)
-	Error(string)
-	SetSvcLogger(service.Logger)
+type Quitter struct {
+	// C is closed to signal to processes to quit
+	C  chan struct{}
+	wg *sync.WaitGroup
 }
 
-type SvcLogger struct {
-	svcLogger service.Logger
+func New() *Quitter {
+	return &Quitter{C: make(chan struct{}), wg: &sync.WaitGroup{}}
 }
 
-func NewSvcLogger() *SvcLogger {
-	return &SvcLogger{
-		svcLogger: nil,
-	}
+// Add a process to wait to quit
+func (q *Quitter) Add() {
+	q.wg.Add(1)
 }
 
-func (l *SvcLogger) Run(quit *quitter.Quitter) {
-	if l.svcLogger == nil {
-		panic("service logger not set")
-	}
-	quit.Add()
-	defer quit.Done()
-
-	for {
-		select {
-		case <-quit.C:
-			return
-		}
-	}
+// Done indicates that a process has finished
+func (q *Quitter) Done() {
+	q.wg.Done()
 }
 
-func (l *SvcLogger) SetSvcLogger(logger service.Logger) {
-	l.svcLogger = logger
-}
-
-func (l *SvcLogger) Error(msg string) {
-	l.svcLogger.Error(msg)
-}
-
-func (l *SvcLogger) Info(msg string) {
-	l.svcLogger.Info(msg)
+// Quit tell all the processes to quit and waits for them to finish
+func (q *Quitter) Quit() {
+	close(q.C)
+	q.wg.Wait()
 }

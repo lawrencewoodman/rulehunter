@@ -26,6 +26,7 @@ import (
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/quitter"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -48,9 +49,11 @@ func Run(
 	config *config.Config,
 	pm *progress.ProgressMonitor,
 	l logger.Logger,
-	quit <-chan struct{},
+	quit *quitter.Quitter,
 	cmds <-chan cmd.Cmd,
 ) {
+	quit.Add()
+	defer quit.Done()
 	if err := generate(cmd.All, config, pm); err != nil {
 		l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
 	}
@@ -61,7 +64,7 @@ func Run(
 			if err := generate(c, config, pm); err != nil {
 				l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
 			}
-		case <-quit:
+		case <-quit.C:
 			return
 		}
 	}

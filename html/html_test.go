@@ -6,6 +6,7 @@ import (
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/quitter"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -15,7 +16,7 @@ import (
 
 // This checks if Run will quit properly when told to
 func TestRun_quit(t *testing.T) {
-	quit := make(chan struct{})
+	quit := quitter.New()
 	l := testhelpers.NewLogger()
 	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
@@ -42,7 +43,7 @@ func TestRun_quit(t *testing.T) {
 	go func() {
 		const secsWait = 2.0
 		time.Sleep(secsWait * time.Second)
-		close(quit)
+		quit.Quit()
 	}()
 	isQuit := false
 	go func() {

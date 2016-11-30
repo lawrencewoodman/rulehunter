@@ -22,6 +22,7 @@ package watcher
 
 import (
 	"github.com/vlifesystems/rulehunter/logger"
+	"github.com/vlifesystems/rulehunter/quitter"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -54,9 +55,11 @@ func Watch(
 	dir string,
 	period time.Duration,
 	l logger.Logger,
-	quit <-chan struct{},
+	quit *quitter.Quitter,
 	filenames chan<- string,
 ) {
+	quit.Add()
+	defer quit.Done()
 	lastLogMsg := ""
 	ticker := time.NewTicker(period).C
 	allFileStats, err := getFileStats(dir)
@@ -71,7 +74,7 @@ func Watch(
 
 	for {
 		select {
-		case <-quit:
+		case <-quit.C:
 			close(filenames)
 			return
 		case <-ticker:

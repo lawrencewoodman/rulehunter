@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
+	"github.com/vlifesystems/rulehunter/quitter"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -15,12 +16,12 @@ func TestWatch_1(t *testing.T) {
 	dir := "fixtures"
 	filenames := make(chan string, 100)
 	logger := testhelpers.NewLogger()
-	quit := make(chan struct{})
+	quit := quitter.New()
 	period := 50 * time.Millisecond
 	go logger.Run(quit)
 	go Watch(dir, period, logger, quit, filenames)
 	time.Sleep(100 * time.Millisecond)
-	close(quit)
+	quit.Quit()
 
 	wantFilenames := []string{"debt.json", "debt.yaml", "flow.yaml"}
 	gotFilenames := []string{}
@@ -47,7 +48,7 @@ func TestWatch_2(t *testing.T) {
 
 	filenames := make(chan string, 100)
 	logger := testhelpers.NewLogger()
-	quit := make(chan struct{})
+	quit := quitter.New()
 	period := 50 * time.Millisecond
 	go logger.Run(quit)
 	go Watch(tempDir, period, logger, quit, filenames)
@@ -55,7 +56,7 @@ func TestWatch_2(t *testing.T) {
 
 	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.yaml"), tempDir)
 	time.Sleep(100 * time.Millisecond)
-	close(quit)
+	quit.Quit()
 
 	wantFilenames := []string{"debt.json", "debt.yaml", "flow.yaml"}
 	gotFilenames := []string{}
@@ -82,7 +83,7 @@ func TestWatch_3(t *testing.T) {
 
 	filenames := make(chan string, 100)
 	logger := testhelpers.NewLogger()
-	quit := make(chan struct{})
+	quit := quitter.New()
 	period := 50 * time.Millisecond
 	go logger.Run(quit)
 	go Watch(tempDir, period, logger, quit, filenames)
@@ -90,7 +91,7 @@ func TestWatch_3(t *testing.T) {
 
 	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.json"), tempDir)
 	time.Sleep(100 * time.Millisecond)
-	close(quit)
+	quit.Quit()
 
 	wantFilenames := []string{"debt.json", "debt.json", "flow.yaml"}
 	gotFilenames := []string{}
@@ -115,12 +116,12 @@ func TestWatch_errors(t *testing.T) {
 	dir := filepath.Join(tempDir, "non")
 	filenames := make(chan string, 100)
 	logger := testhelpers.NewLogger()
-	quit := make(chan struct{})
+	quit := quitter.New()
 	period := 50 * time.Millisecond
 	go logger.Run(quit)
 	go Watch(dir, period, logger, quit, filenames)
 	time.Sleep(100 * time.Millisecond)
-	close(quit)
+	quit.Quit()
 
 	wantFilenames := []string{}
 	wantLogEntries := []testhelpers.Entry{
@@ -151,7 +152,7 @@ func TestWatch_errors2(t *testing.T) {
 	tempDir := testhelpers.TempDir(t)
 	filenames := make(chan string, 100)
 	logger := testhelpers.NewLogger()
-	quit := make(chan struct{})
+	quit := quitter.New()
 	period := 50 * time.Millisecond
 	go logger.Run(quit)
 	go Watch(tempDir, period, logger, quit, filenames)
@@ -159,7 +160,7 @@ func TestWatch_errors2(t *testing.T) {
 
 	os.RemoveAll(tempDir)
 	time.Sleep(100 * time.Millisecond)
-	close(quit)
+	quit.Quit()
 
 	wantFilenames := []string{}
 	wantLogEntries := []testhelpers.Entry{
