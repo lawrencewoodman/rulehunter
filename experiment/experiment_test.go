@@ -322,7 +322,7 @@ func TestProcess(t *testing.T) {
 	defer quit.Quit()
 	l := testhelpers.NewLogger()
 	go l.Run(quit)
-	htmlCmds := make(chan cmd.Cmd)
+	htmlCmds := make(chan cmd.Cmd, 100)
 	defer close(htmlCmds)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 	go cmdMonitor.Run()

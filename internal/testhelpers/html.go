@@ -18,5 +18,16 @@ func (h *htmlCmdMonitor) Run() {
 }
 
 func (h *htmlCmdMonitor) GetCmdsReceived() []cmd.Cmd {
-	return h.cmdsReceived
+	for {
+		select {
+		case c, ok := <-h.htmlCmds:
+			if ok {
+				h.cmdsReceived = append(h.cmdsReceived, c)
+			} else {
+				return h.cmdsReceived
+			}
+		default:
+			return h.cmdsReceived
+		}
+	}
 }
