@@ -21,6 +21,7 @@
 package watcher
 
 import (
+	"github.com/vlifesystems/rulehunter/fileinfo"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/quitter"
 	"io/ioutil"
@@ -56,29 +57,31 @@ func Watch(
 	period time.Duration,
 	l logger.Logger,
 	quit *quitter.Quitter,
-	filenames chan<- string,
+	files chan<- fileinfo.FileInfo,
 ) {
 	quit.Add()
 	defer quit.Done()
 	lastLogMsg := ""
 	ticker := time.NewTicker(period).C
-	allFileStats, err := getFileStats(dir)
+	allFiles, err := getFilesToMap(dir)
 	if err != nil {
 		lastLogMsg = err.Error()
 		l.Error(err.Error())
 	}
 
-	for filename, _ := range allFileStats {
-		filenames <- filename
+	for _, file := range allFiles {
+		files <- file
 	}
 
+	// Used to only send old files every other run
+	flipFlop := false
 	for {
 		select {
 		case <-quit.C:
-			close(filenames)
+			close(files)
 			return
 		case <-ticker:
-			newFileStats, err := getFileStats(dir)
+			newFiles, err := getFilesToMap(dir)
 			if err != nil {
 				if lastLogMsg != err.Error() {
 					lastLogMsg = err.Error()
@@ -88,68 +91,49 @@ func Watch(
 			}
 			lastLogMsg = ""
 
-			for filename, fileStats := range newFileStats {
-				if lastFileStats, ok := allFileStats[filename]; ok {
-					if !lastFileStats.isEqual(fileStats) {
-						allFileStats[filename] = fileStats
-						filenames <- filename
+			for filename, file := range newFiles {
+				if lastFile, ok := allFiles[filename]; ok {
+					isNew := !fileinfo.IsEqual(lastFile, file)
+					if isNew {
+						files <- file
+					} else if flipFlop {
+						files <- file
 					}
 				} else {
-					allFileStats[filename] = fileStats
-					filenames <- filename
+					files <- file
 				}
+				allFiles[filename] = file
 			}
-			allFileStats = newFileStats
+			allFiles = newFiles
+			flipFlop = !flipFlop
 		}
 	}
 }
 
-func GetExperimentFilenames(dir string) ([]string, error) {
-	experimentFilenames := make([]string, 0)
+func GetExperimentFiles(dir string) ([]fileinfo.FileInfo, error) {
+	experimentFiles := make([]fileinfo.FileInfo, 0)
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return []string{}, DirError(dir)
+		return experimentFiles, DirError(dir)
 	}
 
 	for _, file := range files {
 		ext := filepath.Ext(file.Name())
 		if !file.IsDir() && (ext == ".json" || ext == ".yaml") {
-			experimentFilenames = append(experimentFilenames, file.Name())
+			experimentFiles = append(experimentFiles, file)
 		}
 	}
-	return experimentFilenames, nil
+	return experimentFiles, nil
 }
 
-func getFileStats(dir string) (map[string]*FileStats, error) {
-	fileStats := make(map[string]*FileStats)
-	filenames, err := GetExperimentFilenames(dir)
+func getFilesToMap(dir string) (map[string]fileinfo.FileInfo, error) {
+	filesMap := make(map[string]fileinfo.FileInfo)
+	files, err := GetExperimentFiles(dir)
 	if err != nil {
-		return fileStats, err
+		return filesMap, err
 	}
-	for _, filename := range filenames {
-		fs, err := newFileStats(filepath.Join(dir, filename))
-		if err != nil {
-			return fileStats, err
-		}
-		fileStats[filename] = fs
+	for _, file := range files {
+		filesMap[file.Name()] = file
 	}
-	return fileStats, nil
-}
-
-func newFileStats(filename string) (*FileStats, error) {
-	fi, err := os.Stat(filename)
-	if err != nil {
-		return nil, FileError(filename)
-	}
-	return &FileStats{
-		size:    fi.Size(),
-		mode:    fi.Mode(),
-		modTime: fi.ModTime(),
-	}, nil
-}
-
-func (fs *FileStats) isEqual(otherFileStats *FileStats) bool {
-	return fs.size == otherFileStats.size &&
-		fs.mode == otherFileStats.mode &&
-		fs.modTime == otherFileStats.modTime
+	return filesMap, nil
 }

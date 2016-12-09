@@ -32,6 +32,7 @@ import (
 	rhexperiment "github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/fileinfo"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/report"
@@ -92,62 +93,62 @@ func (e InvalidExtError) Error() string {
 const assessRulesNumStages = 3
 
 func Process(
-	experimentFilename string,
+	experimentFile fileinfo.FileInfo,
 	cfg *config.Config,
 	l logger.Logger,
 	progressMonitor *progress.ProgressMonitor,
 ) error {
 	epr, err := progress.NewExperimentProgressReporter(
 		progressMonitor,
-		experimentFilename,
+		experimentFile.Name(),
 	)
 	if err != nil {
 		return err
 	}
 	experimentFullFilename :=
-		filepath.Join(cfg.ExperimentsDir, experimentFilename)
+		filepath.Join(cfg.ExperimentsDir, experimentFile.Name())
 	experiment, tags, whenExpr, err :=
 		loadExperiment(experimentFullFilename, cfg.MaxNumRecords)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't load experiment file: %s", err)
 		return epr.ReportError(fullErr)
 	}
-	ok, err := shouldProcess(progressMonitor, experimentFilename, whenExpr)
+	ok, err := shouldProcess(progressMonitor, experimentFile, whenExpr)
 	if err != nil || !ok {
 		return err
 	}
 
-	l.Info(fmt.Sprintf("Processing experiment: %s", experimentFilename))
+	l.Info(fmt.Sprintf("Processing experiment: %s", experimentFile.Name()))
 	err = epr.UpdateDetails(experiment.Title, tags)
 	if err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		return err
 	}
 
 	if err := epr.ReportInfo("Describing dataset"); err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		return err
 	}
 	fieldDescriptions, err := rhkit.DescribeDataset(experiment.Dataset)
 	if err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't describe dataset: %s", err)
 		return epr.ReportError(fullErr)
 	}
 
 	if err := epr.ReportInfo("Generating rules"); err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		return err
 	}
 	rules, err :=
 		rhkit.GenerateRules(fieldDescriptions, experiment.RuleFieldNames)
 	if err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't generate rules: %s", err)
 		return epr.ReportError(fullErr)
 	}
@@ -155,7 +156,7 @@ func Process(
 	assessment, err := assessRules(1, rules, experiment, epr, cfg)
 	if err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
 	}
@@ -166,7 +167,7 @@ func Process(
 
 	if err := epr.ReportInfo("Tweaking rules"); err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		return err
 	}
 	tweakableRules := rhkit.TweakRules(sortedRules, fieldDescriptions)
@@ -174,7 +175,7 @@ func Process(
 	assessment2, err := assessRules(2, tweakableRules, experiment, epr, cfg)
 	if err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
 	}
@@ -182,7 +183,7 @@ func Process(
 	assessment3, err := assessment.Merge(assessment2)
 	if err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
 		return epr.ReportError(fullErr)
 	}
@@ -196,7 +197,7 @@ func Process(
 	assessment4, err := assessRules(3, combinedRules, experiment, epr, cfg)
 	if err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return epr.ReportError(fullErr)
 	}
@@ -204,7 +205,7 @@ func Process(
 	assessment5, err := assessment3.Merge(assessment4)
 	if err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
 		return epr.ReportError(fullErr)
 	}
@@ -216,25 +217,25 @@ func Process(
 	err = report.WriteJson(
 		assessment6,
 		experiment,
-		experimentFilename,
+		experimentFile.Name(),
 		tags,
 		cfg,
 	)
 	if err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't write json report: %s", err)
 		return epr.ReportError(fullErr)
 	}
 
 	if err := epr.ReportSuccess(); err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFilename, err))
+			experimentFile.Name(), err))
 		return err
 	}
 
 	l.Info(
-		fmt.Sprintf("Successfully processed experiment: %s", experimentFilename),
+		fmt.Sprintf("Successfully processed experiment: %s", experimentFile.Name()),
 	)
 	return nil
 }
@@ -517,10 +518,15 @@ type assessJobResult struct {
 
 func shouldProcess(
 	pm *progress.ProgressMonitor,
-	experimentFilename string,
+	experimentFile fileinfo.FileInfo,
 	whenExpr *dexpr.Expr,
 ) (bool, error) {
-	isFinished, stamp := pm.GetFinishStamp(experimentFilename)
+	isFinished, stamp := pm.GetFinishStamp(experimentFile.Name())
+	if isFinished && experimentFile.ModTime().After(stamp) {
+		isFinished, stamp := false, time.Now()
+		ok, err := evalWhenExpr(time.Now(), isFinished, stamp, whenExpr)
+		return ok, err
+	}
 	ok, err := evalWhenExpr(time.Now(), isFinished, stamp, whenExpr)
 	return ok, err
 }

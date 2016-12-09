@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type errorReporter interface {
@@ -65,4 +66,12 @@ func TempDir(e errorReporter) string {
 		e.Fatalf("TempDir() err: %s", err)
 	}
 	return tempDir
+}
+
+func MustParse(layout, s string) time.Time {
+	t, err := time.Parse(layout, s)
+	if err != nil {
+		panic(err)
+	}
+	return t
 }

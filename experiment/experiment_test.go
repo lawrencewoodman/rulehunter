@@ -11,6 +11,7 @@ import (
 	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rhkit/goal"
 	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/fileinfo"
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal/progresstest"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
@@ -247,13 +248,38 @@ func TestInvalidExtErrorError(t *testing.T) {
 
 func TestShouldProcess(t *testing.T) {
 	cases := []struct {
-		filename string
-		when     string
-		want     bool
+		file fileinfo.FileInfo
+		when string
+		want bool
 	}{
-		{"bank-divorced.json", "!hasRun", false},
-		{"bank-tiny.json", "!hasRun", false},
-		{"bank-full-divorced.json", "!hasRun", true},
+		{file: testhelpers.NewFileInfo("bank-divorced.json", time.Now()),
+			when: "!hasRun",
+			want: true,
+		},
+		{file: testhelpers.NewFileInfo("bank-divorced.json",
+			testhelpers.MustParse(time.RFC3339Nano,
+				"2016-05-04T14:53:00.570347516+01:00")),
+			when: "!hasRun",
+			want: false,
+		},
+		{file: testhelpers.NewFileInfo("bank-tiny.json", time.Now()),
+			when: "!hasRun",
+			want: true,
+		},
+		{file: testhelpers.NewFileInfo("bank-tiny.json",
+			testhelpers.MustParse(time.RFC3339Nano,
+				"2016-05-05T09:37:58.220312223+01:00")),
+			when: "!hasRun",
+			want: false,
+		},
+		{file: testhelpers.NewFileInfo("bank-full-divorced.json", time.Now()),
+			when: "!hasRun",
+			want: true,
+		},
+		{file: testhelpers.NewFileInfo("bank-full-divorced.json", time.Now()),
+			when: "!hasRun",
+			want: true,
+		},
 	}
 	tempDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tempDir)
@@ -273,14 +299,14 @@ func TestShouldProcess(t *testing.T) {
 
 	for _, c := range cases {
 		whenExpr := dexpr.MustNew(c.when)
-		got, err := shouldProcess(pm, c.filename, whenExpr)
+		got, err := shouldProcess(pm, c.file, whenExpr)
 		if err != nil {
-			t.Errorf("shouldProcess(pm, %v, %v) err: %s", c.filename, c.when, err)
+			t.Errorf("shouldProcess(pm, %v, %v) err: %s", c.file, c.when, err)
 			continue
 		}
 		if got != c.want {
 			t.Errorf("shouldProcess(pm, %v, %v) got: %t, want: %t",
-				c.filename, c.when, got, c.want)
+				c.file, c.when, got, c.want)
 		}
 	}
 }
@@ -301,6 +327,7 @@ func TestProcess(t *testing.T) {
 		filepath.Join("fixtures", "flow.json"),
 		cfg.ExperimentsDir,
 	)
+	file := testhelpers.NewFileInfo("flow.json", time.Now())
 	wantLogEntries := []testhelpers.Entry{
 		{Level: testhelpers.Info,
 			Msg: "Processing experiment: flow.json"},
@@ -333,7 +360,7 @@ func TestProcess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: err: %v", err)
 	}
-	if err := Process("flow.json", cfg, l, pm); err != nil {
+	if err := Process(file, cfg, l, pm); err != nil {
 		t.Fatalf("Process: err: %v", err)
 	}
 
@@ -396,6 +423,7 @@ func TestProcess_errors(t *testing.T) {
 		filepath.Join("fixtures", "flow_div_zero.yaml"),
 		cfg.ExperimentsDir,
 	)
+	file := testhelpers.NewFileInfo("flow_div_zero.yaml", time.Now())
 	wantLogEntries := []testhelpers.Entry{
 		{Level: testhelpers.Info,
 			Msg: "Processing experiment: flow_div_zero.yaml",
@@ -431,7 +459,7 @@ func TestProcess_errors(t *testing.T) {
 		t.Fatalf("progress.NewMonitor: err: %v", err)
 	}
 	wantErr := "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)"
-	if err := Process("flow_div_zero.yaml", cfg, l, pm); err.Error() != wantErr {
+	if err := Process(file, cfg, l, pm); err.Error() != wantErr {
 		t.Fatalf("Process: got err: %v, wantErr: %v", err, wantErr)
 	}
 
@@ -566,6 +594,7 @@ func BenchmarkProgress(b *testing.B) {
 			filepath.Join("fixtures", "flow_big.yaml"),
 			cfg.ExperimentsDir,
 		)
+		file := testhelpers.NewFileInfo("flow_big.yaml", time.Now())
 		quit := quitter.New()
 		defer quit.Quit()
 		l := testhelpers.NewLogger()
@@ -582,7 +611,7 @@ func BenchmarkProgress(b *testing.B) {
 			b.Fatalf("progress.NewMonitor: err: %v", err)
 		}
 		b.StartTimer()
-		if err := Process("flow_big.yaml", cfg, l, pm); err != nil {
+		if err := Process(file, cfg, l, pm); err != nil {
 			b.Fatalf("Process: err: %v", err)
 		}
 	}

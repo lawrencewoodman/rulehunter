@@ -110,16 +110,16 @@ func processDir(
 	pm *progress.ProgressMonitor,
 	l logger.Logger,
 ) error {
-	filenames, err := watcher.GetExperimentFilenames(config.ExperimentsDir)
+	files, err := watcher.GetExperimentFiles(config.ExperimentsDir)
 	if err != nil {
 		return err
 	}
-	for _, filename := range filenames {
-		if err := pm.AddExperiment(filename); err != nil {
+	for _, file := range files {
+		if err := pm.AddExperiment(file.Name()); err != nil {
 			l.Error(err.Error())
 			return err
 		}
-		if err := experiment.Process(filename, config, l, pm); err != nil {
+		if err := experiment.Process(file, config, l, pm); err != nil {
 			l.Error(err.Error())
 			return err
 		}

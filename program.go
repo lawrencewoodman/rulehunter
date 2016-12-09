@@ -23,6 +23,7 @@ import (
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/experiment"
+	"github.com/vlifesystems/rulehunter/fileinfo"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/quitter"
@@ -36,7 +37,7 @@ type program struct {
 	progressMonitor *progress.ProgressMonitor
 	logger          logger.Logger
 	quit            *quitter.Quitter
-	filenames       chan string
+	files           chan fileinfo.FileInfo
 	shouldStop      chan struct{}
 }
 
@@ -51,7 +52,7 @@ func newProgram(
 		progressMonitor: p,
 		logger:          l,
 		quit:            q,
-		filenames:       make(chan string, 100),
+		files:           make(chan fileinfo.FileInfo, 100),
 		shouldStop:      make(chan struct{}),
 	}
 }
@@ -63,7 +64,7 @@ func (p *program) Start(s service.Service) error {
 		watchPeriod,
 		p.logger,
 		p.quit,
-		p.filenames,
+		p.files,
 	)
 	go p.run()
 	return nil
@@ -76,12 +77,12 @@ func (p *program) run() {
 			return
 		case <-p.shouldStop:
 			return
-		case filename := <-p.filenames:
-			if err := p.progressMonitor.AddExperiment(filename); err != nil {
+		case file := <-p.files:
+			if err := p.progressMonitor.AddExperiment(file.Name()); err != nil {
 				p.logger.Error(err.Error())
 			}
 			err := experiment.Process(
-				filename,
+				file,
 				p.config,
 				p.logger,
 				p.progressMonitor,
