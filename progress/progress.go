@@ -126,6 +126,12 @@ type Experiment struct {
 	Status             StatusKind
 }
 
+func (e *Experiment) String() string {
+	fmtStr := "{Title: %s, Tags: %s, Stamp: %s, ExperimentFilename: %s, Msg: %s, Status: %s}"
+	return fmt.Sprintf(fmtStr, e.Title, e.Tags, e.Stamp.Format(time.RFC3339Nano),
+		e.ExperimentFilename, e.Msg, e.Status)
+}
+
 func (s StatusKind) String() string {
 	switch s {
 	case Waiting:

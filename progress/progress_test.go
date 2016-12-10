@@ -546,14 +546,14 @@ func checkExperimentsMatch(
 
 func checkExperimentMatch(e1, e2 *Experiment) error {
 	if e1.Title != e2.Title {
-		return fmt.Errorf("Title doesn't match: %s != %s", e1.Title, e2.Title)
+		return fmt.Errorf("Title doesn't match: %s != %s", e1, e2)
 	}
 	if e1.ExperimentFilename != e2.ExperimentFilename {
 		return fmt.Errorf("ExperimentFilename doesn't match: %s != %s",
-			e1.ExperimentFilename, e2.ExperimentFilename)
+			e1, e2)
 	}
 	if e1.Msg != e2.Msg {
-		return fmt.Errorf("Msg doesn't match: %s != %s", e1.Msg, e2.Msg)
+		return fmt.Errorf("Msg doesn't match: %s != %s", e1, e2)
 	}
 	if e1.Status != e2.Status {
 		return errors.New("Status doesn't match")
