@@ -43,13 +43,6 @@ func (e DirError) Error() string {
 	return "can not watch directory: " + string(e)
 }
 
-// FileError indicates that there is a problem watching a file
-type FileError string
-
-func (e FileError) Error() string {
-	return "can not watch file: " + string(e)
-}
-
 // Watch sends experiment filenames that need processing
 // to the filenames channel.  It checks every period of time.
 func Watch(
