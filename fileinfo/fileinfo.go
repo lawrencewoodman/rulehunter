@@ -29,5 +29,5 @@ type FileInfo interface {
 
 // IsEqual returns if two FileInfo objects are equal
 func IsEqual(a, b FileInfo) bool {
-	return a.Name() == b.Name() && a.ModTime() == b.ModTime()
+	return a.Name() == b.Name() && a.ModTime().Equal(b.ModTime())
 }
