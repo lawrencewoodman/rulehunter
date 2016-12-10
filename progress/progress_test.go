@@ -161,6 +161,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 	if err := pm.AddExperiment("bank-full-divorced.json"); err != nil {
 		t.Fatalf("AddExperiment() err: %s", err)
 	}
+	time.Sleep(200 * time.Millisecond)
 	if err := pm.AddExperiment("bank-married.json"); err != nil {
 		t.Fatalf("AddExperiment() err: %s", err)
 	}
