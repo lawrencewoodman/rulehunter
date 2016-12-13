@@ -170,6 +170,8 @@ func TestEscapeString(t *testing.T) {
 			"hello-how-are-you423-33-today"},
 		{"hello((_ how are % you423 33  today",
 			"hello-how-are-you423-33-today"},
+		{"This is it's TITLE",
+			"this-is-its-title"},
 		{"", ""},
 	}
 	for _, c := range cases {
