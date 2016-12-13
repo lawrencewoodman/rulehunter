@@ -78,6 +78,9 @@ func (p *program) run() {
 		case <-p.shouldStop:
 			return
 		case file := <-p.files:
+			if file == nil {
+				break
+			}
 			if err := p.progressMonitor.AddExperiment(file.Name()); err != nil {
 				p.logger.Error(err.Error())
 			}
