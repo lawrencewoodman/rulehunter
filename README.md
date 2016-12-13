@@ -72,8 +72,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program; see the file COPYING.  If not, see
 [http://www.gnu.org/licenses/](http://www.gnu.org/licenses/).
 
-Additional Licences
--------------------
+Additional Licences and Attribution
+-----------------------------------
 
 ### Twitter Boostrap
 
@@ -106,6 +106,13 @@ This is dual licensed under the MIT and GPL version 2 licence.  For the sake of 
 Copyright (c) 2013 Scott Jehl
 
 Licensed under the MIT license.  For details see the license file in `support/respond`.
+
+### loading.io
+
+A loading icon called `ring.gif` has been included under `support/rulehunter/img`.  This came from the [loading.io](http://loading.io) website and their terms of uses state:
+
+    All materials used in generating animated icons in this website, except the g0v icon, are created by loading.io. You can use them freely for any purpose.
+
 
 ### Vendored Go Packages
 

@@ -24,7 +24,6 @@ const progressTpl = `
 <html>
   <head>
 		{{ index .Html "head" }}
-		<meta http-equiv="refresh" content="4">
     <title>Progress</title>
   </head>
 
@@ -35,40 +34,58 @@ const progressTpl = `
 			<div class="container">
 				<h1>Progress</h1>
 
-				<ul class="reports-progress">
-				{{range .Experiments}}
-					<li>
-						<table class="table table-bordered">
-						  <tr>
-								<th class="report-progress-th">Date</th>
-								<td>{{ .Stamp }}</td>
-							</tr>
-							{{if .Title}}
-								<tr><th>Title</th><td>{{ .Title }}</td></tr>
-							{{end}}
-							{{if .Tags}}
+				<div id="reports-container">
+					<ul class="reports-progress">
+					{{range .Experiments}}
+						<li>
+							<table class="table table-bordered">
 								<tr>
-									<th>Tags</th>
-									<td>
-										{{range $tag, $catLink := .Tags}}
-											<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
-										{{end}}
-									</td>
+									<th class="report-progress-th">Date</th>
+									<td>{{ .Stamp }}</td>
 								</tr>
-							{{end}}
-							<tr><th>Experiment filename</th><td>{{ .Filename }}</td></tr>
-							<tr><th>Message</th><td>{{ .Msg }}</td></tr>
-							<tr>
-								<th>Status</th>
-								<td class="status-{{ .Status }}">{{ .Status }}</td>
-							</tr>
-						</table>
-					</li>
-				{{end}}
-				</ul>
+								{{if .Title}}
+									<tr><th>Title</th><td>{{ .Title }}</td></tr>
+								{{end}}
+								{{if .Tags}}
+									<tr>
+										<th>Tags</th>
+										<td>
+											{{range $tag, $catLink := .Tags}}
+												<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
+											{{end}}
+										</td>
+									</tr>
+								{{end}}
+								<tr><th>Experiment filename</th><td>{{ .Filename }}</td></tr>
+								<tr><th>Message</th><td>{{ .Msg }}</td></tr>
+								<tr>
+									<th>Status</th>
+									<td class="status-{{ .Status }}">{{ .Status }}</td>
+								</tr>
+							</table>
+						</li>
+					{{end}}
+					</ul>
+				</div>
 			</div>
 		</div>
 
 		{{ index .Html "bootstrapJS" }}
+
+		<script>
+			(function refreshWorker(){
+					// Don't cache ajax or content won't fresh
+					$.ajaxSetup ({
+							cache: false,
+							complete: function() {
+								// Schedule next request when current one is complete
+								setTimeout(refreshWorker, 10000);
+							}
+					});
+					var ajaxLoad = "<img src='/img/ring.gif' style='width:48px; height:48px' alt='loading...' />";
+					var loadUrl = "/progress #reports-container";
+					$("#reports-container").html(ajaxLoad).load(loadUrl);
+			})();
+		</script>
 	</body>
 </html>`
