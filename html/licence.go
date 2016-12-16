@@ -22,56 +22,24 @@ package html
 import (
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/progress"
-	"github.com/vlifesystems/rulehunter/report"
 	"html/template"
-	"io/ioutil"
 	"path/filepath"
 )
 
-func generateReports(
+func generateLicencePage(
 	config *config.Config,
 	progressMonitor *progress.ProgressMonitor,
 ) error {
-
 	type TplData struct {
-		Reports []*TplReport
-		Html    map[string]template.HTML
+		Html      map[string]template.HTML
+		SourceURL string
 	}
 
-	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
-	if err != nil {
-		return err
-	}
-
-	numReportFiles := countFiles(reportFiles)
-	tplReports := make([]*TplReport, numReportFiles)
-
-	i := 0
-	for _, file := range reportFiles {
-		if !file.IsDir() {
-			report, err := report.LoadJson(config, file.Name())
-			if err != nil {
-				return err
-			}
-			reportURLDir, err := generateReport(report, config)
-			if err != nil {
-				return err
-			}
-			tplReports[i] = newTplReport(
-				report.Title,
-				makeTagLinks(report.Tags),
-				reportURLDir,
-				report.Stamp,
-			)
-		}
-		i++
-	}
-	sortTplReportsByDate(tplReports)
 	tplData := TplData{
-		tplReports,
-		makeHtml("reports"),
+		makeHtml("licence"),
+		config.SourceURL,
 	}
 
-	outputFilename := filepath.Join(config.WWWDir, "index.html")
-	return writeTemplate(outputFilename, reportsTpl, tplData)
+	outputFilename := filepath.Join(config.WWWDir, "licence", "index.html")
+	return writeTemplate(outputFilename, licenceTpl, tplData)
 }

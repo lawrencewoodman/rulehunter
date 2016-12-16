@@ -91,7 +91,7 @@ func generate(
 			return err
 		}
 	case cmd.All:
-		if err := generateHomePage(config, pm); err != nil {
+		if err := generateLicencePage(config, pm); err != nil {
 			return err
 		}
 		if err := generateReports(config, pm); err != nil {
@@ -127,6 +127,13 @@ func writeTemplate(
 	t, err := template.New("webpage").Parse(tpl)
 	if err != nil {
 		return err
+	}
+
+	dir := filepath.Dir(filename)
+	if len(dir) > 1 {
+		if err := os.MkdirAll(dir, modePerm); err != nil {
+			return err
+		}
 	}
 
 	f, err := os.Create(filename)
@@ -172,11 +179,14 @@ func genReportLocalDir(
 ) string {
 	magicNumber := genStampMagicString(stamp)
 	escapedTitle := escapeString(title)
-	return filepath.Join(wwwDir, "reports",
+	return filepath.Join(
+		wwwDir,
+		"reports",
 		fmt.Sprintf("%d", stamp.Year()),
 		fmt.Sprintf("%02d", stamp.Month()),
 		fmt.Sprintf("%02d", stamp.Day()),
-		fmt.Sprintf("%s_%s", magicNumber, escapedTitle))
+		fmt.Sprintf("%s_%s", magicNumber, escapedTitle),
+	)
 }
 
 func makeReportURLDir(
@@ -203,7 +213,7 @@ func countFiles(files []os.FileInfo) int {
 func makeHtmlNav(menuItem string) template.HTML {
 	var doc bytes.Buffer
 	validMenuItems := []string{
-		"home",
+		"licence",
 		"reports",
 		"tag",
 		"progress",
@@ -236,6 +246,7 @@ func makeHtml(menuItem string) map[string]template.HTML {
 	r := make(map[string]template.HTML)
 	r["head"] = template.HTML(headHtml)
 	r["nav"] = makeHtmlNav(menuItem)
+	r["footer"] = template.HTML(footerHtml)
 	r["bootstrapJS"] = template.HTML(bootstrapJSHtml)
 	return r
 }

@@ -112,3 +112,9 @@ table td.status-failure {
 div.aggregators {
   margin-right: 3em;
 }
+
+div#footer {
+  border-top: 1px solid #BBB;
+  padding-top: 2em;
+  padding-bottom: 2em;
+}

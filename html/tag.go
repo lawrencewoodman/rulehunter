@@ -25,7 +25,6 @@ import (
 	"github.com/vlifesystems/rulehunter/report"
 	"html/template"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 )
 
@@ -99,18 +98,15 @@ func generateTagPage(config *config.Config, tagName string) error {
 	tplReports = tplReports[:i]
 	sortTplReportsByDate(tplReports)
 	tplData := TplData{tagName, tplReports, makeHtml("tag")}
-	fullTagDir := filepath.Join(
+	fullFilename := filepath.Join(
 		config.WWWDir,
 		"reports",
 		"tag",
 		escapeString(tagName),
+		"index.html",
 	)
 
-	if err := os.MkdirAll(fullTagDir, modePerm); err != nil {
-		return err
-	}
-	outputFilename := filepath.Join(fullTagDir, "index.html")
-	return writeTemplate(outputFilename, tagTpl, tplData)
+	return writeTemplate(fullFilename, tagTpl, tplData)
 }
 
 func makeTagLinks(tags []string) map[string]string {

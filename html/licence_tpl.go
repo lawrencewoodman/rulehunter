@@ -19,7 +19,7 @@
 
 package html
 
-const homeTpl = `
+const licenceTpl = `
 <!DOCTYPE html>
 <html>
 	<head>
@@ -33,11 +33,10 @@ const homeTpl = `
 
 		<div id="content">
 			<div class="container">
-				<h1>Rulehunter</h1>
-				Find simple rules in your data to meet your goals.
+				<h1>Licence</h1>
+				<p><a href="http://rulehunter.com">Rulehunter</a> - A server to find simple rules in data based on user specified goals.</p>
 
-				<h2>Source</h2>
-				Copyright (C) 2016 <a href="http://vlifesystems.com">vLife Systems Ltd</a>
+				<p>Copyright (C) 2016 <a href="http://vlifesystems.com">vLife Systems Ltd</a></p>
 
 				<p>This program is free software: you can redistribute it and/or modify
 				it under the terms of the GNU Affero General Public License as published by
@@ -56,6 +55,10 @@ const homeTpl = `
 				<p>The source code is available at: <a href="{{ .SourceURL }}">{{ .SourceURL }}</a>.</p>
 
 			</div>
+		</div>
+
+		<div id="footer" class="container">
+			{{ index .Html "footer" }}
 		</div>
 
 		{{ index .Html "bootstrapJS" }}

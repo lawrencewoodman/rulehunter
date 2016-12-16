@@ -70,6 +70,10 @@ const progressTpl = `
 			</div>
 		</div>
 
+		<div id="footer" class="container">
+			{{ index .Html "footer" }}
+		</div>
+
 		{{ index .Html "bootstrapJS" }}
 
 		<script>

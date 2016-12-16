@@ -28,14 +28,13 @@ func TestGenerateTagPages(t *testing.T) {
 		BuildDir: "fixtures",
 	}
 	if err := generateTagPages(config); err != nil {
-		t.Errorf("generateTagPages(config) err: %s", err)
+		t.Fatalf("generateTagPages(config) err: %s", err)
 	}
 
 	tagFiles, err :=
 		ioutil.ReadDir(filepath.Join(config.WWWDir, "reports", "tag"))
 	if err != nil {
-		t.Errorf("ioutil.ReadDir(...) err: %s", err)
-		return
+		t.Fatalf("ioutil.ReadDir(...) err: %s", err)
 	}
 
 	tagsInfo := make(map[string]*tagInfo)

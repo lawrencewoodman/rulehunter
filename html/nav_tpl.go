@@ -36,20 +36,18 @@ const navTpl = `
 
 		<div id="navbar" class="collapse navbar-collapse">
 			<ul class="nav navbar-nav">
-				{{if eq .MenuItem "home"}}
-					<li class="active"><a href="/">Home</a></li>
-				{{else}}
-					<li><a href="/">Home</a></li>
-				{{end}}
-
 				{{if eq .MenuItem "reports"}}
-					<li class="active"><a href="/reports/">Reports</a></li>
+					<li class="active"><a href="/">Reports</a></li>
 				{{else}}
-					<li><a href="/reports/">Reports</a></li>
+					<li><a href="/">Reports</a></li>
 				{{end}}
 
 				{{if eq .MenuItem "tag"}}
 					<li class="active"><a href=".">Tag</a></li>
+				{{end}}
+
+				{{if eq .MenuItem "licence"}}
+					<li class="active"><a href="/licence/">Licence</a></li>
 				{{end}}
 
 				{{if eq .MenuItem "progress"}}

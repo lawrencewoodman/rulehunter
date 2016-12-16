@@ -19,27 +19,5 @@
 
 package html
 
-import (
-	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/progress"
-	"html/template"
-	"path/filepath"
-)
-
-func generateHomePage(
-	config *config.Config,
-	progressMonitor *progress.ProgressMonitor,
-) error {
-	type TplData struct {
-		Html      map[string]template.HTML
-		SourceURL string
-	}
-
-	tplData := TplData{
-		makeHtml("home"),
-		config.SourceURL,
-	}
-
-	outputFilename := filepath.Join(config.WWWDir, "index.html")
-	return writeTemplate(outputFilename, homeTpl, tplData)
-}
+const footerHtml = `
+<a href="http://rulehunter.com">Rulehunter</a> is licensed under the <em>GNU Affero General Public License version 3 (AGPLv3)</em>.  Please see the <a href="/licence/">Licence</a> page for more details and for how to obtain the source code.`
