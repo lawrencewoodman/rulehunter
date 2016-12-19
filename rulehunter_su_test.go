@@ -88,24 +88,25 @@ func TestRulehunter_service(t *testing.T) {
 		filepath.Join(cfgDir, "experiments"),
 	)
 
-	testStart := time.Now()
-	waitSeconds := 10.0
-	gotCorrectFiles := false
 	files := []string{}
 	wantFiles := []string{
 		"debt2_datasets.json",
 		"debt_datasets.json",
 		"debt_datasets.yaml",
 	}
-	for !gotCorrectFiles && time.Since(testStart).Seconds() < waitSeconds {
-		files = getFilesInDir(t, filepath.Join(cfgDir, "build", "reports"))
-		if reflect.DeepEqual(files, wantFiles) {
-			gotCorrectFiles = true
+	timeoutC := time.NewTimer(10 * time.Second).C
+	tickerC := time.NewTicker(400 * time.Millisecond).C
+	for {
+		select {
+		case <-tickerC:
+			files = getFilesInDir(t, filepath.Join(cfgDir, "build", "reports"))
+			if reflect.DeepEqual(files, wantFiles) {
+				return
+			}
+		case <-timeoutC:
+			t.Errorf("didn't generate correct files with time period, got: %v, want: %v",
+				files, wantFiles)
 		}
-	}
-	if !gotCorrectFiles {
-		t.Errorf("didn't generate correct files with time period, got: %v, want: %v",
-			files, wantFiles)
 	}
 }
 

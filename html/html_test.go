@@ -40,28 +40,26 @@ func TestRun_quit(t *testing.T) {
 		BuildDir:          filepath.Join(cfgDir, "build"),
 		MaxNumReportRules: 100,
 	}
-	go func() {
-		const secsWait = 2.0
-		time.Sleep(secsWait * time.Second)
-		quit.Quit()
-	}()
-	isQuit := false
+	hasQuitC := make(chan bool)
 	go func() {
 		Run(config, pm, l, quit, htmlCmds)
-		isQuit = true
+		hasQuitC <- true
 	}()
-	time.Sleep(1 * time.Second)
-	htmlCmds <- cmd.Flush
 
-	startTime := time.Now()
-	const secsWait = 5.0
-	for d := time.Since(startTime); d.Seconds() <= secsWait; {
-		if isQuit {
-			break
+	flushC := time.NewTimer(time.Second).C
+	quitC := time.NewTimer(2 * time.Second).C
+	timeoutC := time.NewTimer(5 * time.Second).C
+	for {
+		select {
+		case <-flushC:
+			htmlCmds <- cmd.Flush
+		case <-quitC:
+			quit.Quit()
+		case <-timeoutC:
+			t.Fatalf("Run() didn't quit")
+		case <-hasQuitC:
+			return
 		}
-	}
-	if !isQuit {
-		t.Fatalf("Run() didn't quit within %v seconds", secsWait)
 	}
 }
 

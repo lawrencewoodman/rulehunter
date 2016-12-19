@@ -364,15 +364,20 @@ func TestProcess(t *testing.T) {
 		t.Fatalf("Process: err: %v", err)
 	}
 
-	testStart := time.Now()
-	gotCorrectLogEntries := false
-	for !gotCorrectLogEntries && time.Since(testStart).Seconds() < 5 {
-		if reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
-			gotCorrectLogEntries = true
+	timeoutC := time.NewTimer(5 * time.Second).C
+	tickerC := time.NewTicker(400 * time.Millisecond).C
+	quitSelect := false
+	for !quitSelect {
+		select {
+		case <-tickerC:
+			if reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
+				quitSelect = true
+			}
+		case <-timeoutC:
+			t.Errorf("l.GetEntries() got: %v, want: %v",
+				l.GetEntries(), wantLogEntries)
+			quitSelect = true
 		}
-	}
-	if !gotCorrectLogEntries {
-		t.Errorf("l.GetEntries() got: %v, want: %v", l.GetEntries(), wantLogEntries)
 	}
 
 	err = progresstest.CheckExperimentsMatch(
@@ -463,15 +468,20 @@ func TestProcess_errors(t *testing.T) {
 		t.Fatalf("Process: got err: %v, wantErr: %v", err, wantErr)
 	}
 
-	testStart := time.Now()
-	gotCorrectLogEntries := false
-	for !gotCorrectLogEntries && time.Since(testStart).Seconds() < 5 {
-		if reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
-			gotCorrectLogEntries = true
+	timeoutC := time.NewTimer(5 * time.Second).C
+	tickerC := time.NewTicker(400 * time.Millisecond).C
+	quitSelect := false
+	for !quitSelect {
+		select {
+		case <-tickerC:
+			if reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
+				quitSelect = true
+			}
+		case <-timeoutC:
+			t.Errorf("l.GetEntries() got: %v, want: %v",
+				l.GetEntries(), wantLogEntries)
+			quitSelect = true
 		}
-	}
-	if !gotCorrectLogEntries {
-		t.Errorf("l.GetEntries() got: %v, want: %v", l.GetEntries(), wantLogEntries)
 	}
 
 	err = progresstest.CheckExperimentsMatch(

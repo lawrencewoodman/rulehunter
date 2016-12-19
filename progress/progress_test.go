@@ -232,7 +232,7 @@ func TestUpdateDetails(t *testing.T) {
 	if err := checkExperimentsMatch(got, wantExperiments); err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}
-	sleep(1)
+	time.Sleep(1 * time.Second)
 	close(htmlCmds)
 	htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
 	if !reflect.DeepEqual(htmlCmdsReceived, wantHtmlCmdsReceived) {
@@ -303,7 +303,7 @@ func TestReportSuccess(t *testing.T) {
 		if err := checkExperimentsMatch(got, wantExperiments); err != nil {
 			t.Errorf("checkExperimentsMatch() err: %s", err)
 		}
-		sleep(1)
+		time.Sleep(1 * time.Second)
 		close(htmlCmds)
 		htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
 		if !reflect.DeepEqual(htmlCmdsReceived, c.wantHtmlCmdsReceived) {
@@ -393,7 +393,7 @@ func TestReportInfo(t *testing.T) {
 		if err := checkExperimentsMatch(got, c.wantExperiments); err != nil {
 			t.Errorf("checkExperimentsMatch() err: %s", err)
 		}
-		sleep(1)
+		time.Sleep(1 * time.Second)
 		close(htmlCmds)
 	}
 }
@@ -462,7 +462,7 @@ func TestReportError(t *testing.T) {
 		if err := checkExperimentsMatch(got, c.wantExperiments); err != nil {
 			t.Errorf("checkExperimentsMatch() err: %s", err)
 		}
-		sleep(1)
+		time.Sleep(1 * time.Second)
 		close(htmlCmds)
 	}
 }
@@ -522,11 +522,6 @@ func mustNewTime(stamp string) time.Time {
 		panic(err)
 	}
 	return t
-}
-
-func sleep(s int) {
-	sleepInSeconds := time.Duration(s)
-	time.Sleep(sleepInSeconds * time.Second)
 }
 
 func checkExperimentsMatch(
