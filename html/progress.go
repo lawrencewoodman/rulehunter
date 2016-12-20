@@ -61,6 +61,6 @@ func generateProgressPage(
 	}
 	tplData := TplData{tplExperiments, makeHtml("progress")}
 
-	outputFilename := filepath.Join(config.WWWDir, "progress", "index.html")
-	return writeTemplate(outputFilename, progressTpl, tplData)
+	outputFilename := filepath.Join("progress", "index.html")
+	return writeTemplate(config, outputFilename, progressTpl, tplData)
 }

@@ -72,6 +72,6 @@ func generateReports(
 		makeHtml("reports"),
 	}
 
-	outputFilename := filepath.Join(config.WWWDir, "index.html")
-	return writeTemplate(outputFilename, reportsTpl, tplData)
+	outputFilename := "index.html"
+	return writeTemplate(config, outputFilename, reportsTpl, tplData)
 }

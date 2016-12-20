@@ -20,10 +20,12 @@
 package html
 
 import (
+	"fmt"
 	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/report"
 	"html/template"
+	"path/filepath"
 	"time"
 )
 
@@ -55,13 +57,21 @@ func generateReport(
 		makeHtml("reports"),
 	}
 
-	reportURLDir, err :=
-		makeReportURLDir(config.WWWDir, _report.Stamp, _report.Title)
-	if err != nil {
-		return "", err
-	}
-	reportFilename :=
-		genReportFilename(config.WWWDir, _report.Stamp, _report.Title)
-	err = writeTemplate(reportFilename, reportTpl, tplData)
+	reportURLDir := genReportURLDir(_report.Stamp, _report.Title)
+	reportFilename := genReportFilename(_report.Stamp, _report.Title)
+	err := writeTemplate(config, reportFilename, reportTpl, tplData)
 	return reportURLDir, err
+}
+
+func genReportFilename(stamp time.Time, title string) string {
+	magicNumber := genStampMagicString(stamp)
+	escapedTitle := escapeString(title)
+	return filepath.Join(
+		"reports",
+		fmt.Sprintf("%d", stamp.Year()),
+		fmt.Sprintf("%02d", stamp.Month()),
+		fmt.Sprintf("%02d", stamp.Day()),
+		fmt.Sprintf("%s_%s", magicNumber, escapedTitle),
+		"index.html",
+	)
 }

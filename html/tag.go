@@ -98,15 +98,14 @@ func generateTagPage(config *config.Config, tagName string) error {
 	tplReports = tplReports[:i]
 	sortTplReportsByDate(tplReports)
 	tplData := TplData{tagName, tplReports, makeHtml("tag")}
-	fullFilename := filepath.Join(
-		config.WWWDir,
+	outputFilename := filepath.Join(
 		"reports",
 		"tag",
 		escapeString(tagName),
 		"index.html",
 	)
 
-	return writeTemplate(fullFilename, tagTpl, tplData)
+	return writeTemplate(config, outputFilename, tagTpl, tplData)
 }
 
 func makeTagLinks(tags []string) map[string]string {

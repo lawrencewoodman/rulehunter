@@ -40,6 +40,6 @@ func generateLicencePage(
 		config.SourceURL,
 	}
 
-	outputFilename := filepath.Join(config.WWWDir, "licence", "index.html")
-	return writeTemplate(outputFilename, licenceTpl, tplData)
+	outputFilename := filepath.Join("licence", "index.html")
+	return writeTemplate(config, outputFilename, licenceTpl, tplData)
 }

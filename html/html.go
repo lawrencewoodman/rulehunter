@@ -120,6 +120,7 @@ func escapeString(s string) string {
 }
 
 func writeTemplate(
+	config *config.Config,
 	filename string,
 	tpl string,
 	tplData interface{},
@@ -129,14 +130,13 @@ func writeTemplate(
 		return err
 	}
 
-	dir := filepath.Dir(filename)
-	if len(dir) > 1 {
-		if err := os.MkdirAll(dir, modePerm); err != nil {
-			return err
-		}
+	fullFilename := filepath.Join(config.WWWDir, filename)
+	dir := filepath.Dir(fullFilename)
+	if err := os.MkdirAll(dir, modePerm); err != nil {
+		return err
 	}
 
-	f, err := os.Create(filename)
+	f, err := os.Create(fullFilename)
 	if err != nil {
 		return err
 	}
@@ -148,11 +148,6 @@ func writeTemplate(
 	return nil
 }
 
-func genReportFilename(wwwDir string, stamp time.Time, title string) string {
-	localDir := genReportLocalDir(wwwDir, stamp, title)
-	return filepath.Join(localDir, "index.html")
-}
-
 // This doesn't change below a second as if two or more reports had the same
 // title and were made less than a second apart then you wouldn't be able to
 // tell them apart anyway from the list of reports.  This should therfore
@@ -162,42 +157,11 @@ func genStampMagicString(stamp time.Time) string {
 	return strconv.FormatUint(uint64(sum), 36)
 }
 
-func genReportURLDir(
-	stamp time.Time,
-	title string,
-) string {
+func genReportURLDir(stamp time.Time, title string) string {
 	magicNumber := genStampMagicString(stamp)
 	escapedTitle := escapeString(title)
 	return fmt.Sprintf("/reports/%d/%02d/%02d/%s_%s/",
 		stamp.Year(), stamp.Month(), stamp.Day(), magicNumber, escapedTitle)
-}
-
-func genReportLocalDir(
-	wwwDir string,
-	stamp time.Time,
-	title string,
-) string {
-	magicNumber := genStampMagicString(stamp)
-	escapedTitle := escapeString(title)
-	return filepath.Join(
-		wwwDir,
-		"reports",
-		fmt.Sprintf("%d", stamp.Year()),
-		fmt.Sprintf("%02d", stamp.Month()),
-		fmt.Sprintf("%02d", stamp.Day()),
-		fmt.Sprintf("%s_%s", magicNumber, escapedTitle),
-	)
-}
-
-func makeReportURLDir(
-	wwwDir string,
-	stamp time.Time,
-	title string,
-) (string, error) {
-	URLDir := genReportURLDir(stamp, title)
-	localDir := genReportLocalDir(wwwDir, stamp, title)
-	err := os.MkdirAll(localDir, modePerm)
-	return URLDir, err
 }
 
 func countFiles(files []os.FileInfo) int {

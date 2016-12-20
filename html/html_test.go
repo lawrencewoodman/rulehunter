@@ -63,32 +63,6 @@ func TestRun_quit(t *testing.T) {
 	}
 }
 
-func TestGenReportFilename(t *testing.T) {
-	wwwDir := "/var/wwww"
-	cases := []struct {
-		stamp        time.Time
-		title        string
-		wantFilename string
-	}{
-		{time.Date(2009, time.November, 10, 22, 19, 18, 17, time.UTC),
-			"This could be very interesting",
-			filepath.Join(wwwDir, "reports", "2009", "11", "10",
-				fmt.Sprintf("%s_this-could-be-very-interesting",
-					genStampMagicString(
-						time.Date(2009, time.November, 10, 22, 19, 18, 17, time.UTC),
-					),
-				),
-				"index.html")},
-	}
-	for _, c := range cases {
-		got := genReportFilename(wwwDir, c.stamp, c.title)
-		if got != c.wantFilename {
-			t.Errorf("genReportFilename(%s, %s) got: %s, want: %s",
-				c.stamp, c.title, got, c.wantFilename)
-		}
-	}
-}
-
 func TestGenReportURLDir(t *testing.T) {
 	cases := []struct {
 		stamp   time.Time
@@ -109,48 +83,6 @@ func TestGenReportURLDir(t *testing.T) {
 		if got != c.wantDir {
 			t.Errorf("genReportFilename(%s, %s) got: %s, want: %s",
 				c.stamp, c.title, got, c.wantDir)
-		}
-	}
-}
-
-func TestMakeReportURLDir(t *testing.T) {
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	cases := []struct {
-		stamp         time.Time
-		title         string
-		wantDirExists string
-		wantURLDir    string
-	}{
-		{time.Date(2009, time.November, 10, 22, 19, 18, 17, time.UTC),
-			"This could be very interesting",
-			filepath.Join(tempDir, "reports", "2009", "11", "10",
-				fmt.Sprintf("%s_this-could-be-very-interesting/",
-					genStampMagicString(
-						time.Date(2009, time.November, 10, 22, 19, 18, 17, time.UTC),
-					),
-				),
-			),
-			fmt.Sprintf("/reports/2009/11/10/%s_this-could-be-very-interesting/",
-				genStampMagicString(
-					time.Date(2009, time.November, 10, 22, 19, 18, 17, time.UTC),
-				),
-			),
-		},
-	}
-	for _, c := range cases {
-		got, err := makeReportURLDir(tempDir, c.stamp, c.title)
-		if err != nil {
-			t.Errorf("makeReportURLDir(%s, %s, %s) err: %s",
-				tempDir, c.stamp, c.title, err)
-		}
-		if got != c.wantURLDir {
-			t.Errorf("makeReportURLDir(%s, %s, %s) got: %s, want: %s",
-				tempDir, c.stamp, c.title, got, c.wantURLDir)
-		}
-		if !dirExists(c.wantDirExists) {
-			t.Errorf("makeReportURLDir(%s, %s, %s)  - directory doesn't exist: %s",
-				tempDir, c.stamp, c.title, c.wantDirExists)
 		}
 	}
 }
