@@ -33,5 +33,5 @@ type errConfigLoad struct {
 }
 
 func (e errConfigLoad) Error() string {
-	return fmt.Sprintf("couldn't load configuration %s: %s", e.filename, e.err)
+	return fmt.Sprintf("couldn't load configuration file: %s: %s", e.filename, e.err)
 }
