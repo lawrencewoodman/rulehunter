@@ -92,8 +92,6 @@ func subMain(
 			return 1, err
 		}
 	} else if flags.serve {
-		quit.Add()
-		defer quit.Done()
 		if err = s.Run(); err != nil {
 			return 1, err
 		}
