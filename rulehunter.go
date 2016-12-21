@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/experiment"
 	"github.com/vlifesystems/rulehunter/html"
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/logger"
@@ -96,29 +95,20 @@ func subMain(
 			return 1, err
 		}
 	} else {
-		if err := processDir(config, pm, l); err != nil {
+		if err := processDir(prg, config); err != nil {
 			return 1, fmt.Errorf("Errors while processing dir")
 		}
 	}
 	return 0, nil
 }
 
-func processDir(
-	config *config.Config,
-	pm *progress.ProgressMonitor,
-	l logger.Logger,
-) error {
+func processDir(p *program, config *config.Config) error {
 	files, err := watcher.GetExperimentFiles(config.ExperimentsDir)
 	if err != nil {
 		return err
 	}
 	for _, file := range files {
-		if err := pm.AddExperiment(file.Name()); err != nil {
-			l.Error(err.Error())
-			return err
-		}
-		if err := experiment.Process(file, config, l, pm); err != nil {
-			l.Error(err.Error())
+		if err := p.ProcessFile(file); err != nil {
 			return err
 		}
 	}

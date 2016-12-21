@@ -70,6 +70,24 @@ func (p *program) Start(s service.Service) error {
 	return nil
 }
 
+func (p *program) ProcessFile(file fileinfo.FileInfo) error {
+	if err := p.progressMonitor.AddExperiment(file.Name()); err != nil {
+		p.logger.Error(err.Error())
+		return err
+	}
+	err := experiment.Process(
+		file,
+		p.config,
+		p.logger,
+		p.progressMonitor,
+	)
+	if err != nil {
+		p.logger.Error(err.Error())
+		return err
+	}
+	return nil
+}
+
 func (p *program) run() {
 	for {
 		select {
@@ -81,18 +99,7 @@ func (p *program) run() {
 			if file == nil {
 				break
 			}
-			if err := p.progressMonitor.AddExperiment(file.Name()); err != nil {
-				p.logger.Error(err.Error())
-			}
-			err := experiment.Process(
-				file,
-				p.config,
-				p.logger,
-				p.progressMonitor,
-			)
-			if err != nil {
-				p.logger.Error(err.Error())
-			}
+			p.ProcessFile(file)
 		}
 	}
 }
