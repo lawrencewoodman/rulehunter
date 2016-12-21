@@ -52,6 +52,7 @@ const licenceTpl = `
 				along with this program.  If not, see
 				<a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p>
 
+				<h1>Source Code</h1>
 				<p>The source code is available at: <a href="{{ .SourceURL }}">{{ .SourceURL }}</a>.</p>
 
 			</div>
