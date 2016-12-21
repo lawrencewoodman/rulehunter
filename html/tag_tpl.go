@@ -49,6 +49,10 @@ const tagTpl = `
 			</div>
 		</div>
 
+		<div id="footer" class="container">
+			{{ index .Html "footer" }}
+		</div>
+
 		{{ index .Html "bootstrapJS" }}
 	</body>
 </html>`
