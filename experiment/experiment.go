@@ -478,8 +478,8 @@ func assessRules(
 		return nil, err
 	}
 
+	wg.Add(cfg.MaxNumProcesses)
 	for i := 0; i < cfg.MaxNumProcesses; i++ {
-		wg.Add(1)
 		go assessRulesWorker(&wg, rules, experiment, jobs, results)
 	}
 
