@@ -435,14 +435,23 @@ func assessCollectResults(
 				return nil, err
 			}
 		}
-		progress := 100.0 * float64(jobNum) / float64(numJobs)
-		msg := fmt.Sprintf("Assessing rules %d/%d: %.2f%%",
-			stage, assessRulesNumStages, progress)
-		if err := epr.ReportInfo(msg); err != nil {
+		if err := reportProgress(epr, stage, jobNum, numJobs); err != nil {
 			return nil, err
 		}
 	}
 	return assessment, nil
+}
+
+func reportProgress(
+	epr *progress.ExperimentProgressReporter,
+	stage int,
+	jobNum int,
+	numJobs int,
+) error {
+	progress := 100.0 * float64(jobNum) / float64(numJobs)
+	msg := fmt.Sprintf("Assessing rules %d/%d: %.2f%%",
+		stage, assessRulesNumStages, progress)
+	return epr.ReportInfo(msg)
 }
 
 func assessCreateJobs(numRules int, step int, jobs chan<- assessJob) {
