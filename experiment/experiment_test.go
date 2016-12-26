@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
 	"syscall"
 	"testing"
 	"time"
@@ -410,6 +411,64 @@ func TestProcess(t *testing.T) {
 		}
 	}
 	// TODO: Test files generated
+}
+
+func TestProcess_multiProcesses(t *testing.T) {
+	var singleCPUTime int64
+	maxNumProcesses := runtime.NumCPU()
+	if maxNumProcesses < 2 {
+		t.Skip("This test isn't implemented on single cpu systems.")
+	}
+	if testing.Short() {
+		t.Skip("This test is skipped in short mode.")
+	}
+
+	t.Logf("Testing with %d processes.", maxNumProcesses)
+	for numProcesses := 1; numProcesses <= maxNumProcesses; numProcesses++ {
+		cfgDir := testhelpers.BuildConfigDirs(t)
+		defer os.RemoveAll(cfgDir)
+		cfg := &config.Config{
+			ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+			WWWDir:            filepath.Join(cfgDir, "www"),
+			BuildDir:          filepath.Join(cfgDir, "build"),
+			MaxNumProcesses:   numProcesses,
+			MaxNumReportRules: 100,
+		}
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", "flow_big.yaml"),
+			cfg.ExperimentsDir,
+		)
+		file := testhelpers.NewFileInfo("flow_big.yaml", time.Now())
+		quit := quitter.New()
+		defer quit.Quit()
+		l := testhelpers.NewLogger()
+		go l.Run(quit)
+		htmlCmds := make(chan cmd.Cmd)
+		defer close(htmlCmds)
+		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+		go cmdMonitor.Run()
+		pm, err := progress.NewMonitor(
+			filepath.Join(cfg.BuildDir, "progress"),
+			htmlCmds,
+		)
+		if err != nil {
+			t.Fatalf("progress.NewMonitor: err: %v", err)
+		}
+		start := time.Now()
+		if err := Process(file, cfg, l, pm); err != nil {
+			t.Fatalf("Process: err: %v", err)
+		}
+		elapsed := time.Since(start).Nanoseconds()
+		if numProcesses == 1 {
+			singleCPUTime = elapsed
+		} else {
+			if elapsed >= singleCPUTime {
+				t.Errorf("Process was slower with %d processes than with 1",
+					numProcesses)
+			}
+		}
+	}
 }
 
 func TestProcess_errors(t *testing.T) {
