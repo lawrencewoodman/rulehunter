@@ -46,7 +46,14 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				RuleFieldNames: []string{"group", "district", "height"},
 				Aggregators: []aggregators.AggregatorSpec{
+					aggregators.MustNew("numMatches", "count", "1==1"),
+					aggregators.MustNew(
+						"percentMatches",
+						"calc",
+						"roundto(100.0 * numMatches / numRecords, 2)",
+					),
 					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
+					aggregators.MustNew("goalsScore", "goalsscore"),
 				},
 				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
 				SortOrder: []experiment.SortField{
@@ -71,7 +78,14 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				RuleFieldNames: []string{"group", "district", "height"},
 				Aggregators: []aggregators.AggregatorSpec{
+					aggregators.MustNew("numMatches", "count", "1==1"),
+					aggregators.MustNew(
+						"percentMatches",
+						"calc",
+						"roundto(100.0 * numMatches / numRecords, 2)",
+					),
 					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
+					aggregators.MustNew("goalsScore", "goalsscore"),
 				},
 				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
 				SortOrder: []experiment.SortField{
@@ -106,7 +120,14 @@ func TestLoadExperiment(t *testing.T) {
 					"tertiaryEducated",
 				},
 				Aggregators: []aggregators.AggregatorSpec{
+					aggregators.MustNew("numMatches", "count", "1==1"),
+					aggregators.MustNew(
+						"percentMatches",
+						"calc",
+						"roundto(100.0 * numMatches / numRecords, 2)",
+					),
 					aggregators.MustNew("helpedMcc", "mcc", "success"),
+					aggregators.MustNew("goalsScore", "goalsscore"),
 				},
 				Goals: []*goal.Goal{goal.MustNew("helpedMcc > 0")},
 				SortOrder: []experiment.SortField{
@@ -128,7 +149,14 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				RuleFieldNames: []string{"group", "district", "height"},
 				Aggregators: []aggregators.AggregatorSpec{
+					aggregators.MustNew("numMatches", "count", "1==1"),
+					aggregators.MustNew(
+						"percentMatches",
+						"calc",
+						"roundto(100.0 * numMatches / numRecords, 2)",
+					),
 					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
+					aggregators.MustNew("goalsScore", "goalsscore"),
 				},
 				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
 				SortOrder: []experiment.SortField{

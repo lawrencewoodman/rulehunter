@@ -20,10 +20,8 @@
 package rhkit
 
 import (
-	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
-	"github.com/vlifesystems/rhkit/aggregators"
 	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rhkit/rule"
 )
@@ -34,29 +32,16 @@ func AssessRules(
 	rules []rule.Rule,
 	e *experiment.Experiment,
 ) (*Assessment, error) {
-	var allAggregatorSpecs []aggregators.AggregatorSpec
-	var numRecords int64
-	var err error
-
-	allAggregatorSpecs, err = addDefaultAggregators(e.Aggregators)
-	if err != nil {
-		return &Assessment{}, err
-	}
-
 	ruleAssessors := make([]*ruleAssessor, len(rules))
 	for i, rule := range rules {
-		ruleAssessors[i] = newRuleAssessor(rule, allAggregatorSpecs, e.Goals)
+		ruleAssessors[i] = newRuleAssessor(rule, e.Aggregators, e.Goals)
 	}
 
-	numRecords, err = processDataset(e.Dataset, ruleAssessors)
+	numRecords, err := processDataset(e.Dataset, ruleAssessors)
 	if err != nil {
 		return &Assessment{}, err
 	}
-	goodRuleAssessors, err := filterGoodRuleAssessors(ruleAssessors, numRecords)
-	if err != nil {
-		return &Assessment{}, err
-	}
-
+	goodRuleAssessors := filterGoodRuleAssessors(ruleAssessors, numRecords)
 	assessment, err := newAssessment(numRecords, goodRuleAssessors, e.Goals)
 	return assessment, err
 }
@@ -64,27 +49,23 @@ func AssessRules(
 func filterGoodRuleAssessors(
 	ruleAssessments []*ruleAssessor,
 	numRecords int64,
-) ([]*ruleAssessor, error) {
+) []*ruleAssessor {
 	goodRuleAssessors := make([]*ruleAssessor, 0)
 	for _, ruleAssessment := range ruleAssessments {
 		numMatches, exists :=
 			ruleAssessment.GetAggregatorValue("numMatches", numRecords)
 		if !exists {
-			// TODO: Create a proper error for this?
-			err := errors.New("numMatches doesn't exist in aggregators")
-			return goodRuleAssessors, err
+			panic("numMatches doesn't exist in aggregators")
 		}
 		numMatchesInt, isInt := numMatches.Int()
 		if !isInt {
-			// TODO: Create a proper error for this?
-			err := errors.New(fmt.Sprintf("Can't cast to Int: %q", numMatches))
-			return goodRuleAssessors, err
+			panic(fmt.Sprintf("can't cast numMatches to Int: %s", numMatches))
 		}
 		if numMatchesInt > 0 {
 			goodRuleAssessors = append(goodRuleAssessors, ruleAssessment)
 		}
 	}
-	return goodRuleAssessors, nil
+	return goodRuleAssessors
 }
 
 func processDataset(
@@ -110,31 +91,4 @@ func processDataset(
 	}
 
 	return numRecords, conn.Err()
-}
-
-// TODO: Do this when creating the experiment, not here
-func addDefaultAggregators(
-	aggregatorSpecs []aggregators.AggregatorSpec,
-) ([]aggregators.AggregatorSpec, error) {
-	newAggregatorSpecs := make([]aggregators.AggregatorSpec, 2)
-	numMatchesAggregatorSpec, err := aggregators.New("numMatches", "count", "1==1")
-	if err != nil {
-		return aggregatorSpecs, err
-	}
-	percentMatchesAggregatorSpec, err :=
-		aggregators.New("percentMatches", "calc",
-			"roundto(100.0 * numMatches / numRecords, 2)")
-	if err != nil {
-		return aggregatorSpecs, err
-	}
-	goalsScoreAggregatorSpec, err :=
-		aggregators.New("goalsScore", "goalsscore")
-	if err != nil {
-		return aggregatorSpecs, err
-	}
-	newAggregatorSpecs[0] = numMatchesAggregatorSpec
-	newAggregatorSpecs[1] = percentMatchesAggregatorSpec
-	newAggregatorSpecs = append(newAggregatorSpecs, aggregatorSpecs...)
-	newAggregatorSpecs = append(newAggregatorSpecs, goalsScoreAggregatorSpec)
-	return newAggregatorSpecs, nil
 }
