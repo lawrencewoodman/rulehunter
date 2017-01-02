@@ -53,7 +53,7 @@ func binaryExprToLiteral(
 	case token.QUO:
 		return opQuo(lh, rh)
 	}
-	return dlit.MustNew(ErrInvalidOp(be.Op))
+	return dlit.MustNew(InvalidOpError(be.Op))
 }
 
 func opLss(lh *dlit.Literal, rh *dlit.Literal) *dlit.Literal {

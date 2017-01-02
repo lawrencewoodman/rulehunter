@@ -56,7 +56,7 @@ func New(v interface{}) (*Literal, error) {
 	case error:
 		return newErrorLiteral(e), nil
 	}
-	err := ErrInvalidKind(reflect.TypeOf(v).String())
+	err := InvalidKindError(reflect.TypeOf(v).String())
 	return newErrorLiteral(err), err
 }
 
@@ -178,12 +178,12 @@ func (l *Literal) Err() error {
 	return nil
 }
 
-// ErrInvalidKind indicates that a Literal can't be created from this type
-type ErrInvalidKind string
+// InvalidKindError indicates that a Literal can't be created from this type
+type InvalidKindError string
 
 // Error returns the error as a string
-func (e ErrInvalidKind) Error() string {
-	return fmt.Sprintf("Can't create Literal from type: %s", string(e))
+func (e InvalidKindError) Error() string {
+	return fmt.Sprintf("can't create Literal from type: %s", string(e))
 }
 
 func newErrorLiteral(e error) *Literal {

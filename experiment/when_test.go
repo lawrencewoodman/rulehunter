@@ -217,9 +217,9 @@ func TestEvalWhenExpr_errors(t *testing.T) {
 	isFinished := true
 	stamp := now
 	when := "!hasTwoLegs"
-	wantErr := dexpr.ErrInvalidExpr{
+	wantErr := dexpr.InvalidExprError{
 		Expr: "!hasTwoLegs",
-		Err:  dexpr.ErrVarNotExist("hasTwoLegs"),
+		Err:  dexpr.VarNotExistError("hasTwoLegs"),
 	}
 	whenExpr := dexpr.MustNew(when)
 	got, err := evalWhenExpr(now, isFinished, stamp, whenExpr)

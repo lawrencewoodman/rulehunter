@@ -27,7 +27,7 @@ type CallFun func([]*dlit.Literal) (*dlit.Literal, error)
 func New(expr string) (*Expr, error) {
 	node, err := parseExpr(expr)
 	if err != nil {
-		return &Expr{}, ErrInvalidExpr{expr, ErrSyntax}
+		return &Expr{}, InvalidExprError{expr, ErrSyntax}
 	}
 	return &Expr{Expr: expr, Node: node}, nil
 }
@@ -52,7 +52,7 @@ func (expr *Expr) Eval(
 	}
 	ast.Inspect(expr.Node, inspector)
 	if err := l.Err(); err != nil {
-		return dlit.MustNew(ErrInvalidExpr{expr.Expr, err})
+		return dlit.MustNew(InvalidExprError{expr.Expr, err})
 	}
 	return l
 }
@@ -67,7 +67,7 @@ func (expr *Expr) EvalBool(
 	} else if err := l.Err(); err != nil {
 		return false, err
 	}
-	return false, ErrInvalidExpr{expr.Expr, ErrIncompatibleTypes}
+	return false, InvalidExprError{expr.Expr, ErrIncompatibleTypes}
 }
 
 func (expr *Expr) String() string {
@@ -102,7 +102,7 @@ func nodeToLiteral(
 		}
 	case *ast.Ident:
 		if l, exists := vars[x.Name]; !exists {
-			return dlit.MustNew(ErrVarNotExist(x.Name))
+			return dlit.MustNew(VarNotExistError(x.Name))
 		} else {
 			return l
 		}
@@ -192,11 +192,11 @@ func callFun(
 	nameString := fmt.Sprintf("%s", name)
 	f, exists := callFuncs[nameString]
 	if !exists {
-		return dlit.MustNew(ErrFunctionNotExist(nameString))
+		return dlit.MustNew(FunctionNotExistError(nameString))
 	}
 	l, err := f(args)
 	if err != nil {
-		return dlit.MustNew(ErrFunctionError{nameString, err})
+		return dlit.MustNew(FunctionError{nameString, err})
 	}
 	return l
 }
@@ -209,7 +209,7 @@ func evalUnaryExpr(rh *dlit.Literal, op token.Token) *dlit.Literal {
 	case token.SUB:
 		r = opNeg(rh)
 	default:
-		r, _ = dlit.New(ErrInvalidOp(op))
+		r, _ = dlit.New(InvalidOpError(op))
 	}
 	return r
 }
