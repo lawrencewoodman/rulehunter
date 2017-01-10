@@ -674,7 +674,7 @@ func TestMakeDataset_err(t *testing.T) {
 /*************************
        Benchmarks
 *************************/
-func BenchmarkProgress(b *testing.B) {
+func BenchmarkProcess(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		b.StopTimer()
 		cfgDir := testhelpers.BuildConfigDirs(b)
