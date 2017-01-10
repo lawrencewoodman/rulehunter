@@ -144,14 +144,7 @@ func Process(
 			experimentFile.Name(), err))
 		return err
 	}
-	rules, err :=
-		rhkit.GenerateRules(fieldDescriptions, experiment.RuleFieldNames)
-	if err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
-		fullErr := fmt.Errorf("Couldn't generate rules: %s", err)
-		return epr.ReportError(fullErr)
-	}
+	rules := rhkit.GenerateRules(fieldDescriptions, experiment.RuleFieldNames)
 
 	assessment, err := assessRules(1, rules, experiment, epr, cfg)
 	if err != nil {

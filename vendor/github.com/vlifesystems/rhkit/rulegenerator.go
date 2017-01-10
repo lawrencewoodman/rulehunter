@@ -20,27 +20,21 @@
 package rhkit
 
 import (
-	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/rule"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 )
 
-type ruleGeneratorFunc func(
-	*Description,
-	[]string,
-	string,
-) ([]rule.Rule, error)
+type ruleGeneratorFunc func(*Description, []string, string) []rule.Rule
 
 func GenerateRules(
 	inputDescription *Description,
 	ruleFields []string,
-) ([]rule.Rule, error) {
+) []rule.Rule {
 	rules := make([]rule.Rule, 1)
 	ruleGenerators := []ruleGeneratorFunc{
 		generateIntRules, generateFloatRules, generateValueRules,
@@ -51,10 +45,7 @@ func GenerateRules(
 	for field, _ := range inputDescription.fields {
 		if stringInSlice(field, ruleFields) {
 			for _, ruleGenerator := range ruleGenerators {
-				newRules, err := ruleGenerator(inputDescription, ruleFields, field)
-				if err != nil {
-					return nil, err
-				}
+				newRules := ruleGenerator(inputDescription, ruleFields, field)
 				rules = append(rules, newRules...)
 			}
 		}
@@ -65,7 +56,7 @@ func GenerateRules(
 		rules = append(rules, cRules...)
 	}
 	rule.Sort(rules)
-	return rules, nil
+	return rules
 }
 
 func CombineRules(rules []rule.Rule) []rule.Rule {
@@ -122,12 +113,12 @@ func generateValueRules(
 	inputDescription *Description,
 	ruleFields []string,
 	field string,
-) ([]rule.Rule, error) {
+) []rule.Rule {
 	fd := inputDescription.fields[field]
 	rulesMap := make(map[string]rule.Rule)
 	values := fd.values
 	if len(values) < 2 {
-		return []rule.Rule{}, nil
+		return []rule.Rule{}
 	}
 	switch fd.kind {
 	case ftInt:
@@ -137,7 +128,7 @@ func generateValueRules(
 			}
 			n, isInt := vd.value.Int()
 			if !isInt {
-				return nil, errors.New(fmt.Sprintf("value isn't int: %s", vd.value))
+				panic(fmt.Sprintf("value isn't int: %s", vd.value))
 			}
 			eqRule := rule.NewEQFVI(field, n)
 			neRule := rule.NewNEFVI(field, n)
@@ -152,7 +143,7 @@ func generateValueRules(
 			}
 			n, isFloat := vd.value.Float()
 			if !isFloat {
-				return nil, errors.New(fmt.Sprintf("value isn't float: %s", vd.value))
+				panic(fmt.Sprintf("value isn't float: %s", vd.value))
 			}
 			tn := truncateFloat(n, maxDP)
 			eqRule := rule.NewEQFVF(field, tn)
@@ -175,17 +166,17 @@ func generateValueRules(
 		}
 	}
 	rules := rulesMapToArray(rulesMap)
-	return rules, nil
+	return rules
 }
 
 func generateIntRules(
 	inputDescription *Description,
 	ruleFields []string,
 	field string,
-) ([]rule.Rule, error) {
+) []rule.Rule {
 	fd := inputDescription.fields[field]
 	if fd.kind != ftInt {
-		return []rule.Rule{}, nil
+		return []rule.Rule{}
 	}
 	rulesMap := make(map[string]rule.Rule)
 	min, _ := fd.min.Int()
@@ -209,16 +200,7 @@ func generateIntRules(
 	}
 
 	rules := rulesMapToArray(rulesMap)
-	return rules, nil
-}
-
-var matchTrailingZerosRegexp = regexp.MustCompile("^(\\d+.[^ 0])(0+)$")
-var matchAllZerosRegexp = regexp.MustCompile("^(0)(.0+)$")
-
-func floatToString(f float64, maxDP int) string {
-	fStr := fmt.Sprintf("%.*f", maxDP, f)
-	fStr = matchTrailingZerosRegexp.ReplaceAllString(fStr, "$1")
-	return matchAllZerosRegexp.ReplaceAllString(fStr, "0")
+	return rules
 }
 
 func truncateFloat(f float64, maxDP int) float64 {
@@ -232,10 +214,10 @@ func generateFloatRules(
 	inputDescription *Description,
 	ruleFields []string,
 	field string,
-) ([]rule.Rule, error) {
+) []rule.Rule {
 	fd := inputDescription.fields[field]
 	if fd.kind != ftFloat {
-		return []rule.Rule{}, nil
+		return []rule.Rule{}
 	}
 	rulesMap := make(map[string]rule.Rule)
 	min, _ := fd.min.Float()
@@ -258,17 +240,17 @@ func generateFloatRules(
 	}
 
 	rules := rulesMapToArray(rulesMap)
-	return rules, nil
+	return rules
 }
 
 func generateCompareNumericRules(
 	inputDescription *Description,
 	ruleFields []string,
 	field string,
-) ([]rule.Rule, error) {
+) []rule.Rule {
 	fd := inputDescription.fields[field]
 	if fd.kind != ftInt && fd.kind != ftFloat {
-		return []rule.Rule{}, nil
+		return []rule.Rule{}
 	}
 	fieldNum := calcFieldNum(inputDescription.fields, field)
 	rulesMap := make(map[string]rule.Rule)
@@ -293,17 +275,17 @@ func generateCompareNumericRules(
 		}
 	}
 	rules := rulesMapToArray(rulesMap)
-	return rules, nil
+	return rules
 }
 
 func generateCompareStringRules(
 	inputDescription *Description,
 	ruleFields []string,
 	field string,
-) ([]rule.Rule, error) {
+) []rule.Rule {
 	fd := inputDescription.fields[field]
 	if fd.kind != ftString {
-		return []rule.Rule{}, nil
+		return []rule.Rule{}
 	}
 	fieldNum := calcFieldNum(inputDescription.fields, field)
 	rulesMap := make(map[string]rule.Rule)
@@ -325,7 +307,7 @@ func generateCompareStringRules(
 		}
 	}
 	rules := rulesMapToArray(rulesMap)
-	return rules, nil
+	return rules
 }
 
 func calcNumSharedValues(
@@ -345,6 +327,8 @@ func isNumberField(fd *fieldDescription) bool {
 	return fd.kind == ftInt || fd.kind == ftFloat
 }
 
+var compareExpr *dexpr.Expr = dexpr.MustNew("min1 < max2 && max1 > min2")
+
 func hasComparableNumberRange(
 	fd1 *fieldDescription,
 	fd2 *fieldDescription,
@@ -360,15 +344,8 @@ func hasComparableNumberRange(
 		"max2": fd2.max,
 	}
 	funcs := map[string]dexpr.CallFun{}
-	expr, err := dexpr.New("min1 < max2 && max1 > min2")
-	if err != nil {
-		return false
-	}
-	isComparable, err = expr.EvalBool(vars, funcs)
-	if err != nil {
-		return false
-	}
-	return isComparable
+	isComparable, err := compareExpr.EvalBool(vars, funcs)
+	return err == nil && isComparable
 }
 
 func rulesMapToArray(rulesMap map[string]rule.Rule) []rule.Rule {
@@ -381,70 +358,18 @@ func rulesMapToArray(rulesMap map[string]rule.Rule) []rule.Rule {
 	return rules
 }
 
-func generateCombineRules(
-	inputDescription *Description,
-	ruleFields []string,
-	field string,
-) ([]rule.Rule, error) {
-	if len(ruleFields) != 2 {
-		return []rule.Rule{}, nil
-	}
-	otherField := getOtherField(ruleFields, field)
-	rulesMap := make(map[string]rule.Rule)
-	firstInRules, err := generateInRules(inputDescription, ruleFields, field)
-	if err != nil {
-		return []rule.Rule{}, err
-	}
-	firstValueRules, err := generateValueRules(inputDescription, ruleFields, field)
-	if err != nil {
-		return []rule.Rule{}, err
-	}
-	firstRules := append(firstInRules, firstValueRules...)
-	for _, firstRule := range firstRules {
-		otherInRules, err :=
-			generateInRules(inputDescription, ruleFields, otherField)
-		if err != nil {
-			return []rule.Rule{}, err
-		}
-		otherValueRules, err :=
-			generateValueRules(inputDescription, ruleFields, otherField)
-		if err != nil {
-			return []rule.Rule{}, err
-		}
-		if len(otherInRules) == 0 && len(otherValueRules) == 0 {
-			break
-		}
-		otherRules := append(otherInRules, otherValueRules...)
-		for _, otherRule := range otherRules {
-			r := rule.NewAnd(firstRule, otherRule)
-			rulesMap[r.String()] = r
-		}
-	}
-	rules := rulesMapToArray(rulesMap)
-	return rules, nil
-}
-
-func getOtherField(ruleFields []string, field string) string {
-	for _, f := range ruleFields {
-		if f != field {
-			return f
-		}
-	}
-	panic(fmt.Sprintf("can't find other field than: %s", field))
-}
-
 func generateInRules(
 	inputDescription *Description,
 	ruleFields []string,
 	field string,
-) ([]rule.Rule, error) {
+) []rule.Rule {
 	fd := inputDescription.fields[field]
 	numValues := len(fd.values)
 	if fd.kind != ftString &&
 		fd.kind != ftFloat &&
 		fd.kind != ftInt ||
 		numValues <= 3 || numValues > 12 {
-		return []rule.Rule{}, nil
+		return []rule.Rule{}
 	}
 	rulesMap := make(map[string]rule.Rule)
 	for i := 3; ; i++ {
@@ -461,7 +386,7 @@ func generateInRules(
 		}
 	}
 	rules := rulesMapToArray(rulesMap)
-	return rules, nil
+	return rules
 }
 
 func makeCompareValues(
@@ -534,5 +459,5 @@ func calcFieldNum(
 		}
 		j++
 	}
-	panic("Can't field field in fieldDescriptions")
+	panic("can't find field in fieldDescriptions")
 }
