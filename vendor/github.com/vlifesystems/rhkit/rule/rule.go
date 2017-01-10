@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
+	"sort"
+	"strings"
 )
 
 type Rule interface {
@@ -53,10 +55,26 @@ func (e IncompatibleTypesRuleError) Error() string {
 	return "incompatible types in rule: " + e.Rule.String()
 }
 
+// Sort sorts the rules in place using their .String() method
+func Sort(rules []Rule) {
+	sort.Sort(byString(rules))
+}
+
 func commaJoinValues(values []*dlit.Literal) string {
 	str := fmt.Sprintf("\"%s\"", values[0].String())
 	for _, v := range values[1:] {
 		str += fmt.Sprintf(",\"%s\"", v)
 	}
 	return str
+}
+
+// byString implements sort.Interface for []Rule
+type byString []Rule
+
+func (rs byString) Len() int { return len(rs) }
+func (rs byString) Swap(i, j int) {
+	rs[i], rs[j] = rs[j], rs[i]
+}
+func (rs byString) Less(i, j int) bool {
+	return strings.Compare(rs[i].String(), rs[j].String()) == -1
 }

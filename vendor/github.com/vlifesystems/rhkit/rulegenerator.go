@@ -45,7 +45,7 @@ func GenerateRules(
 	ruleGenerators := []ruleGeneratorFunc{
 		generateIntRules, generateFloatRules, generateValueRules,
 		generateCompareNumericRules, generateCompareStringRules,
-		generateInRules, generateCombineRules,
+		generateInRules,
 	}
 	rules[0] = rule.NewTrue()
 	for field, _ := range inputDescription.fields {
@@ -59,25 +59,54 @@ func GenerateRules(
 			}
 		}
 	}
+
+	if len(ruleFields) == 2 {
+		cRules := CombineRules(rules)
+		rules = append(rules, cRules...)
+	}
+	rule.Sort(rules)
 	return rules, nil
 }
 
 func CombineRules(rules []rule.Rule) []rule.Rule {
+	rule.Sort(rules)
 	combinedRules := make([]rule.Rule, 0)
 	numRules := len(rules)
 	for i := 0; i < numRules-1; i++ {
 		for j := i + 1; j < numRules; j++ {
-			_, ruleIIsTrue := rules[i].(rule.True)
-			_, ruleJIsTrue := rules[j].(rule.True)
-			if !ruleIIsTrue && !ruleJIsTrue {
+			andOk, orOk := areValidCombineRules(rules[i], rules[j])
+			if andOk {
 				andRule := rule.NewAnd(rules[i], rules[j])
-				orRule := rule.NewOr(rules[i], rules[j])
 				combinedRules = append(combinedRules, andRule)
+			}
+			if orOk {
+				orRule := rule.NewOr(rules[i], rules[j])
 				combinedRules = append(combinedRules, orRule)
 			}
 		}
 	}
 	return combinedRules
+}
+
+// areValidCombineRules returns whether suitable for (And, Or)
+func areValidCombineRules(ruleA, ruleB rule.Rule) (andOk bool, orOk bool) {
+	_, ruleAIsTrue := ruleA.(rule.True)
+	_, ruleBIsTrue := ruleB.(rule.True)
+	if ruleAIsTrue || ruleBIsTrue {
+		return false, false
+	}
+	tRuleA, ruleAIsTweakable := ruleA.(rule.TweakableRule)
+	tRuleB, ruleBIsTweakable := ruleB.(rule.TweakableRule)
+	if !ruleAIsTweakable || !ruleBIsTweakable {
+		return true, true
+	}
+
+	fieldA, opA, vA := tRuleA.GetTweakableParts()
+	fieldB, opB, vB := tRuleB.GetTweakableParts()
+	if (fieldA == fieldB && opA == opB) || (fieldA == fieldB && vA == vB) {
+		return false, true
+	}
+	return true, true
 }
 
 func stringInSlice(s string, strings []string) bool {
@@ -102,10 +131,13 @@ func generateValueRules(
 	}
 	switch fd.kind {
 	case ftInt:
-		for _, v := range values {
-			n, isInt := v.Int()
+		for _, vd := range values {
+			if vd.num < 2 {
+				continue
+			}
+			n, isInt := vd.value.Int()
 			if !isInt {
-				return nil, errors.New(fmt.Sprintf("value isn't int: %s", v))
+				return nil, errors.New(fmt.Sprintf("value isn't int: %s", vd.value))
 			}
 			eqRule := rule.NewEQFVI(field, n)
 			neRule := rule.NewNEFVI(field, n)
@@ -114,10 +146,13 @@ func generateValueRules(
 		}
 	case ftFloat:
 		maxDP := fd.maxDP
-		for _, v := range values {
-			n, isFloat := v.Float()
+		for _, vd := range values {
+			if vd.num < 2 {
+				continue
+			}
+			n, isFloat := vd.value.Float()
 			if !isFloat {
-				return nil, errors.New(fmt.Sprintf("value isn't float: %s", v))
+				return nil, errors.New(fmt.Sprintf("value isn't float: %s", vd.value))
 			}
 			tn := truncateFloat(n, maxDP)
 			eqRule := rule.NewEQFVF(field, tn)
@@ -126,11 +161,14 @@ func generateValueRules(
 			rulesMap[neRule.String()] = neRule
 		}
 	case ftString:
-		for _, v := range fd.values {
-			s := v.String()
+		for _, vd := range values {
+			if vd.num < 2 {
+				continue
+			}
+			s := vd.value.String()
 			eqRule := rule.NewEQFVS(field, s)
 			rulesMap[eqRule.String()] = eqRule
-			if len(fd.values) > 2 {
+			if len(values) > 2 {
 				neRule := rule.NewNEFVS(field, s)
 				rulesMap[neRule.String()] = neRule
 			}
@@ -295,11 +333,9 @@ func calcNumSharedValues(
 	fd2 *fieldDescription,
 ) int {
 	numShared := 0
-	for _, v1 := range fd1.values {
-		for _, v2 := range fd2.values {
-			if v1.String() == v2.String() {
-				numShared++
-			}
+	for _, vd1 := range fd1.values {
+		if _, ok := fd2.values[vd1.value.String()]; ok {
+			numShared++
 		}
 	}
 	return numShared
@@ -350,10 +386,10 @@ func generateCombineRules(
 	ruleFields []string,
 	field string,
 ) ([]rule.Rule, error) {
-	otherField := getOtherField(ruleFields, field)
 	if len(ruleFields) != 2 {
 		return []rule.Rule{}, nil
 	}
+	otherField := getOtherField(ruleFields, field)
 	rulesMap := make(map[string]rule.Rule)
 	firstInRules, err := generateInRules(inputDescription, ruleFields, field)
 	if err != nil {
@@ -418,29 +454,54 @@ func generateInRules(
 		}
 		if numOnBits >= 2 && numOnBits <= 5 && numOnBits < (numValues-1) {
 			compareValues := makeCompareValues(fd.values, i)
-			r := rule.NewInFV(field, compareValues)
-			rulesMap[r.String()] = r
+			if len(compareValues) >= 2 {
+				r := rule.NewInFV(field, compareValues)
+				rulesMap[r.String()] = r
+			}
 		}
 	}
 	rules := rulesMapToArray(rulesMap)
 	return rules, nil
 }
 
-func makeCompareValues(values []*dlit.Literal, i int) []*dlit.Literal {
+func makeCompareValues(
+	values map[string]valueDescription,
+	i int,
+) []*dlit.Literal {
 	bStr := fmt.Sprintf("%b", i)
-	numOnBits := calcNumOnBits(i)
 	numValues := len(values)
+	lits := valuesToLiterals(values)
 	j := numValues - 1
-	compareValues := make([]*dlit.Literal, numOnBits)
-	k := 0
+	compareValues := []*dlit.Literal{}
 	for _, b := range reverseString(bStr) {
 		if b == '1' {
-			compareValues[k] = values[numValues-1-j]
-			k++
+			lit := lits[numValues-1-j]
+			if values[lit.String()].num < 2 {
+				return []*dlit.Literal{}
+			}
+			compareValues = append(compareValues, lit)
 		}
 		j -= 1
 	}
 	return compareValues
+}
+
+func valuesToLiterals(values map[string]valueDescription) []*dlit.Literal {
+	lits := make([]*dlit.Literal, len(values))
+	keys := make([]string, len(values))
+	i := 0
+	for k, _ := range values {
+		keys[i] = k
+		i++
+	}
+	// The keys are sorted to make it easier to test because maps aren't ordered
+	sort.Strings(keys)
+	j := 0
+	for _, k := range keys {
+		lits[j] = values[k].value
+		j++
+	}
+	return lits
 }
 
 func reverseString(s string) (r string) {

@@ -41,8 +41,13 @@ type fieldDescription struct {
 	min       *dlit.Literal
 	max       *dlit.Literal
 	maxDP     int
-	values    []*dlit.Literal
+	values    map[string]valueDescription
 	numValues int
+}
+
+type valueDescription struct {
+	value *dlit.Literal
+	num   int
 }
 
 func (fd *fieldDescription) String() string {
@@ -55,9 +60,10 @@ func (d *Description) NextRecord(record ddataset.Record) {
 	if len(d.fields) == 0 {
 		for field, value := range record {
 			d.fields[field] = &fieldDescription{
-				kind: ftUnknown,
-				min:  value,
-				max:  value,
+				kind:   ftUnknown,
+				min:    value,
+				max:    value,
+				values: map[string]valueDescription{},
 			}
 		}
 	}
@@ -94,27 +100,26 @@ func (f *fieldDescription) updateKind(value *dlit.Literal) {
 
 func (f *fieldDescription) updateValues(value *dlit.Literal) {
 	// Chose 31 so could hold each day in month
-	maxNumValues := 31
+	const maxNumValues = 31
 	if f.kind == ftIgnore ||
 		f.kind == ftUnknown ||
 		f.numValues == -1 {
 		return
 	}
-	for _, v := range f.values {
-		if v.String() == value.String() {
-			return
-		}
+	if vd, ok := f.values[value.String()]; ok {
+		f.values[value.String()] = valueDescription{vd.value, vd.num + 1}
+		return
 	}
 	if f.numValues >= maxNumValues {
 		if f.kind == ftString {
 			f.kind = ftIgnore
 		}
-		f.values = []*dlit.Literal{}
+		f.values = map[string]valueDescription{}
 		f.numValues = -1
 		return
 	}
-	f.values = append(f.values, value)
 	f.numValues++
+	f.values[value.String()] = valueDescription{value, 1}
 }
 
 func (f *fieldDescription) updateNumBoundaries(value *dlit.Literal) {
