@@ -7,14 +7,6 @@
 			"revision": ""
 		},
 		{
-			"path": "dexpr",
-			"revision": ""
-		},
-		{
-			"path": "dlit",
-			"revision": ""
-		},
-		{
 			"checksumSHA1": "pA/IgZAUBy3vrKT2z+7v7xHw/N8=",
 			"path": "github.com/denisenkom/go-mssqldb",
 			"revision": "fbf0a491e5ec011522c8870da9b0553135e2f9da",
@@ -71,8 +63,8 @@
 		{
 			"checksumSHA1": "OsOg3a25BxiIAHSieO+6ImVnhkY=",
 			"path": "github.com/lawrencewoodman/dlit",
-			"revision": "064be13c18b0c0b50036000d71ab2bae8ed39227",
-			"revisionTime": "2017-01-02T08:03:22Z"
+			"revision": "679aa85a58330fdd16079ba94664545f69aacdf7",
+			"revisionTime": "2017-01-10T09:38:51Z"
 		},
 		{
 			"checksumSHA1": "+q6a7iju2XMMu5DB/we6odv3/Iw=",
