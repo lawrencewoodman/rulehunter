@@ -65,6 +65,9 @@ func Run(
 				l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
 			}
 		case <-quit.C:
+			if err := generate(cmd.All, config, pm); err != nil {
+				l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
+			}
 			return
 		}
 	}
