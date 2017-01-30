@@ -51,3 +51,7 @@ func (r *EQFVF) IsTrue(record ddataset.Record) (bool, error) {
 
 	return false, IncompatibleTypesRuleError{Rule: r}
 }
+
+func (r *EQFVF) GetFields() []string {
+	return []string{r.field}
+}

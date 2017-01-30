@@ -22,6 +22,7 @@ package rule
 import (
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/dlit"
 )
 
 // GEFVI represents a rule determening if field >= intValue
@@ -30,7 +31,7 @@ type GEFVI struct {
 	value int64
 }
 
-func NewGEFVI(field string, value int64) TweakableRule {
+func NewGEFVI(field string, value int64) *GEFVI {
 	return &GEFVI{field: field, value: value}
 }
 
@@ -38,8 +39,8 @@ func (r *GEFVI) String() string {
 	return fmt.Sprintf("%s >= %d", r.field, r.value)
 }
 
-func (r *GEFVI) GetTweakableParts() (string, string, string) {
-	return r.field, ">=", fmt.Sprintf("%d", r.value)
+func (r *GEFVI) GetValue() int64 {
+	return r.value
 }
 
 func (r *GEFVI) IsTrue(record ddataset.Record) (bool, error) {
@@ -56,13 +57,31 @@ func (r *GEFVI) IsTrue(record ddataset.Record) (bool, error) {
 	return false, IncompatibleTypesRuleError{Rule: r}
 }
 
-func (r *GEFVI) CloneWithValue(newValue interface{}) TweakableRule {
-	f, ok := newValue.(int64)
-	if ok {
-		return NewGEFVI(r.field, f)
+func (r *GEFVI) Tweak(
+	min *dlit.Literal,
+	max *dlit.Literal,
+	maxDP int,
+	stage int,
+) []Rule {
+	rules := make([]Rule, 0)
+	minInt, _ := min.Int()
+	maxInt, _ := max.Int()
+	step := (maxInt - minInt) / (10 * int64(stage))
+	low := r.value - step
+	high := r.value + step
+	interStep := (high - low) / 20
+	if interStep < 1 {
+		interStep = 1
 	}
-	panic(fmt.Sprintf(
-		"can't clone with newValue: %v of type %T, need type int64",
-		newValue, newValue,
-	))
+	for n := low; n <= high; n += interStep {
+		if n != r.value && n != low && n != high && n >= minInt && n <= maxInt {
+			r := NewGEFVI(r.field, n)
+			rules = append(rules, r)
+		}
+	}
+	return rules
+}
+
+func (r *GEFVI) GetFields() []string {
+	return []string{r.field}
 }

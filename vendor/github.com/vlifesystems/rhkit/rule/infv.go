@@ -50,6 +50,10 @@ func (r *InFV) GetFields() []string {
 	return []string{r.field}
 }
 
+func (r *InFV) GetValues() []*dlit.Literal {
+	return r.values
+}
+
 func (r *InFV) IsTrue(record ddataset.Record) (bool, error) {
 	needle, ok := record[r.field]
 	if !ok {

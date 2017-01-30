@@ -20,8 +20,8 @@
 package rule
 
 import (
-	"fmt"
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/dlit"
 	"strconv"
 )
 
@@ -31,7 +31,7 @@ type LEFVF struct {
 	value float64
 }
 
-func NewLEFVF(field string, value float64) TweakableRule {
+func NewLEFVF(field string, value float64) *LEFVF {
 	return &LEFVF{field: field, value: value}
 }
 
@@ -39,8 +39,12 @@ func (r *LEFVF) String() string {
 	return r.field + " <= " + strconv.FormatFloat(r.value, 'f', -1, 64)
 }
 
-func (r *LEFVF) GetTweakableParts() (string, string, string) {
-	return r.field, "<=", strconv.FormatFloat(r.value, 'f', -1, 64)
+func (r *LEFVF) GetValue() float64 {
+	return r.value
+}
+
+func (r *LEFVF) GetFields() []string {
+	return []string{r.field}
 }
 
 func (r *LEFVF) IsTrue(record ddataset.Record) (bool, error) {
@@ -57,13 +61,25 @@ func (r *LEFVF) IsTrue(record ddataset.Record) (bool, error) {
 	return false, IncompatibleTypesRuleError{Rule: r}
 }
 
-func (r *LEFVF) CloneWithValue(newValue interface{}) TweakableRule {
-	f, ok := newValue.(float64)
-	if ok {
-		return NewLEFVF(r.field, f)
+func (r *LEFVF) Tweak(
+	min *dlit.Literal,
+	max *dlit.Literal,
+	maxDP int,
+	stage int,
+) []Rule {
+	rules := make([]Rule, 0)
+	minFloat, _ := min.Float()
+	maxFloat, _ := max.Float()
+	step := (maxFloat - minFloat) / (10 * float64(stage))
+	low := r.value - step
+	high := r.value + step
+	interStep := (high - low) / 20
+	for n := low; n <= high; n += interStep {
+		v := truncateFloat(n, maxDP)
+		if v != r.value && v != low && v != high && v >= minFloat && v <= maxFloat {
+			r := NewLEFVF(r.field, truncateFloat(n, maxDP))
+			rules = append(rules, r)
+		}
 	}
-	panic(fmt.Sprintf(
-		"can't clone with newValue: %v of type %T, need type float64",
-		newValue, newValue,
-	))
+	return rules
 }

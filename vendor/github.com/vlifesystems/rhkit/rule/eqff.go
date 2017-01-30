@@ -70,3 +70,7 @@ func (r *EQFF) IsTrue(record ddataset.Record) (bool, error) {
 
 	return lh.String() == rh.String(), nil
 }
+
+func (r *EQFF) GetFields() []string {
+	return []string{r.fieldA, r.fieldB}
+}

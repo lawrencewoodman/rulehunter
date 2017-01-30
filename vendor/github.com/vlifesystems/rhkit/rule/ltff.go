@@ -61,3 +61,7 @@ func (r *LTFF) IsTrue(record ddataset.Record) (bool, error) {
 
 	return false, IncompatibleTypesRuleError{Rule: r}
 }
+
+func (r *LTFF) GetFields() []string {
+	return []string{r.fieldA, r.fieldB}
+}

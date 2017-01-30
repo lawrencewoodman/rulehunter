@@ -38,3 +38,7 @@ func (r True) String() string {
 func (r True) IsTrue(record ddataset.Record) (bool, error) {
 	return true, nil
 }
+
+func (r True) GetFields() []string {
+	return []string{}
+}

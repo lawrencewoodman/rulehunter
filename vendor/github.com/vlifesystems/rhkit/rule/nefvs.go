@@ -49,3 +49,7 @@ func (r *NEFVS) IsTrue(record ddataset.Record) (bool, error) {
 	}
 	return r.value != lh.String(), nil
 }
+
+func (r *NEFVS) GetFields() []string {
+	return []string{r.field}
+}

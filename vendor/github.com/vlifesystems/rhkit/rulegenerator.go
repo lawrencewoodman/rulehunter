@@ -65,39 +65,15 @@ func CombineRules(rules []rule.Rule) []rule.Rule {
 	numRules := len(rules)
 	for i := 0; i < numRules-1; i++ {
 		for j := i + 1; j < numRules; j++ {
-			andOk, orOk := areValidCombineRules(rules[i], rules[j])
-			if andOk {
-				andRule := rule.NewAnd(rules[i], rules[j])
+			if andRule, err := rule.NewAnd(rules[i], rules[j]); err == nil {
 				combinedRules = append(combinedRules, andRule)
 			}
-			if orOk {
-				orRule := rule.NewOr(rules[i], rules[j])
+			if orRule, err := rule.NewOr(rules[i], rules[j]); err == nil {
 				combinedRules = append(combinedRules, orRule)
 			}
 		}
 	}
-	return combinedRules
-}
-
-// areValidCombineRules returns whether suitable for (And, Or)
-func areValidCombineRules(ruleA, ruleB rule.Rule) (andOk bool, orOk bool) {
-	_, ruleAIsTrue := ruleA.(rule.True)
-	_, ruleBIsTrue := ruleB.(rule.True)
-	if ruleAIsTrue || ruleBIsTrue {
-		return false, false
-	}
-	tRuleA, ruleAIsTweakable := ruleA.(rule.TweakableRule)
-	tRuleB, ruleBIsTweakable := ruleB.(rule.TweakableRule)
-	if !ruleAIsTweakable || !ruleBIsTweakable {
-		return true, true
-	}
-
-	fieldA, opA, vA := tRuleA.GetTweakableParts()
-	fieldB, opB, vB := tRuleB.GetTweakableParts()
-	if (fieldA == fieldB && opA == opB) || (fieldA == fieldB && vA == vB) {
-		return false, true
-	}
-	return true, true
+	return rule.Uniq(combinedRules)
 }
 
 func stringInSlice(s string, strings []string) bool {
@@ -182,15 +158,9 @@ func generateIntRules(
 	min, _ := fd.min.Int()
 	max, _ := fd.max.Int()
 	diff := max - min
-	step := diff / 10
+	step := diff / 20
 	if step == 0 {
 		step = 1
-	}
-	// i set to 0 to make more tweakable
-	for i := int64(0); i < diff; i += step {
-		n := min + i
-		r := rule.NewGEFVI(field, n)
-		rulesMap[r.String()] = r
 	}
 
 	for i := step; i <= diff; i += step {
@@ -199,8 +169,30 @@ func generateIntRules(
 		rulesMap[r.String()] = r
 	}
 
-	rules := rulesMapToArray(rulesMap)
-	return rules
+	// i set to 0 to make more tweakable
+	for i := int64(0); i < diff; i += step {
+		n := min + i
+		r := rule.NewGEFVI(field, n)
+		rulesMap[r.String()] = r
+	}
+
+	// i set to 0 to make more tweakable
+	for i := int64(0); i < diff; i += step {
+		geN := min + i
+		for j := step; j <= diff; j += step {
+			leN := min + j
+			rB, err := rule.NewBetweenFVI(field, geN, leN)
+			if err == nil {
+				rulesMap[rB.String()] = rB
+			}
+			rO, err := rule.NewOutsideFVI(field, leN, geN)
+			if err == nil {
+				rulesMap[rO.String()] = rO
+			}
+		}
+	}
+
+	return rulesMapToArray(rulesMap)
 }
 
 func truncateFloat(f float64, maxDP int) float64 {
@@ -209,7 +201,6 @@ func truncateFloat(f float64, maxDP int) float64 {
 	return nf
 }
 
-// TODO: For each rule give all dp numbers 0..maxDP
 func generateFloatRules(
 	inputDescription *Description,
 	ruleFields []string,
@@ -224,7 +215,13 @@ func generateFloatRules(
 	max, _ := fd.max.Float()
 	maxDP := fd.maxDP
 	diff := max - min
-	step := diff / 10.0
+	step := diff / 20.0
+
+	for i := step; i <= diff; i += step {
+		n := truncateFloat(min+i, maxDP)
+		r := rule.NewLEFVF(field, n)
+		rulesMap[r.String()] = r
+	}
 
 	// i set to 0 to make more tweakable
 	for i := float64(0); i < diff; i += step {
@@ -233,14 +230,23 @@ func generateFloatRules(
 		rulesMap[r.String()] = r
 	}
 
-	for i := step; i <= diff; i += step {
-		n := truncateFloat(min+i, maxDP)
-		r := rule.NewLEFVF(field, n)
-		rulesMap[r.String()] = r
+	// i set to 0 to make more tweakable
+	for i := float64(0); i < diff; i += step {
+		geN := truncateFloat(min+i, maxDP)
+		for j := step; j <= diff; j += step {
+			leN := truncateFloat(min+j, maxDP)
+			rB, err := rule.NewBetweenFVF(field, geN, leN)
+			if err == nil {
+				rulesMap[rB.String()] = rB
+			}
+			rO, err := rule.NewOutsideFVF(field, leN, geN)
+			if err == nil {
+				rulesMap[rO.String()] = rO
+			}
+		}
 	}
 
-	rules := rulesMapToArray(rulesMap)
-	return rules
+	return rulesMapToArray(rulesMap)
 }
 
 func generateCompareNumericRules(
@@ -358,6 +364,7 @@ func rulesMapToArray(rulesMap map[string]rule.Rule) []rule.Rule {
 	return rules
 }
 
+// TODO: Allow more numValues if only two ruleFields
 func generateInRules(
 	inputDescription *Description,
 	ruleFields []string,

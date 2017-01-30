@@ -70,3 +70,7 @@ func (r *NEFF) IsTrue(record ddataset.Record) (bool, error) {
 
 	return lh.String() != rh.String(), nil
 }
+
+func (r *NEFF) GetFields() []string {
+	return []string{r.fieldA, r.fieldB}
+}

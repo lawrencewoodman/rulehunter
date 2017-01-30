@@ -49,3 +49,7 @@ func (r *EQFVS) IsTrue(record ddataset.Record) (bool, error) {
 	}
 	return r.value == lh.String(), nil
 }
+
+func (r *EQFVS) GetFields() []string {
+	return []string{r.field}
+}

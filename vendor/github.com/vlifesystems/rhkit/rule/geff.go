@@ -61,3 +61,7 @@ func (r *GEFF) IsTrue(record ddataset.Record) (bool, error) {
 
 	return false, IncompatibleTypesRuleError{Rule: r}
 }
+
+func (r *GEFF) GetFields() []string {
+	return []string{r.fieldA, r.fieldB}
+}

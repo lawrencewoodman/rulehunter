@@ -163,7 +163,7 @@ func Process(
 			experimentFile.Name(), err))
 		return err
 	}
-	tweakableRules := rhkit.TweakRules(sortedRules, fieldDescriptions)
+	tweakableRules := rhkit.TweakRules(1, sortedRules, fieldDescriptions)
 
 	assessment2, err := assessRules(2, tweakableRules, experiment, epr, cfg)
 	if err != nil {

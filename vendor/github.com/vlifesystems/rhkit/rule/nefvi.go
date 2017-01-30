@@ -51,3 +51,7 @@ func (r *NEFVI) IsTrue(record ddataset.Record) (bool, error) {
 
 	return false, IncompatibleTypesRuleError{Rule: r}
 }
+
+func (r *NEFVI) GetFields() []string {
+	return []string{r.field}
+}

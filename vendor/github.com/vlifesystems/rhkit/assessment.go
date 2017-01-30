@@ -229,7 +229,7 @@ func (sortedAssessment *Assessment) excludeSameRecordsRules() {
 	if len(sortedAssessment.RuleAssessments) < 2 {
 		return
 	}
-	lastAggregators := sortedAssessment.RuleAssessments[1].Aggregators
+	lastAggregators := sortedAssessment.RuleAssessments[0].Aggregators
 	if len(lastAggregators) <= 3 {
 		return
 	}
@@ -243,16 +243,18 @@ func (sortedAssessment *Assessment) excludeSameRecordsRules() {
 				aggregatorsMatch = false
 			}
 		}
-		_, isTrueRule := a.Rule.(rule.True)
-		if isTrueRule {
+		switch a.Rule.(type) {
+		case rule.True:
 			if aggregatorsMatch {
 				goodRuleAssessments[len(goodRuleAssessments)-1] = a
 			} else {
 				goodRuleAssessments = append(goodRuleAssessments, a)
 			}
 			break
-		} else if !aggregatorsMatch {
-			goodRuleAssessments = append(goodRuleAssessments, a)
+		default:
+			if !aggregatorsMatch {
+				goodRuleAssessments = append(goodRuleAssessments, a)
+			}
 		}
 		lastAggregators = a.Aggregators
 	}
@@ -287,12 +289,9 @@ func (sortedAssessment *Assessment) excludePoorerInRules(
 	goodRuleAssessments := make([]*RuleAssessment, 0)
 	inFields := make(map[string]int)
 	for _, a := range sortedAssessment.RuleAssessments {
-		r := a.Rule
-		inRule, isInRule := r.(*rule.InFV)
-		if !isInRule {
-			goodRuleAssessments = append(goodRuleAssessments, a)
-		} else {
-			field := inRule.GetFields()[0]
+		switch x := a.Rule.(type) {
+		case *rule.InFV:
+			field := x.GetFields()[0]
 			n, ok := inFields[field]
 			if !ok {
 				goodRuleAssessments = append(goodRuleAssessments, a)
@@ -301,6 +300,8 @@ func (sortedAssessment *Assessment) excludePoorerInRules(
 				goodRuleAssessments = append(goodRuleAssessments, a)
 				inFields[field]++
 			}
+		default:
+			goodRuleAssessments = append(goodRuleAssessments, a)
 		}
 	}
 	sortedAssessment.RuleAssessments = goodRuleAssessments
@@ -310,20 +311,21 @@ func (sortedAssessment *Assessment) excludePoorerTweakableRules(
 	numSimilarRules int,
 ) {
 	goodRuleAssessments := make([]*RuleAssessment, 0)
-	fieldOperatorIDs := make(map[string]int)
+	fieldTypeIDs := make(map[string]int)
 	for _, a := range sortedAssessment.RuleAssessments {
-		if tRule, isTweakable := a.Rule.(rule.TweakableRule); isTweakable {
-			field, operator, _ := tRule.GetTweakableParts()
-			fieldOperatorID := fmt.Sprintf("%s^%s", field, operator)
-			n, ok := fieldOperatorIDs[fieldOperatorID]
+		switch x := a.Rule.(type) {
+		case rule.TweakableRule:
+			field := x.GetFields()[0]
+			fieldTypeID := fmt.Sprintf("%s^%T", field, x)
+			n, ok := fieldTypeIDs[fieldTypeID]
 			if !ok {
 				goodRuleAssessments = append(goodRuleAssessments, a)
-				fieldOperatorIDs[fieldOperatorID] = 1
+				fieldTypeIDs[fieldTypeID] = 1
 			} else if n < numSimilarRules {
 				goodRuleAssessments = append(goodRuleAssessments, a)
-				fieldOperatorIDs[fieldOperatorID]++
+				fieldTypeIDs[fieldTypeID]++
 			}
-		} else {
+		default:
 			goodRuleAssessments = append(goodRuleAssessments, a)
 		}
 	}
