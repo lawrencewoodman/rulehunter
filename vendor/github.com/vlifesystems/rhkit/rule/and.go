@@ -126,6 +126,25 @@ func tryJoinTweakableRulesBetween(
 	fieldB := ruleB.GetFields()[0]
 
 	if fieldA == fieldB {
+		_, ruleAIsBetweenFVI := ruleA.(*BetweenFVI)
+		_, ruleAIsBetweenFVF := ruleA.(*BetweenFVF)
+		_, ruleBIsBetweenFVI := ruleB.(*BetweenFVI)
+		_, ruleBIsBetweenFVF := ruleB.(*BetweenFVF)
+		_, ruleAIsOutsideFVI := ruleA.(*OutsideFVI)
+		_, ruleAIsOutsideFVF := ruleA.(*OutsideFVF)
+		_, ruleBIsOutsideFVI := ruleB.(*OutsideFVI)
+		_, ruleBIsOutsideFVF := ruleB.(*OutsideFVF)
+		if (ruleAIsBetweenFVI && !ruleBIsBetweenFVI) ||
+			(!ruleAIsBetweenFVI && ruleBIsBetweenFVI) ||
+			(ruleAIsBetweenFVF && !ruleBIsBetweenFVF) ||
+			(!ruleAIsBetweenFVF && ruleBIsBetweenFVF) ||
+			(ruleAIsOutsideFVI && !ruleBIsOutsideFVI) ||
+			(!ruleAIsOutsideFVI && ruleBIsOutsideFVI) ||
+			(ruleAIsOutsideFVF && !ruleBIsOutsideFVF) ||
+			(!ruleAIsOutsideFVF && ruleBIsOutsideFVF) {
+			return true, nil
+		}
+
 		GEFVIRuleA, ruleAIsGEFVI := ruleA.(*GEFVI)
 		LEFVIRuleA, ruleAIsLEFVI := ruleA.(*LEFVI)
 		GEFVIRuleB, ruleBIsGEFVI := ruleB.(*GEFVI)

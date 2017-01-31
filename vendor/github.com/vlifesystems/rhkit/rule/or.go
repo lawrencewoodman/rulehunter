@@ -136,6 +136,15 @@ func joinTweakableRulesOutside(
 	fieldB := ruleB.GetFields()[0]
 
 	if fieldA == fieldB {
+		_, ruleAIsBetweenFVI := ruleA.(*BetweenFVI)
+		_, ruleAIsBetweenFVF := ruleA.(*BetweenFVF)
+		_, ruleBIsBetweenFVI := ruleB.(*BetweenFVI)
+		_, ruleBIsBetweenFVF := ruleB.(*BetweenFVF)
+		if ruleAIsBetweenFVI || ruleBIsBetweenFVI ||
+			ruleAIsBetweenFVF || ruleBIsBetweenFVF {
+			return &Or{ruleA: ruleA, ruleB: ruleB}, nil
+		}
+
 		GEFVIRuleA, ruleAIsGEFVI := ruleA.(*GEFVI)
 		LEFVIRuleA, ruleAIsLEFVI := ruleA.(*LEFVI)
 		GEFVIRuleB, ruleBIsGEFVI := ruleB.(*GEFVI)
