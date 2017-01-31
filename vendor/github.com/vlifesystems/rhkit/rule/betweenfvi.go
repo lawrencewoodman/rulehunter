@@ -107,12 +107,11 @@ func (r *BetweenFVI) Tweak(
 	}
 	for minN := minLow; minN <= minHigh; minN += minInterStep {
 		for maxN := maxLow; maxN <= maxHigh; maxN += maxInterStep {
-			if minN != r.min &&
+			if (minN != r.min || maxN != r.max) &&
 				minN != minLow &&
 				minN != minHigh &&
 				minN >= fdMinInt &&
 				minN <= fdMaxInt &&
-				maxN != r.max &&
 				maxN != minLow &&
 				maxN != minHigh &&
 				maxN >= fdMinInt &&

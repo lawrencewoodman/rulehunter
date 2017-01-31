@@ -111,12 +111,11 @@ func (r *BetweenFVF) Tweak(
 	}
 	for minN := minLow; minN <= minHigh; minN += minFloaterStep {
 		for maxN := maxLow; maxN <= maxHigh; maxN += maxFloaterStep {
-			if minN != r.min &&
+			if (minN != r.min || maxN != r.max) &&
 				minN != minLow &&
 				minN != minHigh &&
 				minN >= fdMinFloat &&
 				minN <= fdMaxFloat &&
-				maxN != r.max &&
 				maxN != minLow &&
 				maxN != minHigh &&
 				maxN >= fdMinFloat &&
