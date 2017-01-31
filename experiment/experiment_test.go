@@ -460,6 +460,7 @@ func TestProcess_multiProcesses(t *testing.T) {
 			WWWDir:            filepath.Join(cfgDir, "www"),
 			BuildDir:          filepath.Join(cfgDir, "build"),
 			MaxNumProcesses:   numProcesses,
+			MaxNumRecords:     5000,
 			MaxNumReportRules: 100,
 		}
 		testhelpers.CopyFile(
@@ -684,6 +685,7 @@ func BenchmarkProcess(b *testing.B) {
 			WWWDir:            filepath.Join(cfgDir, "www"),
 			BuildDir:          filepath.Join(cfgDir, "build"),
 			MaxNumProcesses:   4,
+			MaxNumRecords:     5000,
 			MaxNumReportRules: 100,
 		}
 		testhelpers.CopyFile(
