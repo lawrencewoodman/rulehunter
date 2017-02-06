@@ -82,3 +82,12 @@ func (r *GEFVF) Tweak(
 func (r *GEFVF) GetFields() []string {
 	return []string{r.field}
 }
+
+func (r *GEFVF) Overlaps(o Rule) bool {
+	switch x := o.(type) {
+	case *GEFVF:
+		oField := x.GetFields()[0]
+		return r.field == oField
+	}
+	return false
+}

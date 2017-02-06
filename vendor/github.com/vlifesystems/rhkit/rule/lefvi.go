@@ -85,3 +85,12 @@ func (r *LEFVI) Tweak(
 func (r *LEFVI) GetFields() []string {
 	return []string{r.field}
 }
+
+func (r *LEFVI) Overlaps(o Rule) bool {
+	switch x := o.(type) {
+	case *LEFVI:
+		oField := x.GetFields()[0]
+		return r.field == oField
+	}
+	return false
+}

@@ -64,7 +64,7 @@ func WriteJson(
 ) error {
 	_assessment := assessment
 	_assessment.Sort(experiment.SortOrder)
-	_assessment.Refine(1)
+	_assessment.Refine()
 
 	trueAggregators, err := getTrueAggregators(_assessment)
 	if err != nil {

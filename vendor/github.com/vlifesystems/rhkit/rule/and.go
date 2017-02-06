@@ -37,22 +37,19 @@ func NewAnd(ruleA Rule, ruleB Rule) (Rule, error) {
 		return nil, fmt.Errorf("can't And rule: %s, with: %s", ruleA, ruleB)
 	}
 
-	skip, r := tryJoinTweakableRulesBetween(ruleA, ruleB)
-	if !skip {
+	if skip, r := tryJoinRulesWithBetween(ruleA, ruleB); !skip {
 		if r != nil {
 			return r, nil
 		}
 		return nil, fmt.Errorf("can't And rule: %s, with: %s", ruleA, ruleB)
 	}
-	skip, r = tryInRule(ruleA, ruleB)
-	if !skip {
+	if skip, r := tryInRule(ruleA, ruleB); !skip {
 		if r != nil {
 			return r, nil
 		}
 		return nil, fmt.Errorf("can't And rule: %s, with: %s", ruleA, ruleB)
 	}
-	skip, r = tryEqNeRule(ruleA, ruleB)
-	if !skip {
+	if skip, r := tryEqNeRule(ruleA, ruleB); !skip {
 		if r != nil {
 			return r, nil
 		}
@@ -110,18 +107,16 @@ func tryEqNeRule(ruleA, ruleB Rule) (skip bool, newRule Rule) {
 	return false, nil
 }
 
-func tryJoinTweakableRulesBetween(
+func tryJoinRulesWithBetween(
 	ruleA Rule,
 	ruleB Rule,
 ) (skip bool, newRule Rule) {
-	_, ruleAIsTweakable := ruleA.(TweakableRule)
-	_, ruleBIsTweakable := ruleB.(TweakableRule)
-	if !ruleAIsTweakable || !ruleBIsTweakable {
-		return true, nil
-	}
-
 	var r Rule
 	var err error
+
+	if len(ruleA.GetFields()) != 1 || len(ruleB.GetFields()) != 1 {
+		return true, nil
+	}
 	fieldA := ruleA.GetFields()[0]
 	fieldB := ruleB.GetFields()[0]
 
@@ -145,6 +140,13 @@ func tryJoinTweakableRulesBetween(
 			return true, nil
 		}
 
+		if (ruleAIsBetweenFVI && ruleBIsBetweenFVI) ||
+			(ruleAIsBetweenFVF && ruleBIsBetweenFVF) ||
+			(ruleAIsOutsideFVI && ruleBIsOutsideFVI) ||
+			(ruleAIsOutsideFVF && ruleBIsOutsideFVF) {
+			return false, nil
+		}
+
 		GEFVIRuleA, ruleAIsGEFVI := ruleA.(*GEFVI)
 		LEFVIRuleA, ruleAIsLEFVI := ruleA.(*LEFVI)
 		GEFVIRuleB, ruleBIsGEFVI := ruleB.(*GEFVI)
@@ -153,6 +155,14 @@ func tryJoinTweakableRulesBetween(
 		LEFVFRuleA, ruleAIsLEFVF := ruleA.(*LEFVF)
 		GEFVFRuleB, ruleBIsGEFVF := ruleB.(*GEFVF)
 		LEFVFRuleB, ruleBIsLEFVF := ruleB.(*LEFVF)
+
+		if (ruleAIsGEFVI && ruleBIsGEFVI) ||
+			(ruleAIsLEFVI && ruleBIsLEFVI) ||
+			(ruleAIsGEFVF && ruleBIsGEFVF) ||
+			(ruleAIsLEFVF && ruleBIsLEFVF) {
+			return false, nil
+		}
+
 		if ruleAIsGEFVI && ruleBIsLEFVI {
 			r, err = NewBetweenFVI(
 				fieldA,
@@ -178,7 +188,7 @@ func tryJoinTweakableRulesBetween(
 				LEFVFRuleA.GetValue(),
 			)
 		} else {
-			err = fmt.Errorf("can't And rule: %s, with: %s", ruleA, ruleB)
+			return true, nil
 		}
 		if err != nil {
 			return false, nil

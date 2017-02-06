@@ -69,3 +69,22 @@ func (r *InFV) IsTrue(record ddataset.Record) (bool, error) {
 	}
 	return false, nil
 }
+
+func (r *InFV) Overlaps(o Rule) bool {
+	switch x := o.(type) {
+	case *InFV:
+		oValues := x.GetValues()
+		oField := x.GetFields()[0]
+		if r.field != oField {
+			return false
+		}
+		for _, v := range r.values {
+			for _, oV := range oValues {
+				if v.String() == oV.String() {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}

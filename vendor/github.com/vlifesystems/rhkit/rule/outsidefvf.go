@@ -128,3 +128,12 @@ func (r *OutsideFVF) Tweak(
 	}
 	return rules
 }
+
+func (r *OutsideFVF) Overlaps(o Rule) bool {
+	switch x := o.(type) {
+	case *OutsideFVF:
+		oField := x.GetFields()[0]
+		return oField == r.field
+	}
+	return false
+}

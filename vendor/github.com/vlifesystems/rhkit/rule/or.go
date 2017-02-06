@@ -43,11 +43,11 @@ func NewOr(ruleA Rule, ruleB Rule) (Rule, error) {
 		return handleInRules(inRuleA, inRuleB), nil
 	}
 
-	tRuleA, ruleAIsTweakable := ruleA.(TweakableRule)
-	tRuleB, ruleBIsTweakable := ruleB.(TweakableRule)
-	if ruleAIsTweakable && ruleBIsTweakable {
-		r, err := joinTweakableRulesOutside(tRuleA, tRuleB)
-		return r, err
+	if skip, r := tryJoinRulesWithOutside(ruleA, ruleB); !skip {
+		if r != nil {
+			return r, nil
+		}
+		return nil, fmt.Errorf("can't Or rule: %s, with: %s", ruleA, ruleB)
 	}
 
 	return &Or{ruleA: ruleA, ruleB: ruleB}, nil
@@ -126,12 +126,16 @@ func (r *Or) GetFields() []string {
 	return results
 }
 
-func joinTweakableRulesOutside(
-	ruleA TweakableRule,
-	ruleB TweakableRule,
-) (Rule, error) {
+func tryJoinRulesWithOutside(
+	ruleA Rule,
+	ruleB Rule,
+) (skip bool, newRule Rule) {
 	var r Rule
 	var err error
+
+	if len(ruleA.GetFields()) != 1 || len(ruleB.GetFields()) != 1 {
+		return true, nil
+	}
 	fieldA := ruleA.GetFields()[0]
 	fieldB := ruleB.GetFields()[0]
 
@@ -140,9 +144,18 @@ func joinTweakableRulesOutside(
 		_, ruleAIsBetweenFVF := ruleA.(*BetweenFVF)
 		_, ruleBIsBetweenFVI := ruleB.(*BetweenFVI)
 		_, ruleBIsBetweenFVF := ruleB.(*BetweenFVF)
+		_, ruleAIsOutsideFVI := ruleA.(*OutsideFVI)
+		_, ruleAIsOutsideFVF := ruleA.(*OutsideFVF)
+		_, ruleBIsOutsideFVI := ruleB.(*OutsideFVI)
+		_, ruleBIsOutsideFVF := ruleB.(*OutsideFVF)
 		if ruleAIsBetweenFVI || ruleBIsBetweenFVI ||
 			ruleAIsBetweenFVF || ruleBIsBetweenFVF {
-			return &Or{ruleA: ruleA, ruleB: ruleB}, nil
+			return true, nil
+		}
+
+		if ruleAIsOutsideFVI || ruleBIsOutsideFVI ||
+			ruleAIsOutsideFVF || ruleBIsOutsideFVF {
+			return false, nil
 		}
 
 		GEFVIRuleA, ruleAIsGEFVI := ruleA.(*GEFVI)
@@ -153,6 +166,14 @@ func joinTweakableRulesOutside(
 		LEFVFRuleA, ruleAIsLEFVF := ruleA.(*LEFVF)
 		GEFVFRuleB, ruleBIsGEFVF := ruleB.(*GEFVF)
 		LEFVFRuleB, ruleBIsLEFVF := ruleB.(*LEFVF)
+
+		if (ruleAIsGEFVI && ruleBIsGEFVI) ||
+			(ruleAIsLEFVI && ruleBIsLEFVI) ||
+			(ruleAIsGEFVF && ruleBIsGEFVF) ||
+			(ruleAIsLEFVF && ruleBIsLEFVF) {
+			return false, nil
+		}
+
 		if ruleAIsGEFVI && ruleBIsLEFVI {
 			r, err = NewOutsideFVI(
 				fieldA,
@@ -178,14 +199,14 @@ func joinTweakableRulesOutside(
 				GEFVFRuleB.GetValue(),
 			)
 		} else {
-			err = fmt.Errorf("can't Or rule: %s, with: %s", ruleA, ruleB)
+			return true, nil
 		}
 		if err != nil {
-			return nil, fmt.Errorf("can't Or rule: %s, with: %s", ruleA, ruleB)
+			return false, nil
 		}
-		return r, err
+		return false, r
 	}
-	return &Or{ruleA: ruleA, ruleB: ruleB}, nil
+	return true, nil
 }
 
 func handleInRules(ruleA, ruleB *InFV) Rule {

@@ -31,8 +31,8 @@ func TweakRules(
 	newRules := make([]rule.Rule, 0)
 	for _, r := range sortedRules {
 		switch x := r.(type) {
-		case rule.TweakableRule:
-			field := x.GetFields()[0]
+		case rule.Tweaker:
+			field := r.GetFields()[0]
 			min := inputDescription.fields[field].min
 			max := inputDescription.fields[field].max
 			maxDP := inputDescription.fields[field].maxDP

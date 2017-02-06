@@ -155,7 +155,7 @@ func Process(
 	}
 
 	assessment.Sort(experiment.SortOrder)
-	assessment.Refine(3)
+	assessment.Refine()
 	sortedRules := assessment.GetRules()
 
 	if err := epr.ReportInfo("Tweaking rules"); err != nil {
@@ -181,7 +181,7 @@ func Process(
 		return epr.ReportError(fullErr)
 	}
 	assessment3.Sort(experiment.SortOrder)
-	assessment3.Refine(1)
+	assessment3.Refine()
 
 	numRulesToCombine := 50
 	bestNonCombinedRules := assessment3.GetRules(numRulesToCombine)
@@ -204,7 +204,7 @@ func Process(
 	}
 
 	assessment5.Sort(experiment.SortOrder)
-	assessment5.Refine(1)
+	assessment5.Refine()
 	assessment6 := assessment5.TruncateRuleAssessments(cfg.MaxNumReportRules)
 
 	err = report.WriteJson(

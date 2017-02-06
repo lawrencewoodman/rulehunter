@@ -83,3 +83,12 @@ func (r *LEFVF) Tweak(
 	}
 	return rules
 }
+
+func (r *LEFVF) Overlaps(o Rule) bool {
+	switch x := o.(type) {
+	case *LEFVF:
+		oField := x.GetFields()[0]
+		return r.field == oField
+	}
+	return false
+}

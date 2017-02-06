@@ -124,3 +124,15 @@ func (r *BetweenFVI) Tweak(
 	}
 	return rules
 }
+
+func (r *BetweenFVI) Overlaps(o Rule) bool {
+	switch x := o.(type) {
+	case *BetweenFVI:
+		oMin := x.GetMin()
+		oMax := x.GetMax()
+		oField := x.GetFields()[0]
+		return oField == r.field &&
+			((oMin >= r.min && oMin <= r.max) || (oMax >= r.min && oMax <= r.max))
+	}
+	return false
+}
