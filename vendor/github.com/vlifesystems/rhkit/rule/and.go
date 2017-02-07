@@ -125,23 +125,15 @@ func tryJoinRulesWithBetween(
 		_, ruleAIsBetweenFVF := ruleA.(*BetweenFVF)
 		_, ruleBIsBetweenFVI := ruleB.(*BetweenFVI)
 		_, ruleBIsBetweenFVF := ruleB.(*BetweenFVF)
-		_, ruleAIsOutsideFVI := ruleA.(*OutsideFVI)
-		_, ruleAIsOutsideFVF := ruleA.(*OutsideFVF)
-		_, ruleBIsOutsideFVI := ruleB.(*OutsideFVI)
-		_, ruleBIsOutsideFVF := ruleB.(*OutsideFVF)
-		if (ruleAIsBetweenFVI && !ruleBIsBetweenFVI) ||
-			(!ruleAIsBetweenFVI && ruleBIsBetweenFVI) ||
-			(ruleAIsBetweenFVF && !ruleBIsBetweenFVF) ||
-			(!ruleAIsBetweenFVF && ruleBIsBetweenFVF) ||
-			(ruleAIsOutsideFVI && !ruleBIsOutsideFVI) ||
-			(!ruleAIsOutsideFVI && ruleBIsOutsideFVI) ||
-			(ruleAIsOutsideFVF && !ruleBIsOutsideFVF) ||
-			(!ruleAIsOutsideFVF && ruleBIsOutsideFVF) {
-			return true, nil
-		}
+		OutsideFVIRuleA, ruleAIsOutsideFVI := ruleA.(*OutsideFVI)
+		OutsideFVFRuleA, ruleAIsOutsideFVF := ruleA.(*OutsideFVF)
+		OutsideFVIRuleB, ruleBIsOutsideFVI := ruleB.(*OutsideFVI)
+		OutsideFVFRuleB, ruleBIsOutsideFVF := ruleB.(*OutsideFVF)
 
-		if (ruleAIsBetweenFVI && ruleBIsBetweenFVI) ||
-			(ruleAIsBetweenFVF && ruleBIsBetweenFVF) ||
+		if (ruleAIsBetweenFVI && !ruleBIsOutsideFVI) ||
+			(ruleAIsBetweenFVF && !ruleBIsOutsideFVF) ||
+			(!ruleAIsOutsideFVI && ruleBIsBetweenFVI) ||
+			(!ruleAIsOutsideFVF && ruleBIsBetweenFVF) ||
 			(ruleAIsOutsideFVI && ruleBIsOutsideFVI) ||
 			(ruleAIsOutsideFVF && ruleBIsOutsideFVF) {
 			return false, nil
@@ -160,6 +152,25 @@ func tryJoinRulesWithBetween(
 			(ruleAIsLEFVI && ruleBIsLEFVI) ||
 			(ruleAIsGEFVF && ruleBIsGEFVF) ||
 			(ruleAIsLEFVF && ruleBIsLEFVF) {
+			return false, nil
+		}
+
+		if (ruleAIsOutsideFVI && ruleBIsLEFVI &&
+			OutsideFVIRuleA.GetHigh() >= LEFVIRuleB.GetValue()) ||
+			(ruleAIsOutsideFVI && ruleBIsGEFVI &&
+				OutsideFVIRuleA.GetLow() <= GEFVIRuleB.GetValue()) ||
+			(ruleAIsOutsideFVF && ruleBIsLEFVF &&
+				OutsideFVFRuleA.GetHigh() >= LEFVFRuleB.GetValue()) ||
+			(ruleAIsOutsideFVF && ruleBIsGEFVF &&
+				OutsideFVFRuleA.GetLow() <= GEFVFRuleB.GetValue()) ||
+			(ruleBIsOutsideFVI && ruleAIsLEFVI &&
+				OutsideFVIRuleB.GetHigh() >= LEFVIRuleA.GetValue()) ||
+			(ruleBIsOutsideFVI && ruleAIsGEFVI &&
+				OutsideFVIRuleB.GetLow() <= GEFVIRuleA.GetValue()) ||
+			(ruleBIsOutsideFVF && ruleAIsLEFVF &&
+				OutsideFVFRuleB.GetHigh() >= LEFVFRuleA.GetValue()) ||
+			(ruleBIsOutsideFVF && ruleAIsGEFVF &&
+				OutsideFVFRuleB.GetLow() <= GEFVFRuleA.GetValue()) {
 			return false, nil
 		}
 
