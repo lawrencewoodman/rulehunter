@@ -80,7 +80,7 @@ func generate(
 ) error {
 	switch c {
 	case cmd.Progress:
-		if err := generateProgressPage(config, pm); err != nil {
+		if err := generateActivityPage(config, pm); err != nil {
 			return err
 		}
 	case cmd.Reports:
@@ -90,7 +90,7 @@ func generate(
 		if err := generateTagPages(config); err != nil {
 			return err
 		}
-		if err := generateProgressPage(config, pm); err != nil {
+		if err := generateActivityPage(config, pm); err != nil {
 			return err
 		}
 	case cmd.All:
@@ -103,7 +103,7 @@ func generate(
 		if err := generateTagPages(config); err != nil {
 			return err
 		}
-		if err := generateProgressPage(config, pm); err != nil {
+		if err := generateActivityPage(config, pm); err != nil {
 			return err
 		}
 	}
@@ -183,7 +183,7 @@ func makeHtmlNav(menuItem string) template.HTML {
 		"licence",
 		"reports",
 		"tag",
-		"progress",
+		"activity",
 	}
 
 	foundValidItem := false

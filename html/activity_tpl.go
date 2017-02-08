@@ -19,12 +19,12 @@
 
 package html
 
-const progressTpl = `
+const activityTpl = `
 <!DOCTYPE html>
 <html>
   <head>
 		{{ index .Html "head" }}
-    <title>Progress</title>
+    <title>Activity</title>
   </head>
 
 	<body>
@@ -32,15 +32,15 @@ const progressTpl = `
 
 		<div id="content">
 			<div class="container">
-				<h1>Progress</h1>
+				<h1>Activity</h1>
 
 				<div id="reports-container">
-					<ul class="reports-progress">
+					<ul class="reports-activity">
 					{{range .Experiments}}
 						<li>
 							<table class="table table-bordered">
 								<tr>
-									<th class="report-progress-th">Date</th>
+									<th>Date</th>
 									<td>{{ .Stamp }}</td>
 								</tr>
 								{{if .Title}}
@@ -99,7 +99,7 @@ const progressTpl = `
 							}
 					});
 					var ajaxLoad = "<img src='/img/ring.gif' style='width:48px; height:48px' alt='loading...' />";
-					var loadUrl = "/progress #reports-container";
+					var loadUrl = "/activity #reports-container";
 					$("#reports-container").html(ajaxLoad).load(loadUrl);
 			})();
 		</script>

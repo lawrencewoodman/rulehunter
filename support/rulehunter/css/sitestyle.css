@@ -38,7 +38,7 @@ ul.reports a.title {
   font-weight: bold;
 }
 
-ul.reports-progress {
+ul.reports-activity {
   margin-top: 2em;
   margin-bottom: 2em;
   margin-left: 0;
@@ -46,16 +46,16 @@ ul.reports-progress {
   padding: 0;
   list-style: none;
 }
-ul.reports-progress li {
+ul.reports-activity li {
   padding-bottom: 1em;
 }
-ul.reports-progress span.date {
+ul.reports-activity span.date {
   font-size: 120%;
   text-decoration: none;
   font-weight: bold;
 }
 
-ul.reports-progress th {
+ul.reports-activity th {
   width: 23ex;
 }
 

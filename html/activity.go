@@ -27,7 +27,7 @@ import (
 	"time"
 )
 
-func generateProgressPage(
+func generateActivityPage(
 	config *config.Config,
 	progressMonitor *progress.ProgressMonitor,
 ) error {
@@ -61,8 +61,8 @@ func generateProgressPage(
 			experiment.Percent,
 		}
 	}
-	tplData := TplData{tplExperiments, makeHtml("progress")}
+	tplData := TplData{tplExperiments, makeHtml("activity")}
 
-	outputFilename := filepath.Join("progress", "index.html")
-	return writeTemplate(config, outputFilename, progressTpl, tplData)
+	outputFilename := filepath.Join("activity", "index.html")
+	return writeTemplate(config, outputFilename, activityTpl, tplData)
 }

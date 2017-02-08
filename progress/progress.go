@@ -134,9 +134,9 @@ type Experiment struct {
 }
 
 func (e *Experiment) String() string {
-	fmtStr := "{Title: %s, Tags: %s, Stamp: %s, ExperimentFilename: %s, Msg: %s, Status: %s}"
+	fmtStr := "{Title: %s, Tags: %s, Stamp: %s, ExperimentFilename: %s, Msg: %s, Percent: %f, Status: %s}"
 	return fmt.Sprintf(fmtStr, e.Title, e.Tags, e.Stamp.Format(time.RFC3339Nano),
-		e.ExperimentFilename, e.Msg, e.Status)
+		e.ExperimentFilename, e.Msg, e.Percent, e.Status)
 }
 
 func (s StatusKind) String() string {

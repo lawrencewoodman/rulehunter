@@ -50,10 +50,10 @@ const navTpl = `
 					<li class="active"><a href="/licence/">Licence</a></li>
 				{{end}}
 
-				{{if eq .MenuItem "progress"}}
-					<li class="active"><a href="/progress/">Progress</a></li>
+				{{if eq .MenuItem "activity"}}
+					<li class="active"><a href="/activity/">Activity</a></li>
 				{{else}}
-					<li><a href="/progress/">Progress</a></li>
+					<li><a href="/activity/">Activity</a></li>
 				{{end}}
 			</ul>
 		</div><!--/.nav-collapse -->

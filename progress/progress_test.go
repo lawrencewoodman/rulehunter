@@ -169,7 +169,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewExperimentProgressReporter: %s", err)
 	}
-	epr.ReportInfo("something is happening")
+	epr.ReportProgress("something is happening", 0)
 	if err := pm.AddExperiment("bank-married.json"); err != nil {
 		t.Fatalf("AddExperiment() err: %s", err)
 	}
@@ -321,6 +321,7 @@ func TestReportInfo(t *testing.T) {
 			Stamp:              time.Now(),
 			ExperimentFilename: "bank-full-divorced.json",
 			Msg:                "Assessing rules",
+			Percent:            float64(0.24),
 			Status:             Processing,
 		},
 		&Experiment{
@@ -384,10 +385,10 @@ func TestReportInfo(t *testing.T) {
 				t.Fatalf("NewExperimentProgressReporter(pm, \"bank-full-divorced.json\") err: %s", err)
 			}
 
-			epr1.ReportInfo("Describing dataset")
+			epr1.ReportProgress("Describing dataset", 0)
 			time.Sleep(time.Second)
-			epr2.ReportInfo("Tweaking rules")
-			epr2.ReportInfo("Assessing rules")
+			epr2.ReportProgress("Tweaking rules", 0)
+			epr2.ReportProgress("Assessing rules", 0.24)
 		}
 		got := pm.GetExperiments()
 		if err := checkExperimentsMatch(got, c.wantExperiments); err != nil {
@@ -550,6 +551,9 @@ func checkExperimentMatch(e1, e2 *Experiment) error {
 	}
 	if e1.Msg != e2.Msg {
 		return fmt.Errorf("Msg doesn't match: %s != %s", e1, e2)
+	}
+	if e1.Percent != e2.Percent {
+		return fmt.Errorf("Percent doesn't match: %s != %s", e1, e2)
 	}
 	if e1.Status != e2.Status {
 		return errors.New("Status doesn't match")
