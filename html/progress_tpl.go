@@ -57,7 +57,19 @@ const progressTpl = `
 									</tr>
 								{{end}}
 								<tr><th>Experiment filename</th><td>{{ .Filename }}</td></tr>
-								<tr><th>Message</th><td>{{ .Msg }}</td></tr>
+								<tr>
+									<th>Message</th>
+									{{if gt .Percent 0.0}}
+										<td>
+											{{ .Msg }}<br />
+											<progress max="100" value="{{ .Percent }}">
+												Progress: {{ .Percent }}%
+											</progress>
+										</td>
+									{{else}}
+										<td>{{ .Msg }}</td>
+									{{end}}
+								</tr>
 								<tr>
 									<th>Status</th>
 									<td class="status-{{ .Status }}">{{ .Status }}</td>

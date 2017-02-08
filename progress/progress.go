@@ -64,11 +64,15 @@ func (epr *ExperimentProgressReporter) UpdateDetails(
 	return nil
 }
 
-func (epr *ExperimentProgressReporter) ReportInfo(msg string) error {
+func (epr *ExperimentProgressReporter) ReportProgress(
+	msg string,
+	progress float64,
+) error {
 	return epr.pm.updateExperiment(
 		epr.experimentFilename,
 		Processing,
 		msg,
+		progress,
 	)
 }
 
@@ -79,6 +83,7 @@ func (epr *ExperimentProgressReporter) ReportError(err error) error {
 		epr.experimentFilename,
 		Failure,
 		err.Error(),
+		0,
 	)
 	if updateErr != nil {
 		return updateErr
@@ -91,6 +96,7 @@ func (epr *ExperimentProgressReporter) ReportSuccess() error {
 		epr.experimentFilename,
 		Success,
 		"Finished processing successfully",
+		0,
 	)
 	if err == nil {
 		epr.pm.htmlCmds <- cmd.Reports
@@ -123,6 +129,7 @@ type Experiment struct {
 	Stamp              time.Time // Time of last update
 	ExperimentFilename string
 	Msg                string
+	Percent            float64
 	Status             StatusKind
 }
 
@@ -182,12 +189,13 @@ func (pm *ProgressMonitor) AddExperiment(
 	e := pm.findExperiment(experimentFilename)
 	if e == nil {
 		newExperiment := &Experiment{
-			"",
-			[]string{},
-			time.Now(),
-			experimentFilename,
-			"Waiting to be processed",
-			Waiting,
+			Title:              "",
+			Tags:               []string{},
+			Stamp:              time.Now(),
+			ExperimentFilename: experimentFilename,
+			Msg:                "Waiting to be processed",
+			Percent:            0,
+			Status:             Waiting,
 		}
 		pm.experiments = append(pm.experiments, newExperiment)
 	} else {
@@ -198,6 +206,7 @@ func (pm *ProgressMonitor) AddExperiment(
 		e.Tags = []string{}
 		e.Stamp = time.Now()
 		e.Msg = "Waiting to be processed"
+		e.Percent = 0
 		e.Status = Waiting
 	}
 	if err := pm.writeJson(); err != nil {
@@ -231,6 +240,7 @@ func (pm *ProgressMonitor) updateExperiment(
 	experimentFilename string,
 	status StatusKind,
 	msg string,
+	percent float64,
 ) error {
 	e := pm.findExperiment(experimentFilename)
 	if e == nil {
@@ -240,6 +250,7 @@ func (pm *ProgressMonitor) updateExperiment(
 	e.Stamp = time.Now()
 	e.Status = status
 	e.Msg = msg
+	e.Percent = percent
 	if err := pm.writeJson(); err != nil {
 		return err
 	}

@@ -109,6 +109,12 @@ table td.status-failure {
   color: red;
 }
 
+progress[value] {
+  margin-top: 0.5em;
+  width: 100%;
+  height: 1.5em;
+}
+
 div.aggregators {
   margin-right: 3em;
 }

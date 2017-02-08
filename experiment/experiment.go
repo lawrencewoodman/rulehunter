@@ -126,7 +126,7 @@ func Process(
 		return err
 	}
 
-	if err := epr.ReportInfo("Describing dataset"); err != nil {
+	if err := epr.ReportProgress("Describing dataset", 0); err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
 			experimentFile.Name(), err))
 		return err
@@ -139,7 +139,7 @@ func Process(
 		return epr.ReportError(fullErr)
 	}
 
-	if err := epr.ReportInfo("Generating rules"); err != nil {
+	if err := epr.ReportProgress("Generating rules", 0); err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
 			experimentFile.Name(), err))
 		return err
@@ -158,7 +158,7 @@ func Process(
 	assessment.Refine()
 	sortedRules := assessment.GetRules()
 
-	if err := epr.ReportInfo("Tweaking rules"); err != nil {
+	if err := epr.ReportProgress("Tweaking rules", 0); err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
 			experimentFile.Name(), err))
 		return err
@@ -442,9 +442,8 @@ func reportProgress(
 	numJobs int,
 ) error {
 	progress := 100.0 * float64(jobNum) / float64(numJobs)
-	msg := fmt.Sprintf("Assessing rules %d/%d: %.2f%%",
-		stage, assessRulesNumStages, progress)
-	return epr.ReportInfo(msg)
+	msg := fmt.Sprintf("Assessing rules %d/%d", stage, assessRulesNumStages)
+	return epr.ReportProgress(msg, progress)
 }
 
 func assessCreateJobs(numRules int, step int, jobs chan<- assessJob) {
@@ -475,8 +474,7 @@ func assessRules(
 		panic("assessRules: stage > assessRulesNumStages")
 	}
 
-	msg := fmt.Sprintf("Assessing rules %d/%d", stage, assessRulesNumStages)
-	if err := epr.ReportInfo(msg); err != nil {
+	if err := reportProgress(epr, stage, 0, 1); err != nil {
 		return nil, err
 	}
 

@@ -38,6 +38,7 @@ func generateProgressPage(
 		Filename string
 		Status   string
 		Msg      string
+		Percent  float64
 	}
 
 	type TplData struct {
@@ -57,6 +58,7 @@ func generateProgressPage(
 			experiment.ExperimentFilename,
 			experiment.Status.String(),
 			experiment.Msg,
+			experiment.Percent,
 		}
 	}
 	tplData := TplData{tplExperiments, makeHtml("progress")}
