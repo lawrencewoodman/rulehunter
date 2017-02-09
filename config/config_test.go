@@ -21,6 +21,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://example.com/rulehunter/src",
+				BaseURL:           "/rulehunter/",
 				User:              "",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   1,
@@ -33,6 +34,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://example.com/rulehunter/src",
+				BaseURL:           "/rulehunter/",
 				User:              "",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   4,
@@ -45,6 +47,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://example.com/rulehunter/src",
+				BaseURL:           "/rulehunter/",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   4,
 				MaxNumRecords:     -1,
@@ -56,6 +59,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://example.com/rulehunter/src",
+				BaseURL:           "/rulehunter/",
 				User:              "rhuser",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   4,
@@ -68,6 +72,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://example.com/rulehunter/src",
+				BaseURL:           "/rulehunter/",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   runtime.NumCPU(),
 				MaxNumRecords:     -1,
@@ -79,6 +84,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://example.com/rulehunter/src",
+				BaseURL:           "/rulehunter/",
 				MaxNumReportRules: 100,
 				MaxNumProcesses:   4,
 				MaxNumRecords:     -1,
@@ -90,6 +96,20 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://github.com/vlifesystems/rulehunter",
+				BaseURL:           "/rulehunter/",
+				MaxNumReportRules: 2000,
+				MaxNumProcesses:   4,
+				MaxNumRecords:     -1,
+			},
+		},
+		{filepath.Join("fixtures", "config_nobaseurl.yaml"),
+			&Config{
+				ExperimentsDir:    "experiments",
+				WWWDir:            "www",
+				BuildDir:          "build",
+				SourceURL:         "https://example.com/rulehunter/src",
+				BaseURL:           "/",
+				User:              "rhuser",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   4,
 				MaxNumRecords:     -1,
@@ -101,6 +121,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				SourceURL:         "https://example.com/rulehunter/src",
+				BaseURL:           "/rulehunter/",
 				User:              "rhuser",
 				MaxNumReportRules: 2000,
 				MaxNumProcesses:   4,
@@ -177,6 +198,7 @@ func configsMatch(c1, c2 *Config) bool {
 		c1.WWWDir == c2.WWWDir &&
 		c1.BuildDir == c2.BuildDir &&
 		c1.SourceURL == c2.SourceURL &&
+		c1.BaseURL == c2.BaseURL &&
 		c1.User == c2.User &&
 		c1.MaxNumReportRules == c2.MaxNumReportRules &&
 		c1.MaxNumProcesses == c2.MaxNumProcesses &&

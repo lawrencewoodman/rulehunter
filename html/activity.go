@@ -61,7 +61,7 @@ func generateActivityPage(
 			experiment.Percent,
 		}
 	}
-	tplData := TplData{tplExperiments, makeHtml("activity")}
+	tplData := TplData{tplExperiments, makeHtml(config, "activity")}
 
 	outputFilename := filepath.Join("activity", "index.html")
 	return writeTemplate(config, outputFilename, activityTpl, tplData)

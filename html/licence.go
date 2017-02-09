@@ -36,8 +36,8 @@ func generateLicencePage(
 	}
 
 	tplData := TplData{
-		makeHtml("licence"),
-		config.SourceURL,
+		Html:      makeHtml(config, "licence"),
+		SourceURL: config.SourceURL,
 	}
 
 	outputFilename := filepath.Join("licence", "index.html")

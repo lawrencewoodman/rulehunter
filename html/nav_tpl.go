@@ -31,15 +31,15 @@ const navTpl = `
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand" href="/">Rulehunter</a>
+			<a class="navbar-brand" href="">Rulehunter</a>
 		</div>
 
 		<div id="navbar" class="collapse navbar-collapse">
 			<ul class="nav navbar-nav">
 				{{if eq .MenuItem "reports"}}
-					<li class="active"><a href="/">Reports</a></li>
+					<li class="active"><a href="">Reports</a></li>
 				{{else}}
-					<li><a href="/">Reports</a></li>
+					<li><a href="">Reports</a></li>
 				{{end}}
 
 				{{if eq .MenuItem "tag"}}
@@ -47,13 +47,13 @@ const navTpl = `
 				{{end}}
 
 				{{if eq .MenuItem "licence"}}
-					<li class="active"><a href="/licence/">Licence</a></li>
+					<li class="active"><a href="licence/">Licence</a></li>
 				{{end}}
 
 				{{if eq .MenuItem "activity"}}
-					<li class="active"><a href="/activity/">Activity</a></li>
+					<li class="active"><a href="activity/">Activity</a></li>
 				{{else}}
-					<li><a href="/activity/">Activity</a></li>
+					<li><a href="activity/">Activity</a></li>
 				{{end}}
 			</ul>
 		</div><!--/.nav-collapse -->

@@ -98,8 +98,8 @@ const activityTpl = `
 								setTimeout(refreshWorker, 10000);
 							}
 					});
-					var ajaxLoad = "<img src='/img/ring.gif' style='width:48px; height:48px' alt='loading...' />";
-					var loadUrl = "/activity #reports-container";
+					var ajaxLoad = "<img src='img/ring.gif' style='width:48px; height:48px' alt='loading...' />";
+					var loadUrl = "activity #reports-container";
 					$("#reports-container").html(ajaxLoad).load(loadUrl);
 			})();
 		</script>

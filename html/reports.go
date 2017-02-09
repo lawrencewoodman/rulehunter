@@ -68,8 +68,8 @@ func generateReports(
 	}
 	sortTplReportsByDate(tplReports)
 	tplData := TplData{
-		tplReports,
-		makeHtml("reports"),
+		Reports: tplReports,
+		Html:    makeHtml(config, "reports"),
 	}
 
 	outputFilename := "index.html"

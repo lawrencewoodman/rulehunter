@@ -24,7 +24,6 @@ const licenceTpl = `
 <html>
 	<head>
 		{{ index .Html "head" }}
-		<meta charset="UTF-8">
 		<title>Rulehunter</title>
 	</head>
 

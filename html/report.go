@@ -47,14 +47,14 @@ func generateReport(
 	tagLinks := makeTagLinks(_report.Tags)
 
 	tplData := TplData{
-		_report.Title,
-		tagLinks,
-		_report.Stamp.Format(time.RFC822),
-		_report.ExperimentFilename,
-		_report.NumRecords,
-		_report.SortOrder,
-		_report.Assessments,
-		makeHtml("reports"),
+		Title:              _report.Title,
+		Tags:               tagLinks,
+		DateTime:           _report.Stamp.Format(time.RFC822),
+		ExperimentFilename: _report.ExperimentFilename,
+		NumRecords:         _report.NumRecords,
+		SortOrder:          _report.SortOrder,
+		Assessments:        _report.Assessments,
+		Html:               makeHtml(config, "reports"),
 	}
 
 	reportURLDir := genReportURLDir(_report.Stamp, _report.Title)

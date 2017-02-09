@@ -71,7 +71,7 @@ func TestGenReportURLDir(t *testing.T) {
 	}{
 		{time.Date(2009, time.November, 10, 22, 19, 18, 17, time.UTC),
 			"This could be very interesting",
-			fmt.Sprintf("/reports/2009/11/10/%s_this-could-be-very-interesting/",
+			fmt.Sprintf("reports/2009/11/10/%s_this-could-be-very-interesting/",
 				genStampMagicString(
 					time.Date(2009, time.November, 10, 22, 19, 18, 17, time.UTC),
 				),

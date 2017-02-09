@@ -33,6 +33,7 @@ type Config struct {
 	WWWDir            string `yaml:"wwwDir"`
 	BuildDir          string `yaml:"buildDir"`
 	SourceURL         string `yaml:"sourceUrl"`
+	BaseURL           string `yaml:"baseUrl"`
 	User              string `yaml:"user"`
 	MaxNumReportRules int    `yaml:"maxNumReportRules"`
 	MaxNumProcesses   int    `yaml:"maxNumProcesses"`
@@ -70,6 +71,10 @@ func Load(filename string) (*Config, error) {
 
 	if c.SourceURL == "" {
 		c.SourceURL = "https://github.com/vlifesystems/rulehunter"
+	}
+
+	if c.BaseURL == "" {
+		c.BaseURL = "/"
 	}
 
 	if err := checkConfigValid(c); err != nil {

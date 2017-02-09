@@ -24,7 +24,6 @@ const reportsTpl = `
 <html>
 	<head>
 		{{ index .Html "head" }}
-		<meta charset="UTF-8">
 		<title>Reports</title>
 	</head>
 

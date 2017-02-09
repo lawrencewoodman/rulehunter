@@ -2,6 +2,7 @@ experimentsDir: "experiments"
 wwwDir: "www"
 buildDir: "build"
 sourceUrl: "https://example.com/rulehunter/src"
+baseUrl: "/rulehunter/"
 maxNumReportRules: 2000
 maxNumProcesses: 4
 maxNumRecords: 0

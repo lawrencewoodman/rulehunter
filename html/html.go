@@ -163,7 +163,7 @@ func genStampMagicString(stamp time.Time) string {
 func genReportURLDir(stamp time.Time, title string) string {
 	magicNumber := genStampMagicString(stamp)
 	escapedTitle := escapeString(title)
-	return fmt.Sprintf("/reports/%d/%02d/%02d/%s_%s/",
+	return fmt.Sprintf("reports/%d/%02d/%02d/%s_%s/",
 		stamp.Year(), stamp.Month(), stamp.Day(), magicNumber, escapedTitle)
 }
 
@@ -209,9 +209,24 @@ func makeHtmlNav(menuItem string) template.HTML {
 	return template.HTML(doc.String())
 }
 
-func makeHtml(menuItem string) map[string]template.HTML {
+func makeHtmlHead(c *config.Config) template.HTML {
+	var doc bytes.Buffer
+	t, err := template.New("webpage").Parse(headTpl)
+	if err != nil {
+		panic(fmt.Sprintf("Couldn't create head html: %s", err))
+	}
+
+	tplData := struct{ BaseURL string }{c.BaseURL}
+
+	if err := t.Execute(&doc, tplData); err != nil {
+		panic(fmt.Sprintf("Couldn't create head html: %s", err))
+	}
+	return template.HTML(doc.String())
+}
+
+func makeHtml(c *config.Config, menuItem string) map[string]template.HTML {
 	r := make(map[string]template.HTML)
-	r["head"] = template.HTML(headHtml)
+	r["head"] = makeHtmlHead(c)
 	r["nav"] = makeHtmlNav(menuItem)
 	r["footer"] = template.HTML(footerHtml)
 	r["bootstrapJS"] = template.HTML(bootstrapJSHtml)

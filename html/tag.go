@@ -97,7 +97,11 @@ func generateTagPage(config *config.Config, tagName string) error {
 	}
 	tplReports = tplReports[:i]
 	sortTplReportsByDate(tplReports)
-	tplData := TplData{tagName, tplReports, makeHtml("tag")}
+	tplData := TplData{
+		Tag:     tagName,
+		Reports: tplReports,
+		Html:    makeHtml(config, "tag"),
+	}
 	outputFilename := filepath.Join(
 		"reports",
 		"tag",
@@ -118,7 +122,7 @@ func makeTagLinks(tags []string) map[string]string {
 
 func makeTagLink(tag string) string {
 	return fmt.Sprintf(
-		"/reports/tag/%s/",
+		"reports/tag/%s/",
 		escapeString(tag),
 	)
 }

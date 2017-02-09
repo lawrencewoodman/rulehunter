@@ -20,4 +20,4 @@
 package html
 
 const footerHtml = `
-<a href="http://rulehunter.com">Rulehunter</a> is licensed under the <em>GNU Affero General Public License version 3 (AGPLv3)</em>.  Please see the <a href="/licence/">Licence</a> page for more details and for how to obtain the source code.`
+<a href="http://rulehunter.com">Rulehunter</a> is licensed under the <em>GNU Affero General Public License version 3 (AGPLv3)</em>.  Please see the <a href="licence/">Licence</a> page for more details and for how to obtain the source code.`
