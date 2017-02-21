@@ -50,8 +50,14 @@ const activityTpl = `
 									<tr>
 										<th>Tags</th>
 										<td>
-											{{range $tag, $catLink := .Tags}}
-												<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
+											{{if eq .Status "success"}}
+												{{range $tag, $catLink := .Tags}}
+													<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
+												{{end}}
+											{{else}}
+												{{range $tag, $catLink := .Tags}}
+													{{ $tag }} &nbsp;
+												{{end}}
 											{{end}}
 										</td>
 									</tr>
