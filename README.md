@@ -36,6 +36,7 @@ These have all be vendored into the `vendor/` directory using the
 [govendor](https://github.com/kardianos/govendor) tool.
 
 * [dexpr](https://github.com/lawrencewoodman/dexpr) package
+* [ddataset](https://github.com/lawrencewoodman/ddataset) package
 * [dlit](https://github.com/lawrencewoodman/dlit) package
 * [rhkit](https://github.com/vlifesystems/rhkit) package
 * [osext](https://github.com/kardianos/osext) package
