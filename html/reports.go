@@ -20,6 +20,7 @@
 package html
 
 import (
+	"github.com/vlifesystems/rhkit"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/report"
@@ -53,7 +54,13 @@ func generateReports(
 			if err != nil {
 				return err
 			}
-			reportURLDir, err := generateReport(report, config)
+			description, err := rhkit.LoadDescriptionJSON(
+				filepath.Join(config.BuildDir, "descriptions", file.Name()),
+			)
+			if err != nil {
+				return err
+			}
+			reportURLDir, err := generateReport(report, description, config)
 			if err != nil {
 				return err
 			}

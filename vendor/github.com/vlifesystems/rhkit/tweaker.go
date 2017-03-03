@@ -33,9 +33,9 @@ func TweakRules(
 		switch x := r.(type) {
 		case rule.Tweaker:
 			field := r.GetFields()[0]
-			min := inputDescription.fields[field].min
-			max := inputDescription.fields[field].max
-			maxDP := inputDescription.fields[field].maxDP
+			min := inputDescription.Fields[field].Min
+			max := inputDescription.Fields[field].Max
+			maxDP := inputDescription.Fields[field].MaxDP
 			rules := x.Tweak(min, max, maxDP, stage)
 			newRules = append(newRules, rules...)
 		}

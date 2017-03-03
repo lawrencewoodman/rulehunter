@@ -30,6 +30,7 @@ func BuildConfigDirs(e errorReporter) string {
 		filepath.Join("www", "progress"),
 		filepath.Join("build", "progress"),
 		filepath.Join("build", "reports"),
+		filepath.Join("build", "descriptions"),
 	}
 	for _, subDir := range subDirs {
 		fullSubDir := filepath.Join(tmpDir, subDir)

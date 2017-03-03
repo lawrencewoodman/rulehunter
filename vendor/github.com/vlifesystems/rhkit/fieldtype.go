@@ -46,3 +46,19 @@ func (ft fieldType) String() string {
 	}
 	panic(fmt.Sprintf("Unsupported type: %d", ft))
 }
+
+func newFieldType(s string) fieldType {
+	switch s {
+	case "Unknown":
+		return ftUnknown
+	case "Ignore":
+		return ftIgnore
+	case "Int":
+		return ftInt
+	case "Float":
+		return ftFloat
+	case "String":
+		return ftString
+	}
+	panic(fmt.Sprintf("Unsupported type: %s", s))
+}

@@ -57,6 +57,34 @@ const reportTpl = `
 				<h2>Data Set</h2>
 				The data set contained {{ .NumRecords }} records.</br />
 				<br />
+				<table class="neat-table">
+					<tr>
+						<th>Field</th>
+						<th>Kind</th>
+						<th>Min</th>
+						<th>Max</th>
+						<th>MaxDP</th>
+						<th>Values - ('value', freq)</th>
+					</tr>
+					{{range $field, $fd := .Description.Fields}}
+						<tr>
+							<td>{{ $field }}</td>
+							<td>{{ $fd.Kind }}</td>
+							{{if eq $fd.Kind.String "Float" "Int"}}
+								<td>{{ $fd.Min }}</td>
+								<td>{{ $fd.Max }}</td>
+								<td>{{ $fd.MaxDP }}</td>
+							{{else}}
+								<td>N/A</td><td>N/A</td><td>N/A</td>
+							{{end}}
+							<td>
+								{{range $value, $valueDesc := $fd.Values}}
+							    ('{{ $value }}', {{ $valueDesc.Num }}) &nbsp;
+								{{end}}
+							</td>
+						</tr>
+					{{end}}
+				</table>
 			</div>
 
 			<div class="container">

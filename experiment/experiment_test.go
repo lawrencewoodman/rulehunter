@@ -599,6 +599,49 @@ func TestProcess_errors(t *testing.T) {
 	// TODO: Test files generated
 }
 
+func TestDescribeDataset_errors(t *testing.T) {
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	cases := []struct {
+		cfg     *config.Config
+		dataset ddataset.Dataset
+		wantErr error
+	}{
+		{cfg: &config.Config{BuildDir: tmpDir},
+			dataset: dcsv.New(
+				filepath.Join("fixtures", "flow.csv"),
+				true,
+				rune(','),
+				[]string{"group", "district", "height", "flow"},
+			),
+			wantErr: &os.PathError{
+				"open",
+				filepath.Join(tmpDir, "descriptions", "aname"),
+				syscall.ENOENT,
+			},
+		},
+		{cfg: &config.Config{BuildDir: tmpDir},
+			dataset: dcsv.New(
+				filepath.Join("fixtures", "flow_nonexistant.csv"),
+				true,
+				rune(','),
+				[]string{"group", "district", "height", "flow"},
+			),
+			wantErr: &os.PathError{
+				"open",
+				filepath.Join("fixtures", "flow_nonexistant.csv"),
+				syscall.ENOENT,
+			},
+		},
+	}
+	for _, c := range cases {
+		_, err := describeDataset(c.cfg, "aname", c.dataset)
+		if err == nil || err.Error() != c.wantErr.Error() {
+			t.Errorf("describeDataset - gotErr: %s, wantErr: %s", err, c.wantErr)
+		}
+	}
+}
+
 func TestMakeDataset(t *testing.T) {
 	cases := []struct {
 		dataSourceName string

@@ -73,46 +73,50 @@
 			"revisionTime": "2016-05-14T12:23:48Z"
 		},
 		{
-			"checksumSHA1": "Mi1I8qrQ8chC+iHYp8I+8bT8SXU=",
+			"checksumSHA1": "fUbLZcZiEfqz3db9GJpliP6Pc2g=",
 			"path": "github.com/vlifesystems/rhkit",
-			"revision": "0690f0a4c94c98785d0cf63f1902e6c683e26d80",
-			"revisionTime": "2017-02-07T10:26:43Z"
+			"revision": "ed4e640f70dd3edee726718f6d765f99caa92b22",
+			"revisionTime": "2017-03-01T15:29:28Z"
 		},
 		{
 			"checksumSHA1": "CLsyGnx52roOvVEkpQrMFY52Y98=",
 			"path": "github.com/vlifesystems/rhkit/aggregators",
-			"revision": "0690f0a4c94c98785d0cf63f1902e6c683e26d80",
-			"revisionTime": "2017-02-07T10:26:43Z"
+			"revision": "ed4e640f70dd3edee726718f6d765f99caa92b22",
+			"revisionTime": "2017-03-01T15:29:28Z"
 		},
 		{
 			"checksumSHA1": "Rxz0JoqiNjPr6bAKkSLJA8t93EM=",
 			"path": "github.com/vlifesystems/rhkit/experiment",
-			"revision": "0690f0a4c94c98785d0cf63f1902e6c683e26d80",
-			"revisionTime": "2017-02-07T10:26:43Z"
+			"revision": "ed4e640f70dd3edee726718f6d765f99caa92b22",
+			"revisionTime": "2017-03-01T15:29:28Z"
 		},
 		{
 			"checksumSHA1": "QXUOHRe861r7tzGp7kJBssqCwA0=",
 			"path": "github.com/vlifesystems/rhkit/goal",
-			"revision": "0690f0a4c94c98785d0cf63f1902e6c683e26d80",
-			"revisionTime": "2017-02-07T10:26:43Z"
+			"revision": "ed4e640f70dd3edee726718f6d765f99caa92b22",
+			"revisionTime": "2017-03-01T15:29:28Z"
 		},
 		{
 			"checksumSHA1": "tpL0KMtuA0eI+CD1V6NM+yH8FaM=",
 			"path": "github.com/vlifesystems/rhkit/internal",
-			"revision": "0690f0a4c94c98785d0cf63f1902e6c683e26d80",
-			"revisionTime": "2017-02-07T10:26:43Z"
+			"revision": "ed4e640f70dd3edee726718f6d765f99caa92b22",
+			"revisionTime": "2017-03-01T15:29:28Z"
 		},
 		{
 			"checksumSHA1": "qc8zAy/5GFh/8ExtOebLecCk1Z4=",
 			"path": "github.com/vlifesystems/rhkit/internal/dexprfuncs",
-			"revision": "0690f0a4c94c98785d0cf63f1902e6c683e26d80",
-			"revisionTime": "2017-02-07T10:26:43Z"
+			"revision": "ed4e640f70dd3edee726718f6d765f99caa92b22",
+			"revisionTime": "2017-03-01T15:29:28Z"
 		},
 		{
 			"checksumSHA1": "/XUk9WeYeFrgrICtlUVpzifFQb0=",
 			"path": "github.com/vlifesystems/rhkit/rule",
-			"revision": "0690f0a4c94c98785d0cf63f1902e6c683e26d80",
-			"revisionTime": "2017-02-07T10:26:43Z"
+			"revision": "ed4e640f70dd3edee726718f6d765f99caa92b22",
+			"revisionTime": "2017-03-01T15:29:28Z"
+		},
+		{
+			"path": "github.com/vlifesytems/rhkit",
+			"revision": ""
 		},
 		{
 			"checksumSHA1": "MCeXr2RNeiG1XG6V+er1OR0qyeo=",

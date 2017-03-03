@@ -21,6 +21,7 @@ package html
 
 import (
 	"fmt"
+	"github.com/vlifesystems/rhkit"
 	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/report"
@@ -31,6 +32,7 @@ import (
 
 func generateReport(
 	_report *report.Report,
+	description *rhkit.Description,
 	config *config.Config,
 ) (string, error) {
 	type TplData struct {
@@ -39,6 +41,7 @@ func generateReport(
 		DateTime           string
 		ExperimentFilename string
 		NumRecords         int64
+		Description        *rhkit.Description
 		SortOrder          []experiment.SortField
 		Assessments        []*report.Assessment
 		Html               map[string]template.HTML
@@ -52,6 +55,7 @@ func generateReport(
 		DateTime:           _report.Stamp.Format(time.RFC822),
 		ExperimentFilename: _report.ExperimentFilename,
 		NumRecords:         _report.NumRecords,
+		Description:        description,
 		SortOrder:          _report.SortOrder,
 		Assessments:        _report.Assessments,
 		Html:               makeHtml(config, "reports"),

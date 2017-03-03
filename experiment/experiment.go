@@ -131,7 +131,9 @@ func Process(
 			experimentFile.Name(), err))
 		return err
 	}
-	fieldDescriptions, err := rhkit.DescribeDataset(experiment.Dataset)
+
+	dDescription, err :=
+		describeDataset(cfg, experimentFile.Name(), experiment.Dataset)
 	if err != nil {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
 			experimentFile.Name(), err))
@@ -144,7 +146,7 @@ func Process(
 			experimentFile.Name(), err))
 		return err
 	}
-	rules := rhkit.GenerateRules(fieldDescriptions, experiment.RuleFieldNames)
+	rules := rhkit.GenerateRules(dDescription, experiment.RuleFieldNames)
 
 	assessment, err := assessRules(1, rules, experiment, epr, cfg)
 	if err != nil {
@@ -163,7 +165,7 @@ func Process(
 			experimentFile.Name(), err))
 		return err
 	}
-	tweakableRules := rhkit.TweakRules(1, sortedRules, fieldDescriptions)
+	tweakableRules := rhkit.TweakRules(1, sortedRules, dDescription)
 
 	assessment2, err := assessRules(2, tweakableRules, experiment, epr, cfg)
 	if err != nil {
@@ -385,6 +387,23 @@ func (e *experimentFile) checkValid() error {
 		}
 	}
 	return nil
+}
+
+func describeDataset(
+	cfg *config.Config,
+	filename string,
+	dataset ddataset.Dataset,
+) (*rhkit.Description, error) {
+	description, err := rhkit.DescribeDataset(dataset)
+	if err != nil {
+		return nil, err
+	}
+
+	fdFilename := filepath.Join(cfg.BuildDir, "descriptions", filename)
+	if err := description.WriteJSON(fdFilename); err != nil {
+		return nil, err
+	}
+	return description, nil
 }
 
 func assessRulesWorker(
