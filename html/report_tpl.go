@@ -43,8 +43,8 @@ const reportTpl = `
 				<h2>Experiment Details</h2>
 				<p>Experiment file: {{ .ExperimentFilename }}</p>
 				<br />
-				<table class="neat-table">
-					<tr class="title">
+				<table class="table table-bordered table-nonfluid">
+					<tr>
 						<th>Sort Order</th><th class="last-column">Direction</th>
 					</tr>
 					{{range .SortOrder}}
@@ -57,7 +57,7 @@ const reportTpl = `
 				<h2>Data Set</h2>
 				The data set contained {{ .NumRecords }} records.</br />
 				<br />
-				<table class="neat-table">
+				<table class="table table-bordered">
 					<tr>
 						<th>Field</th>
 						<th>Kind</th>
@@ -95,8 +95,8 @@ const reportTpl = `
 					<h3>{{ .Rule }}</h3>
 
 					<div class="pull-left aggregators">
-						<table class="neat-table">
-							<tr class="title">
+						<table class="table table-bordered">
+							<tr>
 								<th>Aggregator</th>
 								<th>Value</th>
 								<th class="last-column">Improvement</th>
@@ -112,8 +112,8 @@ const reportTpl = `
 					</div>
 
 					<div class="pull-left">
-						<table class="neat-table">
-							<tr class="title">
+						<table class="table table-bordered">
+							<tr>
 								<th>Goal</th><th class="last-column">Value</th>
 							</tr>
 							{{ range .Goals }}

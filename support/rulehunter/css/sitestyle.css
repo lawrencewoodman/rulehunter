@@ -59,34 +59,12 @@ ul.reports-activity th {
   width: 23ex;
 }
 
-table.neat-table {
-  border-collapse: collapse;
-  margin-bottom: 2em;
+.table-nonfluid {
+   width: auto !important;
 }
 
-table.neat-table th {
-  text-align: left;
-  padding-left: 1em;
-  padding-right: 2em;
-  border-collapse: collapse;
-  border-right: 1px solid black;
-  border-bottom: 1px solid black;
-  height: 1em;
-}
-
-table.neat-table th.last-column {
-  border-right: 0;
-}
-table.neat-table td {
-  border-collapse: collapse;
-  border-right: 1px solid black;
-  padding-left: 1em;
-  padding-right: 1em;
-  padding-top: 0.1em;
-  padding-bottom: 0.1em;
-}
-table.neat-table td.last-column {
-  border-right: 0;
+.table-bordered th {
+  background-color: #E4E4E4
 }
 
 table td.status-processing {
