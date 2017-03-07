@@ -82,6 +82,10 @@ func (ad *mccSpec) GetName() string {
 	return ad.name
 }
 
+func (ad *mccSpec) GetKind() string {
+	return "mcc"
+}
+
 func (ad *mccSpec) GetArg() string {
 	return ad.expr.String()
 }

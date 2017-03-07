@@ -64,6 +64,10 @@ func (ad *calcSpec) GetName() string {
 	return ad.name
 }
 
+func (ad *calcSpec) GetKind() string {
+	return "calc"
+}
+
 func (ad *calcSpec) GetArg() string {
 	return ad.expr.String()
 }

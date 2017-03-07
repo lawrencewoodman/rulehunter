@@ -72,6 +72,10 @@ func (ad *recallSpec) GetName() string {
 	return ad.name
 }
 
+func (ad *recallSpec) GetKind() string {
+	return "recall"
+}
+
 func (ad *recallSpec) GetArg() string {
 	return ad.expr.String()
 }

@@ -74,6 +74,10 @@ func (ad *meanSpec) GetName() string {
 	return ad.name
 }
 
+func (ad *meanSpec) GetKind() string {
+	return "mean"
+}
+
 func (ad *meanSpec) GetArg() string {
 	return ad.expr.String()
 }

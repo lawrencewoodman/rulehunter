@@ -72,6 +72,10 @@ func (ad *precisionSpec) GetName() string {
 	return ad.name
 }
 
+func (ad *precisionSpec) GetKind() string {
+	return "precision"
+}
+
 func (ad *precisionSpec) GetArg() string {
 	return ad.expr.String()
 }

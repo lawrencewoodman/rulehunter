@@ -68,6 +68,10 @@ func (ad *countSpec) GetName() string {
 	return ad.name
 }
 
+func (ad *countSpec) GetKind() string {
+	return "count"
+}
+
 func (ad *countSpec) GetArg() string {
 	return ad.expr.String()
 }

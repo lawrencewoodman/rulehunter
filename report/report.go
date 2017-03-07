@@ -52,7 +52,14 @@ type Report struct {
 	ExperimentFilename string
 	NumRecords         int64
 	SortOrder          []experiment.SortField
+	Aggregators        []AggregatorDesc
 	Assessments        []*Assessment
+}
+
+type AggregatorDesc struct {
+	Name string
+	Kind string
+	Arg  string
 }
 
 func WriteJson(
@@ -71,6 +78,15 @@ func WriteJson(
 		return err
 	}
 
+	aggregatorDescs := make([]AggregatorDesc, len(experiment.Aggregators))
+	for i, as := range experiment.Aggregators {
+		aggregatorDescs[i] = AggregatorDesc{
+			Name: as.GetName(),
+			Kind: as.GetKind(),
+			Arg:  as.GetArg(),
+		}
+	}
+
 	assessments := make([]*Assessment, len(_assessment.RuleAssessments))
 	for i, ruleAssessment := range _assessment.RuleAssessments {
 		aggregatorNames := getSortedAggregatorNames(ruleAssessment.Aggregators)
@@ -81,9 +97,9 @@ func WriteJson(
 			difference :=
 				calcTrueAggregatorDiff(trueAggregators, aggregatorName, aggregator)
 			aggregators[j] = &Aggregator{
-				aggregatorName,
-				aggregator.String(),
-				difference,
+				Name:       aggregatorName,
+				Value:      aggregator.String(),
+				Difference: difference,
 			}
 			j++
 		}
@@ -100,6 +116,7 @@ func WriteJson(
 		experimentFilename,
 		assessment.NumRecords,
 		experiment.SortOrder,
+		aggregatorDescs,
 		assessments,
 	}
 	json, err := json.Marshal(report)

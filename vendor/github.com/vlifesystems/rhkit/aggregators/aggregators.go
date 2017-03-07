@@ -39,6 +39,7 @@ type Aggregator interface {
 type AggregatorSpec interface {
 	New() AggregatorInstance
 	GetName() string
+	GetKind() string
 	GetArg() string
 }
 

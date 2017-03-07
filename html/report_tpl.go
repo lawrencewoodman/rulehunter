@@ -45,14 +45,27 @@ const reportTpl = `
 				<br />
 				<table class="table table-bordered table-nonfluid">
 					<tr>
-						<th>Sort Order</th><th class="last-column">Direction</th>
+						<th>Sort Order</th><th>Direction</th>
 					</tr>
 					{{range .SortOrder}}
 						<tr>
-							<td>{{ .Field }}</td><td class="last-column">{{ .Direction }}</td>
+							<td>{{ .Field }}</td><td>{{ .Direction }}</td>
 						</tr>
 					{{end}}
 				</table>
+
+				{{if .Aggregators}}
+					<table class="table table-bordered">
+						<tr>
+							<th>Aggregator Name</th><th>Function</th><th>Arg</th>
+						</tr>
+						{{range .Aggregators}}
+							<tr>
+								<td>{{ .Name }}</td><td>{{ .Kind }}</td><td>{{ .Arg }}</td>
+							</tr>
+						{{end}}
+					</table>
+				{{end}}
 
 				<h2>Data Set</h2>
 				The data set contained {{ .NumRecords }} records.</br />
@@ -99,30 +112,32 @@ const reportTpl = `
 							<tr>
 								<th>Aggregator</th>
 								<th>Value</th>
-								<th class="last-column">Improvement</th>
+								<th>Improvement</th>
 							</tr>
 							{{ range .Aggregators }}
 							<tr>
 								<td>{{ .Name }}</td>
 								<td>{{ .Value }}</td>
-								<td class="last-column">{{ .Difference }}</td>
+								<td>{{ .Difference }}</td>
 							</tr>
 							{{ end }}
 						</table>
 					</div>
 
-					<div class="pull-left">
-						<table class="table table-bordered">
-							<tr>
-								<th>Goal</th><th class="last-column">Value</th>
-							</tr>
-							{{ range .Goals }}
-							<tr>
-								<td>{{ .Expr }}</td><td class="last-column">{{ .Passed }}</td>
-							</tr>
-							{{ end }}
-						</table>
-					</div>
+					{{if .Goals}}
+						<div class="pull-left">
+							<table class="table table-bordered">
+								<tr>
+									<th>Goal</th><th>Value</th>
+								</tr>
+								{{ range .Goals }}
+								<tr>
+									<td>{{ .Expr }}</td><td>{{ .Passed }}</td>
+								</tr>
+								{{ end }}
+							</table>
+						</div>
+					{{end}}
 
 				</div>
 			{{ end }}

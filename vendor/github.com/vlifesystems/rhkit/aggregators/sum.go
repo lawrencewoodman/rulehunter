@@ -71,6 +71,10 @@ func (ad *sumSpec) GetName() string {
 	return ad.name
 }
 
+func (ad *sumSpec) GetKind() string {
+	return "sum"
+}
+
 func (ad *sumSpec) GetArg() string {
 	return ad.expr.String()
 }

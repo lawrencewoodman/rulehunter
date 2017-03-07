@@ -54,6 +54,10 @@ func (ad *goalsScoreSpec) GetName() string {
 	return ad.name
 }
 
+func (ad *goalsScoreSpec) GetKind() string {
+	return "goalsscore"
+}
+
 func (ad *goalsScoreSpec) GetArg() string {
 	return ""
 }

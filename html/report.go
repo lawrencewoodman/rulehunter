@@ -43,6 +43,7 @@ func generateReport(
 		NumRecords         int64
 		Description        *rhkit.Description
 		SortOrder          []experiment.SortField
+		Aggregators        []report.AggregatorDesc
 		Assessments        []*report.Assessment
 		Html               map[string]template.HTML
 	}
@@ -57,6 +58,7 @@ func generateReport(
 		NumRecords:         _report.NumRecords,
 		Description:        description,
 		SortOrder:          _report.SortOrder,
+		Aggregators:        _report.Aggregators,
 		Assessments:        _report.Assessments,
 		Html:               makeHtml(config, "reports"),
 	}
