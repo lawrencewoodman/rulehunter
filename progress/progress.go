@@ -271,6 +271,13 @@ func (pm *ProgressMonitor) findExperiment(
 }
 
 func (pm *ProgressMonitor) writeJson() error {
+	// File mode permission:
+	// No special permission bits
+	// User: Read, Write
+	// Group: Read
+	// Other: None
+	const modePerm = 0640
+
 	sort.Sort(pm)
 	successfulExperiments := []*Experiment{}
 	for _, e := range pm.experiments {
@@ -283,7 +290,7 @@ func (pm *ProgressMonitor) writeJson() error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(pm.filename, json, 0640)
+	return ioutil.WriteFile(pm.filename, json, modePerm)
 }
 
 // Implements sort.Interface

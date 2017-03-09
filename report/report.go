@@ -69,6 +69,13 @@ func WriteJson(
 	tags []string,
 	config *config.Config,
 ) error {
+	// File mode permission:
+	// No special permission bits
+	// User: Read, Write
+	// Group: Read
+	// Other: None
+	const modePerm = 0640
+
 	_assessment := assessment
 	_assessment.Sort(experiment.SortOrder)
 	_assessment.Refine()
@@ -125,7 +132,7 @@ func WriteJson(
 	}
 	reportFilename :=
 		filepath.Join(config.BuildDir, "reports", experimentFilename)
-	return ioutil.WriteFile(reportFilename, json, 0640)
+	return ioutil.WriteFile(reportFilename, json, modePerm)
 }
 
 func LoadJson(config *config.Config, reportFilename string) (*Report, error) {

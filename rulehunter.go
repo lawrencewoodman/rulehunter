@@ -62,6 +62,10 @@ func subMain(
 		return 1, errConfigLoad{filename: configFilename, err: err}
 	}
 
+	if err := buildConfigDirs(config); err != nil {
+		return 1, err
+	}
+
 	htmlCmds := make(chan cmd.Cmd, 100)
 	pm, err := progress.NewMonitor(
 		filepath.Join(config.BuildDir, "progress"),
@@ -136,4 +140,28 @@ func newService(
 	}
 	s, err := service.New(prg, svcConfig)
 	return s, err
+}
+
+func buildConfigDirs(cfg *config.Config) error {
+	// File mode permission:
+	// No special permission bits
+	// User: Read, Write Execute
+	// Group: None
+	// Other: None
+	const modePerm = 0700
+
+	dirs := []string{
+		filepath.Join(cfg.WWWDir, "reports"),
+		filepath.Join(cfg.WWWDir, "progress"),
+		filepath.Join(cfg.BuildDir, "progress"),
+		filepath.Join(cfg.BuildDir, "reports"),
+		filepath.Join(cfg.BuildDir, "descriptions"),
+	}
+	for _, dir := range dirs {
+		if err := os.MkdirAll(dir, modePerm); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

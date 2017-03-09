@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestRulehunter_service(t *testing.T) {
-	cfgDir := testhelpers.BuildConfigDirs(t)
+	cfgDir := testhelpers.BuildConfigDirs(t, false)
 	defer os.RemoveAll(cfgDir)
 	mustWriteConfig(t, cfgDir, 10)
 

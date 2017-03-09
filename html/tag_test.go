@@ -21,10 +21,10 @@ import (
 //  iii) That the shortest tag name is used if there are multiple ones that
 //       resolve to the same escaped tag
 func TestGenerateTagPages(t *testing.T) {
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
 	config := &config.Config{
-		WWWDir:   filepath.Join(tempDir),
+		WWWDir:   filepath.Join(tmpDir),
 		BuildDir: "fixtures",
 	}
 	if err := generateTagPages(config); err != nil {

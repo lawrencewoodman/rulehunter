@@ -24,7 +24,7 @@ func TestRun_quit(t *testing.T) {
 		t.Fatal("Getwd() err: ", err)
 	}
 	defer os.Chdir(wd)
-	cfgDir := testhelpers.BuildConfigDirs(t)
+	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
 
 	pm, err := progress.NewMonitor(

@@ -30,7 +30,7 @@ func TestSubMain(t *testing.T) {
 		{Level: testhelpers.Info,
 			Msg: "Successfully processed experiment: debt2.json"},
 	}
-	cfgDir := testhelpers.BuildConfigDirs(t)
+	cfgDir := testhelpers.BuildConfigDirs(t, false)
 	flags := &cmdFlags{configDir: cfgDir}
 	defer os.RemoveAll(cfgDir)
 	if testing.Short() {
@@ -73,7 +73,7 @@ func TestSubMain(t *testing.T) {
 }
 
 func TestSubMain_errors(t *testing.T) {
-	tmpDir := testhelpers.TempDir(t)
+	tmpDir := testhelpers.BuildConfigDirs(t, false)
 	defer os.RemoveAll(tmpDir)
 
 	cases := []struct {

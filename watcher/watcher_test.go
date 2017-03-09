@@ -15,18 +15,18 @@ import (
 
 // Test initial filenames
 func TestWatch_1(t *testing.T) {
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.json"), tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.yaml"), tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "flow.yaml"), tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.json"), tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.yaml"), tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "flow.yaml"), tmpDir)
 
 	files := make(chan fileinfo.FileInfo, 100)
 	logger := testhelpers.NewLogger()
 	quit := quitter.New()
 	period := 50 * time.Millisecond
 	go logger.Run(quit)
-	go Watch(tempDir, period, logger, quit, files)
+	go Watch(tmpDir, period, logger, quit, files)
 	time.Sleep(200 * time.Millisecond)
 	quit.Quit()
 
@@ -46,20 +46,20 @@ func TestWatch_1(t *testing.T) {
 
 // Test adding a filename to directory
 func TestWatch_2(t *testing.T) {
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.json"), tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "flow.yaml"), tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.json"), tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "flow.yaml"), tmpDir)
 
 	files := make(chan fileinfo.FileInfo, 100)
 	logger := testhelpers.NewLogger()
 	quit := quitter.New()
 	period := 50 * time.Millisecond
 	go logger.Run(quit)
-	go Watch(tempDir, period, logger, quit, files)
+	go Watch(tmpDir, period, logger, quit, files)
 	time.Sleep(100 * time.Millisecond)
 
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.yaml"), tempDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.yaml"), tmpDir)
 	time.Sleep(100 * time.Millisecond)
 	quit.Quit()
 
@@ -78,20 +78,20 @@ func TestWatch_2(t *testing.T) {
 
 // Test changing a file
 func TestWatch_3(t *testing.T) {
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.json"), tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "flow.yaml"), tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.json"), tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "flow.yaml"), tmpDir)
 
 	files := make(chan fileinfo.FileInfo, 100)
 	logger := testhelpers.NewLogger()
 	quit := quitter.New()
 	period := 50 * time.Millisecond
 	go logger.Run(quit)
-	go Watch(tempDir, period, logger, quit, files)
+	go Watch(tmpDir, period, logger, quit, files)
 	time.Sleep(100 * time.Millisecond)
 
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.json"), tempDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.json"), tmpDir)
 	time.Sleep(100 * time.Millisecond)
 	quit.Quit()
 
@@ -108,9 +108,9 @@ func TestWatch_3(t *testing.T) {
 }
 
 func TestWatch_errors(t *testing.T) {
-	tempDir := testhelpers.TempDir(t)
-	os.RemoveAll(tempDir)
-	dir := filepath.Join(tempDir, "non")
+	tmpDir := testhelpers.TempDir(t)
+	os.RemoveAll(tmpDir)
+	dir := filepath.Join(tmpDir, "non")
 	files := make(chan fileinfo.FileInfo, 100)
 	logger := testhelpers.NewLogger()
 	quit := quitter.New()
@@ -139,16 +139,16 @@ func TestWatch_errors(t *testing.T) {
 
 // Test a directory being removed part way through watching
 func TestWatch_errors2(t *testing.T) {
-	tempDir := testhelpers.TempDir(t)
+	tmpDir := testhelpers.TempDir(t)
 	files := make(chan fileinfo.FileInfo, 100)
 	logger := testhelpers.NewLogger()
 	quit := quitter.New()
 	period := 50 * time.Millisecond
 	go logger.Run(quit)
-	go Watch(tempDir, period, logger, quit, files)
+	go Watch(tmpDir, period, logger, quit, files)
 	time.Sleep(100 * time.Millisecond)
 
-	os.RemoveAll(tempDir)
+	os.RemoveAll(tmpDir)
 	time.Sleep(100 * time.Millisecond)
 	quit.Quit()
 
@@ -156,7 +156,7 @@ func TestWatch_errors2(t *testing.T) {
 	wantLogEntries := []testhelpers.Entry{
 		testhelpers.Entry{
 			Level: testhelpers.Error,
-			Msg:   DirError(tempDir).Error(),
+			Msg:   DirError(tmpDir).Error(),
 		},
 	}
 
@@ -170,20 +170,20 @@ func TestWatch_errors2(t *testing.T) {
 }
 
 func TestGetExperimentFilenames(t *testing.T) {
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.json"), tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.yaml"), tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "flow.yaml"), tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.json"), tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.yaml"), tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "flow.yaml"), tmpDir)
 	testhelpers.CopyFile(
 		t,
 		filepath.Join("fixtures", "flow.yaml"),
-		tempDir,
+		tmpDir,
 		"flow.txt",
 	)
 
 	wantFiles := []string{"debt.json", "debt.yaml", "flow.yaml"}
-	gotFiles, err := GetExperimentFiles(tempDir)
+	gotFiles, err := GetExperimentFiles(tmpDir)
 	if err != nil {
 		t.Fatalf("GetExperimentFilenames: %v", err)
 	}
@@ -193,9 +193,9 @@ func TestGetExperimentFilenames(t *testing.T) {
 }
 
 func TestGetExperimentFilenames_errors(t *testing.T) {
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	dir := filepath.Join(tempDir, "non")
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	dir := filepath.Join(tmpDir, "non")
 	wantFiles := []string{}
 	wantErr := DirError(dir)
 	gotFiles, err := GetExperimentFiles(dir)

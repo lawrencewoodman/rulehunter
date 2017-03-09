@@ -310,18 +310,18 @@ func TestShouldProcess(t *testing.T) {
 			want: true,
 		},
 	}
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
 	testhelpers.CopyFile(
 		t,
 		filepath.Join("..", "progress", "fixtures", "progress.json"),
-		tempDir,
+		tmpDir,
 	)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 	go cmdMonitor.Run()
-	pm, err := progress.NewMonitor(tempDir, htmlCmds)
+	pm, err := progress.NewMonitor(tmpDir, htmlCmds)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %v", err)
 	}
@@ -341,7 +341,7 @@ func TestShouldProcess(t *testing.T) {
 }
 
 func TestProcess(t *testing.T) {
-	cfgDir := testhelpers.BuildConfigDirs(t)
+	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
 	cfg := &config.Config{
 		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
@@ -453,7 +453,7 @@ func TestProcess_multiProcesses(t *testing.T) {
 
 	t.Logf("Testing with %d processes.", maxNumProcesses)
 	for numProcesses := 1; numProcesses <= maxNumProcesses; numProcesses++ {
-		cfgDir := testhelpers.BuildConfigDirs(t)
+		cfgDir := testhelpers.BuildConfigDirs(t, true)
 		defer os.RemoveAll(cfgDir)
 		cfg := &config.Config{
 			ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
@@ -501,7 +501,7 @@ func TestProcess_multiProcesses(t *testing.T) {
 }
 
 func TestProcess_errors(t *testing.T) {
-	cfgDir := testhelpers.BuildConfigDirs(t)
+	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
 	cfg := &config.Config{
 		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
@@ -721,7 +721,7 @@ func TestMakeDataset_err(t *testing.T) {
 func BenchmarkProcess(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		b.StopTimer()
-		cfgDir := testhelpers.BuildConfigDirs(b)
+		cfgDir := testhelpers.BuildConfigDirs(b, true)
 		defer os.RemoveAll(cfgDir)
 		cfg := &config.Config{
 			ExperimentsDir:    filepath.Join(cfgDir, "experiments"),

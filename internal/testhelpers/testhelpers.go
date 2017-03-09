@@ -12,25 +12,32 @@ type errorReporter interface {
 	Fatalf(format string, args ...interface{})
 }
 
-func BuildConfigDirs(e errorReporter) string {
+func BuildConfigDirs(e errorReporter, buildAllDirs bool) string {
 	// File mode permission:
 	// No special permission bits
 	// User: Read, Write Execute
 	// Group: None
 	// Other: None
 	const modePerm = 0700
+	var subDirs []string
 
 	tmpDir := TempDir(e)
 
-	// TODO: Create the www/* and build/* subdirectories from rulehunter code
-	subDirs := []string{
-		"experiments",
-		"datasets",
-		filepath.Join("www", "reports"),
-		filepath.Join("www", "progress"),
-		filepath.Join("build", "progress"),
-		filepath.Join("build", "reports"),
-		filepath.Join("build", "descriptions"),
+	if buildAllDirs {
+		subDirs = []string{
+			"experiments",
+			"datasets",
+			filepath.Join("www", "reports"),
+			filepath.Join("www", "progress"),
+			filepath.Join("build", "progress"),
+			filepath.Join("build", "reports"),
+			filepath.Join("build", "descriptions"),
+		}
+	} else {
+		subDirs = []string{
+			"experiments",
+			"datasets",
+		}
 	}
 	for _, subDir := range subDirs {
 		fullSubDir := filepath.Join(tmpDir, subDir)
@@ -62,11 +69,11 @@ func CopyFile(e errorReporter, srcFilename, dstDir string, args ...string) {
 }
 
 func TempDir(e errorReporter) string {
-	tempDir, err := ioutil.TempDir("", "rulehunter_test")
+	tmpDir, err := ioutil.TempDir("", "rulehunter_test")
 	if err != nil {
 		e.Fatalf("TempDir() err: %s", err)
 	}
-	return tempDir
+	return tmpDir
 }
 
 func MustParse(layout, s string) time.Time {

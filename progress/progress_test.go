@@ -33,12 +33,12 @@ func TestExperimentString(t *testing.T) {
 }
 
 func TestNewMonitor_errors(t *testing.T) {
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
 	testhelpers.CopyFile(
 		t,
 		filepath.Join("fixtures", "progress_invalid.json"),
-		tempDir,
+		tmpDir,
 		"progress.json",
 	)
 	htmlCmds := make(chan cmd.Cmd)
@@ -46,7 +46,7 @@ func TestNewMonitor_errors(t *testing.T) {
 	go cmdMonitor.Run()
 
 	wantErr := errors.New("invalid character '[' after object key")
-	_, gotErr := NewMonitor(tempDir, htmlCmds)
+	_, gotErr := NewMonitor(tmpDir, htmlCmds)
 	if gotErr == nil || gotErr.Error() != wantErr.Error() {
 		t.Errorf("NewMonitor: gotErr: %s, wantErr: %s", gotErr, wantErr)
 	}
@@ -73,14 +73,14 @@ func TestGetExperiments(t *testing.T) {
 		},
 	}
 
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 	go cmdMonitor.Run()
-	pm, err := NewMonitor(tempDir, htmlCmds)
+	pm, err := NewMonitor(tmpDir, htmlCmds)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %s", err)
 	}
@@ -91,13 +91,13 @@ func TestGetExperiments(t *testing.T) {
 }
 
 func TestGetExperiments_notExists(t *testing.T) {
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 	go cmdMonitor.Run()
-	pm, err := NewMonitor(tempDir, htmlCmds)
+	pm, err := NewMonitor(tmpDir, htmlCmds)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %s", err)
 	}
@@ -144,14 +144,14 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		},
 	}
 
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 	go cmdMonitor.Run()
-	pm, err := NewMonitor(tempDir, htmlCmds)
+	pm, err := NewMonitor(tmpDir, htmlCmds)
 	if err != nil {
 		t.Errorf("NewMonitor() err: %s", err)
 	}
@@ -208,14 +208,14 @@ func TestUpdateDetails(t *testing.T) {
 	}
 
 	wantHtmlCmdsReceived := []cmd.Cmd{cmd.Progress, cmd.Progress}
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 	go cmdMonitor.Run()
-	pm, err := NewMonitor(tempDir, htmlCmds)
+	pm, err := NewMonitor(tmpDir, htmlCmds)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %v", err)
 	}
@@ -279,15 +279,15 @@ func TestReportSuccess(t *testing.T) {
 			wantHtmlCmdsReceived: []cmd.Cmd{},
 		},
 	}
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
 
 	for _, c := range cases {
 		htmlCmds := make(chan cmd.Cmd)
 		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 		go cmdMonitor.Run()
-		pm, err := NewMonitor(tempDir, htmlCmds)
+		pm, err := NewMonitor(tmpDir, htmlCmds)
 		if err != nil {
 			t.Fatalf("NewMonitor() err: %v", err)
 		}
@@ -362,15 +362,15 @@ func TestReportInfo(t *testing.T) {
 			wantExperiments: wantExperimentsFile,
 		},
 	}
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
 
 	for _, c := range cases {
 		htmlCmds := make(chan cmd.Cmd)
 		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 		go cmdMonitor.Run()
-		pm, err := NewMonitor(tempDir, htmlCmds)
+		pm, err := NewMonitor(tmpDir, htmlCmds)
 		if err != nil {
 			t.Fatalf("NewMonitor() err: %v", err)
 		}
@@ -439,15 +439,15 @@ func TestReportError(t *testing.T) {
 			wantExperiments: wantExperimentsFile,
 		},
 	}
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
 
 	for _, c := range cases {
 		htmlCmds := make(chan cmd.Cmd)
 		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 		go cmdMonitor.Run()
-		pm, err := NewMonitor(tempDir, htmlCmds)
+		pm, err := NewMonitor(tmpDir, htmlCmds)
 		if err != nil {
 			t.Fatalf("NewMonitor() err: %v", err)
 		}
@@ -488,14 +488,14 @@ func TestGetFinishStamp(t *testing.T) {
 			mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 		},
 	}
-	tempDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tempDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tempDir)
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 	go cmdMonitor.Run()
-	pm, err := NewMonitor(tempDir, htmlCmds)
+	pm, err := NewMonitor(tmpDir, htmlCmds)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %s", err)
 	}
