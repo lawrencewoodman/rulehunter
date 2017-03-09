@@ -600,14 +600,14 @@ func TestProcess_errors(t *testing.T) {
 }
 
 func TestDescribeDataset_errors(t *testing.T) {
-	tmpDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tmpDir)
+	cfgDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(cfgDir)
 	cases := []struct {
 		cfg     *config.Config
 		dataset ddataset.Dataset
 		wantErr error
 	}{
-		{cfg: &config.Config{BuildDir: tmpDir},
+		{cfg: &config.Config{BuildDir: cfgDir},
 			dataset: dcsv.New(
 				filepath.Join("fixtures", "flow.csv"),
 				true,
@@ -616,11 +616,11 @@ func TestDescribeDataset_errors(t *testing.T) {
 			),
 			wantErr: &os.PathError{
 				"open",
-				filepath.Join(tmpDir, "descriptions", "aname"),
+				filepath.Join(cfgDir, "descriptions", "aname"),
 				syscall.ENOENT,
 			},
 		},
-		{cfg: &config.Config{BuildDir: tmpDir},
+		{cfg: &config.Config{BuildDir: cfgDir},
 			dataset: dcsv.New(
 				filepath.Join("fixtures", "flow_nonexistant.csv"),
 				true,
