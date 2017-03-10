@@ -4,7 +4,6 @@ package main
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -12,10 +11,10 @@ import (
 )
 
 func TestSubMain_interrupt(t *testing.T) {
-	configDir := testhelpers.BuildConfigDirs(t, false)
-	flags := &cmdFlags{install: false, serve: true, configDir: configDir}
-	defer os.RemoveAll(configDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "config.yaml"), configDir)
+	cfgDir := testhelpers.BuildConfigDirs(t, false)
+	flags := &cmdFlags{install: false, serve: true, configDir: cfgDir}
+	defer os.RemoveAll(cfgDir)
+	mustWriteConfig(t, cfgDir, 100)
 
 	l := testhelpers.NewLogger()
 	hasQuitC := make(chan bool)
