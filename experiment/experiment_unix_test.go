@@ -29,7 +29,7 @@ func TestDescribeDataset_errors(t *testing.T) {
 			wantErr: &os.PathError{
 				"open",
 				filepath.Join(cfgDir, "build", "descriptions", "aname"),
-				syscall.ESRCH,
+				syscall.ENOENT,
 			},
 		},
 		{cfg: &config.Config{BuildDir: filepath.Join(cfgDir, "build")},
