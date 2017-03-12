@@ -29,7 +29,7 @@ func TestDescribeDataset_errors(t *testing.T) {
 			wantErr: &os.PathError{
 				"open",
 				filepath.Join(cfgDir, "build", "descriptions", "aname"),
-				syscall.ESRCH,
+				syscall.ERROR_PATH_NOT_FOUND,
 			},
 		},
 		{cfg: &config.Config{BuildDir: filepath.Join(cfgDir, "build")},
@@ -42,7 +42,7 @@ func TestDescribeDataset_errors(t *testing.T) {
 			wantErr: &os.PathError{
 				"open",
 				filepath.Join("fixtures", "flow_nonexistant.csv"),
-				syscall.ENOENT,
+				syscall.ERROR_FILE_NOT_FOUND,
 			},
 		},
 	}
