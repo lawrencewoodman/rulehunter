@@ -233,7 +233,7 @@ func addDefaultAggregators(
 	aggregatorSpecs []aggregators.AggregatorSpec,
 ) []aggregators.AggregatorSpec {
 	newAggregatorSpecs := make([]aggregators.AggregatorSpec, 2)
-	newAggregatorSpecs[0] = aggregators.MustNew("numMatches", "count", "1==1")
+	newAggregatorSpecs[0] = aggregators.MustNew("numMatches", "count", "true()")
 	newAggregatorSpecs[1] = aggregators.MustNew(
 		"percentMatches",
 		"calc",

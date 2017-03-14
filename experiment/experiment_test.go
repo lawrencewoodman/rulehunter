@@ -46,7 +46,7 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				RuleFieldNames: []string{"group", "district", "height"},
 				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("numMatches", "count", "1==1"),
+					aggregators.MustNew("numMatches", "count", "true()"),
 					aggregators.MustNew(
 						"percentMatches",
 						"calc",
@@ -78,7 +78,7 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				RuleFieldNames: []string{"group", "district", "height"},
 				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("numMatches", "count", "1==1"),
+					aggregators.MustNew("numMatches", "count", "true()"),
 					aggregators.MustNew(
 						"percentMatches",
 						"calc",
@@ -120,7 +120,7 @@ func TestLoadExperiment(t *testing.T) {
 					"tertiaryEducated",
 				},
 				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("numMatches", "count", "1==1"),
+					aggregators.MustNew("numMatches", "count", "true()"),
 					aggregators.MustNew(
 						"percentMatches",
 						"calc",
@@ -149,7 +149,7 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				RuleFieldNames: []string{"group", "district", "height"},
 				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("numMatches", "count", "1==1"),
+					aggregators.MustNew("numMatches", "count", "true()"),
 					aggregators.MustNew(
 						"percentMatches",
 						"calc",
