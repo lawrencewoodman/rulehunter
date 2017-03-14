@@ -209,7 +209,7 @@ func evalUnaryExpr(rh *dlit.Literal, op token.Token) *dlit.Literal {
 	case token.SUB:
 		r = opNeg(rh)
 	default:
-		r, _ = dlit.New(InvalidOpError(op))
+		r = dlit.MustNew(InvalidOpError(op))
 	}
 	return r
 }
