@@ -37,7 +37,7 @@ func generateTagPages(config *config.Config) error {
 	tagsLen := make(map[string]int)
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			report, err := report.LoadJson(config, file.Name())
+			report, err := report.LoadJSON(config, file.Name())
 			if err != nil {
 				return err
 			}
@@ -76,7 +76,7 @@ func generateTagPage(config *config.Config, tagName string) error {
 	i := 0
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			report, err := report.LoadJson(config, file.Name())
+			report, err := report.LoadJSON(config, file.Name())
 			if err != nil {
 				return err
 			}

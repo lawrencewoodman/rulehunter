@@ -62,7 +62,7 @@ type AggregatorDesc struct {
 	Arg  string
 }
 
-func WriteJson(
+func WriteJSON(
 	assessment *rhkit.Assessment,
 	experiment *experiment.Experiment,
 	experimentFilename string,
@@ -135,7 +135,7 @@ func WriteJson(
 	return ioutil.WriteFile(reportFilename, json, modePerm)
 }
 
-func LoadJson(config *config.Config, reportFilename string) (*Report, error) {
+func LoadJSON(config *config.Config, reportFilename string) (*Report, error) {
 	var report Report
 	filename := filepath.Join(config.BuildDir, "reports", reportFilename)
 

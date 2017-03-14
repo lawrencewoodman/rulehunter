@@ -50,7 +50,7 @@ func generateReports(
 	i := 0
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			report, err := report.LoadJson(config, file.Name())
+			report, err := report.LoadJSON(config, file.Name())
 			if err != nil {
 				return err
 			}

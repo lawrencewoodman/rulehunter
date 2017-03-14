@@ -209,7 +209,7 @@ func Process(
 	assessment5.Refine()
 	assessment6 := assessment5.TruncateRuleAssessments(cfg.MaxNumReportRules)
 
-	err = report.WriteJson(
+	err = report.WriteJSON(
 		assessment6,
 		experiment,
 		experimentFile.Name(),

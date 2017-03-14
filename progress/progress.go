@@ -57,7 +57,7 @@ func (epr *ExperimentProgressReporter) UpdateDetails(
 	e.Title = title
 	e.Tags = tags
 	e.Stamp = time.Now()
-	if err := epr.pm.writeJson(); err != nil {
+	if err := epr.pm.writeJSON(); err != nil {
 		return err
 	}
 	epr.pm.htmlCmds <- cmd.Progress
@@ -209,7 +209,7 @@ func (pm *ProgressMonitor) AddExperiment(
 		e.Percent = 0
 		e.Status = Waiting
 	}
-	if err := pm.writeJson(); err != nil {
+	if err := pm.writeJSON(); err != nil {
 		return err
 	}
 	pm.htmlCmds <- cmd.Progress
@@ -251,7 +251,7 @@ func (pm *ProgressMonitor) updateExperiment(
 	e.Status = status
 	e.Msg = msg
 	e.Percent = percent
-	if err := pm.writeJson(); err != nil {
+	if err := pm.writeJSON(); err != nil {
 		return err
 	}
 	pm.htmlCmds <- cmd.Progress
@@ -270,7 +270,7 @@ func (pm *ProgressMonitor) findExperiment(
 	return nil
 }
 
-func (pm *ProgressMonitor) writeJson() error {
+func (pm *ProgressMonitor) writeJSON() error {
 	// File mode permission:
 	// No special permission bits
 	// User: Read, Write
