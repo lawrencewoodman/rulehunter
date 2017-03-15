@@ -33,26 +33,26 @@
 		{
 			"checksumSHA1": "HiIlZBLtdzZFe73+dT3okTOFWoU=",
 			"path": "github.com/lawrencewoodman/ddataset",
-			"revision": "7c5a9bd2a367367fa80f32423faf71d77023d542",
-			"revisionTime": "2016-07-21T11:39:06Z"
+			"revision": "f99d2e40c18740fdc9c01d818aa7044925761539",
+			"revisionTime": "2017-03-14T14:42:19Z"
 		},
 		{
 			"checksumSHA1": "c6YhbiOlQ6B44pipZekaKx1hs74=",
 			"path": "github.com/lawrencewoodman/ddataset/dcsv",
-			"revision": "7c5a9bd2a367367fa80f32423faf71d77023d542",
-			"revisionTime": "2016-07-21T11:39:06Z"
+			"revision": "f99d2e40c18740fdc9c01d818aa7044925761539",
+			"revisionTime": "2017-03-14T14:42:19Z"
 		},
 		{
-			"checksumSHA1": "3k8FSDCPc6phL3NH5Olf0gcBG4I=",
+			"checksumSHA1": "blfW0xQpj6z9KAGoE9BJ4G1K7fY=",
 			"path": "github.com/lawrencewoodman/ddataset/dsql",
-			"revision": "7c5a9bd2a367367fa80f32423faf71d77023d542",
-			"revisionTime": "2016-07-21T11:39:06Z"
+			"revision": "f99d2e40c18740fdc9c01d818aa7044925761539",
+			"revisionTime": "2017-03-14T14:42:19Z"
 		},
 		{
 			"checksumSHA1": "W96P404u4RaUvPDlQBf9oPaNAXo=",
 			"path": "github.com/lawrencewoodman/ddataset/dtruncate",
-			"revision": "7c5a9bd2a367367fa80f32423faf71d77023d542",
-			"revisionTime": "2016-07-21T11:39:06Z"
+			"revision": "f99d2e40c18740fdc9c01d818aa7044925761539",
+			"revisionTime": "2017-03-14T14:42:19Z"
 		},
 		{
 			"checksumSHA1": "BS1MYP2M87MtNS7zKloxhuquLNo=",

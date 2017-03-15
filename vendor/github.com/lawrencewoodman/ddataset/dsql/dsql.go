@@ -106,11 +106,7 @@ func (sc *DSQLConn) Next() bool {
 			sc.err = err
 			return false
 		}
-		if err := sc.makeRowCurrentRecord(); err != nil {
-			sc.Close()
-			sc.err = err
-			return false
-		}
+		sc.makeRowCurrentRecord()
 		return true
 	}
 	if err := sc.rows.Err(); err != nil {
@@ -136,22 +132,10 @@ func (sc *DSQLConn) Close() error {
 	return sc.dataset.dbHandler.Close()
 }
 
-func (sc *DSQLConn) makeRowCurrentRecord() error {
-	var l *dlit.Literal
-	var err error
+func (sc *DSQLConn) makeRowCurrentRecord() {
 	for i, v := range sc.row {
-		if v.Valid {
-			l = dlit.NewString(v.String)
-		} else {
-			l, err = dlit.New(nil)
-			if err != nil {
-				sc.Close()
-				return err
-			}
-		}
-		sc.currentRecord[sc.dataset.fieldNames[i]] = l
+		sc.currentRecord[sc.dataset.fieldNames[i]] = dlit.NewString(v.String)
 	}
-	return nil
 }
 
 func checkTableValid(fieldNames []string, numColumns int) error {
