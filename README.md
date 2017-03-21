@@ -2,7 +2,7 @@ Rulehunter
 ==========
 
 [![Build Status](https://travis-ci.org/vlifesystems/rulehunter.svg?branch=master)](https://travis-ci.org/vlifesystems/rulehunter)
-[![Build status](https://ci.appveyor.com/api/projects/status/8tds5r4dk6163es0?svg=true)](https://ci.appveyor.com/project/LawrenceWoodman/rulehunter)
+[![Build status](https://ci.appveyor.com/api/projects/status/8tds5r4dk6163es0?svg=true)](https://ci.appveyor.com/project/lawrencewoodman/rulehunter)
 [![Coverage Status](https://coveralls.io/repos/vlifesystems/rulehunter/badge.svg?branch=master)](https://coveralls.io/r/vlifesystems/rulehunter?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/vlifesystems/rulehunter)](https://goreportcard.com/report/github.com/vlifesystems/rulehunter)
 
