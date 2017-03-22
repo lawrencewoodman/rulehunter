@@ -29,13 +29,13 @@ import (
 
 func TestLoadExperiment(t *testing.T) {
 	cases := []struct {
-		cfgMaxNumRecords int
-		filename         string
-		wantExperiment   *experiment.Experiment
-		wantTags         []string
-		wantWhenExpr     *dexpr.Expr
+		cfg            *config.Config
+		filename       string
+		wantExperiment *experiment.Experiment
+		wantTags       []string
+		wantWhenExpr   *dexpr.Expr
 	}{
-		{-1, filepath.Join("fixtures", "flow.json"),
+		{&config.Config{MaxNumRecords: -1}, filepath.Join("fixtures", "flow.json"),
 			&experiment.Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dcsv.New(
@@ -64,7 +64,7 @@ func TestLoadExperiment(t *testing.T) {
 			[]string{"test", "fred / ned"},
 			dexpr.MustNew("!hasRun"),
 		},
-		{4, filepath.Join("fixtures", "flow.json"),
+		{&config.Config{MaxNumRecords: 4}, filepath.Join("fixtures", "flow.json"),
 			&experiment.Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dtruncate.New(
@@ -96,7 +96,7 @@ func TestLoadExperiment(t *testing.T) {
 			[]string{"test", "fred / ned"},
 			dexpr.MustNew("!hasRun"),
 		},
-		{-1, filepath.Join("fixtures", "debt.json"),
+		{&config.Config{MaxNumRecords: -1}, filepath.Join("fixtures", "debt.json"),
 			&experiment.Experiment{
 				Title: "What would predict people being helped to be debt free?",
 				Dataset: dcsv.New(
@@ -138,7 +138,7 @@ func TestLoadExperiment(t *testing.T) {
 			[]string{"debt"},
 			dexpr.MustNew("!hasRunToday || sinceLastRunHours > 2"),
 		},
-		{-1, filepath.Join("fixtures", "flow.yaml"),
+		{&config.Config{MaxNumRecords: -1}, filepath.Join("fixtures", "flow.yaml"),
 			&experiment.Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dcsv.New(
@@ -170,7 +170,7 @@ func TestLoadExperiment(t *testing.T) {
 	}
 	for _, c := range cases {
 		gotExperiment, gotTags, gotWhenExpr, err :=
-			loadExperiment(c.filename, c.cfgMaxNumRecords)
+			loadExperiment(c.filename, c.cfg)
 		if err != nil {
 			t.Fatalf("loadExperiment(%s) err: %s", c.filename, err)
 			return
@@ -243,9 +243,9 @@ func TestLoadExperiment_error(t *testing.T) {
 			errors.New("yaml: line 3: did not find expected key"),
 		},
 	}
-	maxNumRecords := -1
+	cfg := &config.Config{MaxNumRecords: -1}
 	for _, c := range cases {
-		_, _, _, err := loadExperiment(c.filename, maxNumRecords)
+		_, _, _, err := loadExperiment(c.filename, cfg)
 		if err == nil {
 			t.Errorf("loadExperiment(%s) no error, wantErr:%s",
 				c.filename, c.wantErr)
@@ -675,44 +675,106 @@ func TestMakeDataset_err(t *testing.T) {
 /*************************
        Benchmarks
 *************************/
-func BenchmarkProcess(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		b.StopTimer()
-		cfgDir := testhelpers.BuildConfigDirs(b, true)
-		defer os.RemoveAll(cfgDir)
-		cfg := &config.Config{
-			ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-			WWWDir:            filepath.Join(cfgDir, "www"),
-			BuildDir:          filepath.Join(cfgDir, "build"),
-			MaxNumProcesses:   4,
-			MaxNumRecords:     5000,
-			MaxNumReportRules: 100,
-		}
-		testhelpers.CopyFile(
-			b,
-			filepath.Join("fixtures", "flow_big.yaml"),
-			cfg.ExperimentsDir,
-		)
-		file := testhelpers.NewFileInfo("flow_big.yaml", time.Now())
-		quit := quitter.New()
-		defer quit.Quit()
-		l := testhelpers.NewLogger()
-		go l.Run(quit)
-		htmlCmds := make(chan cmd.Cmd)
-		defer close(htmlCmds)
-		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-		go cmdMonitor.Run()
-		pm, err := progress.NewMonitor(
-			filepath.Join(cfg.BuildDir, "progress"),
-			htmlCmds,
-		)
-		if err != nil {
-			b.Fatalf("progress.NewMonitor: err: %v", err)
-		}
-		b.StartTimer()
-		if err := Process(file, cfg, l, pm); err != nil {
-			b.Fatalf("Process: err: %v", err)
-		}
+
+func BenchmarkProcess_csv(b *testing.B) {
+	benchmarks := []struct {
+		cacheRecords int
+	}{
+		{0}, {4000}, {5000}, {10000}, {100000},
+	}
+	for _, bm := range benchmarks {
+		b.Run(fmt.Sprintf("cacherecords-%d", bm.cacheRecords), func(b *testing.B) {
+			for n := 0; n < b.N; n++ {
+				b.StopTimer()
+				cfgDir := testhelpers.BuildConfigDirs(b, true)
+				defer os.RemoveAll(cfgDir)
+				cfg := &config.Config{
+					ExperimentsDir:     filepath.Join(cfgDir, "experiments"),
+					WWWDir:             filepath.Join(cfgDir, "www"),
+					BuildDir:           filepath.Join(cfgDir, "build"),
+					MaxNumProcesses:    4,
+					MaxNumRecords:      10000,
+					MaxNumReportRules:  100,
+					MaxNumCacheRecords: bm.cacheRecords,
+				}
+				testhelpers.CopyFile(
+					b,
+					filepath.Join("fixtures", "flow_big.yaml"),
+					cfg.ExperimentsDir,
+				)
+				file := testhelpers.NewFileInfo("flow_big.yaml", time.Now())
+				quit := quitter.New()
+				defer quit.Quit()
+				l := testhelpers.NewLogger()
+				go l.Run(quit)
+				htmlCmds := make(chan cmd.Cmd)
+				defer close(htmlCmds)
+				cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+				go cmdMonitor.Run()
+				pm, err := progress.NewMonitor(
+					filepath.Join(cfg.BuildDir, "progress"),
+					htmlCmds,
+				)
+				if err != nil {
+					b.Fatalf("progress.NewMonitor: err: %v", err)
+				}
+				b.StartTimer()
+				if err := Process(file, cfg, l, pm); err != nil {
+					b.Fatalf("Process: err: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func BenchmarkProcess_sql(b *testing.B) {
+	benchmarks := []struct {
+		cacheRecords int
+	}{
+		{0}, {4000}, {5000}, {10000}, {100000},
+	}
+	for _, bm := range benchmarks {
+		b.Run(fmt.Sprintf("cacherecords-%d", bm.cacheRecords), func(b *testing.B) {
+			for n := 0; n < b.N; n++ {
+				b.StopTimer()
+				cfgDir := testhelpers.BuildConfigDirs(b, true)
+				defer os.RemoveAll(cfgDir)
+				cfg := &config.Config{
+					ExperimentsDir:     filepath.Join(cfgDir, "experiments"),
+					WWWDir:             filepath.Join(cfgDir, "www"),
+					BuildDir:           filepath.Join(cfgDir, "build"),
+					MaxNumProcesses:    4,
+					MaxNumRecords:      10000,
+					MaxNumReportRules:  100,
+					MaxNumCacheRecords: bm.cacheRecords,
+				}
+				testhelpers.CopyFile(
+					b,
+					filepath.Join("fixtures", "flow_big_sql.yaml"),
+					cfg.ExperimentsDir,
+				)
+				file := testhelpers.NewFileInfo("flow_big_sql.yaml", time.Now())
+				quit := quitter.New()
+				defer quit.Quit()
+				l := testhelpers.NewLogger()
+				go l.Run(quit)
+				htmlCmds := make(chan cmd.Cmd)
+				defer close(htmlCmds)
+				cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+				go cmdMonitor.Run()
+				pm, err := progress.NewMonitor(
+					filepath.Join(cfg.BuildDir, "progress"),
+					htmlCmds,
+				)
+				if err != nil {
+					b.Fatalf("progress.NewMonitor: err: %v", err)
+				}
+				b.StartTimer()
+				if err := Process(file, cfg, l, pm); err != nil {
+					b.Fatalf("Process: err: %v", err)
+				}
+			}
+		})
 	}
 }
 

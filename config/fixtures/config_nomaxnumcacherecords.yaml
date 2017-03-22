@@ -6,4 +6,3 @@ baseUrl: "/rulehunter/"
 user: "rhuser"
 maxNumReportRules: 2000
 maxNumProcesses: 4
-maxNumCacheRecords: 500000

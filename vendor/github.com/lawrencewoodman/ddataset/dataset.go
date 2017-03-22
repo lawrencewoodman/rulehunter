@@ -1,7 +1,7 @@
 /*
  * A Go package to describe a dynamic Dataset interface
  *
- * Copyright (C) 2016 Lawrence Woodman <lwoodman@vlifesystems.com>
+ * Copyright (C) 2016-2017 Lawrence Woodman <lwoodman@vlifesystems.com>
  *
  * Licensed under an MIT licence.  Please see LICENCE.md for details.
  */
@@ -43,3 +43,14 @@ type Conn interface {
 
 // Record represents a single record/row from the Dataset
 type Record map[string]*dlit.Literal
+
+// Clone creates a copy of the Record.  This is important where you might
+// want to store a record for later use or make use of two or more different
+// records at the same time.
+func (r Record) Clone() Record {
+	ret := make(Record, len(r))
+	for k, v := range r {
+		ret[k] = v
+	}
+	return ret
+}

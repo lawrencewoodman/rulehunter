@@ -1,6 +1,6 @@
 /*
 	rulehunter - A server to find rules in data based on user specified goals
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Affero General Public License as published by
@@ -29,15 +29,16 @@ import (
 )
 
 type Config struct {
-	ExperimentsDir    string `yaml:"experimentsDir"`
-	WWWDir            string `yaml:"wwwDir"`
-	BuildDir          string `yaml:"buildDir"`
-	SourceURL         string `yaml:"sourceUrl"`
-	BaseURL           string `yaml:"baseUrl"`
-	User              string `yaml:"user"`
-	MaxNumReportRules int    `yaml:"maxNumReportRules"`
-	MaxNumProcesses   int    `yaml:"maxNumProcesses"`
-	MaxNumRecords     int    `yaml:"maxNumRecords"`
+	ExperimentsDir     string `yaml:"experimentsDir"`
+	WWWDir             string `yaml:"wwwDir"`
+	BuildDir           string `yaml:"buildDir"`
+	SourceURL          string `yaml:"sourceUrl"`
+	BaseURL            string `yaml:"baseUrl"`
+	User               string `yaml:"user"`
+	MaxNumReportRules  int    `yaml:"maxNumReportRules"`
+	MaxNumProcesses    int    `yaml:"maxNumProcesses"`
+	MaxNumRecords      int    `yaml:"maxNumRecords"`
+	MaxNumCacheRecords int    `yaml:"maxNumCacheRecords"`
 }
 
 // InvalidExtError indicates that a config file has an invalid extension
@@ -67,6 +68,10 @@ func Load(filename string) (*Config, error) {
 
 	if c.MaxNumRecords < 1 {
 		c.MaxNumRecords = -1
+	}
+
+	if c.MaxNumCacheRecords < 1 {
+		c.MaxNumCacheRecords = 0
 	}
 
 	if c.SourceURL == "" {

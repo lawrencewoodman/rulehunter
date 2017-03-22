@@ -1,6 +1,6 @@
 /*
 	rulehunter - A server to find rules in data based on user specified goals
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Affero General Public License as published by
@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/ddataset/dcache"
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"github.com/lawrencewoodman/ddataset/dsql"
 	"github.com/lawrencewoodman/ddataset/dtruncate"
@@ -108,7 +109,7 @@ func Process(
 	experimentFullFilename :=
 		filepath.Join(cfg.ExperimentsDir, experimentFile.Name())
 	experiment, tags, whenExpr, err :=
-		loadExperiment(experimentFullFilename, cfg.MaxNumRecords)
+		loadExperiment(experimentFullFilename, cfg)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't load experiment file: %s", err)
 		return epr.ReportError(fullErr)
@@ -235,7 +236,7 @@ func Process(
 	return nil
 }
 
-func loadExperiment(filename string, maxNumRecords int) (
+func loadExperiment(filename string, cfg *config.Config) (
 	experiment *rhexperiment.Experiment,
 	tags []string,
 	whenExpr *dexpr.Expr,
@@ -266,8 +267,12 @@ func loadExperiment(filename string, maxNumRecords int) (
 		return nil, noTags, nil, err
 	}
 
-	if maxNumRecords >= 1 {
-		dataset = dtruncate.New(dataset, maxNumRecords)
+	if cfg.MaxNumRecords >= 1 {
+		dataset = dtruncate.New(dataset, cfg.MaxNumRecords)
+	}
+
+	if cfg.MaxNumCacheRecords >= 1 {
+		dataset = dcache.New(dataset, cfg.MaxNumCacheRecords)
 	}
 
 	experimentDesc := &rhexperiment.ExperimentDesc{

@@ -1,5 +1,5 @@
 /*
- * A Go package to handles access to a truncated subset of a Dataset
+ * A Go package to handle access to a truncated subset of a Dataset
  *
  * Copyright (C) 2016 Lawrence Woodman <lwoodman@vlifesystems.com>
  *
