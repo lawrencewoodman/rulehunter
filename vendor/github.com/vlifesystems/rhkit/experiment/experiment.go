@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -21,8 +21,6 @@
 package experiment
 
 import (
-	"errors"
-	"fmt"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/vlifesystems/rhkit/aggregators"
 	"github.com/vlifesystems/rhkit/goal"
@@ -79,25 +77,19 @@ func (d direction) String() string {
 
 // Create a new Experiment from the description
 func New(e *ExperimentDesc) (*Experiment, error) {
-	var goals []*goal.Goal
-	var aggregators []aggregators.AggregatorSpec
-	var sortOrder []SortField
-	var err error
-
-	err = checkExperimentDescValid(e)
+	if err := checkExperimentDescValid(e); err != nil {
+		return nil, err
+	}
+	goals, err := makeGoals(e.Goals)
 	if err != nil {
 		return nil, err
 	}
-	goals, err = makeGoals(e.Goals)
-	if err != nil {
-		return nil, err
-	}
-	aggregators, err = makeAggregators(e.Aggregators)
+	aggregators, err := makeAggregators(e.Aggregators)
 	if err != nil {
 		return nil, err
 	}
 
-	sortOrder, err = makeSortOrder(e.SortOrder)
+	sortOrder, err := makeSortOrder(e.SortOrder)
 	if err != nil {
 		return nil, err
 	}
@@ -130,8 +122,10 @@ func checkExperimentDescValid(e *ExperimentDesc) error {
 func checkSortDescsValid(e *ExperimentDesc) error {
 	for _, sortDesc := range e.SortOrder {
 		if sortDesc.Direction != "ascending" && sortDesc.Direction != "descending" {
-			return fmt.Errorf("Invalid sort direction: %s, for field: %s",
-				sortDesc.Direction, sortDesc.AggregatorName)
+			return &InvalidSortDirectionError{
+				sortDesc.AggregatorName,
+				sortDesc.Direction,
+			}
 		}
 		sortName := sortDesc.AggregatorName
 		nameFound := false
@@ -145,7 +139,7 @@ func checkSortDescsValid(e *ExperimentDesc) error {
 			sortName != "percentMatches" &&
 			sortName != "numMatches" &&
 			sortName != "goalsScore" {
-			return fmt.Errorf("Invalid sort field: %s", sortName)
+			return InvalidSortFieldError(sortName)
 		}
 	}
 	return nil
@@ -153,15 +147,15 @@ func checkSortDescsValid(e *ExperimentDesc) error {
 
 func checkRuleFieldsValid(e *ExperimentDesc) error {
 	if len(e.RuleFields) == 0 {
-		return fmt.Errorf("No rule fields specified")
+		return ErrNoRuleFieldsSpecified
 	}
 	fieldNames := e.Dataset.GetFieldNames()
 	for _, ruleField := range e.RuleFields {
 		if !internal.IsIdentifierValid(ruleField) {
-			return fmt.Errorf("Invalid rule field: %s", ruleField)
+			return InvalidRuleFieldError(ruleField)
 		}
 		if !isStringInSlice(ruleField, fieldNames) {
-			return fmt.Errorf("Invalid rule field: %s", ruleField)
+			return InvalidRuleFieldError(ruleField)
 		}
 	}
 	return nil
@@ -180,34 +174,25 @@ func checkAggregatorsValid(e *ExperimentDesc) error {
 	fieldNames := e.Dataset.GetFieldNames()
 	for _, aggregator := range e.Aggregators {
 		if !internal.IsIdentifierValid(aggregator.Name) {
-			return fmt.Errorf("Invalid aggregator name: %s", aggregator.Name)
+			return InvalidAggregatorNameError(aggregator.Name)
 		}
 		if isStringInSlice(aggregator.Name, fieldNames) {
-			return fmt.Errorf("Aggregator name clashes with field name: %s",
-				aggregator.Name)
+			return AggregatorNameClashError(aggregator.Name)
 		}
 		if aggregator.Name == "percentMatches" ||
 			aggregator.Name == "numMatches" ||
 			aggregator.Name == "goalsScore" {
-			return fmt.Errorf("Aggregator name reserved: %s", aggregator.Name)
+			return AggregatorNameReservedError(aggregator.Name)
 		}
 	}
 	return nil
 }
 
-func makeGoal(expr string) (*goal.Goal, error) {
-	r, err := goal.New(expr)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Can't make goal: %s", err))
-	}
-	return r, nil
-}
-
 func makeGoals(exprs []string) ([]*goal.Goal, error) {
 	var err error
 	r := make([]*goal.Goal, len(exprs))
-	for i, s := range exprs {
-		r[i], err = makeGoal(s)
+	for i, expr := range exprs {
+		r[i], err = goal.New(expr)
 		if err != nil {
 			return r, err
 		}
@@ -253,12 +238,8 @@ func makeSortOrder(eSortOrder []*SortDesc) ([]SortField, error) {
 		// TODO: Make case insensitive
 		if direction == "ascending" {
 			r[i] = SortField{field, ASCENDING}
-		} else if direction == "descending" {
-			r[i] = SortField{field, DESCENDING}
 		} else {
-			err := errors.New(fmt.Sprintf("Invalid sort direction: %s, for field: %s",
-				direction, field))
-			return r, err
+			r[i] = SortField{field, DESCENDING}
 		}
 	}
 	return r, nil

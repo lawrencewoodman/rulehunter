@@ -23,7 +23,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 )
 
-// EQFF represents a rule determening if fieldA == fieldB
+// EQFF represents a rule determining if fieldA == fieldB
 type EQFF struct {
 	fieldA string
 	fieldB string

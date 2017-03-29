@@ -23,7 +23,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 )
 
-// NEFF represents a rule determening if fieldA != fieldB
+// NEFF represents a rule determining if fieldA != fieldB
 type NEFF struct {
 	fieldA string
 	fieldB string

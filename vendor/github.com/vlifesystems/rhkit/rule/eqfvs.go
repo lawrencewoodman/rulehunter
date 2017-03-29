@@ -24,7 +24,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 )
 
-// EQFVS represents a rule determening if field == stringValue
+// EQFVS represents a rule determining if field == stringValue
 type EQFVS struct {
 	field string
 	value string

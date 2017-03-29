@@ -24,7 +24,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 )
 
-// NEFVI represents a rule determening if field != intValue
+// NEFVI represents a rule determining if field != intValue
 type NEFVI struct {
 	field string
 	value int64

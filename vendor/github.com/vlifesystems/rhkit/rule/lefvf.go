@@ -25,7 +25,7 @@ import (
 	"strconv"
 )
 
-// LEFVF represents a rule determening if fieldA <= floatValue
+// LEFVF represents a rule determining if fieldA <= floatValue
 type LEFVF struct {
 	field string
 	value float64

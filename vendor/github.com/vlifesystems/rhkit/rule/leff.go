@@ -23,7 +23,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 )
 
-// LEFF represents a rule determening if fieldA <= fieldB
+// LEFF represents a rule determining if fieldA <= fieldB
 type LEFF struct {
 	fieldA string
 	fieldB string

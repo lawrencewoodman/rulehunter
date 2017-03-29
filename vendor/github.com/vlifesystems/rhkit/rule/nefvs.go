@@ -24,7 +24,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 )
 
-// NEFVS represents a rule determening if field != stringValue
+// NEFVS represents a rule determining if field != stringValue
 type NEFVS struct {
 	field string
 	value string

@@ -24,7 +24,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 )
 
-// EQFVI represents a rule determening if field == intValue
+// EQFVI represents a rule determining if field == intValue
 type EQFVI struct {
 	field string
 	value int64

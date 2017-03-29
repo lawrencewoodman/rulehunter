@@ -42,7 +42,7 @@ func GenerateRules(
 		generateInRules,
 	}
 	rules[0] = rule.NewTrue()
-	for field, _ := range inputDescription.Fields {
+	for field := range inputDescription.Fields {
 		if stringInSlice(field, ruleFields) {
 			for _, ruleGenerator := range ruleGenerators {
 				newRules := ruleGenerator(inputDescription, ruleFields, field)
@@ -422,7 +422,7 @@ func valuesToLiterals(values map[string]valueDescription) []*dlit.Literal {
 	lits := make([]*dlit.Literal, len(values))
 	keys := make([]string, len(values))
 	i := 0
-	for k, _ := range values {
+	for k := range values {
 		keys[i] = k
 		i++
 	}
@@ -454,7 +454,7 @@ func calcFieldNum(
 ) int {
 	fields := make([]string, len(fieldDescriptions))
 	i := 0
-	for field, _ := range fieldDescriptions {
+	for field := range fieldDescriptions {
 		fields[i] = field
 		i++
 	}

@@ -23,7 +23,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 )
 
-// LTFF represents a rule determening if fieldA < fieldB
+// LTFF represents a rule determining if fieldA < fieldB
 type LTFF struct {
 	fieldA string
 	fieldB string

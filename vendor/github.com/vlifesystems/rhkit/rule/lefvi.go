@@ -25,7 +25,7 @@ import (
 	"github.com/lawrencewoodman/dlit"
 )
 
-// LEFVI represents a rule determening if field <= intValue
+// LEFVI represents a rule determining if field <= intValue
 type LEFVI struct {
 	field string
 	value int64

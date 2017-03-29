@@ -23,6 +23,6 @@ If you want to improve this program make a pull request to the [repo](https://gi
 
 Licence
 -------
-Copyright (C) 2016, Lawrence Woodman <lwoodman@vlifesystems.com>
+Copyright (C) 2016-2017, Lawrence Woodman <lwoodman@vlifesystems.com>
 
 This software is licensed under an MIT Licence.  Please see the file, LICENCE.md, for details.

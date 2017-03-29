@@ -24,7 +24,7 @@ import (
 	"strconv"
 )
 
-// EQFVF represents a rule determening if fieldA == floatValue
+// EQFVF represents a rule determining if fieldA == floatValue
 type EQFVF struct {
 	field string
 	value float64

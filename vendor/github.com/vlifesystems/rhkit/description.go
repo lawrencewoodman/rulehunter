@@ -147,7 +147,7 @@ func newFieldDescriptionJ(fd *fieldDescription) *fieldDescriptionJ {
 }
 
 func (fd *fieldDescription) String() string {
-	return fmt.Sprintf("Kind: %s, Min: %s, Max: %s, MaxDP: %d, Values: %s",
+	return fmt.Sprintf("Kind: %s, Min: %s, Max: %s, MaxDP: %d, Values: %v",
 		fd.Kind, fd.Min, fd.Max, fd.MaxDP, fd.Values)
 }
 

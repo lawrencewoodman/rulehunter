@@ -25,7 +25,7 @@ import (
 	"github.com/lawrencewoodman/dlit"
 )
 
-// GEFVI represents a rule determening if field >= intValue
+// GEFVI represents a rule determining if field >= intValue
 type GEFVI struct {
 	field string
 	value int64

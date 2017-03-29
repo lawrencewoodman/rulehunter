@@ -24,7 +24,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 )
 
-// And represents a rule determening if ruleA AND ruleB
+// And represents a rule determining if ruleA AND ruleB
 type And struct {
 	ruleA Rule
 	ruleB Rule

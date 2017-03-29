@@ -23,7 +23,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 )
 
-// GTFF represents a rule determening if fieldA > fieldB
+// GTFF represents a rule determining if fieldA > fieldB
 type GTFF struct {
 	fieldA string
 	fieldB string

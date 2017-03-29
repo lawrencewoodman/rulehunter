@@ -31,10 +31,10 @@
 			"revisionTime": "2016-03-01T17:23:23Z"
 		},
 		{
-			"checksumSHA1": "3w1DHXoN85A+qcViTkYn/vmY8T8=",
+			"checksumSHA1": "UyWU38Krc+z3KZuKNs1Wqkii9hg=",
 			"path": "github.com/lawrencewoodman/ddataset",
-			"revision": "2180f6ccc87f56ec15557c68541bba06f98bc225",
-			"revisionTime": "2017-03-21T10:47:19Z"
+			"revision": "e3237bf052cc19316c12bffbb8967e764f3b9cf4",
+			"revisionTime": "2017-03-23T06:51:23Z"
 		},
 		{
 			"checksumSHA1": "Eq2gmueQEuJaTSxADYq2pkgdXQI=",
@@ -61,16 +61,16 @@
 			"revisionTime": "2017-03-21T10:47:19Z"
 		},
 		{
-			"checksumSHA1": "BS1MYP2M87MtNS7zKloxhuquLNo=",
+			"checksumSHA1": "i0wWYwV5Y1Knry2TM7CtAP0NEUc=",
 			"path": "github.com/lawrencewoodman/dexpr",
-			"revision": "ed0f7583b842907e3afd709f96e0152d92ede71f",
-			"revisionTime": "2017-03-14T13:45:48Z"
+			"revision": "3d99ee7eafdeb7fba1d219f4bf730d73fa3d63a7",
+			"revisionTime": "2017-03-28T15:30:32Z"
 		},
 		{
-			"checksumSHA1": "8ZZbjg+PFGknlVEg1PJ4y57CU3c=",
+			"checksumSHA1": "awekeO7/pkRZKIGxDhOxkorZ+vg=",
 			"path": "github.com/lawrencewoodman/dlit",
-			"revision": "664b9d0eb5296d2d0bd98f77bd9c4167f63351fa",
-			"revisionTime": "2017-03-21T07:30:12Z"
+			"revision": "ea4c841fb6e137469f75d2770382130f031109a4",
+			"revisionTime": "2017-03-28T09:38:37Z"
 		},
 		{
 			"checksumSHA1": "+q6a7iju2XMMu5DB/we6odv3/Iw=",
@@ -79,46 +79,46 @@
 			"revisionTime": "2016-05-14T12:23:48Z"
 		},
 		{
-			"checksumSHA1": "fUbLZcZiEfqz3db9GJpliP6Pc2g=",
+			"checksumSHA1": "M/qRqXW7QTbgS24B6U9swYPykLU=",
 			"path": "github.com/vlifesystems/rhkit",
-			"revision": "31002a63bc07db014438d64cc3971b0111c62e88",
-			"revisionTime": "2017-03-14T11:04:16Z"
+			"revision": "beb37074c2de5af368dd84a42dc9a8eafa26a02d",
+			"revisionTime": "2017-03-29T06:08:16Z"
 		},
 		{
 			"checksumSHA1": "6IzSkkZcS3/lGIplOrZe7+p5txo=",
 			"path": "github.com/vlifesystems/rhkit/aggregators",
-			"revision": "31002a63bc07db014438d64cc3971b0111c62e88",
-			"revisionTime": "2017-03-14T11:04:16Z"
+			"revision": "beb37074c2de5af368dd84a42dc9a8eafa26a02d",
+			"revisionTime": "2017-03-29T06:08:16Z"
 		},
 		{
-			"checksumSHA1": "YWklWeVd574WHA50vWBuFKunnWE=",
+			"checksumSHA1": "q9WjVLe/wV86vQkUJs7RXJ63n84=",
 			"path": "github.com/vlifesystems/rhkit/experiment",
-			"revision": "31002a63bc07db014438d64cc3971b0111c62e88",
-			"revisionTime": "2017-03-14T11:04:16Z"
+			"revision": "beb37074c2de5af368dd84a42dc9a8eafa26a02d",
+			"revisionTime": "2017-03-29T06:08:16Z"
 		},
 		{
 			"checksumSHA1": "QXUOHRe861r7tzGp7kJBssqCwA0=",
 			"path": "github.com/vlifesystems/rhkit/goal",
-			"revision": "31002a63bc07db014438d64cc3971b0111c62e88",
-			"revisionTime": "2017-03-14T11:04:16Z"
+			"revision": "beb37074c2de5af368dd84a42dc9a8eafa26a02d",
+			"revisionTime": "2017-03-29T06:08:16Z"
 		},
 		{
 			"checksumSHA1": "tpL0KMtuA0eI+CD1V6NM+yH8FaM=",
 			"path": "github.com/vlifesystems/rhkit/internal",
-			"revision": "31002a63bc07db014438d64cc3971b0111c62e88",
-			"revisionTime": "2017-03-14T11:04:16Z"
+			"revision": "beb37074c2de5af368dd84a42dc9a8eafa26a02d",
+			"revisionTime": "2017-03-29T06:08:16Z"
 		},
 		{
-			"checksumSHA1": "qc8zAy/5GFh/8ExtOebLecCk1Z4=",
+			"checksumSHA1": "S75lFOFXQxQfrYuRvUQiIkqFZXo=",
 			"path": "github.com/vlifesystems/rhkit/internal/dexprfuncs",
-			"revision": "31002a63bc07db014438d64cc3971b0111c62e88",
-			"revisionTime": "2017-03-14T11:04:16Z"
+			"revision": "beb37074c2de5af368dd84a42dc9a8eafa26a02d",
+			"revisionTime": "2017-03-29T06:08:16Z"
 		},
 		{
-			"checksumSHA1": "/XUk9WeYeFrgrICtlUVpzifFQb0=",
+			"checksumSHA1": "jaOCfna9lw0SKnYPwDwNC1vYFeA=",
 			"path": "github.com/vlifesystems/rhkit/rule",
-			"revision": "31002a63bc07db014438d64cc3971b0111c62e88",
-			"revisionTime": "2017-03-14T11:04:16Z"
+			"revision": "beb37074c2de5af368dd84a42dc9a8eafa26a02d",
+			"revisionTime": "2017-03-29T06:08:16Z"
 		},
 		{
 			"checksumSHA1": "MCeXr2RNeiG1XG6V+er1OR0qyeo=",

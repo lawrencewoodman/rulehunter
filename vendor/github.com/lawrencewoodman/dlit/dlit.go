@@ -1,7 +1,7 @@
 /*
  * A package for easing the use of dynamic literals
  *
- * Copyright (C) 2016 Lawrence Woodman <lwoodman@vlifesystems.com>
+ * Copyright (C) 2016-2017 Lawrence Woodman <lwoodman@vlifesystems.com>
  *
  * Licensed under an MIT licence.  Please see LICENCE.md for details.
  */
@@ -12,7 +12,6 @@ package dlit
 import (
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 )
 
@@ -80,15 +79,35 @@ func (l *Literal) Int() (value int64, canBeInt bool) {
 	case yes:
 		return l.i, true
 	case unknown:
-		str := trailingZerosRegexp.ReplaceAllString(l.String(), "")
-		i, err := strconv.ParseInt(str, 10, 64)
-		if err == nil {
+		if v, ok := parseInt(l.String()); ok {
 			l.canBeInt = yes
-			l.i = i
-			return i, true
+			l.i = v
+			return v, true
 		}
 	}
 	l.canBeInt = no
+	return 0, false
+}
+
+// parseInt returns a string as an int64 value if it can and says whether
+// this was successful.  If the string has a decimal point in it but is
+// still an integer then this number will be converted successfully;
+// e.g. -6, 6, 6., 6.0, 6.000 will all be fine.
+func parseInt(s string) (value int64, ok bool) {
+	dpPos := -1
+	for i, r := range s {
+		if r == '.' {
+			dpPos = i
+		} else if dpPos > -1 && r != '0' {
+			return 0, false
+		}
+	}
+	if dpPos >= 0 {
+		s = s[:dpPos]
+	}
+	if i, err := strconv.ParseInt(s, 10, 64); err == nil {
+		return i, true
+	}
 	return 0, false
 }
 
@@ -190,5 +209,3 @@ func newErrorLiteral(e error) *Literal {
 	return &Literal{e: e, canBeInt: no, canBeFloat: no, canBeBool: no,
 		canBeError: yes}
 }
-
-var trailingZerosRegexp = regexp.MustCompile("\\.0*$")

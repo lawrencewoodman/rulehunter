@@ -23,7 +23,7 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 )
 
-// GEFF represents a rule determening if fieldA >= fieldB
+// GEFF represents a rule determining if fieldA >= fieldB
 type GEFF struct {
 	fieldA string
 	fieldB string

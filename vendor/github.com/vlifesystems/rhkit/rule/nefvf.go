@@ -24,7 +24,7 @@ import (
 	"strconv"
 )
 
-// NEFVF represents a rule determening if fieldA != floatValue
+// NEFVF represents a rule determining if fieldA != floatValue
 type NEFVF struct {
 	field string
 	value float64

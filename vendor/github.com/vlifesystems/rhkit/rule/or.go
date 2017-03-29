@@ -25,7 +25,7 @@ import (
 	"github.com/lawrencewoodman/dlit"
 )
 
-// Or represents a rule determening if ruleA OR ruleB
+// Or represents a rule determining if ruleA OR ruleB
 type Or struct {
 	ruleA Rule
 	ruleB Rule

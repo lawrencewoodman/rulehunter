@@ -24,7 +24,7 @@ import (
 	"github.com/lawrencewoodman/dlit"
 )
 
-// InFV represents a rule determening if field is equal to
+// InFV represents a rule determining if field is equal to
 // any of the supplied values when represented as a string
 type InFV struct {
 	field  string
