@@ -19,11 +19,12 @@ var falseLiteral = dlit.MustNew(false)
 func binaryExprToLiteral(
 	vars map[string]*dlit.Literal,
 	callFuncs map[string]CallFun,
+	valStore *valStore,
 	eltStore *eltStore,
 	be *ast.BinaryExpr,
 ) *dlit.Literal {
-	lh := nodeToLiteral(vars, callFuncs, eltStore, be.X)
-	rh := nodeToLiteral(vars, callFuncs, eltStore, be.Y)
+	lh := nodeToLiteral(vars, callFuncs, valStore, eltStore, be.X)
+	rh := nodeToLiteral(vars, callFuncs, valStore, eltStore, be.Y)
 	if lh.Err() != nil {
 		return lh
 	} else if rh.Err() != nil {

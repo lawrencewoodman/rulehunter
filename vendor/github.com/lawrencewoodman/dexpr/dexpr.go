@@ -18,8 +18,9 @@ import (
 )
 
 type Expr struct {
-	Expr string
-	Node ast.Node
+	Expr     string
+	valStore *valStore
+	Node     ast.Node
 }
 
 type CallFun func([]*dlit.Literal) (*dlit.Literal, error)
@@ -29,7 +30,7 @@ func New(expr string) (*Expr, error) {
 	if err != nil {
 		return &Expr{}, InvalidExprError{expr, ErrSyntax}
 	}
-	return &Expr{Expr: expr, Node: node}, nil
+	return &Expr{Expr: expr, valStore: newValStore(), Node: node}, nil
 }
 
 func MustNew(expr string) *Expr {
@@ -47,7 +48,7 @@ func (expr *Expr) Eval(
 	var l *dlit.Literal
 	inspector := func(n ast.Node) bool {
 		eltStore := newEltStore()
-		l = nodeToLiteral(vars, callFuncs, eltStore, n)
+		l = nodeToLiteral(vars, callFuncs, expr.valStore, eltStore, n)
 		return false
 	}
 	ast.Inspect(expr.Node, inspector)
@@ -81,6 +82,7 @@ var kinds = map[string]*dlit.Literal{
 func nodeToLiteral(
 	vars map[string]*dlit.Literal,
 	callFuncs map[string]CallFun,
+	valStore *valStore,
 	eltStore *eltStore,
 	n ast.Node,
 ) *dlit.Literal {
@@ -88,9 +90,9 @@ func nodeToLiteral(
 	case *ast.BasicLit:
 		switch x.Kind {
 		case token.INT:
-			return dlit.MustNew(x.Value)
+			fallthrough
 		case token.FLOAT:
-			return dlit.MustNew(x.Value)
+			return valStore.Use(x.Value)
 		case token.CHAR:
 			fallthrough
 		case token.STRING:
@@ -98,7 +100,7 @@ func nodeToLiteral(
 			if err != nil {
 				return dlit.MustNew(ErrSyntax)
 			}
-			return dlit.NewString(uc)
+			return valStore.Use(uc)
 		}
 	case *ast.Ident:
 		if l, exists := vars[x.Name]; !exists {
@@ -107,30 +109,30 @@ func nodeToLiteral(
 			return l
 		}
 	case *ast.ParenExpr:
-		return nodeToLiteral(vars, callFuncs, eltStore, x.X)
+		return nodeToLiteral(vars, callFuncs, valStore, eltStore, x.X)
 	case *ast.BinaryExpr:
-		return binaryExprToLiteral(vars, callFuncs, eltStore, x)
+		return binaryExprToLiteral(vars, callFuncs, valStore, eltStore, x)
 	case *ast.UnaryExpr:
-		rh := nodeToLiteral(vars, callFuncs, eltStore, x.X)
+		rh := nodeToLiteral(vars, callFuncs, valStore, eltStore, x.X)
 		if err := rh.Err(); err != nil {
 			return rh
 		}
 		return evalUnaryExpr(rh, x.Op)
 	case *ast.CallExpr:
-		args := exprSliceToDLiterals(vars, callFuncs, eltStore, x.Args)
+		args := exprSliceToDLiterals(vars, callFuncs, valStore, eltStore, x.Args)
 		return callFun(callFuncs, x.Fun, args)
 	case *ast.CompositeLit:
-		kind := nodeToLiteral(kinds, callFuncs, eltStore, x.Type)
+		kind := nodeToLiteral(kinds, callFuncs, valStore, eltStore, x.Type)
 		if kind.String() != "lit" {
 			return dlit.MustNew(ErrInvalidCompositeType)
 		}
-		elts := exprSliceToDLiterals(vars, callFuncs, eltStore, x.Elts)
+		elts := exprSliceToDLiterals(vars, callFuncs, valStore, eltStore, x.Elts)
 		rNum := eltStore.Add(elts)
 		return dlit.MustNew(rNum)
 	case *ast.IndexExpr:
-		return indexExprToLiteral(vars, callFuncs, eltStore, x)
+		return indexExprToLiteral(vars, callFuncs, valStore, eltStore, x)
 	case *ast.ArrayType:
-		return nodeToLiteral(vars, callFuncs, eltStore, x.Elt)
+		return nodeToLiteral(vars, callFuncs, valStore, eltStore, x.Elt)
 	}
 	return dlit.MustNew(ErrSyntax)
 }
@@ -138,11 +140,12 @@ func nodeToLiteral(
 func indexExprToLiteral(
 	vars map[string]*dlit.Literal,
 	callFuncs map[string]CallFun,
+	valStore *valStore,
 	eltStore *eltStore,
 	ie *ast.IndexExpr,
 ) *dlit.Literal {
-	indexX := nodeToLiteral(vars, callFuncs, eltStore, ie.X)
-	indexIndex := nodeToLiteral(vars, callFuncs, eltStore, ie.Index)
+	indexX := nodeToLiteral(vars, callFuncs, valStore, eltStore, ie.X)
+	indexIndex := nodeToLiteral(vars, callFuncs, valStore, eltStore, ie.Index)
 
 	if indexX.Err() != nil {
 		return indexX
@@ -157,7 +160,7 @@ func indexExprToLiteral(
 		if bl.Kind != token.STRING {
 			return dlit.MustNew(ErrTypeNotIndexable)
 		}
-		return dlit.NewString(string(indexX.String()[ii]))
+		return valStore.Use(string(indexX.String()[ii]))
 	}
 
 	ix, isInt := indexX.Int()
@@ -174,12 +177,13 @@ func indexExprToLiteral(
 func exprSliceToDLiterals(
 	vars map[string]*dlit.Literal,
 	callFuncs map[string]CallFun,
+	valStore *valStore,
 	eltStore *eltStore,
 	callArgs []ast.Expr,
 ) []*dlit.Literal {
 	r := make([]*dlit.Literal, len(callArgs))
 	for i, arg := range callArgs {
-		r[i] = nodeToLiteral(vars, callFuncs, eltStore, arg)
+		r[i] = nodeToLiteral(vars, callFuncs, valStore, eltStore, arg)
 	}
 	return r
 }
