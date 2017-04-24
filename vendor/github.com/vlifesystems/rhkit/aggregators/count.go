@@ -46,7 +46,7 @@ func (a *countAggregator) MakeSpec(
 	name string,
 	expr string,
 ) (AggregatorSpec, error) {
-	dexpr, err := dexpr.New(expr)
+	dexpr, err := dexpr.New(expr, dexprfuncs.CallFuncs)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (ai *countInstance) NextRecord(
 	record map[string]*dlit.Literal,
 	isRuleTrue bool,
 ) error {
-	countExprIsTrue, err := ai.spec.expr.EvalBool(record, dexprfuncs.CallFuncs)
+	countExprIsTrue, err := ai.spec.expr.EvalBool(record)
 	if err != nil {
 		return err
 	}

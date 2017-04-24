@@ -13,6 +13,7 @@ import (
 )
 
 var ErrDivByZero = errors.New("divide by zero")
+var ErrUnderflowOverflow = errors.New("underflow/overflow")
 var ErrIncompatibleTypes = errors.New("incompatible types")
 var ErrInvalidCompositeType = errors.New("invalid composite type")
 var ErrInvalidIndex = errors.New("index out of range")

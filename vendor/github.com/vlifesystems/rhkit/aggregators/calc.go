@@ -45,7 +45,7 @@ func (a *calcAggregator) MakeSpec(
 	name string,
 	expr string,
 ) (AggregatorSpec, error) {
-	dexpr, err := dexpr.New(expr)
+	dexpr, err := dexpr.New(expr, dexprfuncs.CallFuncs)
 	if err != nil {
 		return nil, err
 	}
@@ -93,5 +93,5 @@ func (ai *calcInstance) GetResult(
 	if err != nil {
 		return dlit.MustNew(err)
 	}
-	return ai.spec.expr.Eval(instancesMap, dexprfuncs.CallFuncs)
+	return ai.spec.expr.Eval(instancesMap)
 }

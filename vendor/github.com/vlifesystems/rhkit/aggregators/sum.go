@@ -39,7 +39,7 @@ type sumInstance struct {
 	sum  *dlit.Literal
 }
 
-var sumExpr = dexpr.MustNew("sum+value")
+var sumExpr = dexpr.MustNew("sum+value", dexprfuncs.CallFuncs)
 
 func init() {
 	Register("sum", &sumAggregator{})
@@ -49,7 +49,7 @@ func (a *sumAggregator) MakeSpec(
 	name string,
 	expr string,
 ) (AggregatorSpec, error) {
-	dexpr, err := dexpr.New(expr)
+	dexpr, err := dexpr.New(expr, dexprfuncs.CallFuncs)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (ai *sumInstance) NextRecord(
 	isRuleTrue bool,
 ) error {
 	if isRuleTrue {
-		exprValue := ai.spec.expr.Eval(record, dexprfuncs.CallFuncs)
+		exprValue := ai.spec.expr.Eval(record)
 		_, valueIsFloat := exprValue.Float()
 		if !valueIsFloat {
 			return fmt.Errorf("sum aggregator: value isn't a float: %s", exprValue)
@@ -98,7 +98,7 @@ func (ai *sumInstance) NextRecord(
 			"sum":   ai.sum,
 			"value": exprValue,
 		}
-		ai.sum = sumExpr.Eval(vars, dexprfuncs.CallFuncs)
+		ai.sum = sumExpr.Eval(vars)
 	}
 	return nil
 }

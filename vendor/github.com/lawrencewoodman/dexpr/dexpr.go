@@ -13,56 +13,47 @@ import (
 	"github.com/lawrencewoodman/dlit"
 	"go/ast"
 	"go/token"
-	"math"
 	"strconv"
 )
 
 type Expr struct {
-	Expr     string
-	valStore *valStore
-	Node     ast.Node
+	Expr string
+	Node enode
 }
 
 type CallFun func([]*dlit.Literal) (*dlit.Literal, error)
 
-func New(expr string) (*Expr, error) {
+func New(expr string, callFuncs map[string]CallFun) (*Expr, error) {
 	node, err := parseExpr(expr)
 	if err != nil {
 		return &Expr{}, InvalidExprError{expr, ErrSyntax}
 	}
-	return &Expr{Expr: expr, valStore: newValStore(), Node: node}, nil
+
+	en := compile(node, callFuncs)
+	if ee, ok := en.(enErr); ok {
+		return &Expr{}, InvalidExprError{expr, ee.Err()}
+	}
+	return &Expr{Expr: expr, Node: en}, nil
 }
 
-func MustNew(expr string) *Expr {
-	e, err := New(expr)
+func MustNew(expr string, callFuncs map[string]CallFun) *Expr {
+	e, err := New(expr, callFuncs)
 	if err != nil {
 		panic(err.Error())
 	}
 	return e
 }
 
-func (expr *Expr) Eval(
-	vars map[string]*dlit.Literal,
-	callFuncs map[string]CallFun,
-) *dlit.Literal {
-	var l *dlit.Literal
-	inspector := func(n ast.Node) bool {
-		eltStore := newEltStore()
-		l = nodeToLiteral(vars, callFuncs, expr.valStore, eltStore, n)
-		return false
-	}
-	ast.Inspect(expr.Node, inspector)
+func (expr *Expr) Eval(vars map[string]*dlit.Literal) *dlit.Literal {
+	l := expr.Node.Eval(vars)
 	if err := l.Err(); err != nil {
 		return dlit.MustNew(InvalidExprError{expr.Expr, err})
 	}
 	return l
 }
 
-func (expr *Expr) EvalBool(
-	vars map[string]*dlit.Literal,
-	callFuncs map[string]CallFun,
-) (bool, error) {
-	l := expr.Eval(vars, callFuncs)
+func (expr *Expr) EvalBool(vars map[string]*dlit.Literal) (bool, error) {
+	l := expr.Eval(vars)
 	if b, isBool := l.Bool(); isBool {
 		return b, nil
 	} else if err := l.Err(); err != nil {
@@ -75,115 +66,145 @@ func (expr *Expr) String() string {
 	return expr.Expr
 }
 
+// kinds are the kinds of composite type
 var kinds = map[string]*dlit.Literal{
 	"lit": dlit.NewString("lit"),
 }
 
-func nodeToLiteral(
-	vars map[string]*dlit.Literal,
+func compile(node ast.Node, callFuncs map[string]CallFun) enode {
+	var en enode
+	inspector := func(n ast.Node) bool {
+		eltStore := newEltStore()
+		en = nodeToenode(callFuncs, eltStore, n)
+		return false
+	}
+	ast.Inspect(node, inspector)
+	if _, ok := en.(enErr); ok {
+		return en
+	}
+	return en
+}
+
+func nodeToenode(
 	callFuncs map[string]CallFun,
-	valStore *valStore,
 	eltStore *eltStore,
 	n ast.Node,
-) *dlit.Literal {
+) enode {
 	switch x := n.(type) {
 	case *ast.BasicLit:
 		switch x.Kind {
 		case token.INT:
 			fallthrough
 		case token.FLOAT:
-			return valStore.Use(x.Value)
+			return enLit{val: dlit.NewString(x.Value)}
 		case token.CHAR:
 			fallthrough
 		case token.STRING:
 			uc, err := strconv.Unquote(x.Value)
 			if err != nil {
-				return dlit.MustNew(ErrSyntax)
+				return enErr{err: ErrSyntax}
 			}
-			return valStore.Use(uc)
+			return enLit{val: dlit.NewString(uc)}
 		}
 	case *ast.Ident:
-		if l, exists := vars[x.Name]; !exists {
-			return dlit.MustNew(VarNotExistError(x.Name))
-		} else {
-			return l
-		}
+		return enVar(x.Name)
 	case *ast.ParenExpr:
-		return nodeToLiteral(vars, callFuncs, valStore, eltStore, x.X)
+		return nodeToenode(callFuncs, eltStore, x.X)
 	case *ast.BinaryExpr:
-		return binaryExprToLiteral(vars, callFuncs, valStore, eltStore, x)
+		return binaryExprToenode(callFuncs, eltStore, x)
 	case *ast.UnaryExpr:
-		rh := nodeToLiteral(vars, callFuncs, valStore, eltStore, x.X)
-		if err := rh.Err(); err != nil {
-			return rh
-		}
-		return evalUnaryExpr(rh, x.Op)
+		return unaryExprToenode(callFuncs, eltStore, x)
 	case *ast.CallExpr:
-		args := exprSliceToDLiterals(vars, callFuncs, valStore, eltStore, x.Args)
-		return callFun(callFuncs, x.Fun, args)
-	case *ast.CompositeLit:
-		kind := nodeToLiteral(kinds, callFuncs, valStore, eltStore, x.Type)
-		if kind.String() != "lit" {
-			return dlit.MustNew(ErrInvalidCompositeType)
+		args := exprSliceToenodes(callFuncs, eltStore, x.Args)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				lits := eNodesToDLiterals(vars, args)
+				return callFun(callFuncs, x.Fun, lits)
+			},
 		}
-		elts := exprSliceToDLiterals(vars, callFuncs, valStore, eltStore, x.Elts)
+	case *ast.CompositeLit:
+		kindNode := nodeToenode(callFuncs, eltStore, x.Type)
+		kind := kindNode.Eval(kinds)
+		if kind.String() != "lit" {
+			return enErr{err: ErrInvalidCompositeType}
+		}
+		elts := exprSliceToenodes(callFuncs, eltStore, x.Elts)
 		rNum := eltStore.Add(elts)
-		return dlit.MustNew(rNum)
+		return enLit{val: dlit.MustNew(rNum)}
 	case *ast.IndexExpr:
-		return indexExprToLiteral(vars, callFuncs, valStore, eltStore, x)
+		return indexExprToenode(callFuncs, eltStore, x)
 	case *ast.ArrayType:
-		return nodeToLiteral(vars, callFuncs, valStore, eltStore, x.Elt)
+		return nodeToenode(callFuncs, eltStore, x.Elt)
 	}
-	return dlit.MustNew(ErrSyntax)
+	return enErr{err: ErrSyntax}
 }
 
-func indexExprToLiteral(
-	vars map[string]*dlit.Literal,
+func indexExprToenode(
 	callFuncs map[string]CallFun,
-	valStore *valStore,
 	eltStore *eltStore,
 	ie *ast.IndexExpr,
-) *dlit.Literal {
-	indexX := nodeToLiteral(vars, callFuncs, valStore, eltStore, ie.X)
-	indexIndex := nodeToLiteral(vars, callFuncs, valStore, eltStore, ie.Index)
+) enode {
+	var ii, ix int64
+	var isInt bool
 
-	if indexX.Err() != nil {
+	indexX := nodeToenode(callFuncs, eltStore, ie.X)
+	indexIndex := nodeToenode(callFuncs, eltStore, ie.Index)
+
+	switch xx := indexX.(type) {
+	case enErr:
 		return indexX
-	} else if indexIndex.Err() != nil {
-		return indexIndex
-	}
-	ii, isInt := indexIndex.Int()
-	if !isInt {
-		return dlit.MustNew(ErrSyntax)
-	}
-	if bl, ok := ie.X.(*ast.BasicLit); ok {
-		if bl.Kind != token.STRING {
-			return dlit.MustNew(ErrTypeNotIndexable)
-		}
-		return valStore.Use(string(indexX.String()[ii]))
-	}
+	case enLit:
+		switch xii := indexIndex.(type) {
+		case enErr:
+			return indexIndex
+		case enLit:
+			ii, isInt = xii.Int()
+			if !isInt {
+				return enErr{err: ErrSyntax}
+			}
+			if bl, ok := ie.X.(*ast.BasicLit); ok {
+				if bl.Kind != token.STRING {
+					return enErr{err: ErrTypeNotIndexable}
+				}
+				return enLit{val: dlit.MustNew(string(xx.String()[ii]))}
+			}
+			ix, isInt = xx.Int()
+			if !isInt {
+				return enErr{err: ErrSyntax}
+			}
+			elts := eltStore.Get(ix)
+			if ii >= int64(len(elts)) {
+				return enErr{err: ErrInvalidIndex}
+			}
+			return elts[ii]
 
-	ix, isInt := indexX.Int()
-	if !isInt {
-		return dlit.MustNew(ErrSyntax)
+		default:
+			return enErr{err: ErrSyntax}
+		}
+	default:
+		return enErr{err: ErrSyntax}
 	}
-	elts := eltStore.Get(ix)
-	if ii >= int64(len(elts)) {
-		return dlit.MustNew(ErrInvalidIndex)
-	}
-	return elts[ii]
 }
 
-func exprSliceToDLiterals(
-	vars map[string]*dlit.Literal,
+func exprSliceToenodes(
 	callFuncs map[string]CallFun,
-	valStore *valStore,
 	eltStore *eltStore,
 	callArgs []ast.Expr,
-) []*dlit.Literal {
-	r := make([]*dlit.Literal, len(callArgs))
+) []enode {
+	r := make([]enode, len(callArgs))
 	for i, arg := range callArgs {
-		r[i] = nodeToLiteral(vars, callFuncs, valStore, eltStore, arg)
+		r[i] = nodeToenode(callFuncs, eltStore, arg)
+	}
+	return r
+}
+
+func eNodesToDLiterals(
+	vars map[string]*dlit.Literal,
+	ens []enode,
+) []*dlit.Literal {
+	r := make([]*dlit.Literal, len(ens))
+	for i, en := range ens {
+		r[i] = en.Eval(vars)
 	}
 	return r
 }
@@ -206,47 +227,4 @@ func callFun(
 		return dlit.MustNew(FunctionError{id.Name, err})
 	}
 	return l
-}
-
-func evalUnaryExpr(rh *dlit.Literal, op token.Token) *dlit.Literal {
-	var r *dlit.Literal
-	switch op {
-	case token.NOT:
-		r = opNot(rh)
-	case token.SUB:
-		r = opNeg(rh)
-	default:
-		r = dlit.MustNew(InvalidOpError(op))
-	}
-	return r
-}
-
-func opNot(l *dlit.Literal) *dlit.Literal {
-	lBool, lIsBool := l.Bool()
-	if !lIsBool {
-		return dlit.MustNew(ErrIncompatibleTypes)
-	}
-	if lBool {
-		return falseLiteral
-	}
-	return trueLiteral
-}
-
-func opNeg(l *dlit.Literal) *dlit.Literal {
-	lInt, lIsInt := l.Int()
-	if lIsInt {
-		return dlit.MustNew(0 - lInt)
-	}
-
-	strMinInt64 := strconv.FormatInt(int64(math.MinInt64), 10)
-	posMinInt64 := strMinInt64[1:]
-	if l.String() == posMinInt64 {
-		return dlit.MustNew(int64(math.MinInt64))
-	}
-
-	lFloat, lIsFloat := l.Float()
-	if lIsFloat {
-		return dlit.MustNew(0 - lFloat)
-	}
-	return dlit.MustNew(ErrIncompatibleTypes)
 }

@@ -40,8 +40,8 @@ type meanInstance struct {
 	numRecords int64
 }
 
-var meanExpr = dexpr.MustNew("sum/n")
-var meanSumExpr = dexpr.MustNew("sum+value")
+var meanExpr = dexpr.MustNew("sum/n", dexprfuncs.CallFuncs)
+var meanSumExpr = dexpr.MustNew("sum+value", dexprfuncs.CallFuncs)
 
 func init() {
 	Register("mean", &meanAggregator{})
@@ -51,7 +51,7 @@ func (a *meanAggregator) MakeSpec(
 	name string,
 	expr string,
 ) (AggregatorSpec, error) {
-	dexpr, err := dexpr.New(expr)
+	dexpr, err := dexpr.New(expr, dexprfuncs.CallFuncs)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (ai *meanInstance) NextRecord(
 ) error {
 	if isRuleTrue {
 		ai.numRecords++
-		exprValue := ai.spec.expr.Eval(record, dexprfuncs.CallFuncs)
+		exprValue := ai.spec.expr.Eval(record)
 		_, valueIsFloat := exprValue.Float()
 		if !valueIsFloat {
 			return fmt.Errorf("mean aggregator: value isn't a float: %s", exprValue)
@@ -102,7 +102,7 @@ func (ai *meanInstance) NextRecord(
 			"sum":   ai.sum,
 			"value": exprValue,
 		}
-		ai.sum = meanSumExpr.Eval(vars, dexprfuncs.CallFuncs)
+		ai.sum = meanSumExpr.Eval(vars)
 	}
 	return nil
 }
@@ -120,5 +120,5 @@ func (ai *meanInstance) GetResult(
 		"sum": ai.sum,
 		"n":   dlit.MustNew(ai.numRecords),
 	}
-	return meanExpr.Eval(vars, dexprfuncs.CallFuncs)
+	return meanExpr.Eval(vars)
 }

@@ -197,8 +197,9 @@ var evalWhenExprCases = []struct {
 }
 
 func TestEvalWhenExpr(t *testing.T) {
+	funcs := map[string]dexpr.CallFun{}
 	for _, c := range evalWhenExprCases {
-		whenExpr := dexpr.MustNew(c.when)
+		whenExpr := dexpr.MustNew(c.when, funcs)
 		got, err := evalWhenExpr(c.now, c.isFinished, c.stamp, whenExpr)
 		if err != nil {
 			t.Errorf("evalWhenExpr(%v, %t, %v, %v) err: %v",
@@ -213,6 +214,7 @@ func TestEvalWhenExpr(t *testing.T) {
 }
 
 func TestEvalWhenExpr_errors(t *testing.T) {
+	funcs := map[string]dexpr.CallFun{}
 	now := time.Now()
 	isFinished := true
 	stamp := now
@@ -221,7 +223,7 @@ func TestEvalWhenExpr_errors(t *testing.T) {
 		Expr: "!hasTwoLegs",
 		Err:  dexpr.VarNotExistError("hasTwoLegs"),
 	}
-	whenExpr := dexpr.MustNew(when)
+	whenExpr := dexpr.MustNew(when, funcs)
 	got, err := evalWhenExpr(now, isFinished, stamp, whenExpr)
 	if got != false {
 		t.Errorf("evalWhenExpr(%v, %t, %v, %v) got: %t, want: %t",

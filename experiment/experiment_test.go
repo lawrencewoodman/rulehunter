@@ -28,6 +28,7 @@ import (
 )
 
 func TestLoadExperiment(t *testing.T) {
+	funcs := map[string]dexpr.CallFun{}
 	cases := []struct {
 		cfg            *config.Config
 		filename       string
@@ -62,7 +63,7 @@ func TestLoadExperiment(t *testing.T) {
 				},
 			},
 			[]string{"test", "fred / ned"},
-			dexpr.MustNew("!hasRun"),
+			dexpr.MustNew("!hasRun", funcs),
 		},
 		{&config.Config{MaxNumRecords: 4}, filepath.Join("fixtures", "flow.json"),
 			&experiment.Experiment{
@@ -94,7 +95,7 @@ func TestLoadExperiment(t *testing.T) {
 				},
 			},
 			[]string{"test", "fred / ned"},
-			dexpr.MustNew("!hasRun"),
+			dexpr.MustNew("!hasRun", funcs),
 		},
 		{&config.Config{MaxNumRecords: -1}, filepath.Join("fixtures", "debt.json"),
 			&experiment.Experiment{
@@ -136,7 +137,7 @@ func TestLoadExperiment(t *testing.T) {
 				},
 			},
 			[]string{"debt"},
-			dexpr.MustNew("!hasRunToday || sinceLastRunHours > 2"),
+			dexpr.MustNew("!hasRunToday || sinceLastRunHours > 2", funcs),
 		},
 		{&config.Config{MaxNumRecords: -1}, filepath.Join("fixtures", "flow.yaml"),
 			&experiment.Experiment{
@@ -165,7 +166,7 @@ func TestLoadExperiment(t *testing.T) {
 				},
 			},
 			[]string{"test", "fred / ned"},
-			dexpr.MustNew("!hasRun"),
+			dexpr.MustNew("!hasRun", funcs),
 		},
 	}
 	for _, c := range cases {
@@ -276,6 +277,7 @@ func TestInvalidExtErrorError(t *testing.T) {
 }
 
 func TestShouldProcess(t *testing.T) {
+	funcs := map[string]dexpr.CallFun{}
 	cases := []struct {
 		file fileinfo.FileInfo
 		when string
@@ -327,7 +329,7 @@ func TestShouldProcess(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		whenExpr := dexpr.MustNew(c.when)
+		whenExpr := dexpr.MustNew(c.when, funcs)
 		got, err := shouldProcess(pm, c.file, whenExpr)
 		if err != nil {
 			t.Errorf("shouldProcess(pm, %v, %v) err: %s", c.file, c.when, err)

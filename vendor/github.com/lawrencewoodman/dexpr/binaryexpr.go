@@ -16,49 +16,114 @@ import (
 var trueLiteral = dlit.MustNew(true)
 var falseLiteral = dlit.MustNew(false)
 
-func binaryExprToLiteral(
-	vars map[string]*dlit.Literal,
+func binaryExprToenode(
 	callFuncs map[string]CallFun,
-	valStore *valStore,
 	eltStore *eltStore,
 	be *ast.BinaryExpr,
-) *dlit.Literal {
-	lh := nodeToLiteral(vars, callFuncs, valStore, eltStore, be.X)
-	rh := nodeToLiteral(vars, callFuncs, valStore, eltStore, be.Y)
-	if lh.Err() != nil {
+) enode {
+	lh := nodeToenode(callFuncs, eltStore, be.X)
+	rh := nodeToenode(callFuncs, eltStore, be.Y)
+	if _, ok := lh.(enErr); ok {
 		return lh
-	} else if rh.Err() != nil {
+	} else if _, ok := rh.(enErr); ok {
 		return rh
 	}
 
 	switch be.Op {
 	case token.LSS:
-		return opLss(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opLss, lh, rh, vars)
+			},
+		}
 	case token.LEQ:
-		return opLeq(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opLeq, lh, rh, vars)
+			},
+		}
 	case token.EQL:
-		return opEql(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opEql, lh, rh, vars)
+			},
+		}
 	case token.NEQ:
-		return opNeq(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opNeq, lh, rh, vars)
+			},
+		}
 	case token.GTR:
-		return opGtr(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opGtr, lh, rh, vars)
+			},
+		}
 	case token.GEQ:
-		return opGeq(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opGeq, lh, rh, vars)
+			},
+		}
 	case token.LAND:
-		return opLand(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opLand, lh, rh, vars)
+			},
+		}
 	case token.LOR:
-		return opLor(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opLor, lh, rh, vars)
+			},
+		}
 	case token.ADD:
-		return opAdd(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opAdd, lh, rh, vars)
+			},
+		}
 	case token.SUB:
-		return opSub(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opSub, lh, rh, vars)
+			},
+		}
 	case token.MUL:
-		return opMul(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opMul, lh, rh, vars)
+			},
+		}
 	case token.QUO:
-		return opQuo(lh, rh)
+		return enFunc{
+			fn: func(vars map[string]*dlit.Literal) *dlit.Literal {
+				return callBinaryFn(opQuo, lh, rh, vars)
+			},
+		}
 	}
-	return dlit.MustNew(InvalidOpError(be.Op))
+	return enErr{err: InvalidOpError(be.Op)}
 }
+
+func callBinaryFn(
+	fn binaryFn,
+	lh enode,
+	rh enode,
+	vars map[string]*dlit.Literal,
+) *dlit.Literal {
+	lhV := lh.Eval(vars)
+	rhV := rh.Eval(vars)
+	if lhV.Err() != nil {
+		return lhV
+	}
+	if rhV.Err() != nil {
+		return rhV
+	}
+	return fn(lhV, rhV)
+}
+
+type binaryFn func(*dlit.Literal, *dlit.Literal) *dlit.Literal
 
 func opLss(lh *dlit.Literal, rh *dlit.Literal) *dlit.Literal {
 	lhInt, lhIsInt := lh.Int()
@@ -283,7 +348,11 @@ func opAdd(lh *dlit.Literal, rh *dlit.Literal) *dlit.Literal {
 	lhFloat, lhIsFloat := lh.Float()
 	rhFloat, rhIsFloat := rh.Float()
 	if lhIsFloat && rhIsFloat {
-		return dlit.MustNew(lhFloat + rhFloat)
+		r := lhFloat + rhFloat
+		if !math.IsInf(r, 0) {
+			return dlit.MustNew(r)
+		}
+		return dlit.MustNew(ErrUnderflowOverflow)
 	}
 	return dlit.MustNew(ErrIncompatibleTypes)
 }
@@ -302,7 +371,11 @@ func opSub(lh *dlit.Literal, rh *dlit.Literal) *dlit.Literal {
 	lhFloat, lhIsFloat := lh.Float()
 	rhFloat, rhIsFloat := rh.Float()
 	if lhIsFloat && rhIsFloat {
-		return dlit.MustNew(lhFloat - rhFloat)
+		r := lhFloat - rhFloat
+		if !math.IsInf(r, 0) {
+			return dlit.MustNew(r)
+		}
+		return dlit.MustNew(ErrUnderflowOverflow)
 	}
 	return dlit.MustNew(ErrIncompatibleTypes)
 }
@@ -328,7 +401,11 @@ func opMul(lh *dlit.Literal, rh *dlit.Literal) *dlit.Literal {
 	lhFloat, lhIsFloat := lh.Float()
 	rhFloat, rhIsFloat := rh.Float()
 	if lhIsFloat && rhIsFloat {
-		return dlit.MustNew(lhFloat * rhFloat)
+		r := lhFloat * rhFloat
+		if !math.IsInf(r, 0) {
+			return dlit.MustNew(r)
+		}
+		return dlit.MustNew(ErrUnderflowOverflow)
 	}
 	return dlit.MustNew(ErrIncompatibleTypes)
 }
@@ -347,7 +424,11 @@ func opQuo(lh *dlit.Literal, rh *dlit.Literal) *dlit.Literal {
 	lhFloat, lhIsFloat := lh.Float()
 	rhFloat, rhIsFloat := rh.Float()
 	if lhIsFloat && rhIsFloat {
-		return dlit.MustNew(lhFloat / rhFloat)
+		r := lhFloat / rhFloat
+		if !math.IsInf(r, 0) {
+			return dlit.MustNew(r)
+		}
+		return dlit.MustNew(ErrUnderflowOverflow)
 	}
 	return dlit.MustNew(ErrIncompatibleTypes)
 }

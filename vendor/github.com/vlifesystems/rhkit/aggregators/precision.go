@@ -39,7 +39,10 @@ type precisionInstance struct {
 	numFP int64
 }
 
-var precisionExpr = dexpr.MustNew("roundto(numTP/(numTP+numFP),4)")
+var precisionExpr = dexpr.MustNew(
+	"roundto(numTP/(numTP+numFP),4)",
+	dexprfuncs.CallFuncs,
+)
 
 func init() {
 	Register("precision", &precisionAggregator{})
@@ -49,7 +52,7 @@ func (a *precisionAggregator) MakeSpec(
 	name string,
 	expr string,
 ) (AggregatorSpec, error) {
-	dexpr, err := dexpr.New(expr)
+	dexpr, err := dexpr.New(expr, dexprfuncs.CallFuncs)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +89,7 @@ func (ai *precisionInstance) GetName() string {
 
 func (ai *precisionInstance) NextRecord(record map[string]*dlit.Literal,
 	isRuleTrue bool) error {
-	matchExprIsTrue, err := ai.spec.expr.EvalBool(record, dexprfuncs.CallFuncs)
+	matchExprIsTrue, err := ai.spec.expr.EvalBool(record)
 	if err != nil {
 		return err
 	}
@@ -113,5 +116,5 @@ func (ai *precisionInstance) GetResult(
 		"numTP": dlit.MustNew(ai.numTP),
 		"numFP": dlit.MustNew(ai.numFP),
 	}
-	return precisionExpr.Eval(vars, dexprfuncs.CallFuncs)
+	return precisionExpr.Eval(vars)
 }

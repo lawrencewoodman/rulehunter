@@ -29,7 +29,8 @@ func makeWhenExpr(expr string) (*dexpr.Expr, error) {
 	if expr == "" {
 		expr = "!hasRun"
 	}
-	de, err := dexpr.New(expr)
+	funcs := map[string]dexpr.CallFun{}
+	de, err := dexpr.New(expr, funcs)
 	return de, err
 }
 
@@ -70,7 +71,7 @@ func evalWhenExpr(
 			now.Weekday() != time.Saturday && now.Weekday() != time.Sunday,
 		),
 	}
-	ok, err := whenExpr.EvalBool(vars, map[string]dexpr.CallFun{})
+	ok, err := whenExpr.EvalBool(vars)
 	if err != nil {
 		return false, err
 	}

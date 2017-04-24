@@ -180,13 +180,13 @@ func calcTrueAggregatorDiff(
 	aggregatorName string,
 	aggregatorValue *dlit.Literal,
 ) string {
-	diffExpr := dexpr.MustNew("r - t")
 	funcs := map[string]dexpr.CallFun{}
+	diffExpr := dexpr.MustNew("r - t", funcs)
 	vars := map[string]*dlit.Literal{
 		"r": aggregatorValue,
 		"t": trueAggregators[aggregatorName],
 	}
-	differenceL := diffExpr.Eval(vars, funcs)
+	differenceL := diffExpr.Eval(vars)
 	difference := differenceL.String()
 	if err := differenceL.Err(); err != nil {
 		difference = "N/A"

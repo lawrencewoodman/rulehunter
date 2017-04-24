@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 	"github.com/vlifesystems/rhkit/rule"
 	"sort"
 	"strconv"
@@ -39,7 +40,7 @@ func GenerateRules(
 	ruleGenerators := []ruleGeneratorFunc{
 		generateIntRules, generateFloatRules, generateValueRules,
 		generateCompareNumericRules, generateCompareStringRules,
-		generateInRules,
+		generateAddRules, generateInRules,
 	}
 	rules[0] = rule.NewTrue()
 	for field := range inputDescription.Fields {
@@ -217,6 +218,10 @@ func generateFloatRules(
 	diff := max - min
 	step := diff / 20.0
 
+	if step == 0 {
+		return []rule.Rule{}
+	}
+
 	for i := step; i <= diff; i += step {
 		n := truncateFloat(min+i, maxDP)
 		r := rule.NewLEFVF(field, n)
@@ -316,6 +321,68 @@ func generateCompareStringRules(
 	return rules
 }
 
+func generateAddRules(
+	inputDescription *Description,
+	ruleFields []string,
+	field string,
+) []rule.Rule {
+	fd := inputDescription.Fields[field]
+	if !isNumberField(fd) {
+		return []rule.Rule{}
+	}
+	diffExpr := dexpr.MustNew(
+		"(max + oMax) - (min + oMin)",
+		dexprfuncs.CallFuncs,
+	)
+	fieldNum := calcFieldNum(inputDescription.Fields, field)
+	rulesMap := make(map[string]rule.Rule)
+
+	for oField, oFd := range inputDescription.Fields {
+		oFieldNum := calcFieldNum(inputDescription.Fields, oField)
+		if fieldNum < oFieldNum && isNumberField(oFd) &&
+			stringInSlice(oField, ruleFields) {
+			vars := map[string]*dlit.Literal{
+				"max":  fd.Max,
+				"oMax": oFd.Max,
+				"min":  fd.Min,
+				"oMin": oFd.Min,
+			}
+			diffL := diffExpr.Eval(vars)
+			diff, ok := diffL.Float()
+			if !ok {
+				continue
+			}
+
+			step := diff / 20.0
+			if step <= 0 {
+				continue
+			}
+			maxDP := fd.MaxDP
+			oMaxDP := oFd.MaxDP
+			if oMaxDP > maxDP {
+				maxDP = oMaxDP
+			}
+
+			min, _ := fd.Min.Float()
+			oMin, _ := oFd.Min.Float()
+			for i := step; i <= diff; i += step {
+				n := truncateFloat(min+oMin+i, maxDP)
+				r := rule.NewAddLEF(field, oField, dlit.MustNew(n))
+				rulesMap[r.String()] = r
+			}
+
+			// i set to 0 to make more tweakable
+			for i := float64(0); i < diff; i += step {
+				n := truncateFloat(min+oMin+i, maxDP)
+				r := rule.NewAddGEF(field, oField, dlit.MustNew(n))
+				rulesMap[r.String()] = r
+			}
+		}
+	}
+
+	return rulesMapToArray(rulesMap)
+}
+
 func calcNumSharedValues(
 	fd1 *fieldDescription,
 	fd2 *fieldDescription,
@@ -333,7 +400,10 @@ func isNumberField(fd *fieldDescription) bool {
 	return fd.Kind == ftInt || fd.Kind == ftFloat
 }
 
-var compareExpr *dexpr.Expr = dexpr.MustNew("min1 < max2 && max1 > min2")
+var compareExpr *dexpr.Expr = dexpr.MustNew(
+	"min1 < max2 && max1 > min2",
+	dexprfuncs.CallFuncs,
+)
 
 func hasComparableNumberRange(
 	fd1 *fieldDescription,
@@ -349,8 +419,7 @@ func hasComparableNumberRange(
 		"min2": fd2.Min,
 		"max2": fd2.Max,
 	}
-	funcs := map[string]dexpr.CallFun{}
-	isComparable, err := compareExpr.EvalBool(vars, funcs)
+	isComparable, err := compareExpr.EvalBool(vars)
 	return err == nil && isComparable
 }
 

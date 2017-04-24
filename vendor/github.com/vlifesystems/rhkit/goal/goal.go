@@ -38,7 +38,7 @@ func (e InvalidGoalError) Error() string {
 }
 
 func New(exprStr string) (*Goal, error) {
-	expr, err := dexpr.New(exprStr)
+	expr, err := dexpr.New(exprStr, dexprfuncs.CallFuncs)
 	if err != nil {
 		return nil, InvalidGoalError(exprStr)
 	}
@@ -59,6 +59,6 @@ func (g *Goal) String() string {
 }
 
 func (g *Goal) Assess(aggregators map[string]*dlit.Literal) (bool, error) {
-	passed, err := g.expr.EvalBool(aggregators, dexprfuncs.CallFuncs)
+	passed, err := g.expr.EvalBool(aggregators)
 	return passed, err
 }

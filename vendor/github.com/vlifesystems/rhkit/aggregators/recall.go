@@ -39,7 +39,10 @@ type recallInstance struct {
 	numFN int64
 }
 
-var recallExpr = dexpr.MustNew("roundto(numTP/(numTP+numFN),4)")
+var recallExpr = dexpr.MustNew(
+	"roundto(numTP/(numTP+numFN),4)",
+	dexprfuncs.CallFuncs,
+)
 
 func init() {
 	Register("recall", &recallAggregator{})
@@ -49,7 +52,7 @@ func (a *recallAggregator) MakeSpec(
 	name string,
 	expr string,
 ) (AggregatorSpec, error) {
-	dexpr, err := dexpr.New(expr)
+	dexpr, err := dexpr.New(expr, dexprfuncs.CallFuncs)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +89,7 @@ func (ai *recallInstance) GetName() string {
 
 func (ai *recallInstance) NextRecord(record map[string]*dlit.Literal,
 	isRuleTrue bool) error {
-	matchExprIsTrue, err := ai.spec.expr.EvalBool(record, dexprfuncs.CallFuncs)
+	matchExprIsTrue, err := ai.spec.expr.EvalBool(record)
 	if err != nil {
 		return err
 	}
@@ -115,5 +118,5 @@ func (ai *recallInstance) GetResult(
 		"numTP": dlit.MustNew(ai.numTP),
 		"numFN": dlit.MustNew(ai.numFN),
 	}
-	return recallExpr.Eval(vars, dexprfuncs.CallFuncs)
+	return recallExpr.Eval(vars)
 }

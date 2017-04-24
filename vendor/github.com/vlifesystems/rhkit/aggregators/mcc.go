@@ -47,6 +47,7 @@ type mccInstance struct {
 // overflow/underflow errors
 var mccExpr = dexpr.MustNew(
 	"((tp*tn)-(fp*fn))/sqrt((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))",
+	dexprfuncs.CallFuncs,
 )
 
 func init() {
@@ -57,7 +58,7 @@ func (a *mccAggregator) MakeSpec(
 	name string,
 	expr string,
 ) (AggregatorSpec, error) {
-	dexpr, err := dexpr.New(expr)
+	dexpr, err := dexpr.New(expr, dexprfuncs.CallFuncs)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +99,7 @@ func (ai *mccInstance) NextRecord(
 	record map[string]*dlit.Literal,
 	isRuleTrue bool,
 ) error {
-	matchExprIsTrue, err := ai.spec.expr.EvalBool(record, dexprfuncs.CallFuncs)
+	matchExprIsTrue, err := ai.spec.expr.EvalBool(record)
 	if err != nil {
 		return err
 	}
@@ -141,5 +142,5 @@ func (ai *mccInstance) GetResult(
 	if sums == 0 {
 		return dlit.MustNew(0)
 	}
-	return mccExpr.Eval(vars, dexprfuncs.CallFuncs)
+	return mccExpr.Eval(vars)
 }
