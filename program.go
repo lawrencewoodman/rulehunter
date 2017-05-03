@@ -83,7 +83,6 @@ func (p *program) ProcessFile(file fileinfo.FileInfo) error {
 	)
 	if err != nil {
 		p.logger.Error(err.Error())
-		return err
 	}
 	return nil
 }

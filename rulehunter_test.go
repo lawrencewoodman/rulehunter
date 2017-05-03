@@ -17,6 +17,8 @@ import (
 
 func TestSubMain(t *testing.T) {
 	wantEntries := []testhelpers.Entry{
+		{Level: testhelpers.Error,
+			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 3: did not find expected key"},
 		{Level: testhelpers.Info,
 			Msg: "Processing experiment: debt.json"},
 		{Level: testhelpers.Info,
@@ -38,6 +40,11 @@ func TestSubMain(t *testing.T) {
 	} else {
 		mustWriteConfig(t, cfgDir, 2000)
 	}
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "0debt_broken.yaml"),
+		filepath.Join(cfgDir, "experiments"),
+	)
 	testhelpers.CopyFile(
 		t,
 		filepath.Join("fixtures", "debt.json"),

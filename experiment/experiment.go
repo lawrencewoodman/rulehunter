@@ -111,7 +111,8 @@ func Process(
 	experiment, tags, whenExpr, err :=
 		loadExperiment(experimentFullFilename, cfg)
 	if err != nil {
-		fullErr := fmt.Errorf("Couldn't load experiment file: %s", err)
+		fullErr := fmt.Errorf("Can't load experiment: %s, %s",
+			experimentFile.Name(), err)
 		return epr.ReportError(fullErr)
 	}
 	ok, err := shouldProcess(progressMonitor, experimentFile, whenExpr)
