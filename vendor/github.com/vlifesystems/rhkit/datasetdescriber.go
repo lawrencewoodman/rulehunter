@@ -21,12 +21,13 @@ package rhkit
 
 import (
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/vlifesystems/rhkit/description"
 )
 
 func DescribeDataset(
 	dataset ddataset.Dataset,
-) (*Description, error) {
-	description := newDescription()
+) (*description.Description, error) {
+	description := description.New()
 	conn, err := dataset.Open()
 	if err != nil {
 		return nil, err

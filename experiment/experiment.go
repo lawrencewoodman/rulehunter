@@ -30,6 +30,7 @@ import (
 	"github.com/lawrencewoodman/ddataset/dtruncate"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/vlifesystems/rhkit"
+	"github.com/vlifesystems/rhkit/description"
 	rhexperiment "github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
@@ -399,17 +400,17 @@ func describeDataset(
 	cfg *config.Config,
 	filename string,
 	dataset ddataset.Dataset,
-) (*rhkit.Description, error) {
-	description, err := rhkit.DescribeDataset(dataset)
+) (*description.Description, error) {
+	_description, err := rhkit.DescribeDataset(dataset)
 	if err != nil {
 		return nil, err
 	}
 
 	fdFilename := filepath.Join(cfg.BuildDir, "descriptions", filename)
-	if err := description.WriteJSON(fdFilename); err != nil {
+	if err := _description.WriteJSON(fdFilename); err != nil {
 		return nil, err
 	}
-	return description, nil
+	return _description, nil
 }
 
 func assessRulesWorker(

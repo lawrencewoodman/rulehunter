@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -23,9 +23,12 @@ package rule
 import (
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal"
+	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -36,7 +39,7 @@ type Rule interface {
 }
 
 type Tweaker interface {
-	Tweak(*dlit.Literal, *dlit.Literal, int, int) []Rule
+	Tweak(*description.Description, int) []Rule
 }
 
 type Overlapper interface {
@@ -96,8 +99,38 @@ func (rs byString) Less(i, j int) bool {
 	return strings.Compare(rs[i].String(), rs[j].String()) == -1
 }
 
-func truncateFloat(f float64, maxDP int) float64 {
-	v := fmt.Sprintf("%.*f", maxDP, f)
-	nf, _ := strconv.ParseFloat(v, 64)
-	return nf
+func generateTweakPoints(
+	value, min, max *dlit.Literal,
+	maxDP int,
+	stage int,
+) []*dlit.Literal {
+	matchValueExpr := dexpr.MustNew("value == p", dexprfuncs.CallFuncs)
+	vars := map[string]*dlit.Literal{
+		"min":   min,
+		"max":   max,
+		"maxDP": dlit.MustNew(maxDP),
+		"stage": dlit.MustNew(stage),
+		"value": value,
+	}
+	vars["step"] =
+		dexpr.Eval(
+			"roundto((max - min) / (10 * stage), maxDP)",
+			dexprfuncs.CallFuncs,
+			vars,
+		)
+	low := dexpr.Eval("max(min, value - step)", dexprfuncs.CallFuncs, vars)
+	high := dexpr.Eval("min(max, value + step)", dexprfuncs.CallFuncs, vars)
+	points := internal.GeneratePoints(low, high, maxDP)
+	r := make([]*dlit.Literal, 0)
+	for _, p := range points {
+		vars["p"] = p
+		match, err := matchValueExpr.EvalBool(vars)
+		if err != nil {
+			return r
+		}
+		if !match {
+			r = append(r, p)
+		}
+	}
+	return r
 }

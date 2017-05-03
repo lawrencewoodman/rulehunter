@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -17,48 +17,48 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rhkit
+package fieldtype
 
 import "fmt"
 
-type fieldType int
+type FieldType int
 
 const (
-	ftUnknown fieldType = iota
-	ftIgnore
-	ftInt
-	ftFloat
-	ftString
+	Unknown FieldType = iota
+	Ignore
+	Int
+	Float
+	String
 )
 
-func (ft fieldType) String() string {
+func New(s string) FieldType {
+	switch s {
+	case "Unknown":
+		return Unknown
+	case "Ignore":
+		return Ignore
+	case "Int":
+		return Int
+	case "Float":
+		return Float
+	case "String":
+		return String
+	}
+	panic(fmt.Sprintf("Unsupported type: %s", s))
+}
+
+func (ft FieldType) String() string {
 	switch ft {
-	case ftUnknown:
+	case Unknown:
 		return "Unknown"
-	case ftIgnore:
+	case Ignore:
 		return "Ignore"
-	case ftInt:
+	case Int:
 		return "Int"
-	case ftFloat:
+	case Float:
 		return "Float"
-	case ftString:
+	case String:
 		return "String"
 	}
 	panic(fmt.Sprintf("Unsupported type: %d", ft))
-}
-
-func newFieldType(s string) fieldType {
-	switch s {
-	case "Unknown":
-		return ftUnknown
-	case "Ignore":
-		return ftIgnore
-	case "Int":
-		return ftInt
-	case "Float":
-		return ftFloat
-	case "String":
-		return ftString
-	}
-	panic(fmt.Sprintf("Unsupported type: %s", s))
 }

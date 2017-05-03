@@ -44,6 +44,35 @@ func MustNew(expr string, callFuncs map[string]CallFun) *Expr {
 	return e
 }
 
+// Eval compiles an expression and evaluates it with the supplied callFuncs
+// and vars.  Any errors produced will be encapsulated in the returned
+// Literal.
+func Eval(
+	expr string,
+	callFuncs map[string]CallFun,
+	vars map[string]*dlit.Literal,
+) *dlit.Literal {
+	e, err := New(expr, callFuncs)
+	if err != nil {
+		return dlit.MustNew(err)
+	}
+	return e.Eval(vars)
+}
+
+// EvalBool compiles an expression and evaluates it with the supplied callFuncs
+// and vars.
+func EvalBool(
+	expr string,
+	callFuncs map[string]CallFun,
+	vars map[string]*dlit.Literal,
+) (bool, error) {
+	e, err := New(expr, callFuncs)
+	if err != nil {
+		return false, err
+	}
+	return e.EvalBool(vars)
+}
+
 func (expr *Expr) Eval(vars map[string]*dlit.Literal) *dlit.Literal {
 	l := expr.Node.Eval(vars)
 	if err := l.Err(); err != nil {

@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rhkit/description"
 )
 
 // GEFVI represents a rule determining if field >= intValue
@@ -58,26 +59,24 @@ func (r *GEFVI) IsTrue(record ddataset.Record) (bool, error) {
 }
 
 func (r *GEFVI) Tweak(
-	min *dlit.Literal,
-	max *dlit.Literal,
-	maxDP int,
+	inputDescription *description.Description,
 	stage int,
 ) []Rule {
 	rules := make([]Rule, 0)
-	minInt, _ := min.Int()
-	maxInt, _ := max.Int()
-	step := (maxInt - minInt) / (10 * int64(stage))
-	low := r.value - step
-	high := r.value + step
-	interStep := (high - low) / 20
-	if interStep < 1 {
-		interStep = 1
-	}
-	for n := low; n <= high; n += interStep {
-		if n != r.value && n != low && n != high && n >= minInt && n <= maxInt {
-			r := NewGEFVI(r.field, n)
-			rules = append(rules, r)
+	points := generateTweakPoints(
+		dlit.MustNew(r.value),
+		inputDescription.Fields[r.field].Min,
+		inputDescription.Fields[r.field].Max,
+		inputDescription.Fields[r.field].MaxDP,
+		stage,
+	)
+	for _, p := range points {
+		pInt, pIsInt := p.Int()
+		if !pIsInt {
+			continue
 		}
+		r := NewGEFVI(r.field, pInt)
+		rules = append(rules, r)
 	}
 	return rules
 }

@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -22,7 +22,10 @@ package rule
 import (
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 )
 
 // BetweenFVI represents a rule determining if:
@@ -84,40 +87,36 @@ func (r *BetweenFVI) GetFields() []string {
 }
 
 func (r *BetweenFVI) Tweak(
-	min *dlit.Literal,
-	max *dlit.Literal,
-	maxDP int,
+	inputDescription *description.Description,
 	stage int,
 ) []Rule {
 	rules := make([]Rule, 0)
-	fdMinInt, _ := min.Int()
-	fdMaxInt, _ := max.Int()
-	step := (fdMaxInt - fdMinInt) / (10 * int64(stage))
-	minLow := r.min - step
-	minHigh := r.min + step
-	minInterStep := (minHigh - minLow) / 20
-	if minInterStep < 1 {
-		minInterStep = 1
-	}
-	maxLow := r.max - step
-	maxHigh := r.max + step
-	maxInterStep := (maxHigh - maxLow) / 20
-	if maxInterStep < 1 {
-		maxInterStep = 1
-	}
-	for minN := minLow; minN <= minHigh; minN += minInterStep {
-		for maxN := maxLow; maxN <= maxHigh; maxN += maxInterStep {
-			if (minN != r.min || maxN != r.max) &&
-				minN != minLow &&
-				minN != minHigh &&
-				minN >= fdMinInt &&
-				minN <= fdMaxInt &&
-				maxN != minLow &&
-				maxN != minHigh &&
-				maxN >= fdMinInt &&
-				maxN <= fdMaxInt &&
-				minN < maxN {
-				r := MustNewBetweenFVI(r.field, minN, maxN)
+	pointsL := generateTweakPoints(
+		dlit.MustNew(r.min),
+		inputDescription.Fields[r.field].Min,
+		inputDescription.Fields[r.field].Max,
+		inputDescription.Fields[r.field].MaxDP,
+		stage,
+	)
+	pointsH := generateTweakPoints(
+		dlit.MustNew(r.max),
+		inputDescription.Fields[r.field].Min,
+		inputDescription.Fields[r.field].Max,
+		inputDescription.Fields[r.field].MaxDP,
+		stage,
+	)
+	isValidExpr := dexpr.MustNew("pH > pL", dexprfuncs.CallFuncs)
+	for _, pL := range pointsL {
+		for _, pH := range pointsH {
+			vars := map[string]*dlit.Literal{
+				"pL": pL,
+				"pH": pH,
+			}
+			pLInt, pLIsInt := pL.Int()
+			pHInt, pHIsInt := pH.Int()
+			isValid, err := isValidExpr.EvalBool(vars)
+			if pLIsInt && pHIsInt && err == nil && isValid {
+				r := MustNewBetweenFVI(r.field, pLInt, pHInt)
 				rules = append(rules, r)
 			}
 		}

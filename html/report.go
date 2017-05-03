@@ -1,6 +1,6 @@
 /*
 	rulehunter - A server to find rules in data based on user specified goals
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Affero General Public License as published by
@@ -21,7 +21,7 @@ package html
 
 import (
 	"fmt"
-	"github.com/vlifesystems/rhkit"
+	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/report"
@@ -32,7 +32,7 @@ import (
 
 func generateReport(
 	_report *report.Report,
-	description *rhkit.Description,
+	_description *description.Description,
 	config *config.Config,
 ) (string, error) {
 	type TplData struct {
@@ -41,7 +41,7 @@ func generateReport(
 		DateTime           string
 		ExperimentFilename string
 		NumRecords         int64
-		Description        *rhkit.Description
+		Description        *description.Description
 		SortOrder          []experiment.SortField
 		Aggregators        []report.AggregatorDesc
 		Assessments        []*report.Assessment
@@ -56,7 +56,7 @@ func generateReport(
 		DateTime:           _report.Stamp.Format(time.RFC822),
 		ExperimentFilename: _report.ExperimentFilename,
 		NumRecords:         _report.NumRecords,
-		Description:        description,
+		Description:        _description,
 		SortOrder:          _report.SortOrder,
 		Aggregators:        _report.Aggregators,
 		Assessments:        _report.Assessments,

@@ -21,7 +21,10 @@ package rule
 
 import (
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 )
 
 // AddLEF represents a rule determining if fieldA + fieldB <= floatValue
@@ -78,31 +81,31 @@ func (r *AddLEF) IsTrue(record ddataset.Record) (bool, error) {
 	return vAFloat+vBFloat <= valueFloat, nil
 }
 
-// TODO: implement this by passing inputDescription
-/*
 func (r *AddLEF) Tweak(
-	min *dlit.Literal,
-	max *dlit.Literal,
-	maxDP int,
+	inputDescription *description.Description,
 	stage int,
 ) []Rule {
+	vars := map[string]*dlit.Literal{
+		"aMin": inputDescription.Fields[r.fieldA].Min,
+		"bMin": inputDescription.Fields[r.fieldB].Min,
+		"aMax": inputDescription.Fields[r.fieldA].Max,
+		"bMax": inputDescription.Fields[r.fieldB].Max,
+	}
+	maxDP := inputDescription.Fields[r.fieldA].MaxDP
+	bMaxDP := inputDescription.Fields[r.fieldB].MaxDP
+	if bMaxDP > maxDP {
+		maxDP = bMaxDP
+	}
 	rules := make([]Rule, 0)
-	minFloat, _ := min.Float()
-	maxFloat, _ := max.Float()
-	step := (maxFloat - minFloat) / (10 * float64(stage))
-	low := r.value - step
-	high := r.value + step
-	interStep := (high - low) / 20
-	for n := low; n <= high; n += interStep {
-		v := truncateFloat(n, maxDP)
-		if v != r.value && v != low && v != high && v >= minFloat && v <= maxFloat {
-			r := NewAddLEF(r.fieldA, r.fieldB, truncateFloat(n, maxDP))
-			rules = append(rules, r)
-		}
+	min := dexpr.Eval("aMin + bMin", dexprfuncs.CallFuncs, vars)
+	max := dexpr.Eval("aMax + bMax", dexprfuncs.CallFuncs, vars)
+	points := generateTweakPoints(r.value, min, max, maxDP, stage)
+	for _, p := range points {
+		r := NewAddLEF(r.fieldA, r.fieldB, p)
+		rules = append(rules, r)
 	}
 	return rules
 }
-*/
 
 func (r *AddLEF) Overlaps(o Rule) bool {
 	switch x := o.(type) {

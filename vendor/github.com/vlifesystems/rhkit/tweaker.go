@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -20,23 +20,20 @@
 package rhkit
 
 import (
+	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rhkit/rule"
 )
 
 func TweakRules(
 	stage int,
 	sortedRules []rule.Rule,
-	inputDescription *Description,
+	inputDescription *description.Description,
 ) []rule.Rule {
 	newRules := make([]rule.Rule, 0)
 	for _, r := range sortedRules {
 		switch x := r.(type) {
 		case rule.Tweaker:
-			field := r.GetFields()[0]
-			min := inputDescription.Fields[field].Min
-			max := inputDescription.Fields[field].Max
-			maxDP := inputDescription.Fields[field].MaxDP
-			rules := x.Tweak(min, max, maxDP, stage)
+			rules := x.Tweak(inputDescription, stage)
 			newRules = append(newRules, rules...)
 		}
 	}

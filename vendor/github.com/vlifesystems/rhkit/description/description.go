@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -17,32 +17,34 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rhkit
+package description
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rhkit/internal"
+	"github.com/vlifesystems/rhkit/internal/fieldtype"
 	"io/ioutil"
 	"math"
 	"os"
 )
 
 type Description struct {
-	Fields map[string]*fieldDescription
+	Fields map[string]*Field
 }
 
-type fieldDescription struct {
-	Kind      fieldType
+type Field struct {
+	Kind      fieldtype.FieldType
 	Min       *dlit.Literal
 	Max       *dlit.Literal
 	MaxDP     int
-	Values    map[string]valueDescription
+	Values    map[string]Value
 	NumValues int
 }
 
-type valueDescription struct {
+type Value struct {
 	Value *dlit.Literal
 	Num   int
 }
@@ -61,17 +63,17 @@ func LoadDescriptionJSON(filename string) (*Description, error) {
 		return nil, err
 	}
 
-	fields := make(map[string]*fieldDescription, len(dj.Fields))
+	fields := make(map[string]*Field, len(dj.Fields))
 	for field, fd := range dj.Fields {
-		values := make(map[string]valueDescription, len(fd.Values))
+		values := make(map[string]Value, len(fd.Values))
 		for v, vd := range fd.Values {
-			values[v] = valueDescription{
+			values[v] = Value{
 				Value: dlit.NewString(vd.Value),
 				Num:   vd.Num,
 			}
 		}
-		fields[field] = &fieldDescription{
-			Kind:      newFieldType(fd.Kind),
+		fields[field] = &Field{
+			Kind:      fieldtype.New(fd.Kind),
 			Min:       dlit.NewString(fd.Min),
 			Max:       dlit.NewString(fd.Max),
 			MaxDP:     fd.MaxDP,
@@ -84,7 +86,7 @@ func LoadDescriptionJSON(filename string) (*Description, error) {
 }
 
 func (d *Description) WriteJSON(filename string) error {
-	fields := make(map[string]*fieldDescriptionJ, len(d.Fields))
+	fields := make(map[string]*fieldJ, len(d.Fields))
 	for field, fd := range d.Fields {
 		fields[field] = newFieldDescriptionJ(fd)
 	}
@@ -96,17 +98,36 @@ func (d *Description) WriteJSON(filename string) error {
 	return ioutil.WriteFile(filename, json, 0640)
 }
 
+func (d *Description) CheckEqual(dWant *Description) error {
+	if len(d.Fields) != len(dWant.Fields) {
+		return fmt.Errorf(
+			"number of FieldDescriptions doesn't match. got: %d, want: %d\n",
+			len(d.Fields), len(dWant.Fields),
+		)
+	}
+	for field, fdG := range d.Fields {
+		fdW, ok := dWant.Fields[field]
+		if !ok {
+			return fmt.Errorf("field Description missing for field: %s", field)
+		}
+		if err := fdG.checkEqual(fdW); err != nil {
+			return fmt.Errorf("field Description for field: %s, %s", field, err)
+		}
+	}
+	return nil
+}
+
 // Create a New Description.
-func newDescription() *Description {
-	fd := map[string]*fieldDescription{}
+func New() *Description {
+	fd := map[string]*Field{}
 	return &Description{fd}
 }
 
 type descriptionJ struct {
-	Fields map[string]*fieldDescriptionJ
+	Fields map[string]*fieldJ
 }
 
-type fieldDescriptionJ struct {
+type fieldJ struct {
 	Kind      string
 	Min       string
 	Max       string
@@ -120,7 +141,7 @@ type valueDescriptionJ struct {
 	Num   int
 }
 
-func newFieldDescriptionJ(fd *fieldDescription) *fieldDescriptionJ {
+func newFieldDescriptionJ(fd *Field) *fieldJ {
 	values := make(map[string]valueDescriptionJ, len(fd.Values))
 	for v, vd := range fd.Values {
 		values[v] = valueDescriptionJ{
@@ -136,7 +157,7 @@ func newFieldDescriptionJ(fd *fieldDescription) *fieldDescriptionJ {
 	if fd.Max != nil {
 		max = fd.Max.String()
 	}
-	return &fieldDescriptionJ{
+	return &fieldJ{
 		Kind:      fd.Kind.String(),
 		Min:       min,
 		Max:       max,
@@ -146,7 +167,7 @@ func newFieldDescriptionJ(fd *fieldDescription) *fieldDescriptionJ {
 	}
 }
 
-func (fd *fieldDescription) String() string {
+func (fd *Field) String() string {
 	return fmt.Sprintf("Kind: %s, Min: %s, Max: %s, MaxDP: %d, Values: %v",
 		fd.Kind, fd.Min, fd.Max, fd.MaxDP, fd.Values)
 }
@@ -155,11 +176,11 @@ func (fd *fieldDescription) String() string {
 func (d *Description) NextRecord(record ddataset.Record) {
 	if len(d.Fields) == 0 {
 		for field, value := range record {
-			d.Fields[field] = &fieldDescription{
-				Kind:   ftUnknown,
+			d.Fields[field] = &Field{
+				Kind:   fieldtype.Unknown,
 				Min:    value,
 				Max:    value,
-				Values: map[string]valueDescription{},
+				Values: map[string]Value{},
 			}
 		}
 	}
@@ -169,57 +190,57 @@ func (d *Description) NextRecord(record ddataset.Record) {
 	}
 }
 
-func (f *fieldDescription) processValue(value *dlit.Literal) {
+func (f *Field) processValue(value *dlit.Literal) {
 	f.updateKind(value)
 	f.updateValues(value)
 	f.updateNumBoundaries(value)
 }
 
-func (f *fieldDescription) updateKind(value *dlit.Literal) {
+func (f *Field) updateKind(value *dlit.Literal) {
 	switch f.Kind {
-	case ftUnknown:
+	case fieldtype.Unknown:
 		fallthrough
-	case ftInt:
+	case fieldtype.Int:
 		if _, isInt := value.Int(); isInt {
-			f.Kind = ftInt
+			f.Kind = fieldtype.Int
 			break
 		}
 		fallthrough
-	case ftFloat:
+	case fieldtype.Float:
 		if _, isFloat := value.Float(); isFloat {
-			f.Kind = ftFloat
+			f.Kind = fieldtype.Float
 			break
 		}
-		f.Kind = ftString
+		f.Kind = fieldtype.String
 	}
 }
 
-func (f *fieldDescription) updateValues(value *dlit.Literal) {
+func (f *Field) updateValues(value *dlit.Literal) {
 	// Chose 31 so could hold each day in month
 	const maxNumValues = 31
-	if f.Kind == ftIgnore ||
-		f.Kind == ftUnknown ||
+	if f.Kind == fieldtype.Ignore ||
+		f.Kind == fieldtype.Unknown ||
 		f.NumValues == -1 {
 		return
 	}
 	if vd, ok := f.Values[value.String()]; ok {
-		f.Values[value.String()] = valueDescription{vd.Value, vd.Num + 1}
+		f.Values[value.String()] = Value{vd.Value, vd.Num + 1}
 		return
 	}
 	if f.NumValues >= maxNumValues {
-		if f.Kind == ftString {
-			f.Kind = ftIgnore
+		if f.Kind == fieldtype.String {
+			f.Kind = fieldtype.Ignore
 		}
-		f.Values = map[string]valueDescription{}
+		f.Values = map[string]Value{}
 		f.NumValues = -1
 		return
 	}
 	f.NumValues++
-	f.Values[value.String()] = valueDescription{value, 1}
+	f.Values[value.String()] = Value{value, 1}
 }
 
-func (f *fieldDescription) updateNumBoundaries(value *dlit.Literal) {
-	if f.Kind == ftInt {
+func (f *Field) updateNumBoundaries(value *dlit.Literal) {
+	if f.Kind == fieldtype.Int {
 		valueInt, valueIsInt := value.Int()
 		minInt, minIsInt := f.Min.Int()
 		maxInt, maxIsInt := f.Max.Int()
@@ -228,7 +249,7 @@ func (f *fieldDescription) updateNumBoundaries(value *dlit.Literal) {
 		}
 		f.Min = dlit.MustNew(minI(minInt, valueInt))
 		f.Max = dlit.MustNew(maxI(maxInt, valueInt))
-	} else if f.Kind == ftFloat {
+	} else if f.Kind == fieldtype.Float {
 		valueFloat, valueIsFloat := value.Float()
 		minFloat, minIsFloat := f.Min.Float()
 		maxFloat, maxIsFloat := f.Max.Float()
@@ -238,8 +259,57 @@ func (f *fieldDescription) updateNumBoundaries(value *dlit.Literal) {
 		f.Min = dlit.MustNew(math.Min(minFloat, valueFloat))
 		f.Max = dlit.MustNew(math.Max(maxFloat, valueFloat))
 		f.MaxDP =
-			int(maxI(int64(f.MaxDP), int64(numDecPlaces(value.String()))))
+			int(maxI(int64(f.MaxDP), int64(internal.NumDecPlaces(value.String()))))
 	}
+}
+
+func (f *Field) checkEqual(fdWant *Field) error {
+	if f.Kind != fdWant.Kind {
+		return fmt.Errorf("got field kind: %s, want: %s", f.Kind, fdWant.Kind)
+	}
+	if len(f.Values) != len(fdWant.Values) {
+		return fmt.Errorf("got %d values, want: %d",
+			len(f.Values), len(fdWant.Values))
+	}
+	if f.Kind == fieldtype.Int || f.Kind == fieldtype.Float {
+		if f.Min.String() != fdWant.Min.String() ||
+			f.Max.String() != fdWant.Max.String() {
+			return fmt.Errorf("got min: %s and max: %s, want min: %s and max: %s",
+				f.Min, f.Max, fdWant.Min, fdWant.Max)
+		}
+	}
+	if f.Kind == fieldtype.Float {
+		if f.MaxDP != fdWant.MaxDP {
+			return fmt.Errorf("got maxDP: %d, want: %d", f.MaxDP, fdWant.MaxDP)
+		}
+	}
+
+	if f.NumValues != fdWant.NumValues {
+		return fmt.Errorf("got numValues: %d, numValues: %d",
+			f.NumValues, fdWant.NumValues)
+	}
+
+	return fieldValuesEqual(f.Values, fdWant.Values)
+}
+
+func fieldValuesEqual(
+	vdsGot map[string]Value,
+	vdsWant map[string]Value,
+) error {
+	if len(vdsGot) != len(vdsWant) {
+		return fmt.Errorf("got %d valueDescriptions, want: %d",
+			len(vdsGot), len(vdsWant))
+	}
+	for k, vdW := range vdsWant {
+		vdG, ok := vdsGot[k]
+		if !ok {
+			return fmt.Errorf("valueDescription missing value: %s", k)
+		}
+		if vdG.Num != vdW.Num || vdG.Value.String() != vdW.Value.String() {
+			return fmt.Errorf("got valueDescription: %v, want: %v", vdG, vdW)
+		}
+	}
+	return nil
 }
 
 func minI(x, y int64) int64 {
