@@ -60,6 +60,8 @@ type experimentFile struct {
 	SortOrder      []*sortDesc                    `yaml:"sortOrder"`
 	// An expression that works out whether to run the experiment
 	When string `yaml:"when"`
+	// A number 1..10 to describe how complex the rules should be
+	Complexity int `yaml:"complexity"`
 }
 
 type csvDesc struct {
@@ -92,7 +94,7 @@ func (e InvalidExtError) Error() string {
 	return "invalid extension: " + string(e)
 }
 
-const assessRulesNumStages = 3
+const assessRulesNumStages = 4
 
 func Process(
 	experimentFile fileinfo.FileInfo,
@@ -100,7 +102,23 @@ func Process(
 	l logger.Logger,
 	progressMonitor *progress.ProgressMonitor,
 ) error {
-	epr, err := progress.NewExperimentProgressReporter(
+	var assessment *rhkit.Assessment
+	var newAssessment *rhkit.Assessment
+	var err error
+	var epr *progress.ExperimentProgressReporter
+
+	reportExperimentFail := func(err error, errs ...error) error {
+		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
+			experimentFile.Name(), err))
+		switch len(errs) {
+		case 0:
+			return err
+		case 1:
+			return epr.ReportError(errs[0])
+		}
+		panic("wrong number of errors")
+	}
+	epr, err = progress.NewExperimentProgressReporter(
 		progressMonitor,
 		experimentFile.Name(),
 	)
@@ -109,7 +127,7 @@ func Process(
 	}
 	experimentFullFilename :=
 		filepath.Join(cfg.ExperimentsDir, experimentFile.Name())
-	experiment, tags, whenExpr, err :=
+	experiment, tags, whenExpr, complexity, err :=
 		loadExperiment(experimentFullFilename, cfg)
 	if err != nil {
 		fullErr := fmt.Errorf("Can't load experiment: %s, %s",
@@ -124,39 +142,33 @@ func Process(
 	l.Info(fmt.Sprintf("Processing experiment: %s", experimentFile.Name()))
 	err = epr.UpdateDetails(experiment.Title, tags)
 	if err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
-		return err
+		return reportExperimentFail(err)
 	}
 
 	if err := epr.ReportProgress("Describing dataset", 0); err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
-		return err
+		return reportExperimentFail(err)
 	}
 
 	dDescription, err :=
 		describeDataset(cfg, experimentFile.Name(), experiment.Dataset)
 	if err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't describe dataset: %s", err)
-		return epr.ReportError(fullErr)
+		return reportExperimentFail(err, fullErr)
 	}
 
 	if err := epr.ReportProgress("Generating rules", 0); err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
-		return err
+		return reportExperimentFail(err)
 	}
-	rules := rhkit.GenerateRules(dDescription, experiment.RuleFieldNames)
+	rules := rhkit.GenerateRules(
+		dDescription,
+		experiment.RuleFieldNames,
+		complexity,
+	)
 
-	assessment, err := assessRules(1, rules, experiment, epr, cfg)
+	assessment, err = assessRules(1, rules, experiment, epr, cfg)
 	if err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
-		return epr.ReportError(fullErr)
+		return reportExperimentFail(err, fullErr)
 	}
 
 	assessment.Sort(experiment.SortOrder)
@@ -164,72 +176,79 @@ func Process(
 	sortedRules := assessment.GetRules()
 
 	if err := epr.ReportProgress("Tweaking rules", 0); err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
-		return err
+		return reportExperimentFail(err)
 	}
-	tweakableRules := rhkit.TweakRules(1, sortedRules, dDescription)
+	tweakableRules := rule.Tweak(1, sortedRules, dDescription)
 
-	assessment2, err := assessRules(2, tweakableRules, experiment, epr, cfg)
+	newAssessment, err = assessRules(2, tweakableRules, experiment, epr, cfg)
 	if err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
-		return epr.ReportError(fullErr)
+		return reportExperimentFail(err, fullErr)
 	}
 
-	assessment3, err := assessment.Merge(assessment2)
+	assessment, err = assessment.Merge(newAssessment)
 	if err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
-		return epr.ReportError(fullErr)
+		return reportExperimentFail(err, fullErr)
 	}
-	assessment3.Sort(experiment.SortOrder)
-	assessment3.Refine()
+	assessment.Sort(experiment.SortOrder)
+	assessment.Refine()
+
+	sortedRules = assessment.GetRules()
+
+	if err := epr.ReportProgress("Reduce DP of rules", 0); err != nil {
+		return reportExperimentFail(err)
+	}
+	reducedDPRules := rule.ReduceDP(sortedRules)
+
+	newAssessment, err = assessRules(3, reducedDPRules, experiment, epr, cfg)
+	if err != nil {
+		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
+		return reportExperimentFail(err, fullErr)
+	}
+
+	assessment, err = assessment.Merge(newAssessment)
+	if err != nil {
+		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
+		return reportExperimentFail(err, fullErr)
+	}
+	assessment.Sort(experiment.SortOrder)
+	assessment.Refine()
 
 	numRulesToCombine := 50
-	bestNonCombinedRules := assessment3.GetRules(numRulesToCombine)
+	bestNonCombinedRules := assessment.GetRules(numRulesToCombine)
 	combinedRules := rhkit.CombineRules(bestNonCombinedRules)
 
-	assessment4, err := assessRules(3, combinedRules, experiment, epr, cfg)
+	assessment, err = assessRules(4, combinedRules, experiment, epr, cfg)
 	if err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
-		return epr.ReportError(fullErr)
+		return reportExperimentFail(err, fullErr)
 	}
 
-	assessment5, err := assessment3.Merge(assessment4)
+	assessment, err = assessment.Merge(newAssessment)
 	if err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
-		return epr.ReportError(fullErr)
+		return reportExperimentFail(err, fullErr)
 	}
 
-	assessment5.Sort(experiment.SortOrder)
-	assessment5.Refine()
-	assessment6 := assessment5.TruncateRuleAssessments(cfg.MaxNumReportRules)
+	assessment.Sort(experiment.SortOrder)
+	assessment.Refine()
+	assessment = assessment.TruncateRuleAssessments(cfg.MaxNumReportRules)
 
 	err = report.WriteJSON(
-		assessment6,
+		assessment,
 		experiment,
 		experimentFile.Name(),
 		tags,
 		cfg,
 	)
 	if err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
 		fullErr := fmt.Errorf("Couldn't write json report: %s", err)
-		return epr.ReportError(fullErr)
+		return reportExperimentFail(err, fullErr)
 	}
 
 	if err := epr.ReportSuccess(); err != nil {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
-		return err
+		return reportExperimentFail(err)
 	}
 
 	l.Info(
@@ -242,6 +261,7 @@ func loadExperiment(filename string, cfg *config.Config) (
 	experiment *rhexperiment.Experiment,
 	tags []string,
 	whenExpr *dexpr.Expr,
+	complexity int,
 	err error,
 ) {
 	var e *experimentFile
@@ -254,19 +274,23 @@ func loadExperiment(filename string, cfg *config.Config) (
 	case ".yaml":
 		e, err = loadYAML(filename)
 	default:
-		return nil, noTags, nil, InvalidExtError(ext)
+		return nil, noTags, nil, 0, InvalidExtError(ext)
 	}
 	if err != nil {
-		return nil, noTags, nil, err
+		return nil, noTags, nil, 0, err
+	}
+
+	if e.Complexity == 0 {
+		e.Complexity = 5
 	}
 
 	if err := e.checkValid(); err != nil {
-		return nil, noTags, nil, err
+		return nil, noTags, nil, 0, err
 	}
 
 	dataset, err := makeDataset(e)
 	if err != nil {
-		return nil, noTags, nil, err
+		return nil, noTags, nil, 0, err
 	}
 
 	if cfg.MaxNumRecords >= 1 {
@@ -287,14 +311,14 @@ func loadExperiment(filename string, cfg *config.Config) (
 	}
 	experiment, err = rhexperiment.New(experimentDesc)
 	if err != nil {
-		return nil, noTags, nil, err
+		return nil, noTags, nil, 0, err
 	}
 
 	whenExpr, err = makeWhenExpr(e.When)
 	if err != nil {
-		return nil, noTags, nil, InvalidWhenExprError(e.When)
+		return nil, noTags, nil, 0, InvalidWhenExprError(e.When)
 	}
-	return experiment, e.Tags, whenExpr, err
+	return experiment, e.Tags, whenExpr, e.Complexity, err
 }
 
 func makeRHSortOrder(sortOrder []*sortDesc) []*rhexperiment.SortDesc {
@@ -364,6 +388,9 @@ func makeDataset(e *experimentFile) (d ddataset.Dataset, err error) {
 func (e *experimentFile) checkValid() error {
 	if len(e.Title) == 0 {
 		return errors.New("Experiment field missing: title")
+	}
+	if e.Complexity < 1 || e.Complexity > 10 {
+		return errors.New("Experiment field out of range: complexity")
 	}
 	if len(e.Dataset) == 0 {
 		return errors.New("Experiment field missing: dataset")

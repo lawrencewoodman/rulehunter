@@ -26,8 +26,7 @@ type FieldType int
 const (
 	Unknown FieldType = iota
 	Ignore
-	Int
-	Float
+	Number
 	String
 )
 
@@ -37,10 +36,8 @@ func New(s string) FieldType {
 		return Unknown
 	case "Ignore":
 		return Ignore
-	case "Int":
-		return Int
-	case "Float":
-		return Float
+	case "Number":
+		return Number
 	case "String":
 		return String
 	}
@@ -53,10 +50,8 @@ func (ft FieldType) String() string {
 		return "Unknown"
 	case Ignore:
 		return "Ignore"
-	case Int:
-		return "Int"
-	case Float:
-		return "Float"
+	case Number:
+		return "Number"
 	case String:
 		return "String"
 	}

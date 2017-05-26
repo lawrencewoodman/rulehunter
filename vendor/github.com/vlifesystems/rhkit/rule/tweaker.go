@@ -17,26 +17,25 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package rhkit
+package rule
 
 import (
 	"github.com/vlifesystems/rhkit/description"
-	"github.com/vlifesystems/rhkit/rule"
 )
 
-func TweakRules(
+func Tweak(
 	stage int,
-	sortedRules []rule.Rule,
+	rules []Rule,
 	inputDescription *description.Description,
-) []rule.Rule {
-	newRules := make([]rule.Rule, 0)
-	for _, r := range sortedRules {
+) []Rule {
+	newRules := make([]Rule, 0)
+	for _, r := range rules {
 		switch x := r.(type) {
-		case rule.Tweaker:
+		case Tweaker:
 			rules := x.Tweak(inputDescription, stage)
 			newRules = append(newRules, rules...)
 		}
 	}
-	newRules = append(newRules, rule.NewTrue())
-	return rule.Uniq(newRules)
+	newRules = append(newRules, NewTrue())
+	return Uniq(newRules)
 }

@@ -23,11 +23,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/internal"
+	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 	"github.com/vlifesystems/rhkit/internal/fieldtype"
 	"io/ioutil"
-	"math"
 	"os"
 )
 
@@ -200,15 +201,13 @@ func (f *Field) updateKind(value *dlit.Literal) {
 	switch f.Kind {
 	case fieldtype.Unknown:
 		fallthrough
-	case fieldtype.Int:
+	case fieldtype.Number:
 		if _, isInt := value.Int(); isInt {
-			f.Kind = fieldtype.Int
+			f.Kind = fieldtype.Number
 			break
 		}
-		fallthrough
-	case fieldtype.Float:
 		if _, isFloat := value.Float(); isFloat {
-			f.Kind = fieldtype.Float
+			f.Kind = fieldtype.Number
 			break
 		}
 		f.Kind = fieldtype.String
@@ -240,24 +239,10 @@ func (f *Field) updateValues(value *dlit.Literal) {
 }
 
 func (f *Field) updateNumBoundaries(value *dlit.Literal) {
-	if f.Kind == fieldtype.Int {
-		valueInt, valueIsInt := value.Int()
-		minInt, minIsInt := f.Min.Int()
-		maxInt, maxIsInt := f.Max.Int()
-		if !valueIsInt || !minIsInt || !maxIsInt {
-			panic("Type mismatch")
-		}
-		f.Min = dlit.MustNew(minI(minInt, valueInt))
-		f.Max = dlit.MustNew(maxI(maxInt, valueInt))
-	} else if f.Kind == fieldtype.Float {
-		valueFloat, valueIsFloat := value.Float()
-		minFloat, minIsFloat := f.Min.Float()
-		maxFloat, maxIsFloat := f.Max.Float()
-		if !valueIsFloat || !minIsFloat || !maxIsFloat {
-			panic("Type mismatch")
-		}
-		f.Min = dlit.MustNew(math.Min(minFloat, valueFloat))
-		f.Max = dlit.MustNew(math.Max(maxFloat, valueFloat))
+	if f.Kind == fieldtype.Number {
+		vars := map[string]*dlit.Literal{"min": f.Min, "max": f.Max, "v": value}
+		f.Min = dexpr.Eval("min(min, v)", dexprfuncs.CallFuncs, vars)
+		f.Max = dexpr.Eval("max(max, v)", dexprfuncs.CallFuncs, vars)
 		f.MaxDP =
 			int(maxI(int64(f.MaxDP), int64(internal.NumDecPlaces(value.String()))))
 	}
@@ -271,14 +256,12 @@ func (f *Field) checkEqual(fdWant *Field) error {
 		return fmt.Errorf("got %d values, want: %d",
 			len(f.Values), len(fdWant.Values))
 	}
-	if f.Kind == fieldtype.Int || f.Kind == fieldtype.Float {
+	if f.Kind == fieldtype.Number {
 		if f.Min.String() != fdWant.Min.String() ||
 			f.Max.String() != fdWant.Max.String() {
 			return fmt.Errorf("got min: %s and max: %s, want min: %s and max: %s",
 				f.Min, f.Max, fdWant.Min, fdWant.Max)
 		}
-	}
-	if f.Kind == fieldtype.Float {
 		if f.MaxDP != fdWant.MaxDP {
 			return fmt.Errorf("got maxDP: %d, want: %d", f.MaxDP, fdWant.MaxDP)
 		}
@@ -310,13 +293,6 @@ func fieldValuesEqual(
 		}
 	}
 	return nil
-}
-
-func minI(x, y int64) int64 {
-	if x < y {
-		return x
-	}
-	return y
 }
 
 func maxI(x, y int64) int64 {

@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -70,13 +70,9 @@ func (r *Or) String() string {
 		aStr = "(" + aStr + ")"
 	case *Or:
 		aStr = "(" + aStr + ")"
-	case *BetweenFVI:
+	case *BetweenFV:
 		aStr = "(" + aStr + ")"
-	case *BetweenFVF:
-		aStr = "(" + aStr + ")"
-	case *OutsideFVI:
-		aStr = "(" + aStr + ")"
-	case *OutsideFVF:
+	case *OutsideFV:
 		aStr = "(" + aStr + ")"
 	}
 	switch r.ruleB.(type) {
@@ -84,13 +80,9 @@ func (r *Or) String() string {
 		bStr = "(" + bStr + ")"
 	case *Or:
 		bStr = "(" + bStr + ")"
-	case *BetweenFVI:
+	case *BetweenFV:
 		bStr = "(" + bStr + ")"
-	case *BetweenFVF:
-		bStr = "(" + bStr + ")"
-	case *OutsideFVI:
-		bStr = "(" + bStr + ")"
-	case *OutsideFVF:
+	case *OutsideFV:
 		bStr = "(" + bStr + ")"
 	}
 	return fmt.Sprintf("%s || %s", aStr, bStr)
@@ -140,64 +132,31 @@ func tryJoinRulesWithOutside(
 	fieldB := ruleB.GetFields()[0]
 
 	if fieldA == fieldB {
-		_, ruleAIsBetweenFVI := ruleA.(*BetweenFVI)
-		_, ruleAIsBetweenFVF := ruleA.(*BetweenFVF)
-		_, ruleBIsBetweenFVI := ruleB.(*BetweenFVI)
-		_, ruleBIsBetweenFVF := ruleB.(*BetweenFVF)
-		_, ruleAIsOutsideFVI := ruleA.(*OutsideFVI)
-		_, ruleAIsOutsideFVF := ruleA.(*OutsideFVF)
-		_, ruleBIsOutsideFVI := ruleB.(*OutsideFVI)
-		_, ruleBIsOutsideFVF := ruleB.(*OutsideFVF)
-		if ruleAIsBetweenFVI || ruleBIsBetweenFVI ||
-			ruleAIsBetweenFVF || ruleBIsBetweenFVF {
+		_, ruleAIsBetweenFV := ruleA.(*BetweenFV)
+		_, ruleBIsBetweenFV := ruleB.(*BetweenFV)
+		_, ruleAIsOutsideFV := ruleA.(*OutsideFV)
+		_, ruleBIsOutsideFV := ruleB.(*OutsideFV)
+		if ruleAIsBetweenFV || ruleBIsBetweenFV {
 			return true, nil
 		}
 
-		if ruleAIsOutsideFVI || ruleBIsOutsideFVI ||
-			ruleAIsOutsideFVF || ruleBIsOutsideFVF {
+		if ruleAIsOutsideFV || ruleBIsOutsideFV {
 			return false, nil
 		}
 
-		GEFVIRuleA, ruleAIsGEFVI := ruleA.(*GEFVI)
-		LEFVIRuleA, ruleAIsLEFVI := ruleA.(*LEFVI)
-		GEFVIRuleB, ruleBIsGEFVI := ruleB.(*GEFVI)
-		LEFVIRuleB, ruleBIsLEFVI := ruleB.(*LEFVI)
-		GEFVFRuleA, ruleAIsGEFVF := ruleA.(*GEFVF)
-		LEFVFRuleA, ruleAIsLEFVF := ruleA.(*LEFVF)
-		GEFVFRuleB, ruleBIsGEFVF := ruleB.(*GEFVF)
-		LEFVFRuleB, ruleBIsLEFVF := ruleB.(*LEFVF)
+		GEFVRuleA, ruleAIsGEFV := ruleA.(*GEFV)
+		LEFVRuleA, ruleAIsLEFV := ruleA.(*LEFV)
+		GEFVRuleB, ruleBIsGEFV := ruleB.(*GEFV)
+		LEFVRuleB, ruleBIsLEFV := ruleB.(*LEFV)
 
-		if (ruleAIsGEFVI && ruleBIsGEFVI) ||
-			(ruleAIsLEFVI && ruleBIsLEFVI) ||
-			(ruleAIsGEFVF && ruleBIsGEFVF) ||
-			(ruleAIsLEFVF && ruleBIsLEFVF) {
+		if (ruleAIsGEFV && ruleBIsGEFV) || (ruleAIsLEFV && ruleBIsLEFV) {
 			return false, nil
 		}
 
-		if ruleAIsGEFVI && ruleBIsLEFVI {
-			r, err = NewOutsideFVI(
-				fieldA,
-				LEFVIRuleB.GetValue(),
-				GEFVIRuleA.GetValue(),
-			)
-		} else if ruleAIsLEFVI && ruleBIsGEFVI {
-			r, err = NewOutsideFVI(
-				fieldA,
-				LEFVIRuleA.GetValue(),
-				GEFVIRuleB.GetValue(),
-			)
-		} else if ruleAIsGEFVF && ruleBIsLEFVF {
-			r, err = NewOutsideFVF(
-				fieldA,
-				LEFVFRuleB.GetValue(),
-				GEFVFRuleA.GetValue(),
-			)
-		} else if ruleAIsLEFVF && ruleBIsGEFVF {
-			r, err = NewOutsideFVF(
-				fieldA,
-				LEFVFRuleA.GetValue(),
-				GEFVFRuleB.GetValue(),
-			)
+		if ruleAIsGEFV && ruleBIsLEFV {
+			r, err = NewOutsideFV(fieldA, LEFVRuleB.Value(), GEFVRuleA.Value())
+		} else if ruleAIsLEFV && ruleBIsGEFV {
+			r, err = NewOutsideFV(fieldA, LEFVRuleA.Value(), GEFVRuleB.Value())
 		} else {
 			return true, nil
 		}

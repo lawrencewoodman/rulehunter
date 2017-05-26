@@ -26,6 +26,7 @@ import (
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	"math"
+	"strings"
 )
 
 var CallFuncs = map[string]dexpr.CallFun{}
@@ -121,6 +122,11 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 		r := dlit.MustNew(err)
 		return r, err
 	}
+
+	if _, isInt := args[0].Int(); isInt {
+		return args[0], nil
+	}
+
 	x, isFloat := args[0].Float()
 	if !isFloat {
 		if err := args[0].Err(); err != nil {
@@ -130,7 +136,7 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 		r := dlit.MustNew(err)
 		return r, err
 	}
-	p, isInt := args[1].Int()
+	dp, isInt := args[1].Int()
 	if !isInt {
 		if err := args[1].Err(); err != nil {
 			return args[1], err
@@ -139,9 +145,14 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 		r := dlit.MustNew(err)
 		return r, err
 	}
-	shift := math.Pow(10, float64(p))
-	r, err := dlit.New(math.Floor(.5+x*shift) / shift)
-	return r, err
+
+	// Prevent rounding errors where too high dp is used
+	xNumDP := numDecPlaces(args[0].String())
+	if dp > int64(xNumDP) {
+		dp = int64(xNumDP)
+	}
+	shift := math.Pow(10, float64(dp))
+	return dlit.New(math.Floor(.5+x*shift) / shift)
 }
 
 // in returns whether a string is in a slice strings
@@ -233,4 +244,13 @@ func max(args []*dlit.Literal) (*dlit.Literal, error) {
 // alwaysTrue returns true
 func alwaysTrue(args []*dlit.Literal) (*dlit.Literal, error) {
 	return trueLiteral, nil
+}
+
+func numDecPlaces(s string) int {
+	i := strings.IndexByte(s, '.')
+	if i > -1 {
+		s = strings.TrimRight(s, "0")
+		return len(s) - i - 1
+	}
+	return 0
 }

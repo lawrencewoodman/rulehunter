@@ -28,78 +28,100 @@ import (
 	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 )
 
-// BetweenFVI represents a rule determining if:
-// field >= intValue && field <= intValue
-type BetweenFVI struct {
+// BetweenFV represents a rule determining if:
+// field >= minValue && field <= maxValue
+type BetweenFV struct {
 	field string
-	min   int64
-	max   int64
+	min   *dlit.Literal
+	max   *dlit.Literal
 }
 
-func NewBetweenFVI(
+func NewBetweenFV(
 	field string,
-	min int64,
-	max int64,
-) (*BetweenFVI, error) {
-	if max <= min {
-		return nil,
-			fmt.Errorf("can't create Between rule where max: %d <= min: %d", max, min)
+	min *dlit.Literal,
+	max *dlit.Literal,
+) (*BetweenFV, error) {
+	vars := map[string]*dlit.Literal{
+		"max": max,
+		"min": min,
 	}
-	return &BetweenFVI{field: field, min: min, max: max}, nil
+	ok, err := dexpr.EvalBool("max > min", dexprfuncs.CallFuncs, vars)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil,
+			fmt.Errorf("can't create Between rule where max: %s <= min: %s", max, min)
+	}
+	return &BetweenFV{field: field, min: min, max: max}, nil
 }
 
-func MustNewBetweenFVI(field string, min int64, max int64) *BetweenFVI {
-	r, err := NewBetweenFVI(field, min, max)
+func MustNewBetweenFV(
+	field string,
+	min *dlit.Literal,
+	max *dlit.Literal,
+) *BetweenFV {
+	r, err := NewBetweenFV(field, min, max)
 	if err != nil {
 		panic(err)
 	}
 	return r
 }
 
-func (r *BetweenFVI) GetMin() int64 {
+func (r *BetweenFV) GetMin() *dlit.Literal {
 	return r.min
 }
 
-func (r *BetweenFVI) GetMax() int64 {
+func (r *BetweenFV) GetMax() *dlit.Literal {
 	return r.max
 }
 
-func (r *BetweenFVI) String() string {
-	return fmt.Sprintf("%s >= %d && %s <= %d", r.field, r.min, r.field, r.max)
+func (r *BetweenFV) String() string {
+	return fmt.Sprintf("%s >= %s && %s <= %s", r.field, r.min, r.field, r.max)
 }
 
-func (r *BetweenFVI) IsTrue(record ddataset.Record) (bool, error) {
+func (r *BetweenFV) IsTrue(record ddataset.Record) (bool, error) {
 	value, ok := record[r.field]
 	if !ok {
 		return false, InvalidRuleError{Rule: r}
 	}
+	if vInt, vIsInt := value.Int(); vIsInt {
+		if minInt, minIsInt := r.min.Int(); minIsInt {
+			if maxInt, maxIsInt := r.max.Int(); maxIsInt {
+				return vInt >= minInt && vInt <= maxInt, nil
+			}
+		}
+	}
 
-	valueInt, valueIsInt := value.Int()
-	if valueIsInt {
-		return valueInt >= r.min && valueInt <= r.max, nil
+	if vFloat, vIsFloat := value.Float(); vIsFloat {
+		if minFloat, minIsFloat := r.min.Float(); minIsFloat {
+			if maxFloat, maxIsFloat := r.max.Float(); maxIsFloat {
+				return vFloat >= minFloat && vFloat <= maxFloat, nil
+			}
+		}
 	}
 
 	return false, IncompatibleTypesRuleError{Rule: r}
 }
 
-func (r *BetweenFVI) GetFields() []string {
+func (r *BetweenFV) GetFields() []string {
 	return []string{r.field}
 }
 
-func (r *BetweenFVI) Tweak(
+func (r *BetweenFV) Tweak(
 	inputDescription *description.Description,
 	stage int,
 ) []Rule {
 	rules := make([]Rule, 0)
 	pointsL := generateTweakPoints(
-		dlit.MustNew(r.min),
+		r.min,
 		inputDescription.Fields[r.field].Min,
 		inputDescription.Fields[r.field].Max,
 		inputDescription.Fields[r.field].MaxDP,
 		stage,
 	)
 	pointsH := generateTweakPoints(
-		dlit.MustNew(r.max),
+		r.max,
 		inputDescription.Fields[r.field].Min,
 		inputDescription.Fields[r.field].Max,
 		inputDescription.Fields[r.field].MaxDP,
@@ -112,11 +134,8 @@ func (r *BetweenFVI) Tweak(
 				"pL": pL,
 				"pH": pH,
 			}
-			pLInt, pLIsInt := pL.Int()
-			pHInt, pHIsInt := pH.Int()
-			isValid, err := isValidExpr.EvalBool(vars)
-			if pLIsInt && pHIsInt && err == nil && isValid {
-				r := MustNewBetweenFVI(r.field, pLInt, pHInt)
+			if ok, err := isValidExpr.EvalBool(vars); ok && err == nil {
+				r := MustNewBetweenFV(r.field, pL, pH)
 				rules = append(rules, r)
 			}
 		}
@@ -124,14 +143,25 @@ func (r *BetweenFVI) Tweak(
 	return rules
 }
 
-func (r *BetweenFVI) Overlaps(o Rule) bool {
+func (r *BetweenFV) Overlaps(o Rule) bool {
+	rangeOverlaps := dexpr.MustNew(
+		"((oMin >= min && oMin <= max) || (oMax >= min && oMax <= max))",
+		dexprfuncs.CallFuncs,
+	)
 	switch x := o.(type) {
-	case *BetweenFVI:
-		oMin := x.GetMin()
-		oMax := x.GetMax()
+	case *BetweenFV:
+		vars := map[string]*dlit.Literal{
+			"oMin": x.GetMin(),
+			"oMax": x.GetMax(),
+			"min":  r.min,
+			"max":  r.max,
+		}
 		oField := x.GetFields()[0]
-		return oField == r.field &&
-			((oMin >= r.min && oMin <= r.max) || (oMax >= r.min && oMax <= r.max))
+		overlap, err := rangeOverlaps.EvalBool(vars)
+		if err != nil {
+			panic(err)
+		}
+		return oField == r.field && overlap
 	}
 	return false
 }

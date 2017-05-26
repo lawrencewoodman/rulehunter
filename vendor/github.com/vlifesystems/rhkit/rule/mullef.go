@@ -27,30 +27,34 @@ import (
 	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 )
 
-// AddLEF represents a rule determining if fieldA + fieldB <= floatValue
-type AddLEF struct {
+// MulLEF represents a rule determining if fieldA * fieldB <= value
+type MulLEF struct {
 	fieldA string
 	fieldB string
 	value  *dlit.Literal
 }
 
-func NewAddLEF(fieldA string, fieldB string, value *dlit.Literal) *AddLEF {
-	return &AddLEF{fieldA: fieldA, fieldB: fieldB, value: value}
+func NewMulLEF(fieldA string, fieldB string, value *dlit.Literal) *MulLEF {
+	return &MulLEF{fieldA: fieldA, fieldB: fieldB, value: value}
 }
 
-func (r *AddLEF) String() string {
-	return r.fieldA + " + " + r.fieldB + " <= " + r.value.String()
+func (r *MulLEF) String() string {
+	return r.fieldA + " * " + r.fieldB + " <= " + r.value.String()
 }
 
-func (r *AddLEF) GetFields() []string {
+func (r *MulLEF) GetFields() []string {
 	return []string{r.fieldA, r.fieldB}
+}
+
+func (r *MulLEF) Value() *dlit.Literal {
+	return r.value
 }
 
 // IsTrue returns whether the rule is true for this record.
 // This rule relies on making sure that the two fields when
 // added will not overflow, so this must have been checked
-// before hand by looking at their max/min in the input description.
-func (r *AddLEF) IsTrue(record ddataset.Record) (bool, error) {
+// beforehand by looking at their max/min in the input description.
+func (r *MulLEF) IsTrue(record ddataset.Record) (bool, error) {
 	vA, ok := record[r.fieldA]
 	if !ok {
 		return false, InvalidRuleError{Rule: r}
@@ -61,25 +65,27 @@ func (r *AddLEF) IsTrue(record ddataset.Record) (bool, error) {
 		return false, InvalidRuleError{Rule: r}
 	}
 
-	if vAInt, vAIsInt := vA.Int(); vAIsInt {
-		if vBInt, vBIsInt := vB.Int(); vBIsInt {
-			if i, iIsInt := r.value.Int(); iIsInt {
-				return vAInt+vBInt <= i, nil
+	vAInt, vAIsInt := vA.Int()
+	if vAIsInt {
+		vBInt, vBIsInt := vB.Int()
+		if vBIsInt {
+			if i, ok := r.value.Int(); ok {
+				return vAInt*vBInt <= i, nil
 			}
 		}
 	}
 
-	if vAFloat, vAIsFloat := vA.Float(); vAIsFloat {
-		if vBFloat, vBIsFloat := vB.Float(); vBIsFloat {
-			if f, fIsFloat := r.value.Float(); fIsFloat {
-				return vAFloat+vBFloat <= f, nil
-			}
-		}
+	vAFloat, vAIsFloat := vA.Float()
+	vBFloat, vBIsFloat := vB.Float()
+	valueFloat, valueIsFloat := r.value.Float()
+	if !vAIsFloat || !vBIsFloat || !valueIsFloat {
+		return false, IncompatibleTypesRuleError{Rule: r}
 	}
-	return false, IncompatibleTypesRuleError{Rule: r}
+
+	return vAFloat*vBFloat <= valueFloat, nil
 }
 
-func (r *AddLEF) Tweak(
+func (r *MulLEF) Tweak(
 	inputDescription *description.Description,
 	stage int,
 ) []Rule {
@@ -95,19 +101,19 @@ func (r *AddLEF) Tweak(
 		maxDP = bMaxDP
 	}
 	rules := make([]Rule, 0)
-	min := dexpr.Eval("aMin + bMin", dexprfuncs.CallFuncs, vars)
-	max := dexpr.Eval("aMax + bMax", dexprfuncs.CallFuncs, vars)
+	min := dexpr.Eval("aMin * bMin", dexprfuncs.CallFuncs, vars)
+	max := dexpr.Eval("aMax * bMax", dexprfuncs.CallFuncs, vars)
 	points := generateTweakPoints(r.value, min, max, maxDP, stage)
 	for _, p := range points {
-		r := NewAddLEF(r.fieldA, r.fieldB, p)
+		r := NewMulLEF(r.fieldA, r.fieldB, p)
 		rules = append(rules, r)
 	}
 	return rules
 }
 
-func (r *AddLEF) Overlaps(o Rule) bool {
+func (r *MulLEF) Overlaps(o Rule) bool {
 	switch x := o.(type) {
-	case *AddLEF:
+	case *MulLEF:
 		oFields := x.GetFields()
 		if r.fieldA == oFields[0] && r.fieldB == oFields[1] {
 			return true
@@ -116,8 +122,8 @@ func (r *AddLEF) Overlaps(o Rule) bool {
 	return false
 }
 
-func (r *AddLEF) DPReduce() []Rule {
+func (r *MulLEF) DPReduce() []Rule {
 	return roundRules(r.value, func(p *dlit.Literal) Rule {
-		return NewAddLEF(r.fieldA, r.fieldB, p)
+		return NewMulLEF(r.fieldA, r.fieldB, p)
 	})
 }

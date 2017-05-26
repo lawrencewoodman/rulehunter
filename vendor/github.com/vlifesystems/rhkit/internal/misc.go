@@ -36,50 +36,52 @@ func NumDecPlaces(s string) int {
 	return 0
 }
 
+// GeneratePoints will generate numbers between two points (min..max).
+// It will round each number to maxDP decimal places
 func GeneratePoints(min, max *dlit.Literal, maxDP int) []*dlit.Literal {
-	// Nice DP to work with, in this order to prevent earlier stopping from
-	// rounding a number beyond max at end
-	dps := []int{maxDP, 3, 2, 1, 0}
 	points := make(map[string]*dlit.Literal)
 	vars := map[string]*dlit.Literal{
-		"min":   min,
-		"max":   max,
-		"maxDP": dlit.MustNew(maxDP),
-		"n":     min,
+		"min": min,
+		"max": max,
+		"n":   min,
 	}
 	vars["diff"] = dexpr.Eval("max - min", dexprfuncs.CallFuncs, vars)
-	vars["step"] = dexpr.Eval(
-		"roundto(diff / 20, maxDP)",
-		dexprfuncs.CallFuncs,
-		vars,
-	)
+	vars["step"] = dexpr.Eval("diff / 20", dexprfuncs.CallFuncs, vars)
 	if vars["step"].String() == "0" {
 		vars["step"] = dlit.MustNew(1)
 	}
 
 	nextNExpr := dexpr.MustNew("n + step", dexprfuncs.CallFuncs)
 	stopExpr := dexpr.MustNew("v >= max", dexprfuncs.CallFuncs)
-	roundExpr := dexpr.MustNew("roundto(n, dp)", dexprfuncs.CallFuncs)
+	tooLowExpr := dexpr.MustNew("v <= min", dexprfuncs.CallFuncs)
 	stop := false
 	for !stop {
 		vars["n"] = nextNExpr.Eval(vars)
-		for _, dp := range dps {
-			vars["dp"] = dlit.MustNew(dp)
-			v := roundExpr.Eval(vars)
-			vars["v"] = v
-			if shouldStop, err := stopExpr.EvalBool(vars); shouldStop || err != nil {
-				stop = true
-				break
-			} else {
-				points[v.String()] = v
-			}
+		vars["v"] = RoundLit(vars["n"], maxDP)
+		if shouldStop, err := stopExpr.EvalBool(vars); shouldStop || err != nil {
+			stop = true
+			break
+		}
+		if tooLow, err := tooLowExpr.EvalBool(vars); !tooLow && err == nil {
+			points[vars["v"].String()] = vars["v"]
 		}
 	}
 
-	r := make([]*dlit.Literal, len(points))
+	return MapLitNumsToSlice(points)
+}
+
+var roundExpr = dexpr.MustNew("roundto(n, dp)", dexprfuncs.CallFuncs)
+
+func RoundLit(l *dlit.Literal, dp int) *dlit.Literal {
+	vars := map[string]*dlit.Literal{"n": l, "dp": dlit.MustNew(dp)}
+	return roundExpr.Eval(vars)
+}
+
+func MapLitNumsToSlice(nums map[string]*dlit.Literal) []*dlit.Literal {
+	r := make([]*dlit.Literal, len(nums))
 	i := 0
-	for _, p := range points {
-		r[i] = p
+	for _, n := range nums {
+		r[i] = n
 		i++
 	}
 

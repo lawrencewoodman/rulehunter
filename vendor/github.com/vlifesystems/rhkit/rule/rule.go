@@ -39,11 +39,19 @@ type Rule interface {
 }
 
 type Tweaker interface {
-	Tweak(*description.Description, int) []Rule
+	Tweak(desc *description.Description, stage int) []Rule
 }
 
 type Overlapper interface {
 	Overlaps(o Rule) bool
+}
+
+type DPReducer interface {
+	DPReduce() []Rule
+}
+
+type Valuer interface {
+	Value() *dlit.Literal
 }
 
 type InvalidRuleError struct {
@@ -80,6 +88,21 @@ func Uniq(rules []Rule) []Rule {
 	return results
 }
 
+// ReduceDP returns decimal number reduced rules if they can be reduced.
+// Adds True rule at end.
+func ReduceDP(rules []Rule) []Rule {
+	newRules := make([]Rule, 0)
+	for _, r := range rules {
+		switch x := r.(type) {
+		case DPReducer:
+			rules := x.DPReduce()
+			newRules = append(newRules, rules...)
+		}
+	}
+	newRules = append(newRules, NewTrue())
+	return Uniq(newRules)
+}
+
 func commaJoinValues(values []*dlit.Literal) string {
 	str := fmt.Sprintf("\"%s\"", values[0].String())
 	for _, v := range values[1:] {
@@ -104,7 +127,6 @@ func generateTweakPoints(
 	maxDP int,
 	stage int,
 ) []*dlit.Literal {
-	matchValueExpr := dexpr.MustNew("value == p", dexprfuncs.CallFuncs)
 	vars := map[string]*dlit.Literal{
 		"min":   min,
 		"max":   max,
@@ -118,19 +140,38 @@ func generateTweakPoints(
 			dexprfuncs.CallFuncs,
 			vars,
 		)
+	validValueExpr := dexpr.MustNew(
+		"rp > min && rp != value && rp < max",
+		dexprfuncs.CallFuncs,
+	)
 	low := dexpr.Eval("max(min, value - step)", dexprfuncs.CallFuncs, vars)
 	high := dexpr.Eval("min(max, value + step)", dexprfuncs.CallFuncs, vars)
 	points := internal.GeneratePoints(low, high, maxDP)
-	r := make([]*dlit.Literal, 0)
+	tweakPoints := map[string]*dlit.Literal{}
+
 	for _, p := range points {
 		vars["p"] = p
-		match, err := matchValueExpr.EvalBool(vars)
-		if err != nil {
-			return r
-		}
-		if !match {
-			r = append(r, p)
+		vars["rp"] = internal.RoundLit(p, maxDP)
+		if ok, err := validValueExpr.EvalBool(vars); ok && err == nil {
+			tweakPoints[vars["rp"].String()] = vars["rp"]
 		}
 	}
-	return r
+
+	return internal.MapLitNumsToSlice(tweakPoints)
+}
+
+type makeRoundRule func(*dlit.Literal) Rule
+
+func roundRules(v *dlit.Literal, makeRule makeRoundRule) []Rule {
+	rulesMap := map[string]Rule{}
+	rules := []Rule{}
+	for dp := 200; dp >= 0; dp-- {
+		p := internal.RoundLit(v, dp)
+		r := makeRule(p)
+		if _, ok := rulesMap[r.String()]; !ok {
+			rulesMap[r.String()] = r
+			rules = append(rules, r)
+		}
+	}
+	return rules
 }

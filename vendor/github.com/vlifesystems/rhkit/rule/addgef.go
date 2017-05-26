@@ -47,7 +47,7 @@ func (r *AddGEF) GetFields() []string {
 }
 
 // IsTrue returns whether the rule is true for this record.
-// This rule relies on making shure that the two fields when
+// This rule relies on making sure that the two fields when
 // added will not overflow, so this must have been checked
 // before hand by looking at their max/min in the input description.
 func (r *AddGEF) IsTrue(record ddataset.Record) (bool, error) {
@@ -116,4 +116,10 @@ func (r *AddGEF) Overlaps(o Rule) bool {
 		}
 	}
 	return false
+}
+
+func (r *AddGEF) DPReduce() []Rule {
+	return roundRules(r.value, func(p *dlit.Literal) Rule {
+		return NewAddGEF(r.fieldA, r.fieldB, p)
+	})
 }

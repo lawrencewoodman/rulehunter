@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -47,6 +47,11 @@ type mccInstance struct {
 // overflow/underflow errors
 var mccExpr = dexpr.MustNew(
 	"((tp*tn)-(fp*fn))/sqrt((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))",
+	dexprfuncs.CallFuncs,
+)
+
+var radicandIsZeroExpr = dexpr.MustNew(
+	"((tp+fp) * (tp+fn) * (tn+fp) * (tn+fn)) == 0",
 	dexprfuncs.CallFuncs,
 )
 
@@ -135,11 +140,11 @@ func (ai *mccInstance) GetResult(
 		"fp": dlit.MustNew(ai.numFalsePositives),
 		"fn": dlit.MustNew(ai.numFalseNegatives),
 	}
-	sums := (ai.numTruePositives + ai.numFalsePositives) *
-		(ai.numTruePositives + ai.numFalseNegatives) *
-		(ai.numTrueNegatives + ai.numFalsePositives) *
-		(ai.numTrueNegatives + ai.numFalseNegatives)
-	if sums == 0 {
+	radIsZero, err := radicandIsZeroExpr.EvalBool(vars)
+	if err != nil {
+		return dlit.MustNew(err)
+	}
+	if radIsZero {
 		return dlit.MustNew(0)
 	}
 	return mccExpr.Eval(vars)

@@ -35,9 +35,11 @@ func TestLoadExperiment(t *testing.T) {
 		wantExperiment *experiment.Experiment
 		wantTags       []string
 		wantWhenExpr   *dexpr.Expr
+		wantComplexity int
 	}{
-		{&config.Config{MaxNumRecords: -1}, filepath.Join("fixtures", "flow.json"),
-			&experiment.Experiment{
+		{cfg: &config.Config{MaxNumRecords: -1},
+			filename: filepath.Join("fixtures", "flow.json"),
+			wantExperiment: &experiment.Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dcsv.New(
 					filepath.Join("fixtures", "flow.csv"),
@@ -62,11 +64,13 @@ func TestLoadExperiment(t *testing.T) {
 					experiment.SortField{"numMatches", experiment.DESCENDING},
 				},
 			},
-			[]string{"test", "fred / ned"},
-			dexpr.MustNew("!hasRun", funcs),
+			wantTags:       []string{"test", "fred / ned"},
+			wantWhenExpr:   dexpr.MustNew("!hasRun", funcs),
+			wantComplexity: 5,
 		},
-		{&config.Config{MaxNumRecords: 4}, filepath.Join("fixtures", "flow.json"),
-			&experiment.Experiment{
+		{cfg: &config.Config{MaxNumRecords: 4},
+			filename: filepath.Join("fixtures", "flow.json"),
+			wantExperiment: &experiment.Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dtruncate.New(
 					dcsv.New(
@@ -94,11 +98,13 @@ func TestLoadExperiment(t *testing.T) {
 					experiment.SortField{"numMatches", experiment.DESCENDING},
 				},
 			},
-			[]string{"test", "fred / ned"},
-			dexpr.MustNew("!hasRun", funcs),
+			wantTags:       []string{"test", "fred / ned"},
+			wantWhenExpr:   dexpr.MustNew("!hasRun", funcs),
+			wantComplexity: 5,
 		},
-		{&config.Config{MaxNumRecords: -1}, filepath.Join("fixtures", "debt.json"),
-			&experiment.Experiment{
+		{cfg: &config.Config{MaxNumRecords: -1},
+			filename: filepath.Join("fixtures", "debt.json"),
+			wantExperiment: &experiment.Experiment{
 				Title: "What would predict people being helped to be debt free?",
 				Dataset: dcsv.New(
 					filepath.Join("..", "fixtures", "debt.csv"),
@@ -136,11 +142,16 @@ func TestLoadExperiment(t *testing.T) {
 					experiment.SortField{"numMatches", experiment.DESCENDING},
 				},
 			},
-			[]string{"debt"},
-			dexpr.MustNew("!hasRunToday || sinceLastRunHours > 2", funcs),
+			wantTags: []string{"debt"},
+			wantWhenExpr: dexpr.MustNew(
+				"!hasRunToday || sinceLastRunHours > 2",
+				funcs,
+			),
+			wantComplexity: 5,
 		},
-		{&config.Config{MaxNumRecords: -1}, filepath.Join("fixtures", "flow.yaml"),
-			&experiment.Experiment{
+		{cfg: &config.Config{MaxNumRecords: -1},
+			filename: filepath.Join("fixtures", "flow.yaml"),
+			wantExperiment: &experiment.Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dcsv.New(
 					filepath.Join("fixtures", "flow.csv"),
@@ -165,12 +176,75 @@ func TestLoadExperiment(t *testing.T) {
 					experiment.SortField{"numMatches", experiment.DESCENDING},
 				},
 			},
-			[]string{"test", "fred / ned"},
-			dexpr.MustNew("!hasRun", funcs),
+			wantTags:       []string{"test", "fred / ned"},
+			wantWhenExpr:   dexpr.MustNew("!hasRun", funcs),
+			wantComplexity: 5,
+		},
+		{cfg: &config.Config{MaxNumRecords: -1},
+			filename: filepath.Join("fixtures", "flow_complex_one.yaml"),
+			wantExperiment: &experiment.Experiment{
+				Title: "What would indicate good flow?",
+				Dataset: dcsv.New(
+					filepath.Join("fixtures", "flow.csv"),
+					true,
+					rune(','),
+					[]string{"group", "district", "height", "flow"},
+				),
+				RuleFieldNames: []string{"group", "district", "height"},
+				Aggregators: []aggregators.AggregatorSpec{
+					aggregators.MustNew("numMatches", "count", "true()"),
+					aggregators.MustNew(
+						"percentMatches",
+						"calc",
+						"roundto(100.0 * numMatches / numRecords, 2)",
+					),
+					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
+					aggregators.MustNew("goalsScore", "goalsscore"),
+				},
+				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
+				SortOrder: []experiment.SortField{
+					experiment.SortField{"goodFlowMcc", experiment.DESCENDING},
+					experiment.SortField{"numMatches", experiment.DESCENDING},
+				},
+			},
+			wantTags:       []string{"test", "fred / ned"},
+			wantWhenExpr:   dexpr.MustNew("!hasRun", funcs),
+			wantComplexity: 1,
+		},
+		{cfg: &config.Config{MaxNumRecords: -1},
+			filename: filepath.Join("fixtures", "flow_complex_ten.yaml"),
+			wantExperiment: &experiment.Experiment{
+				Title: "What would indicate good flow?",
+				Dataset: dcsv.New(
+					filepath.Join("fixtures", "flow.csv"),
+					true,
+					rune(','),
+					[]string{"group", "district", "height", "flow"},
+				),
+				RuleFieldNames: []string{"group", "district", "height"},
+				Aggregators: []aggregators.AggregatorSpec{
+					aggregators.MustNew("numMatches", "count", "true()"),
+					aggregators.MustNew(
+						"percentMatches",
+						"calc",
+						"roundto(100.0 * numMatches / numRecords, 2)",
+					),
+					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
+					aggregators.MustNew("goalsScore", "goalsscore"),
+				},
+				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
+				SortOrder: []experiment.SortField{
+					experiment.SortField{"goodFlowMcc", experiment.DESCENDING},
+					experiment.SortField{"numMatches", experiment.DESCENDING},
+				},
+			},
+			wantTags:       []string{"test", "fred / ned"},
+			wantWhenExpr:   dexpr.MustNew("!hasRun", funcs),
+			wantComplexity: 10,
 		},
 	}
 	for _, c := range cases {
-		gotExperiment, gotTags, gotWhenExpr, err :=
+		gotExperiment, gotTags, gotWhenExpr, gotComplexity, err :=
 			loadExperiment(c.filename, c.cfg)
 		if err != nil {
 			t.Fatalf("loadExperiment(%s) err: %s", c.filename, err)
@@ -185,6 +259,10 @@ func TestLoadExperiment(t *testing.T) {
 		if gotWhenExpr.String() != c.wantWhenExpr.String() {
 			t.Errorf("loadExperiment(%s) gotWhenExpr: %s, wantWhenExpr: %s",
 				c.filename, gotWhenExpr, c.wantWhenExpr)
+		}
+		if gotComplexity != c.wantComplexity {
+			t.Errorf("loadExperiment(%s) gotComplexity: %d, wantComplexity: %d",
+				c.filename, gotComplexity, c.wantComplexity)
 		}
 		if !reflect.DeepEqual(gotTags, c.wantTags) {
 			t.Errorf("loadExperiment(%s) gotTags: %s, wantTags: %s",
@@ -243,10 +321,14 @@ func TestLoadExperiment_error(t *testing.T) {
 		{filepath.Join("fixtures", "flow_invalid.yaml"),
 			errors.New("yaml: line 3: did not find expected key"),
 		},
+		{filepath.Join("fixtures", "flow_complex_minus.yaml"),
+			errors.New("Experiment field out of range: complexity")},
+		{filepath.Join("fixtures", "flow_complex_eleven.yaml"),
+			errors.New("Experiment field out of range: complexity")},
 	}
 	cfg := &config.Config{MaxNumRecords: -1}
 	for _, c := range cases {
-		_, _, _, err := loadExperiment(c.filename, cfg)
+		_, _, _, _, err := loadExperiment(c.filename, cfg)
 		if err == nil {
 			t.Errorf("loadExperiment(%s) no error, wantErr:%s",
 				c.filename, c.wantErr)

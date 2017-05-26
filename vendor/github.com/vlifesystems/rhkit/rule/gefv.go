@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -20,76 +20,84 @@
 package rule
 
 import (
+	"fmt"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/description"
-	"strconv"
 )
 
-// LEFVF represents a rule determining if fieldA <= floatValue
-type LEFVF struct {
+// GEFV represents a rule determining if field >= value
+type GEFV struct {
 	field string
-	value float64
+	value *dlit.Literal
 }
 
-func NewLEFVF(field string, value float64) *LEFVF {
-	return &LEFVF{field: field, value: value}
+func NewGEFV(field string, value *dlit.Literal) *GEFV {
+	return &GEFV{field: field, value: value}
 }
 
-func (r *LEFVF) String() string {
-	return r.field + " <= " + strconv.FormatFloat(r.value, 'f', -1, 64)
+func (r *GEFV) String() string {
+	return fmt.Sprintf("%s >= %s", r.field, r.value)
 }
 
-func (r *LEFVF) GetValue() float64 {
+func (r *GEFV) Value() *dlit.Literal {
 	return r.value
 }
 
-func (r *LEFVF) GetFields() []string {
-	return []string{r.field}
-}
-
-func (r *LEFVF) IsTrue(record ddataset.Record) (bool, error) {
+func (r *GEFV) IsTrue(record ddataset.Record) (bool, error) {
 	lh, ok := record[r.field]
 	if !ok {
 		return false, InvalidRuleError{Rule: r}
 	}
 
-	lhFloat, lhIsFloat := lh.Float()
-	if lhIsFloat {
-		return lhFloat <= r.value, nil
+	if lhInt, lhIsInt := lh.Int(); lhIsInt {
+		if v, ok := r.value.Int(); ok {
+			return lhInt >= v, nil
+		}
 	}
 
+	if lhFloat, lhIsFloat := lh.Float(); lhIsFloat {
+		if v, ok := r.value.Float(); ok {
+			return lhFloat >= v, nil
+		}
+	}
 	return false, IncompatibleTypesRuleError{Rule: r}
 }
 
-func (r *LEFVF) Tweak(
+func (r *GEFV) Tweak(
 	inputDescription *description.Description,
 	stage int,
 ) []Rule {
 	rules := make([]Rule, 0)
 	points := generateTweakPoints(
-		dlit.MustNew(r.value),
+		r.value,
 		inputDescription.Fields[r.field].Min,
 		inputDescription.Fields[r.field].Max,
 		inputDescription.Fields[r.field].MaxDP,
 		stage,
 	)
 	for _, p := range points {
-		pFloat, pIsFloat := p.Float()
-		if !pIsFloat {
-			continue
-		}
-		r := NewLEFVF(r.field, pFloat)
+		r := NewGEFV(r.field, p)
 		rules = append(rules, r)
 	}
 	return rules
 }
 
-func (r *LEFVF) Overlaps(o Rule) bool {
+func (r *GEFV) GetFields() []string {
+	return []string{r.field}
+}
+
+func (r *GEFV) Overlaps(o Rule) bool {
 	switch x := o.(type) {
-	case *LEFVF:
+	case *GEFV:
 		oField := x.GetFields()[0]
 		return r.field == oField
 	}
 	return false
+}
+
+func (r *GEFV) DPReduce() []Rule {
+	return roundRules(r.value, func(p *dlit.Literal) Rule {
+		return NewGEFV(r.field, p)
+	})
 }
