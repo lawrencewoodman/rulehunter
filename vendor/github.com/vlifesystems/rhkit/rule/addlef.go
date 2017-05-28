@@ -42,7 +42,7 @@ func (r *AddLEF) String() string {
 	return r.fieldA + " + " + r.fieldB + " <= " + r.value.String()
 }
 
-func (r *AddLEF) GetFields() []string {
+func (r *AddLEF) Fields() []string {
 	return []string{r.fieldA, r.fieldB}
 }
 
@@ -108,7 +108,7 @@ func (r *AddLEF) Tweak(
 func (r *AddLEF) Overlaps(o Rule) bool {
 	switch x := o.(type) {
 	case *AddLEF:
-		oFields := x.GetFields()
+		oFields := x.Fields()
 		if r.fieldA == oFields[0] && r.fieldB == oFields[1] {
 			return true
 		}

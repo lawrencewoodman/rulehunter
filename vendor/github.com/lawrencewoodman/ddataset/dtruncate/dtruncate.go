@@ -1,7 +1,7 @@
 /*
  * A Go package to handle access to a truncated subset of a Dataset
  *
- * Copyright (C) 2016 Lawrence Woodman <lwoodman@vlifesystems.com>
+ * Copyright (C) 2016-2017 Lawrence Woodman <lwoodman@vlifesystems.com>
  *
  * Licensed under an MIT licence.  Please see LICENCE.md for details.
  */
@@ -49,9 +49,9 @@ func (r *DTruncate) Open() (ddataset.Conn, error) {
 	}, nil
 }
 
-// GetFieldNames returns the field names used by the Dataset
-func (r *DTruncate) GetFieldNames() []string {
-	return r.dataset.GetFieldNames()
+// Fields returns the field names used by the Dataset
+func (r *DTruncate) Fields() []string {
+	return r.dataset.Fields()
 }
 
 // Next returns whether there is a Record to be Read

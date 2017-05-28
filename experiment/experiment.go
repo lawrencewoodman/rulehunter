@@ -173,7 +173,7 @@ func Process(
 
 	assessment.Sort(experiment.SortOrder)
 	assessment.Refine()
-	sortedRules := assessment.GetRules()
+	sortedRules := assessment.Rules()
 
 	if err := epr.ReportProgress("Tweaking rules", 0); err != nil {
 		return reportExperimentFail(err)
@@ -194,7 +194,7 @@ func Process(
 	assessment.Sort(experiment.SortOrder)
 	assessment.Refine()
 
-	sortedRules = assessment.GetRules()
+	sortedRules = assessment.Rules()
 
 	if err := epr.ReportProgress("Reduce DP of rules", 0); err != nil {
 		return reportExperimentFail(err)
@@ -216,7 +216,7 @@ func Process(
 	assessment.Refine()
 
 	numRulesToCombine := 50
-	bestNonCombinedRules := assessment.GetRules(numRulesToCombine)
+	bestNonCombinedRules := assessment.Rules(numRulesToCombine)
 	combinedRules := rhkit.CombineRules(bestNonCombinedRules)
 
 	assessment, err = assessRules(4, combinedRules, experiment, epr, cfg)

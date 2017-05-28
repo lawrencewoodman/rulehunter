@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -38,14 +38,14 @@ type Aggregator interface {
 
 type AggregatorSpec interface {
 	New() AggregatorInstance
-	GetName() string
-	GetKind() string
-	GetArg() string
+	Name() string
+	Kind() string
+	Arg() string
 }
 
 type AggregatorInstance interface {
-	GetName() string
-	GetResult([]AggregatorInstance, []*goal.Goal, int64) *dlit.Literal
+	Name() string
+	Result([]AggregatorInstance, []*goal.Goal, int64) *dlit.Literal
 	NextRecord(map[string]*dlit.Literal, bool) error
 }
 
@@ -119,15 +119,15 @@ func InstancesToMap(
 	r["numRecords"] = numRecordsL
 	for _, ai := range aggregatorInstances {
 		for _, stopName := range stopNames {
-			if stopName == ai.GetName() {
+			if stopName == ai.Name() {
 				return r, nil
 			}
 		}
-		l := ai.GetResult(aggregatorInstances, goals, numRecords)
+		l := ai.Result(aggregatorInstances, goals, numRecords)
 		if err := l.Err(); err != nil {
 			return r, err
 		}
-		r[ai.GetName()] = l
+		r[ai.Name()] = l
 	}
 	return r, nil
 }

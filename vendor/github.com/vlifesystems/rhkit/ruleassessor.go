@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -67,13 +67,13 @@ func (ra *ruleAssessor) NextRecord(record ddataset.Record) error {
 	return nil
 }
 
-func (ra *ruleAssessor) GetAggregatorValue(
+func (ra *ruleAssessor) AggregatorValue(
 	name string,
 	numRecords int64,
 ) (*dlit.Literal, bool) {
 	for _, aggregator := range ra.Aggregators {
-		if aggregator.GetName() == name {
-			return aggregator.GetResult(ra.Aggregators, ra.Goals, numRecords), true
+		if aggregator.Name() == name {
+			return aggregator.Result(ra.Aggregators, ra.Goals, numRecords), true
 		}
 	}
 	// TODO: Test and create specific error type

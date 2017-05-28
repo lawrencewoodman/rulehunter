@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -53,7 +53,7 @@ func filterGoodRuleAssessors(
 	goodRuleAssessors := make([]*ruleAssessor, 0)
 	for _, ruleAssessment := range ruleAssessments {
 		numMatches, exists :=
-			ruleAssessment.GetAggregatorValue("numMatches", numRecords)
+			ruleAssessment.AggregatorValue("numMatches", numRecords)
 		if !exists {
 			panic("numMatches doesn't exist in aggregators")
 		}

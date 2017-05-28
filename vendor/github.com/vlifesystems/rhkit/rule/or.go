@@ -100,16 +100,16 @@ func (r *Or) IsTrue(record ddataset.Record) (bool, error) {
 	return lh || rh, nil
 }
 
-func (r *Or) GetFields() []string {
+func (r *Or) Fields() []string {
 	results := []string{}
 	mResults := map[string]interface{}{}
-	for _, f := range r.ruleA.GetFields() {
+	for _, f := range r.ruleA.Fields() {
 		if _, ok := mResults[f]; !ok {
 			mResults[f] = nil
 			results = append(results, f)
 		}
 	}
-	for _, f := range r.ruleB.GetFields() {
+	for _, f := range r.ruleB.Fields() {
 		if _, ok := mResults[f]; !ok {
 			mResults[f] = nil
 			results = append(results, f)
@@ -125,11 +125,11 @@ func tryJoinRulesWithOutside(
 	var r Rule
 	var err error
 
-	if len(ruleA.GetFields()) != 1 || len(ruleB.GetFields()) != 1 {
+	if len(ruleA.Fields()) != 1 || len(ruleB.Fields()) != 1 {
 		return true, nil
 	}
-	fieldA := ruleA.GetFields()[0]
-	fieldB := ruleB.GetFields()[0]
+	fieldA := ruleA.Fields()[0]
+	fieldB := ruleB.Fields()[0]
 
 	if fieldA == fieldB {
 		_, ruleAIsBetweenFV := ruleA.(*BetweenFV)
@@ -169,22 +169,22 @@ func tryJoinRulesWithOutside(
 }
 
 func handleInRules(ruleA, ruleB *InFV) Rule {
-	if ruleA.GetFields()[0] != ruleB.GetFields()[0] {
+	if ruleA.Fields()[0] != ruleB.Fields()[0] {
 		return &Or{ruleA: ruleA, ruleB: ruleB}
 	}
 	newValues := []*dlit.Literal{}
 	mNewValues := map[string]interface{}{}
-	for _, v := range ruleA.GetValues() {
+	for _, v := range ruleA.Values() {
 		if _, ok := mNewValues[v.String()]; !ok {
 			mNewValues[v.String()] = nil
 			newValues = append(newValues, v)
 		}
 	}
-	for _, v := range ruleB.GetValues() {
+	for _, v := range ruleB.Values() {
 		if _, ok := mNewValues[v.String()]; !ok {
 			mNewValues[v.String()] = nil
 			newValues = append(newValues, v)
 		}
 	}
-	return NewInFV(ruleA.GetFields()[0], newValues)
+	return NewInFV(ruleA.Fields()[0], newValues)
 }

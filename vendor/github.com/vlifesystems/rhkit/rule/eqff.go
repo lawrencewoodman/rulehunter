@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -71,6 +71,6 @@ func (r *EQFF) IsTrue(record ddataset.Record) (bool, error) {
 	return lh.String() == rh.String(), nil
 }
 
-func (r *EQFF) GetFields() []string {
+func (r *EQFF) Fields() []string {
 	return []string{r.fieldA, r.fieldB}
 }

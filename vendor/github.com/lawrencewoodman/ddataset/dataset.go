@@ -25,8 +25,8 @@ var ErrWrongNumFields = errors.New("wrong number of field names for dataset")
 type Dataset interface {
 	// Open creates a connection to the Dataset
 	Open() (Conn, error)
-	// GetFieldNames returns the field names used by the Dataset
-	GetFieldNames() []string
+	// Fields returns the field names used by the Dataset
+	Fields() []string
 }
 
 // Conn represents a connection to a Dataset

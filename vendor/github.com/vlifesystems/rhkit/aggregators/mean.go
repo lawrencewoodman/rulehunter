@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -70,19 +70,19 @@ func (ad *meanSpec) New() AggregatorInstance {
 	}
 }
 
-func (ad *meanSpec) GetName() string {
+func (ad *meanSpec) Name() string {
 	return ad.name
 }
 
-func (ad *meanSpec) GetKind() string {
+func (ad *meanSpec) Kind() string {
 	return "mean"
 }
 
-func (ad *meanSpec) GetArg() string {
+func (ad *meanSpec) Arg() string {
 	return ad.expr.String()
 }
 
-func (ai *meanInstance) GetName() string {
+func (ai *meanInstance) Name() string {
 	return ai.spec.name
 }
 
@@ -107,7 +107,7 @@ func (ai *meanInstance) NextRecord(
 	return nil
 }
 
-func (ai *meanInstance) GetResult(
+func (ai *meanInstance) Result(
 	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,

@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -60,19 +60,19 @@ func (ad *calcSpec) New() AggregatorInstance {
 	return &calcInstance{spec: ad}
 }
 
-func (ad *calcSpec) GetName() string {
+func (ad *calcSpec) Name() string {
 	return ad.name
 }
 
-func (ad *calcSpec) GetKind() string {
+func (ad *calcSpec) Kind() string {
 	return "calc"
 }
 
-func (ad *calcSpec) GetArg() string {
+func (ad *calcSpec) Arg() string {
 	return ad.expr.String()
 }
 
-func (ai *calcInstance) GetName() string {
+func (ai *calcInstance) Name() string {
 	return ai.spec.name
 }
 
@@ -83,13 +83,13 @@ func (ai *calcInstance) NextRecord(
 	return nil
 }
 
-func (ai *calcInstance) GetResult(
+func (ai *calcInstance) Result(
 	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
 	instancesMap, err :=
-		InstancesToMap(aggregatorInstances, goals, numRecords, ai.GetName())
+		InstancesToMap(aggregatorInstances, goals, numRecords, ai.Name())
 	if err != nil {
 		return dlit.MustNew(err)
 	}

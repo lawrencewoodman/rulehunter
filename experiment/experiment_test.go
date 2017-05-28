@@ -953,8 +953,8 @@ func areAggregatorsEqual(
 	}
 	for i, a := range a1 {
 		if reflect.TypeOf(a) != reflect.TypeOf(a2[i]) ||
-			a.GetName() != a2[i].GetName() ||
-			a.GetArg() != a2[i].GetArg() {
+			a.Name() != a2[i].Name() ||
+			a.Arg() != a2[i].Arg() {
 			return false
 		}
 	}

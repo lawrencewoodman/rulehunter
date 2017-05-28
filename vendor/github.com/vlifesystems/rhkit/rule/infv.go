@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -46,11 +46,11 @@ func (r *InFV) String() string {
 	return makeInFVString(r.field, r.values)
 }
 
-func (r *InFV) GetFields() []string {
+func (r *InFV) Fields() []string {
 	return []string{r.field}
 }
 
-func (r *InFV) GetValues() []*dlit.Literal {
+func (r *InFV) Values() []*dlit.Literal {
 	return r.values
 }
 
@@ -73,8 +73,8 @@ func (r *InFV) IsTrue(record ddataset.Record) (bool, error) {
 func (r *InFV) Overlaps(o Rule) bool {
 	switch x := o.(type) {
 	case *InFV:
-		oValues := x.GetValues()
-		oField := x.GetFields()[0]
+		oValues := x.Values()
+		oField := x.Fields()[0]
 		if r.field != oField {
 			return false
 		}

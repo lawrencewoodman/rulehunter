@@ -1,7 +1,7 @@
 /*
  * A Go package to handles access to a CSV file as Dataset
  *
- * Copyright (C) 2016 Lawrence Woodman <lwoodman@vlifesystems.com>
+ * Copyright (C) 2016-2017 Lawrence Woodman <lwoodman@vlifesystems.com>
  *
  * Licensed under an MIT licence.  Please see LICENCE.md for details.
  */
@@ -68,8 +68,8 @@ func (c *DCSV) Open() (ddataset.Conn, error) {
 	}, nil
 }
 
-// GetFieldNames returns the field names used by the Dataset
-func (c *DCSV) GetFieldNames() []string {
+// Fields returns the field names used by the Dataset
+func (c *DCSV) Fields() []string {
 	return c.fieldNames
 }
 
@@ -116,13 +116,13 @@ func (cc *DCSVConn) Close() error {
 	return err
 }
 
-func (cc *DCSVConn) getNumFields() int {
+func (cc *DCSVConn) numFields() int {
 	return cc.dataset.numFields
 }
 
 func (cc *DCSVConn) makeRowCurrentRecord(row []string) error {
-	fieldNames := cc.dataset.GetFieldNames()
-	if len(row) != cc.getNumFields() {
+	fieldNames := cc.dataset.Fields()
+	if len(row) != cc.dataset.numFields {
 		cc.err = ddataset.ErrWrongNumFields
 		cc.Close()
 		return cc.err

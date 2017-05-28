@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -50,19 +50,19 @@ func (ad *goalsScoreSpec) New() AggregatorInstance {
 	return &goalsScoreInstance{spec: ad}
 }
 
-func (ad *goalsScoreSpec) GetName() string {
+func (ad *goalsScoreSpec) Name() string {
 	return ad.name
 }
 
-func (ad *goalsScoreSpec) GetKind() string {
+func (ad *goalsScoreSpec) Kind() string {
 	return "goalsscore"
 }
 
-func (ad *goalsScoreSpec) GetArg() string {
+func (ad *goalsScoreSpec) Arg() string {
 	return ""
 }
 
-func (ai *goalsScoreInstance) GetName() string {
+func (ai *goalsScoreInstance) Name() string {
 	return ai.spec.name
 }
 
@@ -73,13 +73,13 @@ func (ai *goalsScoreInstance) NextRecord(
 	return nil
 }
 
-func (ai *goalsScoreInstance) GetResult(
+func (ai *goalsScoreInstance) Result(
 	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {
 	instancesMap, err :=
-		InstancesToMap(aggregatorInstances, goals, numRecords, ai.GetName())
+		InstancesToMap(aggregatorInstances, goals, numRecords, ai.Name())
 	if err != nil {
 		return dlit.MustNew(err)
 	}
@@ -104,5 +104,5 @@ func (ai *goalsScoreInstance) IsEqual(o AggregatorInstance) bool {
 	if _, ok := o.(*goalsScoreInstance); !ok {
 		return false
 	}
-	return ai.GetName() == o.GetName()
+	return ai.Name() == o.Name()
 }

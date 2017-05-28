@@ -66,6 +66,6 @@ func (r *NEFV) IsTrue(record ddataset.Record) (bool, error) {
 	return false, IncompatibleTypesRuleError{Rule: r}
 }
 
-func (r *NEFV) GetFields() []string {
+func (r *NEFV) Fields() []string {
 	return []string{r.field}
 }

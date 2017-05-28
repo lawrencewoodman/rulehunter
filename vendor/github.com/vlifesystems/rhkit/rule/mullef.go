@@ -42,7 +42,7 @@ func (r *MulLEF) String() string {
 	return r.fieldA + " * " + r.fieldB + " <= " + r.value.String()
 }
 
-func (r *MulLEF) GetFields() []string {
+func (r *MulLEF) Fields() []string {
 	return []string{r.fieldA, r.fieldB}
 }
 
@@ -114,7 +114,7 @@ func (r *MulLEF) Tweak(
 func (r *MulLEF) Overlaps(o Rule) bool {
 	switch x := o.(type) {
 	case *MulLEF:
-		oFields := x.GetFields()
+		oFields := x.Fields()
 		if r.fieldA == oFields[0] && r.fieldB == oFields[1] {
 			return true
 		}

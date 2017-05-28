@@ -42,7 +42,7 @@ func (r *MulGEF) String() string {
 	return r.fieldA + " * " + r.fieldB + " >= " + r.value.String()
 }
 
-func (r *MulGEF) GetFields() []string {
+func (r *MulGEF) Fields() []string {
 	return []string{r.fieldA, r.fieldB}
 }
 
@@ -114,7 +114,7 @@ func (r *MulGEF) Tweak(
 func (r *MulGEF) Overlaps(o Rule) bool {
 	switch x := o.(type) {
 	case *MulGEF:
-		oFields := x.GetFields()
+		oFields := x.Fields()
 		if r.fieldA == oFields[0] && r.fieldB == oFields[1] {
 			return true
 		}

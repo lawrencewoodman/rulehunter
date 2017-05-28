@@ -88,9 +88,9 @@ func WriteJSON(
 	aggregatorDescs := make([]AggregatorDesc, len(experiment.Aggregators))
 	for i, as := range experiment.Aggregators {
 		aggregatorDescs[i] = AggregatorDesc{
-			Name: as.GetName(),
-			Kind: as.GetKind(),
-			Arg:  as.GetArg(),
+			Name: as.Name(),
+			Kind: as.Kind(),
+			Arg:  as.Arg(),
 		}
 	}
 

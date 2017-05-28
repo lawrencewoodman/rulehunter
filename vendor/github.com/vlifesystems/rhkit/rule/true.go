@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -39,6 +39,6 @@ func (r True) IsTrue(record ddataset.Record) (bool, error) {
 	return true, nil
 }
 
-func (r True) GetFields() []string {
+func (r True) Fields() []string {
 	return []string{}
 }

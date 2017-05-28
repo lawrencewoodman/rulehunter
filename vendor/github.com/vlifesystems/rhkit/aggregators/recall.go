@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 	This file is part of rhkit.
 
 	rhkit is free software: you can redistribute it and/or modify
@@ -71,19 +71,19 @@ func (ad *recallSpec) New() AggregatorInstance {
 	}
 }
 
-func (ad *recallSpec) GetName() string {
+func (ad *recallSpec) Name() string {
 	return ad.name
 }
 
-func (ad *recallSpec) GetKind() string {
+func (ad *recallSpec) Kind() string {
 	return "recall"
 }
 
-func (ad *recallSpec) GetArg() string {
+func (ad *recallSpec) Arg() string {
 	return ad.expr.String()
 }
 
-func (ai *recallInstance) GetName() string {
+func (ai *recallInstance) Name() string {
 	return ai.spec.name
 }
 
@@ -105,7 +105,7 @@ func (ai *recallInstance) NextRecord(record map[string]*dlit.Literal,
 	return nil
 }
 
-func (ai *recallInstance) GetResult(
+func (ai *recallInstance) Result(
 	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,

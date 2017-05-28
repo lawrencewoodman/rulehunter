@@ -67,8 +67,8 @@ func tryInRule(ruleA, ruleB Rule) (skip bool, newRule Rule) {
 	if !ruleAIsIn && !ruleBIsIn {
 		return true, nil
 	}
-	fieldsA := ruleA.GetFields()
-	fieldsB := ruleB.GetFields()
+	fieldsA := ruleA.Fields()
+	fieldsB := ruleB.Fields()
 	if len(fieldsA) == 1 && len(fieldsB) == 1 && fieldsA[0] == fieldsB[0] {
 		return false, nil
 	}
@@ -76,13 +76,13 @@ func tryInRule(ruleA, ruleB Rule) (skip bool, newRule Rule) {
 }
 
 func tryEqNeRule(ruleA, ruleB Rule) (skip bool, newRule Rule) {
-	ruleAFields := ruleA.GetFields()
-	ruleBFields := ruleB.GetFields()
+	ruleAFields := ruleA.Fields()
+	ruleBFields := ruleB.Fields()
 	if len(ruleAFields) != 1 && len(ruleBFields) != 1 {
 		return true, nil
 	}
-	fieldA := ruleA.GetFields()[0]
-	fieldB := ruleB.GetFields()[0]
+	fieldA := ruleA.Fields()[0]
+	fieldB := ruleB.Fields()[0]
 
 	if fieldA != fieldB {
 		return true, nil
@@ -109,11 +109,11 @@ func tryJoinRulesWithBetween(
 	var r Rule
 	var err error
 
-	if len(ruleA.GetFields()) != 1 || len(ruleB.GetFields()) != 1 {
+	if len(ruleA.Fields()) != 1 || len(ruleB.Fields()) != 1 {
 		return true, nil
 	}
-	fieldA := ruleA.GetFields()[0]
-	fieldB := ruleB.GetFields()[0]
+	fieldA := ruleA.Fields()[0]
+	fieldB := ruleB.Fields()[0]
 
 	if fieldA != fieldB {
 		return true, nil
@@ -169,12 +169,12 @@ func tryJoinRulesWithBetween(
 		vars["GEFVRuleBValue"] = GEFVRuleB.Value()
 	}
 	if ruleAIsOutsideFV {
-		vars["OutsideFVRuleALow"] = OutsideFVRuleA.GetLow()
-		vars["OutsideFVRuleAHigh"] = OutsideFVRuleA.GetHigh()
+		vars["OutsideFVRuleALow"] = OutsideFVRuleA.Low()
+		vars["OutsideFVRuleAHigh"] = OutsideFVRuleA.High()
 	}
 	if ruleBIsOutsideFV {
-		vars["OutsideFVRuleBLow"] = OutsideFVRuleB.GetLow()
-		vars["OutsideFVRuleBHigh"] = OutsideFVRuleB.GetHigh()
+		vars["OutsideFVRuleBLow"] = OutsideFVRuleB.Low()
+		vars["OutsideFVRuleBHigh"] = OutsideFVRuleB.High()
 	}
 	invalidExpr, err := dexpr.EvalBool(
 		"(ruleAIsOutsideFV && ruleBIsLEFV && "+
@@ -252,16 +252,16 @@ func (r *And) IsTrue(record ddataset.Record) (bool, error) {
 	return lh && rh, nil
 }
 
-func (r *And) GetFields() []string {
+func (r *And) Fields() []string {
 	results := []string{}
 	mResults := map[string]interface{}{}
-	for _, f := range r.ruleA.GetFields() {
+	for _, f := range r.ruleA.Fields() {
 		if _, ok := mResults[f]; !ok {
 			mResults[f] = nil
 			results = append(results, f)
 		}
 	}
-	for _, f := range r.ruleB.GetFields() {
+	for _, f := range r.ruleB.Fields() {
 		if _, ok := mResults[f]; !ok {
 			mResults[f] = nil
 			results = append(results, f)

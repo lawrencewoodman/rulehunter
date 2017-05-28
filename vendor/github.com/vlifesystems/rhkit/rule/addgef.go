@@ -42,7 +42,7 @@ func (r *AddGEF) String() string {
 	return r.fieldA + " + " + r.fieldB + " >= " + r.value.String()
 }
 
-func (r *AddGEF) GetFields() []string {
+func (r *AddGEF) Fields() []string {
 	return []string{r.fieldA, r.fieldB}
 }
 
@@ -110,7 +110,7 @@ func (r *AddGEF) Tweak(
 func (r *AddGEF) Overlaps(o Rule) bool {
 	switch x := o.(type) {
 	case *AddGEF:
-		oFields := x.GetFields()
+		oFields := x.Fields()
 		if r.fieldA == oFields[0] && r.fieldB == oFields[1] {
 			return true
 		}

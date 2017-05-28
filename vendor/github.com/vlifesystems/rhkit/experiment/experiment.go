@@ -149,7 +149,7 @@ func checkRuleFieldsValid(e *ExperimentDesc) error {
 	if len(e.RuleFields) == 0 {
 		return ErrNoRuleFieldsSpecified
 	}
-	fieldNames := e.Dataset.GetFieldNames()
+	fieldNames := e.Dataset.Fields()
 	for _, ruleField := range e.RuleFields {
 		if !internal.IsIdentifierValid(ruleField) {
 			return InvalidRuleFieldError(ruleField)
@@ -171,7 +171,7 @@ func isStringInSlice(needle string, haystack []string) bool {
 }
 
 func checkAggregatorsValid(e *ExperimentDesc) error {
-	fieldNames := e.Dataset.GetFieldNames()
+	fieldNames := e.Dataset.Fields()
 	for _, aggregator := range e.Aggregators {
 		if !internal.IsIdentifierValid(aggregator.Name) {
 			return InvalidAggregatorNameError(aggregator.Name)

@@ -1,7 +1,7 @@
 /*
  * A Go package to handles access to a an Sql database as a Dataset
  *
- * Copyright (C) 2016 Lawrence Woodman <lwoodman@vlifesystems.com>
+ * Copyright (C) 2016-2017 Lawrence Woodman <lwoodman@vlifesystems.com>
  *
  * Licensed under an MIT licence.  Please see LICENCE.md for details.
  */
@@ -90,8 +90,8 @@ func (s *DSQL) Open() (ddataset.Conn, error) {
 	}, nil
 }
 
-// GetFieldNames returns the field names used by the Dataset
-func (s *DSQL) GetFieldNames() []string {
+// Fields returns the field names used by the Dataset
+func (s *DSQL) Fields() []string {
 	return s.fieldNames
 }
 

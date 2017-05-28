@@ -69,9 +69,9 @@ func (c *DCache) Open() (ddataset.Conn, error) {
 	}, nil
 }
 
-// GetFieldNames returns the field names used by the Dataset
-func (c *DCache) GetFieldNames() []string {
-	return c.dataset.GetFieldNames()
+// Fields returns the field names used by the Dataset
+func (c *DCache) Fields() []string {
+	return c.dataset.Fields()
 }
 
 // Next returns whether there is a Record to be Read

@@ -84,19 +84,19 @@ func (ad *mccSpec) New() AggregatorInstance {
 	}
 }
 
-func (ad *mccSpec) GetName() string {
+func (ad *mccSpec) Name() string {
 	return ad.name
 }
 
-func (ad *mccSpec) GetKind() string {
+func (ad *mccSpec) Kind() string {
 	return "mcc"
 }
 
-func (ad *mccSpec) GetArg() string {
+func (ad *mccSpec) Arg() string {
 	return ad.expr.String()
 }
 
-func (ai *mccInstance) GetName() string {
+func (ai *mccInstance) Name() string {
 	return ai.spec.name
 }
 
@@ -125,7 +125,7 @@ func (ai *mccInstance) NextRecord(
 	return nil
 }
 
-func (ai *mccInstance) GetResult(
+func (ai *mccInstance) Result(
 	aggregatorInstances []AggregatorInstance,
 	goals []*goal.Goal,
 	numRecords int64,
