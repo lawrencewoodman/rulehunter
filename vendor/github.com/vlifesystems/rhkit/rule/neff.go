@@ -21,12 +21,19 @@ package rule
 
 import (
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal"
+	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // NEFF represents a rule determining if fieldA != fieldB
 type NEFF struct {
 	fieldA string
 	fieldB string
+}
+
+func init() {
+	registerGenerator("NEFF", generateNEFF)
 }
 
 func NewNEFF(fieldA, fieldB string) Rule {
@@ -73,4 +80,32 @@ func (r *NEFF) IsTrue(record ddataset.Record) (bool, error) {
 
 func (r *NEFF) Fields() []string {
 	return []string{r.fieldA, r.fieldB}
+}
+
+func generateNEFF(
+	inputDescription *description.Description,
+	ruleFields []string,
+	complexity int,
+	field string,
+) []Rule {
+	fd := inputDescription.Fields[field]
+	if fd.Kind != fieldtype.String &&
+		fd.Kind != fieldtype.Number {
+		return []Rule{}
+	}
+	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
+	rules := make([]Rule, 0)
+	for oField, oFd := range inputDescription.Fields {
+		if oFd.Kind == fd.Kind {
+			oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
+			numSharedValues := calcNumSharedValues(fd, oFd)
+			if fieldNum < oFieldNum &&
+				numSharedValues >= 2 &&
+				internal.StringInSlice(oField, ruleFields) {
+				r := NewNEFF(field, oField)
+				rules = append(rules, r)
+			}
+		}
+	}
+	return rules
 }

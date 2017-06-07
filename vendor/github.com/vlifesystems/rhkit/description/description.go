@@ -30,6 +30,7 @@ import (
 	"github.com/vlifesystems/rhkit/internal/fieldtype"
 	"io/ioutil"
 	"os"
+	"sort"
 )
 
 type Description struct {
@@ -84,6 +85,26 @@ func LoadDescriptionJSON(filename string) (*Description, error) {
 	}
 	d := &Description{Fields: fields}
 	return d, nil
+}
+
+// Calculates the field number based on the string sorted order of
+// the field names
+func CalcFieldNum(fieldDescriptions map[string]*Field, fieldN string) int {
+	fields := make([]string, len(fieldDescriptions))
+	i := 0
+	for field := range fieldDescriptions {
+		fields[i] = field
+		i++
+	}
+	sort.Strings(fields)
+	j := 0
+	for _, field := range fields {
+		if field == fieldN {
+			return j
+		}
+		j++
+	}
+	panic("can't find field in fieldDescriptions")
 }
 
 func (d *Description) WriteJSON(filename string) error {

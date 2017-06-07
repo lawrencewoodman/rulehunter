@@ -159,11 +159,7 @@ func Process(
 	if err := epr.ReportProgress("Generating rules", 0); err != nil {
 		return reportExperimentFail(err)
 	}
-	rules := rhkit.GenerateRules(
-		dDescription,
-		experiment.RuleFieldNames,
-		complexity,
-	)
+	rules := rule.Generate(dDescription, experiment.RuleFieldNames, complexity)
 
 	assessment, err = assessRules(1, rules, experiment, epr, cfg)
 	if err != nil {
@@ -217,7 +213,7 @@ func Process(
 
 	numRulesToCombine := 50
 	bestNonCombinedRules := assessment.Rules(numRulesToCombine)
-	combinedRules := rhkit.CombineRules(bestNonCombinedRules)
+	combinedRules := rule.Combine(bestNonCombinedRules)
 
 	assessment, err = assessRules(4, combinedRules, experiment, epr, cfg)
 	if err != nil {

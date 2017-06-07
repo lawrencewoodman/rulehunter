@@ -24,7 +24,9 @@ import (
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal"
 	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
+	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // AddLEF represents a rule determining if fieldA + fieldB <= floatValue
@@ -34,12 +36,20 @@ type AddLEF struct {
 	value  *dlit.Literal
 }
 
+func init() {
+	registerGenerator("AddLEF", generateAddLEF)
+}
+
 func NewAddLEF(fieldA string, fieldB string, value *dlit.Literal) *AddLEF {
 	return &AddLEF{fieldA: fieldA, fieldB: fieldB, value: value}
 }
 
 func (r *AddLEF) String() string {
 	return r.fieldA + " + " + r.fieldB + " <= " + r.value.String()
+}
+
+func (r *AddLEF) Value() *dlit.Literal {
+	return r.value
 }
 
 func (r *AddLEF) Fields() []string {
@@ -120,4 +130,44 @@ func (r *AddLEF) DPReduce() []Rule {
 	return roundRules(r.value, func(p *dlit.Literal) Rule {
 		return NewAddLEF(r.fieldA, r.fieldB, p)
 	})
+}
+
+func generateAddLEF(
+	inputDescription *description.Description,
+	ruleFields []string,
+	complexity int,
+	field string,
+) []Rule {
+	fd := inputDescription.Fields[field]
+	if fd.Kind != fieldtype.Number {
+		return []Rule{}
+	}
+	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
+	rules := make([]Rule, 0)
+
+	for oField, oFd := range inputDescription.Fields {
+		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
+		if fieldNum < oFieldNum &&
+			oFd.Kind == fieldtype.Number &&
+			internal.StringInSlice(oField, ruleFields) {
+			vars := map[string]*dlit.Literal{
+				"min":  fd.Min,
+				"max":  fd.Max,
+				"oMin": oFd.Min,
+				"oMax": oFd.Max,
+			}
+			min := dexpr.Eval("min + oMin", dexprfuncs.CallFuncs, vars)
+			max := dexpr.Eval("max + oMax", dexprfuncs.CallFuncs, vars)
+			maxDP := fd.MaxDP
+			if oFd.MaxDP > maxDP {
+				maxDP = oFd.MaxDP
+			}
+			points := internal.GeneratePoints(min, max, maxDP)
+			for _, p := range points {
+				r := NewAddLEF(field, oField, p)
+				rules = append(rules, r)
+			}
+		}
+	}
+	return rules
 }

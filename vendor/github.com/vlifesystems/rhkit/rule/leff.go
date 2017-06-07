@@ -21,12 +21,19 @@ package rule
 
 import (
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal"
+	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // LEFF represents a rule determining if fieldA <= fieldB
 type LEFF struct {
 	fieldA string
 	fieldB string
+}
+
+func init() {
+	registerGenerator("LEFF", generateLEFF)
 }
 
 func NewLEFF(fieldA, fieldB string) Rule {
@@ -64,4 +71,28 @@ func (r *LEFF) IsTrue(record ddataset.Record) (bool, error) {
 
 func (r *LEFF) Fields() []string {
 	return []string{r.fieldA, r.fieldB}
+}
+
+func generateLEFF(
+	inputDescription *description.Description,
+	ruleFields []string,
+	complexity int,
+	field string,
+) []Rule {
+	fd := inputDescription.Fields[field]
+	if fd.Kind != fieldtype.Number {
+		return []Rule{}
+	}
+	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
+	rules := make([]Rule, 0)
+	for oField, oFd := range inputDescription.Fields {
+		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
+		isComparable := hasComparableNumberRange(fd, oFd)
+		if fieldNum < oFieldNum && isComparable &&
+			internal.StringInSlice(oField, ruleFields) {
+			r := NewLEFF(field, oField)
+			rules = append(rules, r)
+		}
+	}
+	return rules
 }

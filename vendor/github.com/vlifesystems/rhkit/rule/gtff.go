@@ -21,12 +21,19 @@ package rule
 
 import (
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal"
+	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // GTFF represents a rule determining if fieldA > fieldB
 type GTFF struct {
 	fieldA string
 	fieldB string
+}
+
+func init() {
+	registerGenerator("GTFF", generateGTFF)
 }
 
 func NewGTFF(fieldA, fieldB string) Rule {
@@ -64,4 +71,28 @@ func (r *GTFF) IsTrue(record ddataset.Record) (bool, error) {
 
 func (r *GTFF) Fields() []string {
 	return []string{r.fieldA, r.fieldB}
+}
+
+func generateGTFF(
+	inputDescription *description.Description,
+	ruleFields []string,
+	complexity int,
+	field string,
+) []Rule {
+	fd := inputDescription.Fields[field]
+	if fd.Kind != fieldtype.Number {
+		return []Rule{}
+	}
+	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
+	rules := make([]Rule, 0)
+	for oField, oFd := range inputDescription.Fields {
+		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
+		isComparable := hasComparableNumberRange(fd, oFd)
+		if fieldNum < oFieldNum && isComparable &&
+			internal.StringInSlice(oField, ruleFields) {
+			r := NewGTFF(field, oField)
+			rules = append(rules, r)
+		}
+	}
+	return rules
 }

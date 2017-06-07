@@ -24,12 +24,18 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal"
+	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // LEFV represents a rule determining if field <= value
 type LEFV struct {
 	field string
 	value *dlit.Literal
+}
+
+func init() {
+	registerGenerator("LEFV", generateLEFV)
 }
 
 func NewLEFV(field string, value *dlit.Literal) *LEFV {
@@ -69,7 +75,6 @@ func (r *LEFV) Tweak(
 	inputDescription *description.Description,
 	stage int,
 ) []Rule {
-	rules := make([]Rule, 0)
 	points := generateTweakPoints(
 		r.value,
 		inputDescription.Fields[r.field].Min,
@@ -77,9 +82,9 @@ func (r *LEFV) Tweak(
 		inputDescription.Fields[r.field].MaxDP,
 		stage,
 	)
-	for _, p := range points {
-		r := NewLEFV(r.field, p)
-		rules = append(rules, r)
+	rules := make([]Rule, len(points))
+	for i, p := range points {
+		rules[i] = NewLEFV(r.field, p)
 	}
 	return rules
 }
@@ -101,4 +106,22 @@ func (r *LEFV) DPReduce() []Rule {
 	return roundRules(r.value, func(p *dlit.Literal) Rule {
 		return NewLEFV(r.field, p)
 	})
+}
+
+func generateLEFV(
+	inputDescription *description.Description,
+	ruleFields []string,
+	complexity int,
+	field string,
+) []Rule {
+	fd := inputDescription.Fields[field]
+	if fd.Kind != fieldtype.Number {
+		return []Rule{}
+	}
+	points := internal.GeneratePoints(fd.Min, fd.Max, fd.MaxDP)
+	rules := make([]Rule, len(points))
+	for i, p := range points {
+		rules[i] = NewLEFV(field, p)
+	}
+	return rules
 }

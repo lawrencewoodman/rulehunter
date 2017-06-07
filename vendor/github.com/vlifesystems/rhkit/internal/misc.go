@@ -110,3 +110,12 @@ func (bn byNumber) Less(i, j int) bool {
 		return r
 	}
 }
+
+func StringInSlice(s string, strings []string) bool {
+	for _, x := range strings {
+		if x == s {
+			return true
+		}
+	}
+	return false
+}

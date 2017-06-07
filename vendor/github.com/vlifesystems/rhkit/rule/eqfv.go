@@ -23,12 +23,18 @@ import (
 	"fmt"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // EQFV represents a rule determining if fieldA == value
 type EQFV struct {
 	field string
 	value *dlit.Literal
+}
+
+func init() {
+	registerGenerator("EQFV", generateEQFV)
 }
 
 func NewEQFV(field string, value *dlit.Literal) Rule {
@@ -68,4 +74,25 @@ func (r *EQFV) IsTrue(record ddataset.Record) (bool, error) {
 
 func (r *EQFV) Fields() []string {
 	return []string{r.field}
+}
+
+func generateEQFV(
+	inputDescription *description.Description,
+	ruleFields []string,
+	complexity int,
+	field string,
+) []Rule {
+	fd := inputDescription.Fields[field]
+	rules := make([]Rule, 0)
+	values := fd.Values
+	if len(values) < 2 || fd.Kind == fieldtype.Ignore {
+		return []Rule{}
+	}
+	for _, vd := range values {
+		if vd.Num >= 2 {
+			r := NewEQFV(field, vd.Value)
+			rules = append(rules, r)
+		}
+	}
+	return rules
 }

@@ -25,7 +25,9 @@ import (
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal"
 	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
+	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // OutsideFV represents a rule determining if:
@@ -34,6 +36,10 @@ type OutsideFV struct {
 	field string
 	low   *dlit.Literal
 	high  *dlit.Literal
+}
+
+func init() {
+	registerGenerator("OutsideFV", generateOutsideFV)
 }
 
 func NewOutsideFV(
@@ -151,4 +157,38 @@ func (r *OutsideFV) Overlaps(o Rule) bool {
 		return oField == r.field
 	}
 	return false
+}
+
+func generateOutsideFV(
+	inputDescription *description.Description,
+	ruleFields []string,
+	complexity int,
+	field string,
+) []Rule {
+	fd := inputDescription.Fields[field]
+	if fd.Kind != fieldtype.Number {
+		return []Rule{}
+	}
+	rulesMap := make(map[string]Rule)
+	rules := make([]Rule, 0)
+	points := internal.GeneratePoints(fd.Min, fd.Max, fd.MaxDP)
+	isValidExpr := dexpr.MustNew("pH > pL", dexprfuncs.CallFuncs)
+
+	for _, pL := range points {
+		for _, pH := range points {
+			vars := map[string]*dlit.Literal{
+				"pL": pL,
+				"pH": pH,
+			}
+			if ok, err := isValidExpr.EvalBool(vars); ok && err == nil {
+				if r, err := NewOutsideFV(field, pL, pH); err == nil {
+					if _, dup := rulesMap[r.String()]; !dup {
+						rulesMap[r.String()] = r
+						rules = append(rules, r)
+					}
+				}
+			}
+		}
+	}
+	return rules
 }

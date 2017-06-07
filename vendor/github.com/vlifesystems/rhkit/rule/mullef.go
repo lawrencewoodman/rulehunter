@@ -24,7 +24,9 @@ import (
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal"
 	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
+	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // MulLEF represents a rule determining if fieldA * fieldB <= value
@@ -32,6 +34,10 @@ type MulLEF struct {
 	fieldA string
 	fieldB string
 	value  *dlit.Literal
+}
+
+func init() {
+	registerGenerator("MulLEF", generateMulLEF)
 }
 
 func NewMulLEF(fieldA string, fieldB string, value *dlit.Literal) *MulLEF {
@@ -126,4 +132,44 @@ func (r *MulLEF) DPReduce() []Rule {
 	return roundRules(r.value, func(p *dlit.Literal) Rule {
 		return NewMulLEF(r.fieldA, r.fieldB, p)
 	})
+}
+
+func generateMulLEF(
+	inputDescription *description.Description,
+	ruleFields []string,
+	complexity int,
+	field string,
+) []Rule {
+	fd := inputDescription.Fields[field]
+	if fd.Kind != fieldtype.Number {
+		return []Rule{}
+	}
+	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
+	rules := make([]Rule, 0)
+
+	for oField, oFd := range inputDescription.Fields {
+		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
+		if fieldNum < oFieldNum &&
+			oFd.Kind == fieldtype.Number &&
+			internal.StringInSlice(oField, ruleFields) {
+			vars := map[string]*dlit.Literal{
+				"min":  fd.Min,
+				"max":  fd.Max,
+				"oMin": oFd.Min,
+				"oMax": oFd.Max,
+			}
+			min := dexpr.Eval("min * oMin", dexprfuncs.CallFuncs, vars)
+			max := dexpr.Eval("max * oMax", dexprfuncs.CallFuncs, vars)
+			maxDP := fd.MaxDP
+			if oFd.MaxDP > maxDP {
+				maxDP = oFd.MaxDP
+			}
+			points := internal.GeneratePoints(min, max, maxDP)
+			for _, p := range points {
+				r := NewMulLEF(field, oField, p)
+				rules = append(rules, r)
+			}
+		}
+	}
+	return rules
 }

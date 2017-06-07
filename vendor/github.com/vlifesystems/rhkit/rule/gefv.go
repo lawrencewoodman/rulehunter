@@ -24,12 +24,18 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/internal"
+	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // GEFV represents a rule determining if field >= value
 type GEFV struct {
 	field string
 	value *dlit.Literal
+}
+
+func init() {
+	registerGenerator("GEFV", generateGEFV)
 }
 
 func NewGEFV(field string, value *dlit.Literal) *GEFV {
@@ -100,4 +106,22 @@ func (r *GEFV) DPReduce() []Rule {
 	return roundRules(r.value, func(p *dlit.Literal) Rule {
 		return NewGEFV(r.field, p)
 	})
+}
+
+func generateGEFV(
+	inputDescription *description.Description,
+	ruleFields []string,
+	complexity int,
+	field string,
+) []Rule {
+	fd := inputDescription.Fields[field]
+	if fd.Kind != fieldtype.Number {
+		return []Rule{}
+	}
+	points := internal.GeneratePoints(fd.Min, fd.Max, fd.MaxDP)
+	rules := make([]Rule, len(points))
+	for i, p := range points {
+		rules[i] = NewGEFV(field, p)
+	}
+	return rules
 }
