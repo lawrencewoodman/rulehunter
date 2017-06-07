@@ -31,7 +31,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -151,20 +150,9 @@ func writeTemplate(
 	return nil
 }
 
-// This doesn't change below a second as if two or more reports had the same
-// title and were made less than a second apart then you wouldn't be able to
-// tell them apart anyway from the list of reports.  This should therfore
-// be discouraged.
-func genStampMagicString(stamp time.Time) string {
-	sum := stamp.Hour()*3600 + stamp.Minute()*60 + stamp.Second()
-	return strconv.FormatUint(uint64(sum), 36)
-}
-
 func genReportURLDir(stamp time.Time, title string) string {
-	magicNumber := genStampMagicString(stamp)
 	escapedTitle := escapeString(title)
-	return fmt.Sprintf("reports/%d/%02d/%02d/%s_%s/",
-		stamp.Year(), stamp.Month(), stamp.Day(), magicNumber, escapedTitle)
+	return fmt.Sprintf("reports/%s/", escapedTitle)
 }
 
 func countFiles(files []os.FileInfo) int {

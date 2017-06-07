@@ -20,7 +20,6 @@
 package html
 
 import (
-	"fmt"
 	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rulehunter/config"
@@ -70,14 +69,6 @@ func generateReport(
 }
 
 func genReportFilename(stamp time.Time, title string) string {
-	magicNumber := genStampMagicString(stamp)
 	escapedTitle := escapeString(title)
-	return filepath.Join(
-		"reports",
-		fmt.Sprintf("%d", stamp.Year()),
-		fmt.Sprintf("%02d", stamp.Month()),
-		fmt.Sprintf("%02d", stamp.Day()),
-		fmt.Sprintf("%s_%s", magicNumber, escapedTitle),
-		"index.html",
-	)
+	return filepath.Join("reports", escapedTitle, "index.html")
 }

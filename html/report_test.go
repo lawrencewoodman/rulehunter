@@ -1,7 +1,6 @@
 package html
 
 import (
-	"fmt"
 	"path/filepath"
 	"testing"
 	"time"
@@ -15,13 +14,11 @@ func TestGenReportFilename(t *testing.T) {
 	}{
 		{stamp: time.Date(2009, time.November, 10, 22, 19, 18, 17, time.UTC),
 			title: "This could be very interesting",
-			wantFilename: filepath.Join("reports", "2009", "11", "10",
-				fmt.Sprintf("%s_this-could-be-very-interesting",
-					genStampMagicString(
-						time.Date(2009, time.November, 10, 22, 19, 18, 17, time.UTC),
-					),
-				),
-				"index.html")},
+			wantFilename: filepath.Join(
+				"reports",
+				"this-could-be-very-interesting",
+				"index.html",
+			)},
 	}
 	for _, c := range cases {
 		got := genReportFilename(c.stamp, c.title)

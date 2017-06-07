@@ -103,7 +103,6 @@ func generateTagPage(config *config.Config, tagName string) error {
 		Html:    makeHtml(config, "tag"),
 	}
 	outputFilename := filepath.Join(
-		"reports",
 		"tag",
 		escapeString(tagName),
 		"index.html",
@@ -122,7 +121,7 @@ func makeTagLinks(tags []string) map[string]string {
 
 func makeTagLink(tag string) string {
 	return fmt.Sprintf(
-		"reports/tag/%s/",
+		"tag/%s/",
 		escapeString(tag),
 	)
 }
