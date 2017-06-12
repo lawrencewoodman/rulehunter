@@ -7,7 +7,7 @@
     "dataSourceName": "../fixtures/debt.db",
     "query": "select * from \"people\""
   },
-  "fieldNames": [
+  "fields": [
 		"name",
 		"balance",
 		"numCards",

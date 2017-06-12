@@ -1,21 +1,27 @@
 {
   "tags": ["test", "fred / ned"],
-  "datasetFilename": "fixtures/flow.csv",
-  "fieldNames": ["group","district","height","flow"],
+  "dataset": "csv",
+  "csv": {
+    "filename": "fixtures/flow.csv",
+    "hasHeader": true,
+    "separator":  ","
+  },
+  "fields": ["group","district","height","flow"],
   "ruleFields": ["group","district","height"],
-  "isFirstLineFieldNames": true,
-  "separator":  ",",
+  "ruleComplexity": {
+    "arithmetic": true
+  },
   "aggregators": [
     {
-      "name": "goodFlowAccuracy",
-      "function": "accuracy",
+      "name": "goodFlowMcc",
+      "function": "mcc",
       "arg": "flow > 60"
     }
   ],
-  "goals": ["goodFlowAccuracy > 10"],
+  "goals": ["goodFlowMcc > 0"],
   "sortOrder": [
     {
-      "aggregatorName": "goodFlowAccuracy",
+      "aggregatorName": "goodFlowMcc",
       "direction": "descending"
     },
     {

@@ -6,7 +6,7 @@
     "filename": "fixtures/flow.csv",
     "hasHeader": true
   },
-  "fieldNames": ["group","district","height","flow"],
+  "fields": ["group","district","height","flow"],
   "ruleFields": ["group","district","height"],
   "aggregators": [
     {

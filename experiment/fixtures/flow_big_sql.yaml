@@ -7,7 +7,7 @@ sql:
   driverName: "sqlite3"
   dataSourceName: "fixtures/flow_big.db"
   query: "select * from \"flow\""
-fieldNames:
+fields:
   - group
   - district
   - height

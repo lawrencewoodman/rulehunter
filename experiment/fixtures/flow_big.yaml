@@ -7,7 +7,7 @@ csv:
   filename: "fixtures/flow_big.csv"
   hasHeader: true
   separator:  ","
-fieldNames:
+fields:
   - group
   - district
   - height

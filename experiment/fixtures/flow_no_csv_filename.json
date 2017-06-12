@@ -6,7 +6,7 @@
     "hasHeader": true,
     "separator":  ","
   },
-  "fieldNames": ["group","district","height","flow"],
+  "fields": ["group","district","height","flow"],
   "ruleFields": ["group","district","height"],
   "aggregators": [
     {

@@ -1,6 +1,6 @@
 fileFormatVersion: "0.1"
 title: "What is most likely to indicate success"
-fieldNames:
+fields:
   - "name"
   - "balance"
   - "num_cards"

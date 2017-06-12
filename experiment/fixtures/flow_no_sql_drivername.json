@@ -6,7 +6,7 @@
     "dataSourceName": "users.db",
     "query": "select * from \"people\""
   },
-  "fieldNames": ["group","district","height","flow"],
+  "fields": ["group","district","height","flow"],
   "ruleFields": ["group","district","height"],
   "aggregators": [
     {

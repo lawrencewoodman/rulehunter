@@ -53,7 +53,7 @@ type experimentFile struct {
 	Dataset        string                         `yaml:"dataset"`
 	Csv            *csvDesc                       `yaml:"csv"`
 	Sql            *sqlDesc                       `yaml:"sql"`
-	FieldNames     []string                       `yaml:"fieldNames"`
+	Fields         []string                       `yaml:"fields"`
 	RuleFields     []string                       `yaml:"ruleFields"`
 	RuleComplexity *ruleComplexity                `yaml:"ruleComplexity"`
 	Aggregators    []*rhexperiment.AggregatorDesc `yaml:"aggregators"`
@@ -367,7 +367,7 @@ func makeDataset(e *experimentFile) (d ddataset.Dataset, err error) {
 			e.Csv.Filename,
 			e.Csv.HasHeader,
 			rune(e.Csv.Separator[0]),
-			e.FieldNames,
+			e.Fields,
 		)
 	case "sql":
 		sqlHandler, err := newSQLHandler(
@@ -378,7 +378,7 @@ func makeDataset(e *experimentFile) (d ddataset.Dataset, err error) {
 		if err != nil {
 			return nil, fmt.Errorf("Experiment field: sql, has %s", err)
 		}
-		d = dsql.New(sqlHandler, e.FieldNames)
+		d = dsql.New(sqlHandler, e.Fields)
 	default:
 		return nil,
 			fmt.Errorf("Experiment field: dataset, has invalid type: %s", e.Dataset)

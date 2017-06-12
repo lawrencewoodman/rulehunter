@@ -617,12 +617,12 @@ func TestMakeDataset(t *testing.T) {
 	cases := []struct {
 		dataSourceName string
 		query          string
-		fieldNames     []string
+		fields         []string
 		want           ddataset.Dataset
 	}{
 		{dataSourceName: filepath.Join("fixtures", "flow.db"),
-			query:      "select * from flow",
-			fieldNames: []string{"grp", "district", "height", "flow"},
+			query:  "select * from flow",
+			fields: []string{"grp", "district", "height", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow.csv"),
 				true,
@@ -631,8 +631,8 @@ func TestMakeDataset(t *testing.T) {
 			),
 		},
 		{dataSourceName: filepath.Join("fixtures", "flow.db"),
-			query:      "select grp,district,flow from flow",
-			fieldNames: []string{"grp", "district", "flow"},
+			query:  "select grp,district,flow from flow",
+			fields: []string{"grp", "district", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow_three_columns.csv"),
 				true,
@@ -643,8 +643,8 @@ func TestMakeDataset(t *testing.T) {
 	}
 	for _, c := range cases {
 		e := &experimentFile{
-			Dataset:    "sql",
-			FieldNames: c.fieldNames,
+			Dataset: "sql",
+			Fields:  c.fields,
 			Sql: &sqlDesc{
 				DriverName:     "sqlite3",
 				DataSourceName: c.dataSourceName,
@@ -666,8 +666,8 @@ func TestMakeDataset(t *testing.T) {
 
 func TestMakeDataset_err(t *testing.T) {
 	e := &experimentFile{
-		Dataset:    "sql",
-		FieldNames: []string{},
+		Dataset: "sql",
+		Fields:  []string{},
 		Sql: &sqlDesc{
 			DriverName:     "mysql",
 			DataSourceName: "invalid:invalid@tcp(127.0.0.1:9999)/master",

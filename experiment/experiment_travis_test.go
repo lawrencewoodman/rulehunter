@@ -12,12 +12,12 @@ import (
 
 func TestMakeDataset_travis(t *testing.T) {
 	cases := []struct {
-		query      string
-		fieldNames []string
-		want       ddataset.Dataset
+		query  string
+		fields []string
+		want   ddataset.Dataset
 	}{
 		{query: "select * from flow",
-			fieldNames: []string{"grp", "district", "height", "flow"},
+			fields: []string{"grp", "district", "height", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow.csv"),
 				true,
@@ -26,7 +26,7 @@ func TestMakeDataset_travis(t *testing.T) {
 			),
 		},
 		{query: "select grp,district,flow from flow",
-			fieldNames: []string{"grp", "district", "flow"},
+			fields: []string{"grp", "district", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow_three_columns.csv"),
 				true,
@@ -37,8 +37,8 @@ func TestMakeDataset_travis(t *testing.T) {
 	}
 	for _, c := range cases {
 		e := &experimentFile{
-			Dataset:    "sql",
-			FieldNames: c.fieldNames,
+			Dataset: "sql",
+			Fields:  c.fields,
 			Sql: &sqlDesc{
 				DriverName:     "mysql",
 				DataSourceName: "travis@/master",

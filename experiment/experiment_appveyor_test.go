@@ -16,13 +16,13 @@ func TestMakeDataset_appveyor(t *testing.T) {
 		instanceName string
 		port         int
 		query        string
-		fieldNames   []string
+		fields       []string
 		want         ddataset.Dataset
 	}{
 		{instanceName: "SQL2014",
-			port:       1433,
-			query:      "select * from flow",
-			fieldNames: []string{"grp", "district", "height", "flow"},
+			port:   1433,
+			query:  "select * from flow",
+			fields: []string{"grp", "district", "height", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow.csv"),
 				true,
@@ -33,8 +33,8 @@ func TestMakeDataset_appveyor(t *testing.T) {
 	}
 	for _, c := range cases {
 		e := &experimentFile{
-			Dataset:    "sql",
-			FieldNames: c.fieldNames,
+			Dataset: "sql",
+			Fields:  c.fields,
 			Sql: &sqlDesc{
 				DriverName: "mssql",
 				DataSourceName: fmt.Sprintf(
