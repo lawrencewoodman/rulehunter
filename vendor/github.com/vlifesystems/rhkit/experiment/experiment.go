@@ -25,15 +25,17 @@ import (
 	"github.com/vlifesystems/rhkit/aggregators"
 	"github.com/vlifesystems/rhkit/goal"
 	"github.com/vlifesystems/rhkit/internal"
+	"github.com/vlifesystems/rhkit/rule"
 )
 
 type ExperimentDesc struct {
-	Title       string
-	Dataset     ddataset.Dataset
-	RuleFields  []string
-	Aggregators []*AggregatorDesc
-	Goals       []string
-	SortOrder   []*SortDesc
+	Title          string
+	Dataset        ddataset.Dataset
+	RuleFields     []string
+	RuleComplexity rule.Complexity
+	Aggregators    []*AggregatorDesc
+	Goals          []string
+	SortOrder      []*SortDesc
 }
 
 type AggregatorDesc struct {
@@ -50,7 +52,8 @@ type SortDesc struct {
 type Experiment struct {
 	Title          string
 	Dataset        ddataset.Dataset
-	RuleFieldNames []string
+	RuleFields     []string
+	RuleComplexity rule.Complexity
 	Aggregators    []aggregators.AggregatorSpec
 	Goals          []*goal.Goal
 	SortOrder      []SortField
@@ -97,7 +100,8 @@ func New(e *ExperimentDesc) (*Experiment, error) {
 	return &Experiment{
 		Title:          e.Title,
 		Dataset:        e.Dataset,
-		RuleFieldNames: e.RuleFields,
+		RuleFields:     e.RuleFields,
+		RuleComplexity: e.RuleComplexity,
 		Aggregators:    aggregators,
 		Goals:          goals,
 		SortOrder:      sortOrder,
@@ -108,11 +112,9 @@ func checkExperimentDescValid(e *ExperimentDesc) error {
 	if err := checkSortDescsValid(e); err != nil {
 		return err
 	}
-
 	if err := checkRuleFieldsValid(e); err != nil {
 		return err
 	}
-
 	if err := checkAggregatorsValid(e); err != nil {
 		return err
 	}

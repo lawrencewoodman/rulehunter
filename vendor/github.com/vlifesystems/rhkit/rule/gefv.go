@@ -111,7 +111,7 @@ func (r *GEFV) DPReduce() []Rule {
 func generateGEFV(
 	inputDescription *description.Description,
 	ruleFields []string,
-	complexity int,
+	complexity Complexity,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]

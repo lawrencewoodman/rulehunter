@@ -4,7 +4,7 @@
   "dataset": "csv",
   "fieldNames": ["name", "balance", "num_cards", "marital_status",
                  "tertiary_educated", "success"],
-  "ruleFieldNames": ["name", "balance", "num_cards", "marital_status",
+  "ruleFields": ["name", "balance", "num_cards", "marital_status",
                  "tertiary_educated"],
   "csv": {
     "filename": "fixtures/debt.csv",

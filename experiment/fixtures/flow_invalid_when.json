@@ -8,7 +8,7 @@
     "separator":  ","
   },
   "fieldNames": ["group","district","height","flow"],
-  "ruleFieldNames": ["group","district","height"],
+  "ruleFields": ["group","district","height"],
   "aggregators": [
     {
       "name": "goodFlowMcc",

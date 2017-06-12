@@ -83,8 +83,7 @@ func sqrt(args []*dlit.Literal) (*dlit.Literal, error) {
 		r := dlit.MustNew(err)
 		return r, err
 	}
-	r, err := dlit.New(math.Sqrt(x))
-	return r, err
+	return dlit.New(math.Sqrt(x))
 }
 
 // pow returns the base raised to the power of the exponent
@@ -110,8 +109,7 @@ func pow(args []*dlit.Literal) (*dlit.Literal, error) {
 		err := CantConvertToTypeError{Kind: "float", Value: args[1]}
 		return dlit.MustNew(err), err
 	}
-	r, err := dlit.New(math.Pow(x, y))
-	return r, err
+	return dlit.New(math.Pow(x, y))
 }
 
 // roundto returns a number rounded to a number of decimal places.

@@ -42,7 +42,7 @@ var (
 type generatorFunc func(
 	desc *description.Description,
 	ruleFields []string,
-	complexity int,
+	complexity Complexity,
 	field string,
 ) []Rule
 
@@ -76,6 +76,10 @@ type IncompatibleTypesRuleError struct {
 	Rule Rule
 }
 
+type Complexity struct {
+	Arithmetic bool
+}
+
 func (e InvalidRuleError) Error() string {
 	return "invalid rule: " + e.Rule.String()
 }
@@ -90,11 +94,8 @@ func (e IncompatibleTypesRuleError) Error() string {
 func Generate(
 	inputDescription *description.Description,
 	ruleFields []string,
-	complexity int,
+	complexity Complexity,
 ) []Rule {
-	if complexity < 1 || complexity > 10 {
-		panic("complexity must be in range 1..10")
-	}
 	rules := make([]Rule, 1)
 	rules[0] = NewTrue()
 	for field := range inputDescription.Fields {

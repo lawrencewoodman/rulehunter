@@ -85,7 +85,7 @@ func (r *NEFF) Fields() []string {
 func generateNEFF(
 	inputDescription *description.Description,
 	ruleFields []string,
-	complexity int,
+	complexity Complexity,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]

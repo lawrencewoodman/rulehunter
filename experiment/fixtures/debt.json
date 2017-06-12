@@ -15,7 +15,7 @@
 		"tertiaryEducated",
 		"success"
   ],
-  "ruleFieldNames": [
+  "ruleFields": [
 		"name",
 		"balance",
 		"numCards",

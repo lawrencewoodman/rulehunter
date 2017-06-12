@@ -137,11 +137,11 @@ func (r *MulLEF) DPReduce() []Rule {
 func generateMulLEF(
 	inputDescription *description.Description,
 	ruleFields []string,
-	complexity int,
+	complexity Complexity,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]
-	if fd.Kind != fieldtype.Number {
+	if !complexity.Arithmetic || fd.Kind != fieldtype.Number {
 		return []Rule{}
 	}
 	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)

@@ -76,7 +76,7 @@ func (r *GTFF) Fields() []string {
 func generateGTFF(
 	inputDescription *description.Description,
 	ruleFields []string,
-	complexity int,
+	complexity Complexity,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]

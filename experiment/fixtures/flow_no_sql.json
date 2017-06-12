@@ -3,7 +3,7 @@
   "tags": ["test", "fred / ned"],
   "dataset": "sql",
   "fieldNames": ["group","district","height","flow"],
-  "ruleFieldNames": ["group","district","height"],
+  "ruleFields": ["group","district","height"],
   "aggregators": [
     {
       "name": "goodFlowAccuracy",

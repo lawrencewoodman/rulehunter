@@ -54,14 +54,13 @@ type experimentFile struct {
 	Csv            *csvDesc                       `yaml:"csv"`
 	Sql            *sqlDesc                       `yaml:"sql"`
 	FieldNames     []string                       `yaml:"fieldNames"`
-	RuleFieldNames []string                       `yaml:"ruleFieldNames"`
+	RuleFields     []string                       `yaml:"ruleFields"`
+	RuleComplexity *ruleComplexity                `yaml:"ruleComplexity"`
 	Aggregators    []*rhexperiment.AggregatorDesc `yaml:"aggregators"`
 	Goals          []string                       `yaml:"goals"`
 	SortOrder      []*sortDesc                    `yaml:"sortOrder"`
 	// An expression that works out whether to run the experiment
 	When string `yaml:"when"`
-	// A number 1..10 to describe how complex the rules should be
-	Complexity int `yaml:"complexity"`
 }
 
 type csvDesc struct {
@@ -74,6 +73,10 @@ type sqlDesc struct {
 	DriverName     string `yaml:"driverName"`
 	DataSourceName string `yaml:"dataSourceName"`
 	Query          string `yaml:"query"`
+}
+
+type ruleComplexity struct {
+	Arithmetic bool `yaml:"arithmetic"`
 }
 
 type sortDesc struct {
@@ -127,7 +130,7 @@ func Process(
 	}
 	experimentFullFilename :=
 		filepath.Join(cfg.ExperimentsDir, experimentFile.Name())
-	experiment, tags, whenExpr, complexity, err :=
+	experiment, tags, whenExpr, err :=
 		loadExperiment(experimentFullFilename, cfg)
 	if err != nil {
 		fullErr := fmt.Errorf("Can't load experiment: %s, %s",
@@ -159,7 +162,11 @@ func Process(
 	if err := epr.ReportProgress("Generating rules", 0); err != nil {
 		return reportExperimentFail(err)
 	}
-	rules := rule.Generate(dDescription, experiment.RuleFieldNames, complexity)
+	rules := rule.Generate(
+		dDescription,
+		experiment.RuleFields,
+		experiment.RuleComplexity,
+	)
 
 	assessment, err = assessRules(1, rules, experiment, epr, cfg)
 	if err != nil {
@@ -257,7 +264,6 @@ func loadExperiment(filename string, cfg *config.Config) (
 	experiment *rhexperiment.Experiment,
 	tags []string,
 	whenExpr *dexpr.Expr,
-	complexity int,
 	err error,
 ) {
 	var e *experimentFile
@@ -270,23 +276,19 @@ func loadExperiment(filename string, cfg *config.Config) (
 	case ".yaml":
 		e, err = loadYAML(filename)
 	default:
-		return nil, noTags, nil, 0, InvalidExtError(ext)
+		return nil, noTags, nil, InvalidExtError(ext)
 	}
 	if err != nil {
-		return nil, noTags, nil, 0, err
-	}
-
-	if e.Complexity == 0 {
-		e.Complexity = 5
+		return nil, noTags, nil, err
 	}
 
 	if err := e.checkValid(); err != nil {
-		return nil, noTags, nil, 0, err
+		return nil, noTags, nil, err
 	}
 
 	dataset, err := makeDataset(e)
 	if err != nil {
-		return nil, noTags, nil, 0, err
+		return nil, noTags, nil, err
 	}
 
 	if cfg.MaxNumRecords >= 1 {
@@ -297,24 +299,27 @@ func loadExperiment(filename string, cfg *config.Config) (
 		dataset = dcache.New(dataset, cfg.MaxNumCacheRecords)
 	}
 
+	rc := makeRuleComplexity(e)
+
 	experimentDesc := &rhexperiment.ExperimentDesc{
-		Title:       e.Title,
-		Dataset:     dataset,
-		RuleFields:  e.RuleFieldNames,
-		Aggregators: e.Aggregators,
-		Goals:       e.Goals,
-		SortOrder:   makeRHSortOrder(e.SortOrder),
+		Title:          e.Title,
+		Dataset:        dataset,
+		RuleFields:     e.RuleFields,
+		RuleComplexity: rc,
+		Aggregators:    e.Aggregators,
+		Goals:          e.Goals,
+		SortOrder:      makeRHSortOrder(e.SortOrder),
 	}
 	experiment, err = rhexperiment.New(experimentDesc)
 	if err != nil {
-		return nil, noTags, nil, 0, err
+		return nil, noTags, nil, err
 	}
 
 	whenExpr, err = makeWhenExpr(e.When)
 	if err != nil {
-		return nil, noTags, nil, 0, InvalidWhenExprError(e.When)
+		return nil, noTags, nil, InvalidWhenExprError(e.When)
 	}
-	return experiment, e.Tags, whenExpr, e.Complexity, err
+	return experiment, e.Tags, whenExpr, err
 }
 
 func makeRHSortOrder(sortOrder []*sortDesc) []*rhexperiment.SortDesc {
@@ -381,12 +386,16 @@ func makeDataset(e *experimentFile) (d ddataset.Dataset, err error) {
 	return
 }
 
+func makeRuleComplexity(e *experimentFile) rule.Complexity {
+	if e.RuleComplexity == nil {
+		return rule.Complexity{}
+	}
+	return rule.Complexity{Arithmetic: e.RuleComplexity.Arithmetic}
+}
+
 func (e *experimentFile) checkValid() error {
 	if len(e.Title) == 0 {
 		return errors.New("Experiment field missing: title")
-	}
-	if e.Complexity < 1 || e.Complexity > 10 {
-		return errors.New("Experiment field out of range: complexity")
 	}
 	if len(e.Dataset) == 0 {
 		return errors.New("Experiment field missing: dataset")

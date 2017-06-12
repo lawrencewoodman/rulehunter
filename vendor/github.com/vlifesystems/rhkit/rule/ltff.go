@@ -76,7 +76,7 @@ func (r *LTFF) Fields() []string {
 func generateLTFF(
 	inputDescription *description.Description,
 	ruleFields []string,
-	complexity int,
+	complexity Complexity,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]

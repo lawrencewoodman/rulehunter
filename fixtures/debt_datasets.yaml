@@ -7,7 +7,7 @@ fieldNames:
   - "marital_status"
   - "tertiary_educated"
   - "success"
-ruleFieldNames:
+ruleFields:
   - "name"
   - "balance"
   - "num_cards"

@@ -76,7 +76,7 @@ func (r *LEFF) Fields() []string {
 func generateLEFF(
 	inputDescription *description.Description,
 	ruleFields []string,
-	complexity int,
+	complexity Complexity,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]

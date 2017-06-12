@@ -12,7 +12,7 @@ fieldNames:
   - district
   - height
   - flow
-ruleFieldNames:
+ruleFields:
   - group
   - district
   - height

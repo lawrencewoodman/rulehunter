@@ -10,6 +10,7 @@ import (
 	"github.com/vlifesystems/rhkit/aggregators"
 	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rhkit/goal"
+	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
 	"github.com/vlifesystems/rulehunter/html/cmd"
@@ -35,7 +36,6 @@ func TestLoadExperiment(t *testing.T) {
 		wantExperiment *experiment.Experiment
 		wantTags       []string
 		wantWhenExpr   *dexpr.Expr
-		wantComplexity int
 	}{
 		{cfg: &config.Config{MaxNumRecords: -1},
 			filename: filepath.Join("fixtures", "flow.json"),
@@ -47,7 +47,8 @@ func TestLoadExperiment(t *testing.T) {
 					rune(','),
 					[]string{"group", "district", "height", "flow"},
 				),
-				RuleFieldNames: []string{"group", "district", "height"},
+				RuleFields:     []string{"group", "district", "height"},
+				RuleComplexity: rule.Complexity{Arithmetic: true},
 				Aggregators: []aggregators.AggregatorSpec{
 					aggregators.MustNew("numMatches", "count", "true()"),
 					aggregators.MustNew(
@@ -64,9 +65,8 @@ func TestLoadExperiment(t *testing.T) {
 					experiment.SortField{"numMatches", experiment.DESCENDING},
 				},
 			},
-			wantTags:       []string{"test", "fred / ned"},
-			wantWhenExpr:   dexpr.MustNew("!hasRun", funcs),
-			wantComplexity: 5,
+			wantTags:     []string{"test", "fred / ned"},
+			wantWhenExpr: dexpr.MustNew("!hasRun", funcs),
 		},
 		{cfg: &config.Config{MaxNumRecords: 4},
 			filename: filepath.Join("fixtures", "flow.json"),
@@ -81,7 +81,8 @@ func TestLoadExperiment(t *testing.T) {
 					),
 					4,
 				),
-				RuleFieldNames: []string{"group", "district", "height"},
+				RuleFields:     []string{"group", "district", "height"},
+				RuleComplexity: rule.Complexity{Arithmetic: true},
 				Aggregators: []aggregators.AggregatorSpec{
 					aggregators.MustNew("numMatches", "count", "true()"),
 					aggregators.MustNew(
@@ -98,9 +99,8 @@ func TestLoadExperiment(t *testing.T) {
 					experiment.SortField{"numMatches", experiment.DESCENDING},
 				},
 			},
-			wantTags:       []string{"test", "fred / ned"},
-			wantWhenExpr:   dexpr.MustNew("!hasRun", funcs),
-			wantComplexity: 5,
+			wantTags:     []string{"test", "fred / ned"},
+			wantWhenExpr: dexpr.MustNew("!hasRun", funcs),
 		},
 		{cfg: &config.Config{MaxNumRecords: -1},
 			filename: filepath.Join("fixtures", "debt.json"),
@@ -119,13 +119,14 @@ func TestLoadExperiment(t *testing.T) {
 						"success",
 					},
 				),
-				RuleFieldNames: []string{
+				RuleFields: []string{
 					"name",
 					"balance",
 					"numCards",
 					"martialStatus",
 					"tertiaryEducated",
 				},
+				RuleComplexity: rule.Complexity{Arithmetic: false},
 				Aggregators: []aggregators.AggregatorSpec{
 					aggregators.MustNew("numMatches", "count", "true()"),
 					aggregators.MustNew(
@@ -147,7 +148,6 @@ func TestLoadExperiment(t *testing.T) {
 				"!hasRunToday || sinceLastRunHours > 2",
 				funcs,
 			),
-			wantComplexity: 5,
 		},
 		{cfg: &config.Config{MaxNumRecords: -1},
 			filename: filepath.Join("fixtures", "flow.yaml"),
@@ -159,7 +159,8 @@ func TestLoadExperiment(t *testing.T) {
 					rune(','),
 					[]string{"group", "district", "height", "flow"},
 				),
-				RuleFieldNames: []string{"group", "district", "height"},
+				RuleFields:     []string{"group", "district", "height"},
+				RuleComplexity: rule.Complexity{Arithmetic: false},
 				Aggregators: []aggregators.AggregatorSpec{
 					aggregators.MustNew("numMatches", "count", "true()"),
 					aggregators.MustNew(
@@ -176,75 +177,12 @@ func TestLoadExperiment(t *testing.T) {
 					experiment.SortField{"numMatches", experiment.DESCENDING},
 				},
 			},
-			wantTags:       []string{"test", "fred / ned"},
-			wantWhenExpr:   dexpr.MustNew("!hasRun", funcs),
-			wantComplexity: 5,
-		},
-		{cfg: &config.Config{MaxNumRecords: -1},
-			filename: filepath.Join("fixtures", "flow_complex_one.yaml"),
-			wantExperiment: &experiment.Experiment{
-				Title: "What would indicate good flow?",
-				Dataset: dcsv.New(
-					filepath.Join("fixtures", "flow.csv"),
-					true,
-					rune(','),
-					[]string{"group", "district", "height", "flow"},
-				),
-				RuleFieldNames: []string{"group", "district", "height"},
-				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("numMatches", "count", "true()"),
-					aggregators.MustNew(
-						"percentMatches",
-						"calc",
-						"roundto(100.0 * numMatches / numRecords, 2)",
-					),
-					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
-					aggregators.MustNew("goalsScore", "goalsscore"),
-				},
-				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
-				SortOrder: []experiment.SortField{
-					experiment.SortField{"goodFlowMcc", experiment.DESCENDING},
-					experiment.SortField{"numMatches", experiment.DESCENDING},
-				},
-			},
-			wantTags:       []string{"test", "fred / ned"},
-			wantWhenExpr:   dexpr.MustNew("!hasRun", funcs),
-			wantComplexity: 1,
-		},
-		{cfg: &config.Config{MaxNumRecords: -1},
-			filename: filepath.Join("fixtures", "flow_complex_ten.yaml"),
-			wantExperiment: &experiment.Experiment{
-				Title: "What would indicate good flow?",
-				Dataset: dcsv.New(
-					filepath.Join("fixtures", "flow.csv"),
-					true,
-					rune(','),
-					[]string{"group", "district", "height", "flow"},
-				),
-				RuleFieldNames: []string{"group", "district", "height"},
-				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("numMatches", "count", "true()"),
-					aggregators.MustNew(
-						"percentMatches",
-						"calc",
-						"roundto(100.0 * numMatches / numRecords, 2)",
-					),
-					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
-					aggregators.MustNew("goalsScore", "goalsscore"),
-				},
-				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
-				SortOrder: []experiment.SortField{
-					experiment.SortField{"goodFlowMcc", experiment.DESCENDING},
-					experiment.SortField{"numMatches", experiment.DESCENDING},
-				},
-			},
-			wantTags:       []string{"test", "fred / ned"},
-			wantWhenExpr:   dexpr.MustNew("!hasRun", funcs),
-			wantComplexity: 10,
+			wantTags:     []string{"test", "fred / ned"},
+			wantWhenExpr: dexpr.MustNew("!hasRun", funcs),
 		},
 	}
 	for _, c := range cases {
-		gotExperiment, gotTags, gotWhenExpr, gotComplexity, err :=
+		gotExperiment, gotTags, gotWhenExpr, err :=
 			loadExperiment(c.filename, c.cfg)
 		if err != nil {
 			t.Fatalf("loadExperiment(%s) err: %s", c.filename, err)
@@ -259,10 +197,6 @@ func TestLoadExperiment(t *testing.T) {
 		if gotWhenExpr.String() != c.wantWhenExpr.String() {
 			t.Errorf("loadExperiment(%s) gotWhenExpr: %s, wantWhenExpr: %s",
 				c.filename, gotWhenExpr, c.wantWhenExpr)
-		}
-		if gotComplexity != c.wantComplexity {
-			t.Errorf("loadExperiment(%s) gotComplexity: %d, wantComplexity: %d",
-				c.filename, gotComplexity, c.wantComplexity)
 		}
 		if !reflect.DeepEqual(gotTags, c.wantTags) {
 			t.Errorf("loadExperiment(%s) gotTags: %s, wantTags: %s",
@@ -321,14 +255,10 @@ func TestLoadExperiment_error(t *testing.T) {
 		{filepath.Join("fixtures", "flow_invalid.yaml"),
 			errors.New("yaml: line 3: did not find expected key"),
 		},
-		{filepath.Join("fixtures", "flow_complex_minus.yaml"),
-			errors.New("Experiment field out of range: complexity")},
-		{filepath.Join("fixtures", "flow_complex_eleven.yaml"),
-			errors.New("Experiment field out of range: complexity")},
 	}
 	cfg := &config.Config{MaxNumRecords: -1}
 	for _, c := range cases {
-		_, _, _, _, err := loadExperiment(c.filename, cfg)
+		_, _, _, err := loadExperiment(c.filename, cfg)
 		if err == nil {
 			t.Errorf("loadExperiment(%s) no error, wantErr:%s",
 				c.filename, c.wantErr)
@@ -873,8 +803,11 @@ func checkExperimentMatch(
 	if e1.Title != e2.Title {
 		return errors.New("Titles don't match")
 	}
-	if !areStringArraysEqual(e1.RuleFieldNames, e2.RuleFieldNames) {
-		return errors.New("RuleFieldNames don't match")
+	if !areStringArraysEqual(e1.RuleFields, e2.RuleFields) {
+		return errors.New("RuleFields don't match")
+	}
+	if !areRuleComplexitiesEqual(e1.RuleComplexity, e2.RuleComplexity) {
+		return errors.New("RuleComplexities don't match")
 	}
 	if !areGoalExpressionsEqual(e1.Goals, e2.Goals) {
 		return errors.New("Goals don't match")
@@ -929,6 +862,10 @@ func areStringArraysEqual(a1 []string, a2 []string) bool {
 		}
 	}
 	return true
+}
+
+func areRuleComplexitiesEqual(c1, c2 rule.Complexity) bool {
+	return c1.Arithmetic == c2.Arithmetic
 }
 
 func areGoalExpressionsEqual(g1 []*goal.Goal, g2 []*goal.Goal) bool {

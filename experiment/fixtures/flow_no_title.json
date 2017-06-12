@@ -2,7 +2,7 @@
   "tags": ["test", "fred / ned"],
   "datasetFilename": "fixtures/flow.csv",
   "fieldNames": ["group","district","height","flow"],
-  "ruleFieldNames": ["group","district","height"],
+  "ruleFields": ["group","district","height"],
   "isFirstLineFieldNames": true,
   "separator":  ",",
   "aggregators": [

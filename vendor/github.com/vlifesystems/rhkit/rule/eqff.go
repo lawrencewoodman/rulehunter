@@ -85,7 +85,7 @@ func (r *EQFF) Fields() []string {
 func generateEQFF(
 	inputDescription *description.Description,
 	ruleFields []string,
-	complexity int,
+	complexity Complexity,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]
