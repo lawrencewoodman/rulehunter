@@ -80,7 +80,7 @@ func New(name string, aggType string, args ...string) (AggregatorSpec, error) {
 	if aggType == "goalsscore" {
 		if len(args) != 0 {
 			return nil,
-				fmt.Errorf("invalid number of arguments for aggregator: %s", aggType)
+				fmt.Errorf("invalid number of arguments for aggregator: goalsscore")
 		}
 		ad, err = aggregator.MakeSpec(name, "")
 	} else {

@@ -30,6 +30,7 @@ const (
 	String
 )
 
+// New creates a new FieldType and will panic if an unsupported type is given
 func New(s string) FieldType {
 	switch s {
 	case "Unknown":
@@ -41,9 +42,10 @@ func New(s string) FieldType {
 	case "String":
 		return String
 	}
-	panic(fmt.Sprintf("Unsupported type: %s", s))
+	panic(fmt.Sprintf("unsupported type: %s", s))
 }
 
+// String returns the string representation of the FieldType
 func (ft FieldType) String() string {
 	switch ft {
 	case Unknown:
@@ -55,5 +57,5 @@ func (ft FieldType) String() string {
 	case String:
 		return "String"
 	}
-	panic(fmt.Sprintf("Unsupported type: %d", ft))
+	panic(fmt.Sprintf("unsupported type: %d", ft))
 }

@@ -139,7 +139,7 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 		if err := args[1].Err(); err != nil {
 			return args[1], err
 		}
-		err := CantConvertToTypeError{Kind: "int", Value: args[0]}
+		err := CantConvertToTypeError{Kind: "int", Value: args[1]}
 		r := dlit.MustNew(err)
 		return r, err
 	}
@@ -153,7 +153,7 @@ func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 	return dlit.New(math.Floor(.5+x*shift) / shift)
 }
 
-// in returns whether a string is in a slice strings
+// in returns whether a string is in a slice of strings
 func in(args []*dlit.Literal) (*dlit.Literal, error) {
 	if len(args) < 2 {
 		r := dlit.MustNew(ErrTooFewArguments)
@@ -161,7 +161,13 @@ func in(args []*dlit.Literal) (*dlit.Literal, error) {
 	}
 	needle := args[0]
 	haystack := args[1:]
+	if err := needle.Err(); err != nil {
+		return needle, err
+	}
 	for _, v := range haystack {
+		if err := v.Err(); err != nil {
+			return v, err
+		}
 		if needle.String() == v.String() {
 			return trueLiteral, nil
 		}
@@ -169,7 +175,7 @@ func in(args []*dlit.Literal) (*dlit.Literal, error) {
 	return falseLiteral, nil
 }
 
-// ni returns whether a string is not in a slice strings
+// ni returns whether a string is not in a slice of strings
 func ni(args []*dlit.Literal) (*dlit.Literal, error) {
 	if len(args) < 2 {
 		r := dlit.MustNew(ErrTooFewArguments)
@@ -177,13 +183,21 @@ func ni(args []*dlit.Literal) (*dlit.Literal, error) {
 	}
 	needle := args[0]
 	haystack := args[1:]
+	if err := needle.Err(); err != nil {
+		return needle, err
+	}
 	for _, v := range haystack {
+		if err := v.Err(); err != nil {
+			return v, err
+		}
 		if needle.String() == v.String() {
 			return falseLiteral, nil
 		}
 	}
 	return trueLiteral, nil
 }
+
+var isSmallerExpr = dexpr.MustNew("v < min", CallFuncs)
 
 // min returns the smallest number of those supplied
 func min(args []*dlit.Literal) (*dlit.Literal, error) {
@@ -195,7 +209,7 @@ func min(args []*dlit.Literal) (*dlit.Literal, error) {
 	min := args[0]
 	for _, v := range args[1:] {
 		vars := map[string]*dlit.Literal{"min": min, "v": v}
-		isSmaller, err := dexpr.EvalBool("v < min", CallFuncs, vars)
+		isSmaller, err := isSmallerExpr.EvalBool(vars)
 		if err != nil {
 			if x, ok := err.(dexpr.InvalidExprError); ok {
 				if x.Err == dexpr.ErrIncompatibleTypes {
@@ -212,6 +226,8 @@ func min(args []*dlit.Literal) (*dlit.Literal, error) {
 	return min, nil
 }
 
+var isBiggerExpr = dexpr.MustNew("v > max", CallFuncs)
+
 // max returns the smallest number of those supplied
 func max(args []*dlit.Literal) (*dlit.Literal, error) {
 	if len(args) < 2 {
@@ -222,7 +238,7 @@ func max(args []*dlit.Literal) (*dlit.Literal, error) {
 	max := args[0]
 	for _, v := range args[1:] {
 		vars := map[string]*dlit.Literal{"max": max, "v": v}
-		isBigger, err := dexpr.EvalBool("v > max", CallFuncs, vars)
+		isBigger, err := isBiggerExpr.EvalBool(vars)
 		if err != nil {
 			if x, ok := err.(dexpr.InvalidExprError); ok {
 				if x.Err == dexpr.ErrIncompatibleTypes {

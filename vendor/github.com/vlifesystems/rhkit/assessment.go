@@ -25,7 +25,6 @@ import (
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/aggregators"
 	"github.com/vlifesystems/rhkit/experiment"
-	"github.com/vlifesystems/rhkit/goal"
 	"github.com/vlifesystems/rhkit/rule"
 	"sort"
 	"strings"
@@ -51,7 +50,6 @@ type GoalAssessment struct {
 func newAssessment(
 	numRecords int64,
 	goodRuleAssessors []*ruleAssessor,
-	goals []*goal.Goal,
 ) (*Assessment, error) {
 	ruleAssessments := make([]*RuleAssessment, len(goodRuleAssessors))
 	for i, ruleAssessment := range goodRuleAssessors {
@@ -130,11 +128,6 @@ func (a *Assessment) IsEqual(o *Assessment) bool {
 	}
 
 	return true
-}
-
-func (r *RuleAssessment) String() string {
-	return fmt.Sprintf("Rule: %s, Aggregators: %s, Goals: %s",
-		r.Rule, r.Aggregators, r.Goals)
 }
 
 // Tidy up rule assessments by removing poor and poorer similar rules
@@ -282,30 +275,6 @@ func (sortedAssessment *Assessment) excludePoorRules() {
 	sortedAssessment.RuleAssessments = goodRuleAssessments
 }
 
-func (sortedAssessment *Assessment) excludePoorerInRules(
-	numSimilarRules int,
-) {
-	goodRuleAssessments := make([]*RuleAssessment, 0)
-	inFields := make(map[string]int)
-	for _, a := range sortedAssessment.RuleAssessments {
-		switch x := a.Rule.(type) {
-		case *rule.InFV:
-			field := x.Fields()[0]
-			n, ok := inFields[field]
-			if !ok {
-				goodRuleAssessments = append(goodRuleAssessments, a)
-				inFields[field] = 1
-			} else if n < numSimilarRules {
-				goodRuleAssessments = append(goodRuleAssessments, a)
-				inFields[field]++
-			}
-		default:
-			goodRuleAssessments = append(goodRuleAssessments, a)
-		}
-	}
-	sortedAssessment.RuleAssessments = goodRuleAssessments
-}
-
 func (sortedAssessment *Assessment) excludePoorerOverlappingRules() {
 	goodRuleAssessments := make([]*RuleAssessment, 0)
 	for i, aI := range sortedAssessment.RuleAssessments {
@@ -431,8 +400,4 @@ func (r *RuleAssessment) clone() *RuleAssessment {
 
 func (g *GoalAssessment) IsEqual(o *GoalAssessment) bool {
 	return g.Expr == o.Expr && g.Passed == o.Passed
-}
-
-func (g *GoalAssessment) String() string {
-	return fmt.Sprintf("Expr: %s, Passed: %t", g.Expr, g.Passed)
 }

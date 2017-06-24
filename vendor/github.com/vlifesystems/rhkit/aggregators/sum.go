@@ -20,7 +20,6 @@
 package aggregators
 
 import (
-	"fmt"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/goal"
@@ -89,9 +88,8 @@ func (ai *sumInstance) NextRecord(
 ) error {
 	if isRuleTrue {
 		exprValue := ai.spec.expr.Eval(record)
-		_, valueIsFloat := exprValue.Float()
-		if !valueIsFloat {
-			return fmt.Errorf("sum aggregator: value isn't a float: %s", exprValue)
+		if err := exprValue.Err(); err != nil {
+			return err
 		}
 
 		vars := map[string]*dlit.Literal{

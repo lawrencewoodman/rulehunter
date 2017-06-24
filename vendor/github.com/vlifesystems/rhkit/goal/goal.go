@@ -49,7 +49,7 @@ func New(exprStr string) (*Goal, error) {
 func MustNew(expr string) *Goal {
 	g, err := New(expr)
 	if err != nil {
-		panic(fmt.Sprintf("Can't create goal: %s", err))
+		panic(fmt.Sprintf("can't create goal: %s", err))
 	}
 	return g
 }

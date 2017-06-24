@@ -20,7 +20,6 @@
 package aggregators
 
 import (
-	"fmt"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/goal"
@@ -93,9 +92,8 @@ func (ai *meanInstance) NextRecord(
 	if isRuleTrue {
 		ai.numRecords++
 		exprValue := ai.spec.expr.Eval(record)
-		_, valueIsFloat := exprValue.Float()
-		if !valueIsFloat {
-			return fmt.Errorf("mean aggregator: value isn't a float: %s", exprValue)
+		if err := exprValue.Err(); err != nil {
+			return err
 		}
 
 		vars := map[string]*dlit.Literal{

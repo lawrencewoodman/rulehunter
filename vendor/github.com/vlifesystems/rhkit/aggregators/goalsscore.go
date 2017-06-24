@@ -99,10 +99,3 @@ func (ai *goalsScoreInstance) Result(
 	}
 	return dlit.MustNew(goalsScore)
 }
-
-func (ai *goalsScoreInstance) IsEqual(o AggregatorInstance) bool {
-	if _, ok := o.(*goalsScoreInstance); !ok {
-		return false
-	}
-	return ai.Name() == o.Name()
-}

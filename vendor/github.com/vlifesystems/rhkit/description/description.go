@@ -51,7 +51,7 @@ type Value struct {
 	Num   int
 }
 
-func LoadDescriptionJSON(filename string) (*Description, error) {
+func LoadJSON(filename string) (*Description, error) {
 	var dj descriptionJ
 
 	f, err := os.Open(filename)
@@ -104,7 +104,7 @@ func CalcFieldNum(fieldDescriptions map[string]*Field, fieldN string) int {
 		}
 		j++
 	}
-	panic("can't find field in fieldDescriptions")
+	panic("can't find field in Field descriptions: " + fieldN)
 }
 
 func (d *Description) WriteJSON(filename string) error {
@@ -120,20 +120,20 @@ func (d *Description) WriteJSON(filename string) error {
 	return ioutil.WriteFile(filename, json, 0640)
 }
 
-func (d *Description) CheckEqual(dWant *Description) error {
-	if len(d.Fields) != len(dWant.Fields) {
+func (d *Description) CheckEqual(o *Description) error {
+	if len(d.Fields) != len(o.Fields) {
 		return fmt.Errorf(
-			"number of FieldDescriptions doesn't match. got: %d, want: %d\n",
-			len(d.Fields), len(dWant.Fields),
+			"number of Fields doesn't match: %d != %d",
+			len(d.Fields), len(o.Fields),
 		)
 	}
-	for field, fdG := range d.Fields {
-		fdW, ok := dWant.Fields[field]
+	for field, fd := range d.Fields {
+		oFd, ok := o.Fields[field]
 		if !ok {
-			return fmt.Errorf("field Description missing for field: %s", field)
+			return fmt.Errorf("missing field: %s", field)
 		}
-		if err := fdG.checkEqual(fdW); err != nil {
-			return fmt.Errorf("field Description for field: %s, %s", field, err)
+		if err := fd.checkEqual(oFd); err != nil {
+			return fmt.Errorf("description for field: %s, %s", field, err)
 		}
 	}
 	return nil
@@ -264,61 +264,51 @@ func (f *Field) updateNumBoundaries(value *dlit.Literal) {
 		vars := map[string]*dlit.Literal{"min": f.Min, "max": f.Max, "v": value}
 		f.Min = dexpr.Eval("min(min, v)", dexprfuncs.CallFuncs, vars)
 		f.Max = dexpr.Eval("max(max, v)", dexprfuncs.CallFuncs, vars)
-		f.MaxDP =
-			int(maxI(int64(f.MaxDP), int64(internal.NumDecPlaces(value.String()))))
+		numDP := internal.NumDecPlaces(value.String())
+		if numDP > f.MaxDP {
+			f.MaxDP = numDP
+		}
 	}
 }
 
-func (f *Field) checkEqual(fdWant *Field) error {
-	if f.Kind != fdWant.Kind {
-		return fmt.Errorf("got field kind: %s, want: %s", f.Kind, fdWant.Kind)
+func (f *Field) checkEqual(o *Field) error {
+	if f.Kind != o.Kind {
+		return fmt.Errorf("Kind not equal: %s != %s", f.Kind, o.Kind)
 	}
-	if len(f.Values) != len(fdWant.Values) {
-		return fmt.Errorf("got %d values, want: %d",
-			len(f.Values), len(fdWant.Values))
+	if f.NumValues != o.NumValues {
+		return fmt.Errorf("NumValues not equal: %d != %d", f.NumValues, o.NumValues)
 	}
+
 	if f.Kind == fieldtype.Number {
-		if f.Min.String() != fdWant.Min.String() ||
-			f.Max.String() != fdWant.Max.String() {
-			return fmt.Errorf("got min: %s and max: %s, want min: %s and max: %s",
-				f.Min, f.Max, fdWant.Min, fdWant.Max)
+		if f.Min.String() != o.Min.String() {
+			return fmt.Errorf("Min not equal: %s != %s", f.Min, o.Min)
 		}
-		if f.MaxDP != fdWant.MaxDP {
-			return fmt.Errorf("got maxDP: %d, want: %d", f.MaxDP, fdWant.MaxDP)
+		if f.Max.String() != o.Max.String() {
+			return fmt.Errorf("Max not equal: %s != %s", f.Max, o.Max)
+		}
+		if f.MaxDP != o.MaxDP {
+			return fmt.Errorf("MaxDP not equal: %d != %d", f.MaxDP, o.MaxDP)
 		}
 	}
-
-	if f.NumValues != fdWant.NumValues {
-		return fmt.Errorf("got numValues: %d, numValues: %d",
-			f.NumValues, fdWant.NumValues)
-	}
-
-	return fieldValuesEqual(f.Values, fdWant.Values)
+	return fieldValuesEqual(f.Values, o.Values)
 }
 
 func fieldValuesEqual(
-	vdsGot map[string]Value,
-	vdsWant map[string]Value,
+	valuesA map[string]Value,
+	valuesB map[string]Value,
 ) error {
-	if len(vdsGot) != len(vdsWant) {
-		return fmt.Errorf("got %d valueDescriptions, want: %d",
-			len(vdsGot), len(vdsWant))
+	if len(valuesA) != len(valuesB) {
+		return fmt.Errorf("number of Values not equal: %d != %d",
+			len(valuesA), len(valuesB))
 	}
-	for k, vdW := range vdsWant {
-		vdG, ok := vdsGot[k]
+	for k, vA := range valuesA {
+		vB, ok := valuesB[k]
 		if !ok {
-			return fmt.Errorf("valueDescription missing value: %s", k)
+			return fmt.Errorf("Value missing: %s", k)
 		}
-		if vdG.Num != vdW.Num || vdG.Value.String() != vdW.Value.String() {
-			return fmt.Errorf("got valueDescription: %v, want: %v", vdG, vdW)
+		if vA.Num != vB.Num || vA.Value.String() != vB.Value.String() {
+			return fmt.Errorf("Value not equal for: %s, %v != %v", k, vA, vB)
 		}
 	}
 	return nil
-}
-
-func maxI(x, y int64) int64 {
-	if x > y {
-		return x
-	}
-	return y
 }

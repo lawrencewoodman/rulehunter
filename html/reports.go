@@ -54,7 +54,7 @@ func generateReports(
 			if err != nil {
 				return err
 			}
-			_description, err := description.LoadDescriptionJSON(
+			_description, err := description.LoadJSON(
 				filepath.Join(config.BuildDir, "descriptions", file.Name()),
 			)
 			if err != nil {

@@ -55,15 +55,14 @@ func (r *EQFV) IsTrue(record ddataset.Record) (bool, error) {
 	if !ok {
 		return false, InvalidRuleError{Rule: r}
 	}
-
-	if lhFloat, lhIsFloat := lh.Float(); lhIsFloat {
-		if vFloat, vIsFloat := r.value.Float(); vIsFloat {
-			return lhFloat == vFloat, nil
-		}
-	}
 	if lhInt, lhIsInt := lh.Int(); lhIsInt {
 		if vInt, vIsInt := r.value.Int(); vIsInt {
 			return lhInt == vInt, nil
+		}
+	}
+	if lhFloat, lhIsFloat := lh.Float(); lhIsFloat {
+		if vFloat, vIsFloat := r.value.Float(); vIsFloat {
+			return lhFloat == vFloat, nil
 		}
 	}
 	if lh.Err() == nil && r.value.Err() == nil {
