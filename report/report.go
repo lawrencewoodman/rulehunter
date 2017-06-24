@@ -25,6 +25,7 @@ import (
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit"
 	"github.com/vlifesystems/rhkit/experiment"
+	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"io/ioutil"
 	"os"
@@ -168,7 +169,7 @@ func getTrueAggregators(
 ) (map[string]*dlit.Literal, error) {
 	trueRuleAssessment :=
 		assessment.RuleAssessments[len(assessment.RuleAssessments)-1]
-	if trueRuleAssessment.Rule.String() != "true()" {
+	if _, isTrueRule := trueRuleAssessment.Rule.(rule.True); !isTrueRule {
 		return map[string]*dlit.Literal{}, errors.New("Can't find true() rule")
 	}
 	trueAggregators := trueRuleAssessment.Aggregators
