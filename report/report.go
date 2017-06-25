@@ -170,7 +170,7 @@ func getTrueAggregators(
 	trueRuleAssessment :=
 		assessment.RuleAssessments[len(assessment.RuleAssessments)-1]
 	if _, isTrueRule := trueRuleAssessment.Rule.(rule.True); !isTrueRule {
-		return map[string]*dlit.Literal{}, errors.New("Can't find true() rule")
+		return map[string]*dlit.Literal{}, errors.New("can't find true() rule")
 	}
 	trueAggregators := trueRuleAssessment.Aggregators
 	return trueAggregators, nil
