@@ -1,9 +1,9 @@
 package report
 
 import (
+	"errors"
 	"github.com/lawrencewoodman/dlit"
 	"math"
-	"strconv"
 	"testing"
 )
 
@@ -22,10 +22,13 @@ func TestCalcTrueAggregatorDiff(t *testing.T) {
 		{name: "numMatches", value: dlit.MustNew(165), want: "-11"},
 		{name: "bigNum",
 			value: dlit.MustNew(int64(math.MinInt64)),
-			want: strconv.FormatFloat(float64(math.MinInt64)-float64(math.MaxInt64),
-				'f',
-				-1,
-				64),
+			want: dlit.MustNew(
+				float64(math.MinInt64) - float64(math.MaxInt64),
+			).String(),
+		},
+		{name: "bigNum",
+			value: dlit.MustNew(errors.New("some error")),
+			want:  "N/A",
 		},
 	}
 

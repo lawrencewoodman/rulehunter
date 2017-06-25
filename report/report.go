@@ -188,9 +188,8 @@ func calcTrueAggregatorDiff(
 		"t": trueAggregators[aggregatorName],
 	}
 	differenceL := diffExpr.Eval(vars)
-	difference := differenceL.String()
 	if err := differenceL.Err(); err != nil {
-		difference = "N/A"
+		return "N/A"
 	}
-	return difference
+	return differenceL.String()
 }
