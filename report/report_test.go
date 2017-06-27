@@ -440,7 +440,7 @@ func checkReportsMatch(r1, r2 *Report) error {
 	if !reflect.DeepEqual(r1.Tags, r2.Tags) {
 		return fmt.Errorf("Tags don't match - %v != %v", r1.Tags, r2.Tags)
 	}
-	if r1.Stamp != r2.Stamp {
+	if math.Abs(r1.Stamp.Sub(r2.Stamp).Seconds()) > 1 {
 		return fmt.Errorf("Stamps don't match - %s != %s", r1.Stamp, r2.Stamp)
 	}
 	if r1.ExperimentFilename != r2.ExperimentFilename {
