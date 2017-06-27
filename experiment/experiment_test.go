@@ -642,7 +642,7 @@ func TestMakeDataset(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		e := &experimentFile{
+		e := &descFile{
 			Dataset: "sql",
 			Fields:  c.fields,
 			Sql: &sqlDesc{
@@ -665,7 +665,7 @@ func TestMakeDataset(t *testing.T) {
 }
 
 func TestMakeDataset_err(t *testing.T) {
-	e := &experimentFile{
+	e := &descFile{
 		Dataset: "sql",
 		Fields:  []string{},
 		Sql: &sqlDesc{

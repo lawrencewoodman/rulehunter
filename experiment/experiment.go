@@ -47,7 +47,7 @@ import (
 	"time"
 )
 
-type experimentFile struct {
+type descFile struct {
 	Title          string                         `yaml:"title"`
 	Tags           []string                       `yaml:"tags"`
 	Dataset        string                         `yaml:"dataset"`
@@ -258,7 +258,7 @@ func loadExperiment(filename string, cfg *config.Config) (
 	whenExpr *dexpr.Expr,
 	err error,
 ) {
-	var e *experimentFile
+	var e *descFile
 	var noTags = []string{}
 
 	ext := filepath.Ext(filename)
@@ -325,8 +325,8 @@ func makeRHSortOrder(sortOrder []*sortDesc) []*rhexperiment.SortDesc {
 	return r
 }
 
-func loadJSON(filename string) (*experimentFile, error) {
-	var e experimentFile
+func loadJSON(filename string) (*descFile, error) {
+	var e descFile
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -340,8 +340,8 @@ func loadJSON(filename string) (*experimentFile, error) {
 	return &e, nil
 }
 
-func loadYAML(filename string) (*experimentFile, error) {
-	var e experimentFile
+func loadYAML(filename string) (*descFile, error) {
+	var e descFile
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -352,7 +352,7 @@ func loadYAML(filename string) (*experimentFile, error) {
 	return &e, nil
 }
 
-func makeDataset(e *experimentFile) (d ddataset.Dataset, err error) {
+func makeDataset(e *descFile) (d ddataset.Dataset, err error) {
 	switch e.Dataset {
 	case "csv":
 		d = dcsv.New(
@@ -378,14 +378,14 @@ func makeDataset(e *experimentFile) (d ddataset.Dataset, err error) {
 	return
 }
 
-func makeRuleComplexity(e *experimentFile) rule.Complexity {
+func makeRuleComplexity(e *descFile) rule.Complexity {
 	if e.RuleComplexity == nil {
 		return rule.Complexity{}
 	}
 	return rule.Complexity{Arithmetic: e.RuleComplexity.Arithmetic}
 }
 
-func (e *experimentFile) checkValid() error {
+func (e *descFile) checkValid() error {
 	if len(e.Title) == 0 {
 		return errors.New("Experiment field missing: title")
 	}
