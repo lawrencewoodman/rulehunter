@@ -238,14 +238,8 @@ func Process(
 	assessment.Refine()
 	assessment = assessment.TruncateRuleAssessments(cfg.MaxNumReportRules)
 
-	err = report.WriteJSON(
-		assessment,
-		experiment,
-		experimentFile.Name(),
-		tags,
-		cfg,
-	)
-	if err != nil {
+	report := report.New(assessment, experiment, experimentFile.Name(), tags)
+	if err := report.WriteJSON(cfg); err != nil {
 		fullErr := fmt.Errorf("Couldn't write json report: %s", err)
 		return reportExperimentFail(err, fullErr)
 	}
@@ -254,9 +248,7 @@ func Process(
 		return reportExperimentFail(err)
 	}
 
-	l.Info(
-		fmt.Sprintf("Successfully processed experiment: %s", experimentFile.Name()),
-	)
+	l.Info("Successfully processed experiment: " + experimentFile.Name())
 	return nil
 }
 

@@ -63,27 +63,18 @@ type AggregatorDesc struct {
 	Arg  string
 }
 
-func WriteJSON(
+func New(
 	assessment *rhkit.Assessment,
 	experiment *experiment.Experiment,
 	experimentFilename string,
 	tags []string,
-	config *config.Config,
-) error {
-	// File mode permission:
-	// No special permission bits
-	// User: Read, Write
-	// Group: Read
-	// Other: None
-	const modePerm = 0640
+) *Report {
+	assessment.Sort(experiment.SortOrder)
+	assessment.Refine()
 
-	_assessment := assessment
-	_assessment.Sort(experiment.SortOrder)
-	_assessment.Refine()
-
-	trueAggregators, err := getTrueAggregators(_assessment)
+	trueAggregators, err := getTrueAggregators(assessment)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	aggregatorDescs := make([]AggregatorDesc, len(experiment.Aggregators))
@@ -95,12 +86,11 @@ func WriteJSON(
 		}
 	}
 
-	assessments := make([]*Assessment, len(_assessment.RuleAssessments))
-	for i, ruleAssessment := range _assessment.RuleAssessments {
+	assessments := make([]*Assessment, len(assessment.RuleAssessments))
+	for i, ruleAssessment := range assessment.RuleAssessments {
 		aggregatorNames := getSortedAggregatorNames(ruleAssessment.Aggregators)
 		aggregators := make([]*Aggregator, len(ruleAssessment.Aggregators))
-		j := 0
-		for _, aggregatorName := range aggregatorNames {
+		for j, aggregatorName := range aggregatorNames {
 			aggregator := ruleAssessment.Aggregators[aggregatorName]
 			difference :=
 				calcTrueAggregatorDiff(trueAggregators, aggregatorName, aggregator)
@@ -109,7 +99,6 @@ func WriteJSON(
 				Value:      aggregator.String(),
 				Difference: difference,
 			}
-			j++
 		}
 		assessments[i] = &Assessment{
 			ruleAssessment.Rule.String(),
@@ -117,7 +106,7 @@ func WriteJSON(
 			ruleAssessment.Goals,
 		}
 	}
-	report := Report{
+	return &Report{
 		experiment.Title,
 		tags,
 		time.Now(),
@@ -127,12 +116,21 @@ func WriteJSON(
 		aggregatorDescs,
 		assessments,
 	}
-	json, err := json.Marshal(report)
+}
+
+func (r *Report) WriteJSON(config *config.Config) error {
+	// File mode permission:
+	// No special permission bits
+	// User: Read, Write
+	// Group: Read
+	// Other: None
+	const modePerm = 0640
+	json, err := json.Marshal(r)
 	if err != nil {
 		return err
 	}
 	reportFilename :=
-		filepath.Join(config.BuildDir, "reports", experimentFilename)
+		filepath.Join(config.BuildDir, "reports", r.ExperimentFilename)
 	return ioutil.WriteFile(reportFilename, json, modePerm)
 }
 

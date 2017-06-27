@@ -47,27 +47,34 @@ type GoalAssessment struct {
 	Passed bool
 }
 
-func newAssessment(
-	numRecords int64,
-	goodRuleAssessors []*ruleAssessor,
-) (*Assessment, error) {
-	ruleAssessments := make([]*RuleAssessment, len(goodRuleAssessors))
-	for i, ruleAssessment := range goodRuleAssessors {
+func NewAssessment(numRecords int64) *Assessment {
+	return &Assessment{
+		NumRecords: numRecords,
+		flags: map[string]bool{
+			"sorted":  false,
+			"refined": false,
+		},
+	}
+}
+
+func (a *Assessment) AddRuleAssessors(ruleAssessors []*ruleAssessor) error {
+	ruleAssessments := make([]*RuleAssessment, len(ruleAssessors))
+	for i, ruleAssessment := range ruleAssessors {
 		rule := ruleAssessment.Rule
 		aggregatorInstancesMap, err :=
 			aggregators.InstancesToMap(
 				ruleAssessment.Aggregators,
 				ruleAssessment.Goals,
-				numRecords,
+				a.NumRecords,
 			)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		goalAssessments := make([]*GoalAssessment, len(ruleAssessment.Goals))
 		for j, goal := range ruleAssessment.Goals {
 			passed, err := goal.Assess(aggregatorInstancesMap)
 			if err != nil {
-				return &Assessment{}, err
+				return err
 			}
 			goalAssessments[j] = &GoalAssessment{goal.String(), passed}
 		}
@@ -78,16 +85,8 @@ func newAssessment(
 			Goals:       goalAssessments,
 		}
 	}
-	flags := map[string]bool{
-		"sorted":  false,
-		"refined": false,
-	}
-	assessment := &Assessment{
-		NumRecords:      numRecords,
-		RuleAssessments: ruleAssessments,
-		flags:           flags,
-	}
-	return assessment, nil
+	a.RuleAssessments = ruleAssessments
+	return nil
 }
 
 func (a *Assessment) Sort(s []experiment.SortField) {
