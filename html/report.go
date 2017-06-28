@@ -62,7 +62,7 @@ func generateReport(
 		Html:               makeHtml(config, "reports"),
 	}
 
-	reportURLDir := genReportURLDir(_report.Stamp, _report.Title)
+	reportURLDir := genReportURLDir(_report.Title)
 	reportFilename := genReportFilename(_report.Stamp, _report.Title)
 	err := writeTemplate(config, reportFilename, reportTpl, tplData)
 	return reportURLDir, err

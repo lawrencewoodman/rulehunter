@@ -32,7 +32,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // File mode permission used as standard for the html content:
@@ -150,7 +149,7 @@ func writeTemplate(
 	return nil
 }
 
-func genReportURLDir(stamp time.Time, title string) string {
+func genReportURLDir(title string) string {
 	escapedTitle := escapeString(title)
 	return fmt.Sprintf("reports/%s/", escapedTitle)
 }

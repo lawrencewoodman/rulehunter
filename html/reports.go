@@ -47,8 +47,7 @@ func generateReports(
 	numReportFiles := countFiles(reportFiles)
 	tplReports := make([]*TplReport, numReportFiles)
 
-	i := 0
-	for _, file := range reportFiles {
+	for i, file := range reportFiles {
 		if !file.IsDir() {
 			report, err := report.LoadJSON(config, file.Name())
 			if err != nil {
@@ -71,7 +70,6 @@ func generateReports(
 				report.Stamp,
 			)
 		}
-		i++
 	}
 	sortTplReportsByDate(tplReports)
 	tplData := TplData{

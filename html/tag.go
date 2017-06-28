@@ -83,7 +83,7 @@ func generateTagPage(config *config.Config, tagName string) error {
 			escapedTagname := escapeString(tagName)
 			for _, reportTag := range report.Tags {
 				if escapedTagname == escapeString(reportTag) {
-					reportURLDir := genReportURLDir(report.Stamp, report.Title)
+					reportURLDir := genReportURLDir(report.Title)
 					tplReports[i] = newTplReport(
 						report.Title,
 						makeTagLinks(report.Tags),

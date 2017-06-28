@@ -28,7 +28,6 @@ func BuildConfigDirs(e errorReporter, buildAllDirs bool) string {
 			"experiments",
 			"datasets",
 			filepath.Join("www", "reports"),
-			filepath.Join("www", "progress"),
 			filepath.Join("build", "progress"),
 			filepath.Join("build", "reports"),
 			filepath.Join("build", "descriptions"),
