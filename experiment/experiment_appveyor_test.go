@@ -32,7 +32,7 @@ func TestMakeDataset_appveyor(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		e := &experimentFile{
+		e := &descFile{
 			Dataset: "sql",
 			Fields:  c.fields,
 			Sql: &sqlDesc{
