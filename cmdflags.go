@@ -29,28 +29,29 @@ type cmdFlags struct {
 	serve     bool
 }
 
-func parseFlags() *cmdFlags {
+func parseFlags(args []string) *cmdFlags {
 	flags := &cmdFlags{}
+	fs := flag.NewFlagSet("cmd", flag.ExitOnError)
 
-	flag.StringVar(
+	fs.StringVar(
 		&flags.configDir,
 		"configdir",
 		"",
 		"The configuration directory",
 	)
-	flag.BoolVar(
+	fs.BoolVar(
 		&flags.install,
 		"install",
 		false,
 		"Install the server as a service",
 	)
-	flag.BoolVar(
+	fs.BoolVar(
 		&flags.serve,
 		"serve",
 		false,
 		"Run the program as a local server",
 	)
-	flag.Parse()
+	fs.Parse(args)
 	return flags
 }
 

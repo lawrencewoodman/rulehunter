@@ -34,7 +34,7 @@ import (
 )
 
 func main() {
-	flags := parseFlags()
+	flags := parseFlags(os.Args[1:])
 	l := logger.NewSvcLogger()
 	exitCode, err := subMain(flags, l)
 	if err != nil {
