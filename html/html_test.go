@@ -1,6 +1,7 @@
 package html
 
 import (
+	"fmt"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
@@ -61,7 +62,7 @@ func TestRun_quit(t *testing.T) {
 	}
 }
 
-// Tests run for cmd.Reports
+// Tests Run for cmd.Reports
 func TestRun_cmd_reports(t *testing.T) {
 	quit := quitter.New()
 	l := testhelpers.NewLogger()
@@ -107,30 +108,6 @@ func TestRun_cmd_reports(t *testing.T) {
 		BuildDir:          filepath.Join(cfgDir, "build"),
 		MaxNumReportRules: 100,
 	}
-	hasQuitC := make(chan bool)
-	go func() {
-		Run(config, pm, l, quit, htmlCmds)
-		hasQuitC <- true
-	}()
-
-	reportsC := time.NewTimer(time.Second).C
-	quitC := time.NewTimer(2 * time.Second).C
-	timeoutC := time.NewTimer(5 * time.Second).C
-	checkFiles := false
-	for !checkFiles {
-		select {
-		case <-reportsC:
-			htmlCmds <- cmd.Reports
-		case <-quitC:
-			quit.Quit()
-		case <-timeoutC:
-			t.Fatalf("Run() didn't quit")
-		case <-hasQuitC:
-			checkFiles = true
-			break
-		}
-	}
-
 	wantFiles := []string{
 		filepath.Join(cfgDir, "www", "index.html"),
 		filepath.Join(cfgDir, "www", "activity", "index.html"),
@@ -151,9 +128,108 @@ func TestRun_cmd_reports(t *testing.T) {
 			"index.html"),
 	}
 
-	for _, wantFile := range wantFiles {
-		if _, err := os.Stat(wantFile); os.IsNotExist(err) {
-			t.Errorf("file doesn't exist: %s", wantFile)
+	hasQuitC := make(chan bool)
+	go func() {
+		Run(config, pm, l, quit, htmlCmds)
+		hasQuitC <- true
+	}()
+
+	reportsC := time.NewTimer(time.Second).C
+	timeoutC := time.NewTimer(5 * time.Second).C
+	ticker := time.NewTicker(time.Millisecond * 100).C
+	for {
+		select {
+		case <-reportsC:
+			htmlCmds <- cmd.Reports
+		case <-ticker:
+			if err := checkFilesExist(wantFiles); err == nil {
+				quit.Quit()
+			}
+		case <-timeoutC:
+			quit.Quit()
+			if err := checkFilesExist(wantFiles); err != nil {
+				t.Fatalf("Run: %s", err)
+			}
+		case <-hasQuitC:
+			return
+		}
+	}
+}
+
+// Tests Run for cmd.Progress
+func TestRun_cmd_progress(t *testing.T) {
+	quit := quitter.New()
+	l := testhelpers.NewLogger()
+	htmlCmds := make(chan cmd.Cmd)
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal("Getwd() err: ", err)
+	}
+	defer os.Chdir(wd)
+	cfgDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(cfgDir)
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "reports", "bank-loss.json"),
+		filepath.Join(cfgDir, "build", "reports"),
+	)
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "reports", "bank-profit.json"),
+		filepath.Join(cfgDir, "build", "reports"),
+	)
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "descriptions", "bank-loss.json"),
+		filepath.Join(cfgDir, "build", "descriptions"),
+	)
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "descriptions", "bank-profit.json"),
+		filepath.Join(cfgDir, "build", "descriptions"),
+	)
+
+	pm, err := progress.NewMonitor(
+		filepath.Join(cfgDir, "build", "progress"),
+		htmlCmds,
+	)
+	if err != nil {
+		t.Fatalf("NewMonitor() err: %v", err)
+	}
+	config := &config.Config{
+		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+		WWWDir:            filepath.Join(cfgDir, "www"),
+		BuildDir:          filepath.Join(cfgDir, "build"),
+		MaxNumReportRules: 100,
+	}
+	wantFiles := []string{
+		filepath.Join(cfgDir, "www", "activity", "index.html"),
+	}
+
+	hasQuitC := make(chan bool)
+	go func() {
+		Run(config, pm, l, quit, htmlCmds)
+		hasQuitC <- true
+	}()
+
+	progressC := time.NewTimer(time.Second).C
+	timeoutC := time.NewTimer(5 * time.Second).C
+	ticker := time.NewTicker(time.Millisecond * 100).C
+	for {
+		select {
+		case <-progressC:
+			htmlCmds <- cmd.Progress
+		case <-ticker:
+			if err := checkFilesExist(wantFiles); err == nil {
+				quit.Quit()
+			}
+		case <-timeoutC:
+			quit.Quit()
+			if err := checkFilesExist(wantFiles); err != nil {
+				t.Fatalf("Run: %s", err)
+			}
+		case <-hasQuitC:
+			return
 		}
 	}
 }
@@ -201,10 +277,15 @@ func TestEscapeString(t *testing.T) {
 	}
 }
 
-func dirExists(path string) bool {
-	fi, err := os.Stat(path)
-	if err != nil {
-		return false
+/***********************************************
+ *   Helper Functions
+ ***********************************************/
+
+func checkFilesExist(wantFiles []string) error {
+	for _, wantFile := range wantFiles {
+		if _, err := os.Stat(wantFile); os.IsNotExist(err) {
+			return fmt.Errorf("file doesn't exist: %s", wantFile)
+		}
 	}
-	return fi.IsDir()
+	return nil
 }
