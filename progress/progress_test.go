@@ -487,10 +487,19 @@ func TestGetFinishStamp(t *testing.T) {
 			true,
 			mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 		},
+		{"bank-what.json",
+			false,
+			mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
+		},
 	}
 	tmpDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tmpDir)
-	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "progress_processing.json"),
+		tmpDir,
+		"progress.json",
+	)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
