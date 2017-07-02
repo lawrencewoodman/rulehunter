@@ -34,7 +34,7 @@ import (
 type program struct {
 	config          *config.Config
 	cmdFlags        cmdFlags
-	progressMonitor *progress.ProgressMonitor
+	progressMonitor *progress.Monitor
 	logger          logger.Logger
 	quit            *quitter.Quitter
 	files           chan fileinfo.FileInfo
@@ -43,7 +43,7 @@ type program struct {
 
 func newProgram(
 	c *config.Config,
-	p *progress.ProgressMonitor,
+	p *progress.Monitor,
 	l logger.Logger,
 	q *quitter.Quitter,
 ) *program {

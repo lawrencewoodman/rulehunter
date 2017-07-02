@@ -103,12 +103,12 @@ func Process(
 	experimentFile fileinfo.FileInfo,
 	cfg *config.Config,
 	l logger.Logger,
-	progressMonitor *progress.ProgressMonitor,
+	progressMonitor *progress.Monitor,
 ) error {
 	var assessment *rhkit.Assessment
 	var newAssessment *rhkit.Assessment
 	var err error
-	var epr *progress.ExperimentProgressReporter
+	var epr *progress.ExperimentReporter
 
 	reportExperimentFail := func(err error, errs ...error) error {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
@@ -121,7 +121,7 @@ func Process(
 		}
 		panic("wrong number of errors")
 	}
-	epr, err = progress.NewExperimentProgressReporter(
+	epr, err = progress.NewExperimentReporter(
 		progressMonitor,
 		experimentFile.Name(),
 	)
@@ -457,7 +457,7 @@ func assessRulesWorker(
 }
 
 func assessCollectResults(
-	epr *progress.ExperimentProgressReporter,
+	epr *progress.ExperimentReporter,
 	stage int,
 	numJobs int,
 	results <-chan assessJobResult,
@@ -486,7 +486,7 @@ func assessCollectResults(
 }
 
 func reportProgress(
-	epr *progress.ExperimentProgressReporter,
+	epr *progress.ExperimentReporter,
 	stage int,
 	jobNum int,
 	numJobs int,
@@ -511,7 +511,7 @@ func assessRules(
 	stage int,
 	rules []rule.Rule,
 	experiment *rhexperiment.Experiment,
-	epr *progress.ExperimentProgressReporter,
+	epr *progress.ExperimentReporter,
 	cfg *config.Config,
 ) (*rhkit.Assessment, error) {
 	var wg sync.WaitGroup
@@ -567,7 +567,7 @@ type assessJobResult struct {
 }
 
 func shouldProcess(
-	pm *progress.ProgressMonitor,
+	pm *progress.Monitor,
 	experimentFile fileinfo.FileInfo,
 	whenExpr *dexpr.Expr,
 ) (bool, error) {

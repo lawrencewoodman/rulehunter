@@ -29,7 +29,7 @@ import (
 
 func generateActivityPage(
 	config *config.Config,
-	progressMonitor *progress.ProgressMonitor,
+	progressMonitor *progress.Monitor,
 ) error {
 	type TplExperiment struct {
 		Title    string

@@ -29,87 +29,14 @@ import (
 	"time"
 )
 
-type ExperimentProgressReporter struct {
-	pm                 *ProgressMonitor
-	experimentFilename string
-}
-
-func NewExperimentProgressReporter(
-	pm *ProgressMonitor,
-	experimentFilename string,
-) (*ExperimentProgressReporter, error) {
-	epr := &ExperimentProgressReporter{
-		pm:                 pm,
-		experimentFilename: experimentFilename,
-	}
-	return epr, pm.AddExperiment(experimentFilename)
-}
-
-func (epr *ExperimentProgressReporter) UpdateDetails(
-	title string,
-	tags []string,
-) error {
-	e := epr.pm.findExperiment(epr.experimentFilename)
-	if e == nil {
-		return fmt.Errorf("Can't update experiment details for: %s",
-			epr.experimentFilename)
-	}
-	e.Title = title
-	e.Tags = tags
-	e.Stamp = time.Now()
-	if err := epr.pm.writeJSON(); err != nil {
-		return err
-	}
-	epr.pm.htmlCmds <- cmd.Progress
-	return nil
-}
-
-func (epr *ExperimentProgressReporter) ReportProgress(
-	msg string,
-	progress float64,
-) error {
-	return epr.pm.updateExperiment(
-		epr.experimentFilename,
-		Processing,
-		msg,
-		progress,
-	)
-}
-
-// This returns the error passed as a parameter unless there is a problem
-// updating the progress file in which case this error will be returned
-func (epr *ExperimentProgressReporter) ReportError(err error) error {
-	updateErr := epr.pm.updateExperiment(
-		epr.experimentFilename,
-		Failure,
-		err.Error(),
-		0,
-	)
-	if updateErr != nil {
-		return updateErr
-	}
-	return err
-}
-
-func (epr *ExperimentProgressReporter) ReportSuccess() error {
-	err := epr.pm.updateExperiment(
-		epr.experimentFilename,
-		Success,
-		"Finished processing successfully",
-		0,
-	)
-	if err == nil {
-		epr.pm.htmlCmds <- cmd.Reports
-	}
-	return err
-}
-
-type ProgressMonitor struct {
+// Monitor represents a progress monitor.
+type Monitor struct {
 	filename    string
 	htmlCmds    chan<- cmd.Cmd
 	experiments []*Experiment
 }
 
+// StatusKind represents the status of an experiment
 type StatusKind int
 
 const (
@@ -156,7 +83,7 @@ func (s StatusKind) String() string {
 func NewMonitor(
 	progressDir string,
 	htmlCmds chan<- cmd.Cmd,
-) (*ProgressMonitor, error) {
+) (*Monitor, error) {
 	var progress progressFile
 	experiments := []*Experiment{}
 	filename := filepath.Join(progressDir, "progress.json")
@@ -174,19 +101,19 @@ func NewMonitor(
 		experiments = progress.Experiments
 	}
 
-	pm := &ProgressMonitor{
+	m := &Monitor{
 		filename:    filename,
 		htmlCmds:    htmlCmds,
 		experiments: experiments,
 	}
-	sort.Sort(pm)
-	return pm, nil
+	sort.Sort(m)
+	return m, nil
 }
 
-func (pm *ProgressMonitor) AddExperiment(
+func (m *Monitor) AddExperiment(
 	experimentFilename string,
 ) error {
-	e := pm.findExperiment(experimentFilename)
+	e := m.findExperiment(experimentFilename)
 	if e == nil {
 		newExperiment := &Experiment{
 			Title:              "",
@@ -197,7 +124,7 @@ func (pm *ProgressMonitor) AddExperiment(
 			Percent:            0,
 			Status:             Waiting,
 		}
-		pm.experiments = append(pm.experiments, newExperiment)
+		m.experiments = append(m.experiments, newExperiment)
 	} else {
 		if isFinished(e) {
 			return nil
@@ -209,24 +136,24 @@ func (pm *ProgressMonitor) AddExperiment(
 		e.Percent = 0
 		e.Status = Waiting
 	}
-	if err := pm.writeJSON(); err != nil {
+	if err := m.writeJSON(); err != nil {
 		return err
 	}
-	pm.htmlCmds <- cmd.Progress
+	m.htmlCmds <- cmd.Progress
 	return nil
 }
 
-func (pm *ProgressMonitor) GetExperiments() []*Experiment {
-	return pm.experiments
+func (m *Monitor) GetExperiments() []*Experiment {
+	return m.experiments
 }
 
 // GetFinishStamp returns whether an experiment has finished
 // (Success or Failure) and when it finished.  If it hasn't
 // finished then it returns the current time.
-func (pm *ProgressMonitor) GetFinishStamp(
+func (m *Monitor) GetFinishStamp(
 	experimentFilename string,
 ) (bool, time.Time) {
-	e := pm.findExperiment(experimentFilename)
+	e := m.findExperiment(experimentFilename)
 	if e == nil {
 		return false, time.Now()
 	}
@@ -236,13 +163,13 @@ func (pm *ProgressMonitor) GetFinishStamp(
 	return false, time.Now()
 }
 
-func (pm *ProgressMonitor) updateExperiment(
+func (m *Monitor) updateExperiment(
 	experimentFilename string,
 	status StatusKind,
 	msg string,
 	percent float64,
 ) error {
-	e := pm.findExperiment(experimentFilename)
+	e := m.findExperiment(experimentFilename)
 	if e == nil {
 		return fmt.Errorf("can't update experiment with filename: %s",
 			experimentFilename)
@@ -251,18 +178,18 @@ func (pm *ProgressMonitor) updateExperiment(
 	e.Status = status
 	e.Msg = msg
 	e.Percent = percent
-	if err := pm.writeJSON(); err != nil {
+	if err := m.writeJSON(); err != nil {
 		return err
 	}
-	pm.htmlCmds <- cmd.Progress
+	m.htmlCmds <- cmd.Progress
 	return nil
 }
 
 // Returns experiment if found experiment or nil if not found
-func (pm *ProgressMonitor) findExperiment(
+func (m *Monitor) findExperiment(
 	experimentFilename string,
 ) *Experiment {
-	for _, experiment := range pm.experiments {
+	for _, experiment := range m.experiments {
 		if experiment.ExperimentFilename == experimentFilename {
 			return experiment
 		}
@@ -270,7 +197,7 @@ func (pm *ProgressMonitor) findExperiment(
 	return nil
 }
 
-func (pm *ProgressMonitor) writeJSON() error {
+func (m *Monitor) writeJSON() error {
 	// File mode permission:
 	// No special permission bits
 	// User: Read, Write
@@ -278,9 +205,9 @@ func (pm *ProgressMonitor) writeJSON() error {
 	// Other: None
 	const modePerm = 0640
 
-	sort.Sort(pm)
+	sort.Sort(m)
 	successfulExperiments := []*Experiment{}
-	for _, e := range pm.experiments {
+	for _, e := range m.experiments {
 		if e.Status == Success {
 			successfulExperiments = append(successfulExperiments, e)
 		}
@@ -290,18 +217,18 @@ func (pm *ProgressMonitor) writeJSON() error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(pm.filename, json, modePerm)
+	return ioutil.WriteFile(m.filename, json, modePerm)
 }
 
 // Implements sort.Interface
-func (pm *ProgressMonitor) Len() int { return len(pm.experiments) }
-func (pm *ProgressMonitor) Swap(i, j int) {
-	pm.experiments[i], pm.experiments[j] =
-		pm.experiments[j], pm.experiments[i]
+func (m *Monitor) Len() int { return len(m.experiments) }
+func (m *Monitor) Swap(i, j int) {
+	m.experiments[i], m.experiments[j] =
+		m.experiments[j], m.experiments[i]
 }
 
-func (pm *ProgressMonitor) Less(i, j int) bool {
-	return pm.experiments[j].Stamp.Before(pm.experiments[i].Stamp)
+func (m *Monitor) Less(i, j int) bool {
+	return m.experiments[j].Stamp.Before(m.experiments[i].Stamp)
 }
 
 // isFinished returns whether an experiment has finished being processed

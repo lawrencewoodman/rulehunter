@@ -45,7 +45,7 @@ const modePerm = 0740
 // cmds the html will be generated
 func Run(
 	config *config.Config,
-	pm *progress.ProgressMonitor,
+	pm *progress.Monitor,
 	l logger.Logger,
 	quit *quitter.Quitter,
 	cmds <-chan cmd.Cmd,
@@ -74,7 +74,7 @@ func Run(
 func generate(
 	c cmd.Cmd,
 	config *config.Config,
-	pm *progress.ProgressMonitor,
+	pm *progress.Monitor,
 ) error {
 	switch c {
 	case cmd.Progress:

@@ -28,7 +28,7 @@ import (
 
 func generateLicencePage(
 	config *config.Config,
-	progressMonitor *progress.ProgressMonitor,
+	progressMonitor *progress.Monitor,
 ) error {
 	type TplData struct {
 		Html      map[string]template.HTML
