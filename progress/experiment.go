@@ -24,54 +24,65 @@ import (
 	"time"
 )
 
-// ExperimentReporter represents an experiment file that is being
-// reported on.
-type ExperimentReporter struct {
-	m        *Monitor
-	filename string
+// StatusKind represents the status of an experiment
+type StatusKind int
+
+const (
+	Waiting StatusKind = iota
+	Processing
+	Success
+	Failure
+)
+
+type Experiment struct {
+	Title    string
+	Tags     []string
+	Stamp    time.Time // Time of last update
+	Filename string
+	Msg      string
+	Percent  float64
+	Status   StatusKind
+	monitor  *Monitor
 }
 
-// NewExperimentReporter creates a new ExperimentReporter
-func NewExperimentReporter(
-	m *Monitor,
-	filename string,
-) (*ExperimentReporter, error) {
-	er := &ExperimentReporter{
-		m:        m,
-		filename: filename,
-	}
-	return er, m.AddExperiment(filename)
+// isFinished returns whether an experiment has finished being processed
+func isFinished(e *Experiment) bool {
+	return e.Status == Success || e.Status == Failure
+}
+
+func (e *Experiment) String() string {
+	fmtStr := "{Title: %s, Tags: %s, Stamp: %s, Filename: %s, Msg: %s, Percent: %f, Status: %s}"
+	return fmt.Sprintf(
+		fmtStr, e.Title, e.Tags,
+		e.Stamp.Format(time.RFC3339Nano),
+		e.Filename, e.Msg, e.Percent, e.Status,
+	)
 }
 
 // UpdateDetails updates the experiement's title and tags.  It also
 // updates the time stamp to the current time.
-func (er *ExperimentReporter) UpdateDetails(
+func (e *Experiment) UpdateDetails(
 	title string,
 	tags []string,
 ) error {
-	e := er.m.findExperiment(er.filename)
-	if e == nil {
-		return fmt.Errorf("Can't update experiment details for: %s",
-			er.filename)
-	}
 	e.Title = title
 	e.Tags = tags
 	e.Stamp = time.Now()
-	if err := er.m.writeJSON(); err != nil {
+	if err := e.monitor.writeJSON(); err != nil {
 		return err
 	}
-	er.m.htmlCmds <- cmd.Progress
+	e.monitor.htmlCmds <- cmd.Progress
 	return nil
 }
 
 // ReportProgress updates the progress of the experiment with a message
 // and percentage progress (0.0-1.0).
-func (er *ExperimentReporter) ReportProgress(
+func (e *Experiment) ReportProgress(
 	msg string,
 	progress float64,
 ) error {
-	return er.m.updateExperiment(
-		er.filename,
+	return e.updateExperiment(
+		e.Filename,
 		Processing,
 		msg,
 		progress,
@@ -82,9 +93,9 @@ func (er *ExperimentReporter) ReportProgress(
 // It returns the error passed as a parameter unless there is a
 // problem updating the progress file in which case this error will
 // be returned.
-func (er *ExperimentReporter) ReportError(err error) error {
-	updateErr := er.m.updateExperiment(
-		er.filename,
+func (e *Experiment) ReportError(err error) error {
+	updateErr := e.updateExperiment(
+		e.Filename,
 		Failure,
 		err.Error(),
 		0,
@@ -96,15 +107,42 @@ func (er *ExperimentReporter) ReportError(err error) error {
 }
 
 // ReportSuccess updates the progress of the experiment to report success.
-func (er *ExperimentReporter) ReportSuccess() error {
-	err := er.m.updateExperiment(
-		er.filename,
+func (e *Experiment) ReportSuccess() error {
+	err := e.updateExperiment(
+		e.Filename,
 		Success,
 		"Finished processing successfully",
 		0,
 	)
 	if err == nil {
-		er.m.htmlCmds <- cmd.Reports
+		e.monitor.htmlCmds <- cmd.Reports
 	}
 	return err
+}
+
+// GetFinishStamp returns whether an experiment has finished
+// (Success or Failure) and when it finished.  If it hasn't
+// finished then it returns the current time.
+func (e *Experiment) GetFinishStamp() (bool, time.Time) {
+	if isFinished(e) {
+		return true, e.Stamp
+	}
+	return false, time.Now()
+}
+
+func (e *Experiment) updateExperiment(
+	experimentFilename string,
+	status StatusKind,
+	msg string,
+	percent float64,
+) error {
+	e.Stamp = time.Now()
+	e.Status = status
+	e.Msg = msg
+	e.Percent = percent
+	if err := e.monitor.writeJSON(); err != nil {
+		return err
+	}
+	e.monitor.htmlCmds <- cmd.Progress
+	return nil
 }

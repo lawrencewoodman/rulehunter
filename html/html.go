@@ -82,7 +82,7 @@ func generate(
 			return err
 		}
 	case cmd.Reports:
-		if err := generateReports(config, pm); err != nil {
+		if err := generateReports(config); err != nil {
 			return err
 		}
 		if err := generateTagPages(config); err != nil {
@@ -92,10 +92,10 @@ func generate(
 			return err
 		}
 	case cmd.All:
-		if err := generateLicencePage(config, pm); err != nil {
+		if err := generateLicencePage(config); err != nil {
 			return err
 		}
-		if err := generateReports(config, pm); err != nil {
+		if err := generateReports(config); err != nil {
 			return err
 		}
 		if err := generateTagPages(config); err != nil {

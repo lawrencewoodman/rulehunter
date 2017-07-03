@@ -342,7 +342,11 @@ func TestShouldProcess(t *testing.T) {
 
 	for _, c := range cases {
 		whenExpr := dexpr.MustNew(c.when, funcs)
-		got, err := shouldProcess(pm, c.file, whenExpr)
+		experimentProgress, err := pm.AddExperiment(c.file.Name())
+		if err != nil {
+			t.Fatalf("AddExperiment(%s): %s", c.file.Name(), err)
+		}
+		got, err := shouldProcess(experimentProgress, c.file, whenExpr)
 		if err != nil {
 			t.Errorf("shouldProcess(pm, %v, %v) err: %s", c.file, c.when, err)
 			continue
@@ -379,12 +383,12 @@ func TestProcess(t *testing.T) {
 	}
 	wantPMExperiments := []*progress.Experiment{
 		&progress.Experiment{
-			Title:              "What would indicate good flow?",
-			Tags:               []string{"test", "fred / ned"},
-			Stamp:              time.Now(),
-			ExperimentFilename: "flow.json",
-			Msg:                "Finished processing successfully",
-			Status:             progress.Success,
+			Title:    "What would indicate good flow?",
+			Tags:     []string{"test", "fred / ned"},
+			Stamp:    time.Now(),
+			Filename: "flow.json",
+			Msg:      "Finished processing successfully",
+			Status:   progress.Success,
 		},
 	}
 
@@ -403,7 +407,11 @@ func TestProcess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: err: %v", err)
 	}
-	if err := Process(file, cfg, l, pm); err != nil {
+	experimentProgress, err := pm.AddExperiment(file.Name())
+	if err != nil {
+		t.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+	}
+	if err := Process(file, cfg, l, experimentProgress); err != nil {
 		t.Fatalf("Process: err: %v", err)
 	}
 
@@ -499,7 +507,11 @@ func TestProcess_multiProcesses(t *testing.T) {
 			t.Fatalf("progress.NewMonitor: err: %v", err)
 		}
 		start := time.Now()
-		if err := Process(file, cfg, l, pm); err != nil {
+		experimentProgress, err := pm.AddExperiment(file.Name())
+		if err != nil {
+			t.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+		}
+		if err := Process(file, cfg, l, experimentProgress); err != nil {
 			t.Fatalf("Process: err: %v", err)
 		}
 		elapsed := time.Since(start).Nanoseconds()
@@ -541,12 +553,12 @@ func TestProcess_errors(t *testing.T) {
 	}
 	wantPMExperiments := []*progress.Experiment{
 		&progress.Experiment{
-			Title:              "What would indicate good flow?",
-			Tags:               []string{"test", "fred / ned"},
-			Stamp:              time.Now(),
-			ExperimentFilename: "flow_div_zero.yaml",
-			Msg:                "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)",
-			Status:             progress.Failure,
+			Title:    "What would indicate good flow?",
+			Tags:     []string{"test", "fred / ned"},
+			Stamp:    time.Now(),
+			Filename: "flow_div_zero.yaml",
+			Msg:      "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)",
+			Status:   progress.Failure,
 		},
 	}
 
@@ -566,7 +578,12 @@ func TestProcess_errors(t *testing.T) {
 		t.Fatalf("progress.NewMonitor: err: %v", err)
 	}
 	wantErr := "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)"
-	if err := Process(file, cfg, l, pm); err.Error() != wantErr {
+	experimentProgress, err := pm.AddExperiment(file.Name())
+	if err != nil {
+		t.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+	}
+	err = Process(file, cfg, l, experimentProgress)
+	if err.Error() != wantErr {
 		t.Fatalf("Process: got err: %v, wantErr: %v", err, wantErr)
 	}
 
@@ -732,8 +749,12 @@ func BenchmarkProcess_csv(b *testing.B) {
 				if err != nil {
 					b.Fatalf("progress.NewMonitor: err: %v", err)
 				}
+				experimentProgress, err := pm.AddExperiment(file.Name())
+				if err != nil {
+					b.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+				}
 				b.StartTimer()
-				if err := Process(file, cfg, l, pm); err != nil {
+				if err := Process(file, cfg, l, experimentProgress); err != nil {
 					b.Fatalf("Process: err: %v", err)
 				}
 			}
@@ -783,8 +804,12 @@ func BenchmarkProcess_sql(b *testing.B) {
 				if err != nil {
 					b.Fatalf("progress.NewMonitor: err: %v", err)
 				}
+				experimentProgress, err := pm.AddExperiment(file.Name())
+				if err != nil {
+					b.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+				}
 				b.StartTimer()
-				if err := Process(file, cfg, l, pm); err != nil {
+				if err := Process(file, cfg, l, experimentProgress); err != nil {
 					b.Fatalf("Process: err: %v", err)
 				}
 			}

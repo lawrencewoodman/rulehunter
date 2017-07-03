@@ -21,15 +21,11 @@ package html
 
 import (
 	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/progress"
 	"html/template"
 	"path/filepath"
 )
 
-func generateLicencePage(
-	config *config.Config,
-	progressMonitor *progress.Monitor,
-) error {
+func generateLicencePage(config *config.Config) error {
 	type TplData struct {
 		Html      map[string]template.HTML
 		SourceURL string

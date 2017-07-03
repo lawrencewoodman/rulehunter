@@ -22,17 +22,13 @@ package html
 import (
 	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/report"
 	"html/template"
 	"io/ioutil"
 	"path/filepath"
 )
 
-func generateReports(
-	config *config.Config,
-	progressMonitor *progress.Monitor,
-) error {
+func generateReports(config *config.Config) error {
 
 	type TplData struct {
 		Reports []*TplReport

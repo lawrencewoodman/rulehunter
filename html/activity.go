@@ -55,7 +55,7 @@ func generateActivityPage(
 			experiment.Title,
 			makeTagLinks(experiment.Tags),
 			experiment.Stamp.Format(time.RFC822),
-			experiment.ExperimentFilename,
+			experiment.Filename,
 			experiment.Status.String(),
 			experiment.Msg,
 			experiment.Percent,

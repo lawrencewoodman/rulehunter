@@ -71,15 +71,16 @@ func (p *program) Start(s service.Service) error {
 }
 
 func (p *program) ProcessFile(file fileinfo.FileInfo) error {
-	if err := p.progressMonitor.AddExperiment(file.Name()); err != nil {
+	experimentProgress, err := p.progressMonitor.AddExperiment(file.Name())
+	if err != nil {
 		p.logger.Error(err.Error())
 		return err
 	}
-	err := experiment.Process(
+	err = experiment.Process(
 		file,
 		p.config,
 		p.logger,
-		p.progressMonitor,
+		experimentProgress,
 	)
 	if err != nil {
 		p.logger.Error(err.Error())

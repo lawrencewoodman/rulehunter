@@ -103,12 +103,11 @@ func Process(
 	experimentFile fileinfo.FileInfo,
 	cfg *config.Config,
 	l logger.Logger,
-	progressMonitor *progress.Monitor,
+	experimentProgress *progress.Experiment,
 ) error {
 	var assessment *rhkit.Assessment
 	var newAssessment *rhkit.Assessment
 	var err error
-	var epr *progress.ExperimentReporter
 
 	reportExperimentFail := func(err error, errs ...error) error {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
@@ -117,16 +116,9 @@ func Process(
 		case 0:
 			return err
 		case 1:
-			return epr.ReportError(errs[0])
+			return experimentProgress.ReportError(errs[0])
 		}
 		panic("wrong number of errors")
-	}
-	epr, err = progress.NewExperimentReporter(
-		progressMonitor,
-		experimentFile.Name(),
-	)
-	if err != nil {
-		return err
 	}
 	experimentFullFilename :=
 		filepath.Join(cfg.ExperimentsDir, experimentFile.Name())
@@ -135,20 +127,21 @@ func Process(
 	if err != nil {
 		fullErr := fmt.Errorf("Can't load experiment: %s, %s",
 			experimentFile.Name(), err)
-		return epr.ReportError(fullErr)
+		return experimentProgress.ReportError(fullErr)
 	}
-	ok, err := shouldProcess(progressMonitor, experimentFile, whenExpr)
+	ok, err := shouldProcess(experimentProgress, experimentFile, whenExpr)
 	if err != nil || !ok {
 		return err
 	}
 
 	l.Info(fmt.Sprintf("Processing experiment: %s", experimentFile.Name()))
-	err = epr.UpdateDetails(experiment.Title, tags)
+	err = experimentProgress.UpdateDetails(experiment.Title, tags)
 	if err != nil {
 		return reportExperimentFail(err)
 	}
 
-	if err := epr.ReportProgress("Describing dataset", 0); err != nil {
+	err = experimentProgress.ReportProgress("Describing dataset", 0)
+	if err != nil {
 		return reportExperimentFail(err)
 	}
 
@@ -159,7 +152,8 @@ func Process(
 		return reportExperimentFail(err, fullErr)
 	}
 
-	if err := epr.ReportProgress("Generating rules", 0); err != nil {
+	err = experimentProgress.ReportProgress("Generating rules", 0)
+	if err != nil {
 		return reportExperimentFail(err)
 	}
 	rules := rule.Generate(
@@ -168,7 +162,13 @@ func Process(
 		experiment.RuleComplexity,
 	)
 
-	assessment, err = assessRules(1, rules, experiment, epr, cfg)
+	assessment, err = assessRules(
+		1,
+		rules,
+		experiment,
+		experimentProgress,
+		cfg,
+	)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return reportExperimentFail(err, fullErr)
@@ -178,12 +178,19 @@ func Process(
 	assessment.Refine()
 	sortedRules := assessment.Rules()
 
-	if err := epr.ReportProgress("Tweaking rules", 0); err != nil {
+	err = experimentProgress.ReportProgress("Tweaking rules", 0)
+	if err != nil {
 		return reportExperimentFail(err)
 	}
 	tweakableRules := rule.Tweak(1, sortedRules, dDescription)
 
-	newAssessment, err = assessRules(2, tweakableRules, experiment, epr, cfg)
+	newAssessment, err = assessRules(
+		2,
+		tweakableRules,
+		experiment,
+		experimentProgress,
+		cfg,
+	)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return reportExperimentFail(err, fullErr)
@@ -199,12 +206,19 @@ func Process(
 
 	sortedRules = assessment.Rules()
 
-	if err := epr.ReportProgress("Reduce DP of rules", 0); err != nil {
+	err = experimentProgress.ReportProgress("Reduce DP of rules", 0)
+	if err != nil {
 		return reportExperimentFail(err)
 	}
 	reducedDPRules := rule.ReduceDP(sortedRules)
 
-	newAssessment, err = assessRules(3, reducedDPRules, experiment, epr, cfg)
+	newAssessment, err = assessRules(
+		3,
+		reducedDPRules,
+		experiment,
+		experimentProgress,
+		cfg,
+	)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return reportExperimentFail(err, fullErr)
@@ -222,7 +236,13 @@ func Process(
 	bestNonCombinedRules := assessment.Rules(numRulesToCombine)
 	combinedRules := rule.Combine(bestNonCombinedRules)
 
-	assessment, err = assessRules(4, combinedRules, experiment, epr, cfg)
+	assessment, err = assessRules(
+		4,
+		combinedRules,
+		experiment,
+		experimentProgress,
+		cfg,
+	)
 	if err != nil {
 		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
 		return reportExperimentFail(err, fullErr)
@@ -244,7 +264,7 @@ func Process(
 		return reportExperimentFail(err, fullErr)
 	}
 
-	if err := epr.ReportSuccess(); err != nil {
+	if err := experimentProgress.ReportSuccess(); err != nil {
 		return reportExperimentFail(err)
 	}
 
@@ -457,7 +477,7 @@ func assessRulesWorker(
 }
 
 func assessCollectResults(
-	epr *progress.ExperimentReporter,
+	experimentProgress *progress.Experiment,
 	stage int,
 	numJobs int,
 	results <-chan assessJobResult,
@@ -478,7 +498,8 @@ func assessCollectResults(
 				return nil, err
 			}
 		}
-		if err := reportProgress(epr, stage, jobNum, numJobs); err != nil {
+		err := reportProgress(experimentProgress, stage, jobNum, numJobs)
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -486,14 +507,14 @@ func assessCollectResults(
 }
 
 func reportProgress(
-	epr *progress.ExperimentReporter,
+	experimentProgress *progress.Experiment,
 	stage int,
 	jobNum int,
 	numJobs int,
 ) error {
 	progress := 100.0 * float64(jobNum) / float64(numJobs)
 	msg := fmt.Sprintf("Assessing rules %d/%d", stage, assessRulesNumStages)
-	return epr.ReportProgress(msg, progress)
+	return experimentProgress.ReportProgress(msg, progress)
 }
 
 func assessCreateJobs(numRules int, step int, jobs chan<- assessJob) {
@@ -511,7 +532,7 @@ func assessRules(
 	stage int,
 	rules []rule.Rule,
 	experiment *rhexperiment.Experiment,
-	epr *progress.ExperimentReporter,
+	experimentProgress *progress.Experiment,
 	cfg *config.Config,
 ) (*rhkit.Assessment, error) {
 	var wg sync.WaitGroup
@@ -524,7 +545,7 @@ func assessRules(
 		panic("assessRules: stage > assessRulesNumStages")
 	}
 
-	if err := reportProgress(epr, stage, 0, 1); err != nil {
+	if err := reportProgress(experimentProgress, stage, 0, 1); err != nil {
 		return nil, err
 	}
 
@@ -548,7 +569,7 @@ func assessRules(
 	}()
 
 	assessment, err := assessCollectResults(
-		epr,
+		experimentProgress,
 		stage,
 		numJobs,
 		results,
@@ -567,11 +588,11 @@ type assessJobResult struct {
 }
 
 func shouldProcess(
-	pm *progress.Monitor,
+	experimentProgress *progress.Experiment,
 	experimentFile fileinfo.FileInfo,
 	whenExpr *dexpr.Expr,
 ) (bool, error) {
-	isFinished, stamp := pm.GetFinishStamp(experimentFile.Name())
+	isFinished, stamp := experimentProgress.GetFinishStamp()
 	if isFinished && experimentFile.ModTime().After(stamp) {
 		isFinished, stamp := false, time.Now()
 		ok, err := evalWhenExpr(time.Now(), isFinished, stamp, whenExpr)

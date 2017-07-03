@@ -20,7 +20,6 @@ package progress
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"io/ioutil"
 	"os"
@@ -36,34 +35,8 @@ type Monitor struct {
 	experiments []*Experiment
 }
 
-// StatusKind represents the status of an experiment
-type StatusKind int
-
-const (
-	Waiting StatusKind = iota
-	Processing
-	Success
-	Failure
-)
-
 type progressFile struct {
 	Experiments []*Experiment
-}
-
-type Experiment struct {
-	Title              string
-	Tags               []string
-	Stamp              time.Time // Time of last update
-	ExperimentFilename string
-	Msg                string
-	Percent            float64
-	Status             StatusKind
-}
-
-func (e *Experiment) String() string {
-	fmtStr := "{Title: %s, Tags: %s, Stamp: %s, ExperimentFilename: %s, Msg: %s, Percent: %f, Status: %s}"
-	return fmt.Sprintf(fmtStr, e.Title, e.Tags, e.Stamp.Format(time.RFC3339Nano),
-		e.ExperimentFilename, e.Msg, e.Percent, e.Status)
 }
 
 func (s StatusKind) String() string {
@@ -106,28 +79,31 @@ func NewMonitor(
 		htmlCmds:    htmlCmds,
 		experiments: experiments,
 	}
+	for _, e := range experiments {
+		e.monitor = m
+	}
 	sort.Sort(m)
 	return m, nil
 }
 
-func (m *Monitor) AddExperiment(
-	experimentFilename string,
-) error {
-	e := m.findExperiment(experimentFilename)
+func (m *Monitor) AddExperiment(filename string) (*Experiment, error) {
+	e := m.findExperiment(filename)
 	if e == nil {
 		newExperiment := &Experiment{
-			Title:              "",
-			Tags:               []string{},
-			Stamp:              time.Now(),
-			ExperimentFilename: experimentFilename,
-			Msg:                "Waiting to be processed",
-			Percent:            0,
-			Status:             Waiting,
+			Title:    "",
+			Tags:     []string{},
+			Stamp:    time.Now(),
+			Filename: filename,
+			Msg:      "Waiting to be processed",
+			Percent:  0,
+			Status:   Waiting,
+			monitor:  m,
 		}
 		m.experiments = append(m.experiments, newExperiment)
+		e = newExperiment
 	} else {
 		if isFinished(e) {
-			return nil
+			return e, nil
 		}
 		e.Title = ""
 		e.Tags = []string{}
@@ -137,60 +113,20 @@ func (m *Monitor) AddExperiment(
 		e.Status = Waiting
 	}
 	if err := m.writeJSON(); err != nil {
-		return err
+		return e, err
 	}
 	m.htmlCmds <- cmd.Progress
-	return nil
+	return e, nil
 }
 
 func (m *Monitor) GetExperiments() []*Experiment {
 	return m.experiments
 }
 
-// GetFinishStamp returns whether an experiment has finished
-// (Success or Failure) and when it finished.  If it hasn't
-// finished then it returns the current time.
-func (m *Monitor) GetFinishStamp(
-	experimentFilename string,
-) (bool, time.Time) {
-	e := m.findExperiment(experimentFilename)
-	if e == nil {
-		return false, time.Now()
-	}
-	if isFinished(e) {
-		return true, e.Stamp
-	}
-	return false, time.Now()
-}
-
-func (m *Monitor) updateExperiment(
-	experimentFilename string,
-	status StatusKind,
-	msg string,
-	percent float64,
-) error {
-	e := m.findExperiment(experimentFilename)
-	if e == nil {
-		return fmt.Errorf("can't update experiment with filename: %s",
-			experimentFilename)
-	}
-	e.Stamp = time.Now()
-	e.Status = status
-	e.Msg = msg
-	e.Percent = percent
-	if err := m.writeJSON(); err != nil {
-		return err
-	}
-	m.htmlCmds <- cmd.Progress
-	return nil
-}
-
 // Returns experiment if found experiment or nil if not found
-func (m *Monitor) findExperiment(
-	experimentFilename string,
-) *Experiment {
+func (m *Monitor) findExperiment(filename string) *Experiment {
 	for _, experiment := range m.experiments {
-		if experiment.ExperimentFilename == experimentFilename {
+		if experiment.Filename == filename {
 			return experiment
 		}
 	}
@@ -221,7 +157,9 @@ func (m *Monitor) writeJSON() error {
 }
 
 // Implements sort.Interface
-func (m *Monitor) Len() int { return len(m.experiments) }
+func (m *Monitor) Len() int {
+	return len(m.experiments)
+}
 func (m *Monitor) Swap(i, j int) {
 	m.experiments[i], m.experiments[j] =
 		m.experiments[j], m.experiments[i]
@@ -229,9 +167,4 @@ func (m *Monitor) Swap(i, j int) {
 
 func (m *Monitor) Less(i, j int) bool {
 	return m.experiments[j].Stamp.Before(m.experiments[i].Stamp)
-}
-
-// isFinished returns whether an experiment has finished being processed
-func isFinished(e *Experiment) bool {
-	return e.Status == Success || e.Status == Failure
 }

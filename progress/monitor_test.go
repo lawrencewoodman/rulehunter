@@ -55,20 +55,20 @@ func TestGetExperiments(t *testing.T) {
 	/* This sorts in reverse order of date */
 	expected := []*Experiment{
 		&Experiment{
-			Title:              "This is a jolly nice title",
-			Tags:               []string{"test", "bank", "fred / ned"},
-			Stamp:              mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
-			ExperimentFilename: "bank-tiny.json",
-			Msg:                "Finished processing successfully",
-			Status:             Success,
+			Title:    "This is a jolly nice title",
+			Tags:     []string{"test", "bank", "fred / ned"},
+			Stamp:    mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
+			Filename: "bank-tiny.json",
+			Msg:      "Finished processing successfully",
+			Status:   Success,
 		},
 		&Experiment{
-			Title:              "Who is more likely to be divorced",
-			Tags:               []string{"test", "bank"},
-			Stamp:              mustNewTime("2016-05-04T14:53:00.570347516+01:00"),
-			ExperimentFilename: "bank-divorced.json",
-			Msg:                "Finished processing successfully",
-			Status:             Success,
+			Title:    "Who is more likely to be divorced",
+			Tags:     []string{"test", "bank"},
+			Stamp:    mustNewTime("2016-05-04T14:53:00.570347516+01:00"),
+			Filename: "bank-divorced.json",
+			Msg:      "Finished processing successfully",
+			Status:   Success,
 		},
 	}
 
@@ -107,58 +107,71 @@ func TestGetExperiments_notExists(t *testing.T) {
 	}
 }
 
-func TestGetFinishStamp(t *testing.T) {
-	cases := []struct {
-		filename       string
-		wantIsFinished bool
-		wantStamp      time.Time
-	}{
-		{"bank-bad.json",
-			false,
-			mustNewTime("2016-05-04T14:52:08.993750731+01:00"),
+func TestAddExperiment_experiment_exists(t *testing.T) {
+	expected := []*Experiment{
+		&Experiment{
+			Title:    "",
+			Tags:     []string{},
+			Stamp:    time.Now(),
+			Filename: "bank-married.json",
+			Msg:      "Waiting to be processed",
+			Status:   Waiting,
 		},
-		{"bank-divorced.json",
-			true,
-			mustNewTime("2016-05-04T14:53:00.570347516+01:00"),
+		&Experiment{
+			Title:    "",
+			Tags:     []string{},
+			Stamp:    time.Now(),
+			Filename: "bank-full-divorced.json",
+			Msg:      "Waiting to be processed",
+			Status:   Waiting,
 		},
-		{"bank-full-divorced.json", false, time.Now()},
-		{"nothing", false, time.Now()},
-		{"bank-tiny.json",
-			true,
-			mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
+		&Experiment{
+			Title:    "This is a jolly nice title",
+			Tags:     []string{"test", "bank", "fred / ned"},
+			Stamp:    mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
+			Filename: "bank-tiny.json",
+			Msg:      "Finished processing successfully",
+			Status:   Success,
 		},
-		{"bank-what.json",
-			false,
-			mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
+		&Experiment{
+			Title:    "Who is more likely to be divorced",
+			Tags:     []string{"test", "bank"},
+			Stamp:    mustNewTime("2016-05-04T14:53:00.570347516+01:00"),
+			Filename: "bank-divorced.json",
+			Msg:      "Finished processing successfully",
+			Status:   Success,
 		},
 	}
+
 	tmpDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tmpDir)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "progress_processing.json"),
-		tmpDir,
-		"progress.json",
-	)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
 
 	htmlCmds := make(chan cmd.Cmd)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 	go cmdMonitor.Run()
 	pm, err := NewMonitor(tmpDir, htmlCmds)
 	if err != nil {
-		t.Fatalf("NewMonitor() err: %s", err)
+		t.Errorf("NewMonitor() err: %s", err)
 	}
-
-	for _, c := range cases {
-		gotIsFinished, gotStamp := pm.GetFinishStamp(c.filename)
-		if gotIsFinished != c.wantIsFinished {
-			t.Errorf("GetFinishStamp(%s) gotIsFinished: %t, wantIsFinished: %t",
-				c.filename, gotIsFinished, c.wantIsFinished)
-		}
-		if gotIsFinished && !gotStamp.Equal(c.wantStamp) {
-			t.Errorf("GetFinishStamp(%s) gotStamp: %v, wantStamp: %v",
-				c.filename, gotStamp, c.wantStamp)
-		}
+	if _, err := pm.AddExperiment("bank-divorced.json"); err != nil {
+		t.Fatalf("AddExperiment() err: %s", err)
+	}
+	if _, err := pm.AddExperiment("bank-full-divorced.json"); err != nil {
+		t.Fatalf("AddExperiment() err: %s", err)
+	}
+	time.Sleep(200 * time.Millisecond)
+	bmProgress, err := pm.AddExperiment("bank-married.json")
+	if err != nil {
+		t.Fatalf("AddExperiment() err: %s", err)
+	}
+	bmProgress.ReportProgress("something is happening", 0)
+	if _, err := pm.AddExperiment("bank-married.json"); err != nil {
+		t.Fatalf("AddExperiment() err: %s", err)
+	}
+	got := pm.GetExperiments()
+	if err := checkExperimentsMatch(got, expected); err != nil {
+		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}
 }
 
@@ -194,9 +207,8 @@ func checkExperimentMatch(e1, e2 *Experiment) error {
 	if e1.Title != e2.Title {
 		return fmt.Errorf("Title doesn't match: %s != %s", e1, e2)
 	}
-	if e1.ExperimentFilename != e2.ExperimentFilename {
-		return fmt.Errorf("ExperimentFilename doesn't match: %s != %s",
-			e1, e2)
+	if e1.Filename != e2.Filename {
+		return fmt.Errorf("Filename doesn't match: %s != %s", e1, e2)
 	}
 	if e1.Msg != e2.Msg {
 		return fmt.Errorf("Msg doesn't match: %s != %s", e1, e2)

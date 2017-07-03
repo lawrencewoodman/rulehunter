@@ -27,7 +27,7 @@ func checkExperimentMatch(e1, e2 *progress.Experiment) error {
 	if e1.Title != e2.Title {
 		return fmt.Errorf("Title doesn't match: %s != %s", e1.Title, e2.Title)
 	}
-	if e1.ExperimentFilename != e2.ExperimentFilename {
+	if e1.Filename != e2.Filename {
 		return errors.New("ExperimentFilename doesn't match")
 	}
 	if e1.Msg != e2.Msg {
