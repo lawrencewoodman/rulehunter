@@ -1,6 +1,6 @@
 /*
 	rulehunter - A server to find rules in data based on user specified goals
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Affero General Public License as published by
