@@ -25,16 +25,9 @@ import (
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/quitter"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"time"
 )
-
-type FileStats struct {
-	size    int64
-	mode    os.FileMode
-	modTime time.Time
-}
 
 // DirError indicates that there was an error reading the directory
 type DirError string
