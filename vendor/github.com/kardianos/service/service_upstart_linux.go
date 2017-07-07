@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -16,6 +18,13 @@ import (
 func isUpstart() bool {
 	if _, err := os.Stat("/sbin/upstart-udev-bridge"); err == nil {
 		return true
+	}
+	if _, err := os.Stat("/sbin/init"); err == nil {
+		if out, err := exec.Command("/sbin/init", "--version").Output(); err == nil {
+			if strings.Contains(string(out), "init (upstart") {
+				return true
+			}
+		}
 	}
 	return false
 }
@@ -155,7 +164,7 @@ kill signal INT
 start on filesystem or runlevel [2345]
 stop on runlevel [!2345]
 
-#setuid username
+{{if .UserName}}setuid {{.UserName}}{{end}}
 
 respawn
 respawn limit 10 5
