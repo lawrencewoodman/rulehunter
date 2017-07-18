@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rhkit"
 	"github.com/vlifesystems/rhkit/aggregators"
+	rhkassessment "github.com/vlifesystems/rhkit/assessment"
 	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
@@ -19,9 +19,9 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	assessment := rhkit.NewAssessment(20)
-	assessment.RuleAssessments = []*rhkit.RuleAssessment{
-		&rhkit.RuleAssessment{
+	assessment := rhkassessment.NewAssessment(20)
+	assessment.RuleAssessments = []*rhkassessment.RuleAssessment{
+		&rhkassessment.RuleAssessment{
 			Rule: rule.NewEQFV("month", dlit.NewString("may")),
 			Aggregators: map[string]*dlit.Literal{
 				"numMatches":     dlit.MustNew("2142"),
@@ -29,12 +29,12 @@ func TestNew(t *testing.T) {
 				"numIncomeGt2":   dlit.MustNew("22"),
 				"goalsScore":     dlit.MustNew(20.1),
 			},
-			Goals: []*rhkit.GoalAssessment{
-				&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkit.GoalAssessment{"numIncomeGt2 == 2", false},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", false},
 			},
 		},
-		&rhkit.RuleAssessment{
+		&rhkassessment.RuleAssessment{
 			Rule: rule.NewGEFV("rate", dlit.MustNew(789.2)),
 			Aggregators: map[string]*dlit.Literal{
 				"numMatches":     dlit.MustNew("3142"),
@@ -42,12 +42,12 @@ func TestNew(t *testing.T) {
 				"numIncomeGt2":   dlit.MustNew("32"),
 				"goalsScore":     dlit.MustNew(30.1),
 			},
-			Goals: []*rhkit.GoalAssessment{
-				&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkit.GoalAssessment{"numIncomeGt2 == 2", false},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", false},
 			},
 		},
-		&rhkit.RuleAssessment{
+		&rhkassessment.RuleAssessment{
 			Rule: rule.NewTrue(),
 			Aggregators: map[string]*dlit.Literal{
 				"numMatches":     dlit.MustNew("142"),
@@ -55,9 +55,9 @@ func TestNew(t *testing.T) {
 				"numIncomeGt2":   dlit.MustNew("2"),
 				"goalsScore":     dlit.MustNew(0.1),
 			},
-			Goals: []*rhkit.GoalAssessment{
-				&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkit.GoalAssessment{"numIncomeGt2 == 2", true},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 			},
 		},
 	}
@@ -105,9 +105,9 @@ func TestNew(t *testing.T) {
 				&Aggregator{Name: "numMatches", Value: "3142", Difference: "3000"},
 				&Aggregator{Name: "percentMatches", Value: "342", Difference: "300"},
 			},
-			Goals: []*rhkit.GoalAssessment{
-				&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkit.GoalAssessment{"numIncomeGt2 == 2", false},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", false},
 			},
 		},
 		&Assessment{
@@ -118,9 +118,9 @@ func TestNew(t *testing.T) {
 				&Aggregator{Name: "numMatches", Value: "2142", Difference: "2000"},
 				&Aggregator{Name: "percentMatches", Value: "242", Difference: "200"},
 			},
-			Goals: []*rhkit.GoalAssessment{
-				&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkit.GoalAssessment{"numIncomeGt2 == 2", false},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", false},
 			},
 		},
 		&Assessment{
@@ -131,9 +131,9 @@ func TestNew(t *testing.T) {
 				&Aggregator{Name: "numMatches", Value: "142", Difference: "0"},
 				&Aggregator{Name: "percentMatches", Value: "42", Difference: "0"},
 			},
-			Goals: []*rhkit.GoalAssessment{
-				&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkit.GoalAssessment{"numIncomeGt2 == 2", true},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 			},
 		},
 	}
@@ -186,9 +186,9 @@ func TestWriteLoadJSON(t *testing.T) {
 	if err := os.MkdirAll(reportsDir, modePerm); err != nil {
 		t.Fatalf("MkdirAll: %s", err)
 	}
-	assessment := rhkit.NewAssessment(20)
-	assessment.RuleAssessments = []*rhkit.RuleAssessment{
-		&rhkit.RuleAssessment{
+	assessment := rhkassessment.NewAssessment(20)
+	assessment.RuleAssessments = []*rhkassessment.RuleAssessment{
+		&rhkassessment.RuleAssessment{
 			Rule: rule.NewEQFV("month", dlit.NewString("may")),
 			Aggregators: map[string]*dlit.Literal{
 				"numMatches":     dlit.MustNew("2142"),
@@ -196,12 +196,12 @@ func TestWriteLoadJSON(t *testing.T) {
 				"numIncomeGt2":   dlit.MustNew("22"),
 				"goalsScore":     dlit.MustNew(20.1),
 			},
-			Goals: []*rhkit.GoalAssessment{
-				&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkit.GoalAssessment{"numIncomeGt2 == 2", true},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 			},
 		},
-		&rhkit.RuleAssessment{
+		&rhkassessment.RuleAssessment{
 			Rule: rule.NewGEFV("rate", dlit.MustNew(789.2)),
 			Aggregators: map[string]*dlit.Literal{
 				"numMatches":     dlit.MustNew("3142"),
@@ -209,12 +209,12 @@ func TestWriteLoadJSON(t *testing.T) {
 				"numIncomeGt2":   dlit.MustNew("32"),
 				"goalsScore":     dlit.MustNew(30.1),
 			},
-			Goals: []*rhkit.GoalAssessment{
-				&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkit.GoalAssessment{"numIncomeGt2 == 2", true},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 			},
 		},
-		&rhkit.RuleAssessment{
+		&rhkassessment.RuleAssessment{
 			Rule: rule.NewTrue(),
 			Aggregators: map[string]*dlit.Literal{
 				"numMatches":     dlit.MustNew("142"),
@@ -222,9 +222,9 @@ func TestWriteLoadJSON(t *testing.T) {
 				"numIncomeGt2":   dlit.MustNew("2"),
 				"goalsScore":     dlit.MustNew(0.1),
 			},
-			Goals: []*rhkit.GoalAssessment{
-				&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkit.GoalAssessment{"numIncomeGt2 == 2", true},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 			},
 		},
 	}
@@ -316,10 +316,10 @@ func TestGetSortedAggregatorNames(t *testing.T) {
 }
 
 func TestGetTrueAggregators(t *testing.T) {
-	assessment := &rhkit.Assessment{
+	assessment := &rhkassessment.Assessment{
 		NumRecords: 20,
-		RuleAssessments: []*rhkit.RuleAssessment{
-			&rhkit.RuleAssessment{
+		RuleAssessments: []*rhkassessment.RuleAssessment{
+			&rhkassessment.RuleAssessment{
 				Rule: rule.NewEQFV("month", dlit.NewString("may")),
 				Aggregators: map[string]*dlit.Literal{
 					"numMatches":     dlit.MustNew("2142"),
@@ -327,12 +327,12 @@ func TestGetTrueAggregators(t *testing.T) {
 					"numIncomeGt2":   dlit.MustNew("22"),
 					"goalsScore":     dlit.MustNew(20.1),
 				},
-				Goals: []*rhkit.GoalAssessment{
-					&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-					&rhkit.GoalAssessment{"numIncomeGt2 == 2", true},
+				Goals: []*rhkassessment.GoalAssessment{
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 				},
 			},
-			&rhkit.RuleAssessment{
+			&rhkassessment.RuleAssessment{
 				Rule: rule.NewGEFV("rate", dlit.MustNew(789.2)),
 				Aggregators: map[string]*dlit.Literal{
 					"numMatches":     dlit.MustNew("3142"),
@@ -340,12 +340,12 @@ func TestGetTrueAggregators(t *testing.T) {
 					"numIncomeGt2":   dlit.MustNew("32"),
 					"goalsScore":     dlit.MustNew(30.1),
 				},
-				Goals: []*rhkit.GoalAssessment{
-					&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-					&rhkit.GoalAssessment{"numIncomeGt2 == 2", true},
+				Goals: []*rhkassessment.GoalAssessment{
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 				},
 			},
-			&rhkit.RuleAssessment{
+			&rhkassessment.RuleAssessment{
 				Rule: rule.NewTrue(),
 				Aggregators: map[string]*dlit.Literal{
 					"numMatches":     dlit.MustNew("142"),
@@ -353,9 +353,9 @@ func TestGetTrueAggregators(t *testing.T) {
 					"numIncomeGt2":   dlit.MustNew("2"),
 					"goalsScore":     dlit.MustNew(0.1),
 				},
-				Goals: []*rhkit.GoalAssessment{
-					&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-					&rhkit.GoalAssessment{"numIncomeGt2 == 2", true},
+				Goals: []*rhkassessment.GoalAssessment{
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 				},
 			},
 		},
@@ -377,10 +377,10 @@ func TestGetTrueAggregators(t *testing.T) {
 }
 
 func TestGetTrueAggregators_error(t *testing.T) {
-	assessment := &rhkit.Assessment{
+	assessment := &rhkassessment.Assessment{
 		NumRecords: 20,
-		RuleAssessments: []*rhkit.RuleAssessment{
-			&rhkit.RuleAssessment{
+		RuleAssessments: []*rhkassessment.RuleAssessment{
+			&rhkassessment.RuleAssessment{
 				Rule: rule.NewEQFV("month", dlit.NewString("may")),
 				Aggregators: map[string]*dlit.Literal{
 					"numMatches":     dlit.MustNew("2142"),
@@ -388,12 +388,12 @@ func TestGetTrueAggregators_error(t *testing.T) {
 					"numIncomeGt2":   dlit.MustNew("22"),
 					"goalsScore":     dlit.MustNew(20.1),
 				},
-				Goals: []*rhkit.GoalAssessment{
-					&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-					&rhkit.GoalAssessment{"numIncomeGt2 == 2", true},
+				Goals: []*rhkassessment.GoalAssessment{
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 				},
 			},
-			&rhkit.RuleAssessment{
+			&rhkassessment.RuleAssessment{
 				Rule: rule.NewTrue(),
 				Aggregators: map[string]*dlit.Literal{
 					"numMatches":     dlit.MustNew("142"),
@@ -401,12 +401,12 @@ func TestGetTrueAggregators_error(t *testing.T) {
 					"numIncomeGt2":   dlit.MustNew("2"),
 					"goalsScore":     dlit.MustNew(0.1),
 				},
-				Goals: []*rhkit.GoalAssessment{
-					&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-					&rhkit.GoalAssessment{"numIncomeGt2 == 2", true},
+				Goals: []*rhkassessment.GoalAssessment{
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 				},
 			},
-			&rhkit.RuleAssessment{
+			&rhkassessment.RuleAssessment{
 				Rule: rule.NewGEFV("rate", dlit.MustNew(789.2)),
 				Aggregators: map[string]*dlit.Literal{
 					"numMatches":     dlit.MustNew("3142"),
@@ -414,9 +414,9 @@ func TestGetTrueAggregators_error(t *testing.T) {
 					"numIncomeGt2":   dlit.MustNew("32"),
 					"goalsScore":     dlit.MustNew(30.1),
 				},
-				Goals: []*rhkit.GoalAssessment{
-					&rhkit.GoalAssessment{"numIncomeGt2 == 1", false},
-					&rhkit.GoalAssessment{"numIncomeGt2 == 2", true},
+				Goals: []*rhkassessment.GoalAssessment{
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 				},
 			},
 		},

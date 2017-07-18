@@ -23,7 +23,7 @@ import (
 	"errors"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rhkit"
+	rhkassessment "github.com/vlifesystems/rhkit/assessment"
 	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
@@ -43,7 +43,7 @@ type Aggregator struct {
 type Assessment struct {
 	Rule        string
 	Aggregators []*Aggregator
-	Goals       []*rhkit.GoalAssessment
+	Goals       []*rhkassessment.GoalAssessment
 }
 
 type Report struct {
@@ -64,7 +64,7 @@ type AggregatorDesc struct {
 }
 
 func New(
-	assessment *rhkit.Assessment,
+	assessment *rhkassessment.Assessment,
 	experiment *experiment.Experiment,
 	experimentFilename string,
 	tags []string,
@@ -163,7 +163,7 @@ func getSortedAggregatorNames(aggregators map[string]*dlit.Literal) []string {
 }
 
 func getTrueAggregators(
-	assessment *rhkit.Assessment,
+	assessment *rhkassessment.Assessment,
 ) (map[string]*dlit.Literal, error) {
 	trueRuleAssessment :=
 		assessment.RuleAssessments[len(assessment.RuleAssessments)-1]

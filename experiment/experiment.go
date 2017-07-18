@@ -29,9 +29,9 @@ import (
 	"github.com/lawrencewoodman/ddataset/dsql"
 	"github.com/lawrencewoodman/ddataset/dtruncate"
 	"github.com/lawrencewoodman/dexpr"
-	"github.com/vlifesystems/rhkit"
+	rhkassessment "github.com/vlifesystems/rhkit/assessment"
 	"github.com/vlifesystems/rhkit/description"
-	rhexperiment "github.com/vlifesystems/rhkit/experiment"
+	rhkexperiment "github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
@@ -48,17 +48,17 @@ import (
 )
 
 type descFile struct {
-	Title          string                         `yaml:"title"`
-	Tags           []string                       `yaml:"tags"`
-	Dataset        string                         `yaml:"dataset"`
-	Csv            *csvDesc                       `yaml:"csv"`
-	Sql            *sqlDesc                       `yaml:"sql"`
-	Fields         []string                       `yaml:"fields"`
-	RuleFields     []string                       `yaml:"ruleFields"`
-	RuleComplexity *ruleComplexity                `yaml:"ruleComplexity"`
-	Aggregators    []*rhexperiment.AggregatorDesc `yaml:"aggregators"`
-	Goals          []string                       `yaml:"goals"`
-	SortOrder      []*sortDesc                    `yaml:"sortOrder"`
+	Title          string                          `yaml:"title"`
+	Tags           []string                        `yaml:"tags"`
+	Dataset        string                          `yaml:"dataset"`
+	Csv            *csvDesc                        `yaml:"csv"`
+	Sql            *sqlDesc                        `yaml:"sql"`
+	Fields         []string                        `yaml:"fields"`
+	RuleFields     []string                        `yaml:"ruleFields"`
+	RuleComplexity *ruleComplexity                 `yaml:"ruleComplexity"`
+	Aggregators    []*rhkexperiment.AggregatorDesc `yaml:"aggregators"`
+	Goals          []string                        `yaml:"goals"`
+	SortOrder      []*sortDesc                     `yaml:"sortOrder"`
 	// An expression that works out whether to run the experiment
 	When string `yaml:"when"`
 }
@@ -105,8 +105,8 @@ func Process(
 	l logger.Logger,
 	experimentProgress *progress.Experiment,
 ) error {
-	var assessment *rhkit.Assessment
-	var newAssessment *rhkit.Assessment
+	var assessment *rhkassessment.Assessment
+	var newAssessment *rhkassessment.Assessment
 	var err error
 
 	reportExperimentFail := func(err error, errs ...error) error {
@@ -273,7 +273,7 @@ func Process(
 }
 
 func loadExperiment(filename string, cfg *config.Config) (
-	experiment *rhexperiment.Experiment,
+	experiment *rhkexperiment.Experiment,
 	tags []string,
 	whenExpr *dexpr.Expr,
 	err error,
@@ -313,7 +313,7 @@ func loadExperiment(filename string, cfg *config.Config) (
 
 	rc := makeRuleComplexity(e)
 
-	experimentDesc := &rhexperiment.ExperimentDesc{
+	experimentDesc := &rhkexperiment.ExperimentDesc{
 		Title:          e.Title,
 		Dataset:        dataset,
 		RuleFields:     e.RuleFields,
@@ -322,7 +322,7 @@ func loadExperiment(filename string, cfg *config.Config) (
 		Goals:          e.Goals,
 		SortOrder:      makeRHSortOrder(e.SortOrder),
 	}
-	experiment, err = rhexperiment.New(experimentDesc)
+	experiment, err = rhkexperiment.New(experimentDesc)
 	if err != nil {
 		return nil, noTags, nil, err
 	}
@@ -334,10 +334,10 @@ func loadExperiment(filename string, cfg *config.Config) (
 	return experiment, e.Tags, whenExpr, err
 }
 
-func makeRHSortOrder(sortOrder []*sortDesc) []*rhexperiment.SortDesc {
-	r := make([]*rhexperiment.SortDesc, len(sortOrder))
+func makeRHSortOrder(sortOrder []*sortDesc) []*rhkexperiment.SortDesc {
+	r := make([]*rhkexperiment.SortDesc, len(sortOrder))
 	for i, sd := range sortOrder {
-		r[i] = &rhexperiment.SortDesc{
+		r[i] = &rhkexperiment.SortDesc{
 			AggregatorName: sd.AggregatorName,
 			Direction:      sd.Direction,
 		}
@@ -445,7 +445,7 @@ func describeDataset(
 	filename string,
 	dataset ddataset.Dataset,
 ) (*description.Description, error) {
-	_description, err := rhkit.DescribeDataset(dataset)
+	_description, err := description.DescribeDataset(dataset)
 	if err != nil {
 		return nil, err
 	}
@@ -460,14 +460,14 @@ func describeDataset(
 func assessRulesWorker(
 	wg *sync.WaitGroup,
 	rules []rule.Rule,
-	experiment *rhexperiment.Experiment,
+	experiment *rhkexperiment.Experiment,
 	jobs <-chan assessJob,
 	results chan<- assessJobResult,
 ) {
 	defer wg.Done()
 	for j := range jobs {
 		rulesPartial := rules[j.startRuleNum:j.endRuleNum]
-		assessment, err := rhkit.AssessRules(rulesPartial, experiment)
+		assessment, err := rhkassessment.AssessRules(rulesPartial, experiment)
 		if err != nil {
 			results <- assessJobResult{assessment: nil, err: err}
 			return
@@ -481,8 +481,8 @@ func assessCollectResults(
 	stage int,
 	numJobs int,
 	results <-chan assessJobResult,
-) (*rhkit.Assessment, error) {
-	var assessment *rhkit.Assessment
+) (*rhkassessment.Assessment, error) {
+	var assessment *rhkassessment.Assessment
 	var err error
 	jobNum := 0
 	for r := range results {
@@ -531,10 +531,10 @@ func assessCreateJobs(numRules int, step int, jobs chan<- assessJob) {
 func assessRules(
 	stage int,
 	rules []rule.Rule,
-	experiment *rhexperiment.Experiment,
+	experiment *rhkexperiment.Experiment,
 	experimentProgress *progress.Experiment,
 	cfg *config.Config,
-) (*rhkit.Assessment, error) {
+) (*rhkassessment.Assessment, error) {
 	var wg sync.WaitGroup
 	progressIntervals := 1000
 	numRules := len(rules)
@@ -583,7 +583,7 @@ type assessJob struct {
 }
 
 type assessJobResult struct {
-	assessment *rhkit.Assessment
+	assessment *rhkassessment.Assessment
 	err        error
 }
 
