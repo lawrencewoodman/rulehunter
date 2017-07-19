@@ -1,0 +1,30 @@
+project_name: rulehunter
+release:
+  github:
+    owner: vlifesystems
+    name: rulehunter
+builds:
+- goos:
+  - linux
+  - darwin
+  - windows
+  goarch:
+  - amd64
+  - "386"
+  goarm:
+  - "6"
+  main: .
+  binary: rulehunter
+archive:
+  format: zip
+  files:
+  - licence*
+  - LICENCE*
+  - license*
+  - LICENSE*
+  - readme*
+  - README*
+  - changelog*
+  - CHANGELOG*
+  - COPYING
+  - support/**/**/**/**

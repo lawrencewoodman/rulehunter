@@ -1,2 +1,5 @@
 # Vim Swap files
 *.swp
+
+# Goreleaser build directory
+dist

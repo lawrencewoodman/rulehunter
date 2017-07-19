@@ -10,8 +10,7 @@ Rulehunter allows you to describe your goals and will then find simple rules to 
 
 Getting Started
 ---------------
-* Download and install [Go](https://golang.org)
-* Follow the Rulehunter [installation](http://rulehunter.com/docs/installation/) instructions
+* Follow the Rulehunter [installation](http://rulehunter.com/docs/installation/) instructions.  There are prebuilt binaries for a number of platforms.
 * Read about its [configuration](http://rulehunter.com/docs/configuration/) and [usage](http://rulehunter.com/docs/usage/)
 * Start creating [experiments](http://rulehunter.com/docs/experiments/)
 * See the [Rulehunter](http://rulehunter.com) website for more information
