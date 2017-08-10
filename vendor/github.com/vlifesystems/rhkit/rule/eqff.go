@@ -85,7 +85,7 @@ func generateEQFF(
 			numSharedValues := calcNumSharedValues(fd, oFd)
 			if fieldNum < oFieldNum &&
 				numSharedValues >= 2 &&
-				internal.StringInSlice(oField, ruleFields) {
+				internal.IsStringInSlice(oField, ruleFields) {
 				r := NewEQFF(field, oField)
 				rules = append(rules, r)
 			}

@@ -25,7 +25,7 @@
   "aggregators": [
     {
       "name": "helpedMcc",
-      "function": "mcc",
+      "kind": "mcc",
       "arg": "success"
     }
   ],

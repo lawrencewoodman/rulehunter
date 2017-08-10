@@ -18,13 +18,13 @@ ruleFields:
   - height
 aggregators:
   - name: "goodFlowMcc"
-    function: "mcc"
+    kind: "mcc"
     arg: "flow > 60"
   - name: "totalFlow"
-    function: "sum"
+    kind: "sum"
     arg: "flow"
   - name: "totalFlowTimesHeight"
-    function: "sum"
+    kind: "sum"
     arg: "flow*height"
 goals:
   - "goodFlowMcc > 0"

@@ -7,24 +7,21 @@ package assessment
 import (
 	"errors"
 	"fmt"
-	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rhkit/aggregators"
-	"github.com/vlifesystems/rhkit/experiment"
+	"github.com/lawrencewoodman/ddataset"
+	"github.com/vlifesystems/rhkit/aggregator"
+	"github.com/vlifesystems/rhkit/goal"
 	"github.com/vlifesystems/rhkit/rule"
 	"sort"
-	"strings"
+	"sync"
 )
+
+var ErrNumRecordsChanged = errors.New("number of records changed in dataset")
 
 type Assessment struct {
 	NumRecords      int64
 	RuleAssessments []*RuleAssessment
 	flags           map[string]bool
-}
-
-type RuleAssessment struct {
-	Rule        rule.Rule
-	Aggregators map[string]*dlit.Literal
-	Goals       []*GoalAssessment
+	mux             sync.RWMutex
 }
 
 type GoalAssessment struct {
@@ -32,49 +29,16 @@ type GoalAssessment struct {
 	Passed bool
 }
 
-func NewAssessment(numRecords int64) *Assessment {
-	return &Assessment{
-		NumRecords: numRecords,
-		flags: map[string]bool{
-			"sorted":  false,
-			"refined": false,
-		},
+func New() *Assessment {
+	a := &Assessment{
+		NumRecords:      0,
+		RuleAssessments: []*RuleAssessment{},
 	}
+	a.resetFlags()
+	return a
 }
 
-func (a *Assessment) AddRuleAssessors(ruleAssessors []*ruleAssessor) error {
-	ruleAssessments := make([]*RuleAssessment, len(ruleAssessors))
-	for i, ruleAssessment := range ruleAssessors {
-		rule := ruleAssessment.Rule
-		aggregatorInstancesMap, err :=
-			aggregators.InstancesToMap(
-				ruleAssessment.Aggregators,
-				ruleAssessment.Goals,
-				a.NumRecords,
-			)
-		if err != nil {
-			return err
-		}
-		goalAssessments := make([]*GoalAssessment, len(ruleAssessment.Goals))
-		for j, goal := range ruleAssessment.Goals {
-			passed, err := goal.Assess(aggregatorInstancesMap)
-			if err != nil {
-				return err
-			}
-			goalAssessments[j] = &GoalAssessment{goal.String(), passed}
-		}
-		delete(aggregatorInstancesMap, "numRecords")
-		ruleAssessments[i] = &RuleAssessment{
-			Rule:        rule,
-			Aggregators: aggregatorInstancesMap,
-			Goals:       goalAssessments,
-		}
-	}
-	a.RuleAssessments = ruleAssessments
-	return nil
-}
-
-func (a *Assessment) Sort(s []experiment.SortField) {
+func (a *Assessment) Sort(s []SortOrder) {
 	sort.Sort(by{a.RuleAssessments, s})
 	a.flags["sorted"] = true
 }
@@ -128,16 +92,15 @@ func (sortedAssessment *Assessment) Refine() {
 
 func (a *Assessment) Merge(o *Assessment) (*Assessment, error) {
 	if a.NumRecords != o.NumRecords {
-		// TODO: Create error type
-		err := errors.New("Can't merge assessments: Number of records don't match")
-		return nil, err
+		return nil, ErrNumRecordsChanged
 	}
 	newRuleAssessments := append(a.RuleAssessments, o.RuleAssessments...)
-	flags := map[string]bool{
-		"sorted":  false,
-		"refined": false,
+	r := &Assessment{
+		NumRecords:      a.NumRecords,
+		RuleAssessments: newRuleAssessments,
 	}
-	return &Assessment{a.NumRecords, newRuleAssessments, flags}, nil
+	r.resetFlags()
+	return r, nil
 }
 
 // Assessment must be sorted and refined first
@@ -173,7 +136,11 @@ func (a *Assessment) TruncateRuleAssessments(
 		"sorted":  true,
 		"refined": true,
 	}
-	return &Assessment{a.NumRecords, ruleAssessments, flags}
+	return &Assessment{
+		NumRecords:      a.NumRecords,
+		RuleAssessments: ruleAssessments,
+		flags:           flags,
+	}
 }
 
 // Can optionally pass maximum number of rules to return
@@ -199,6 +166,87 @@ func (a *Assessment) Rules(args ...int) []rule.Rule {
 		r[i] = ruleAssessment.Rule
 	}
 	return r
+}
+
+// AssessRules assesses the given rules against a Dataset and
+// adds their assessment to the existing assessment.
+// This function is thread safe.
+func (a *Assessment) AssessRules(
+	dataset ddataset.Dataset,
+	rules []rule.Rule,
+	aggregatorSpecs []aggregator.Spec,
+	goals []*goal.Goal,
+) error {
+	ruleAssessments := make([]*RuleAssessment, len(rules))
+	for i, rule := range rules {
+		ruleAssessments[i] = newRuleAssessment(rule, aggregatorSpecs, goals)
+	}
+	numRecords, err := processDataset(dataset, ruleAssessments)
+	if err != nil {
+		return err
+	}
+	if a.NumRecords == 0 {
+		a.NumRecords = numRecords
+	} else if numRecords != a.NumRecords {
+		return ErrNumRecordsChanged
+	}
+	return a.addRuleAssessments(ruleAssessments)
+}
+
+func processDataset(
+	dataset ddataset.Dataset,
+	ruleAssessments []*RuleAssessment,
+) (int64, error) {
+	numRecords := int64(0)
+	conn, err := dataset.Open()
+	if err != nil {
+		return numRecords, err
+	}
+	defer conn.Close()
+
+	for conn.Next() {
+		record := conn.Read()
+		numRecords++
+		for _, ruleAssessment := range ruleAssessments {
+			err := ruleAssessment.NextRecord(record)
+			if err != nil {
+				return numRecords, err
+			}
+		}
+	}
+	return numRecords, conn.Err()
+}
+
+func (a *Assessment) resetFlags() {
+	a.flags = map[string]bool{
+		"sorted":  false,
+		"refined": false,
+	}
+}
+
+func (a *Assessment) addRuleAssessments(
+	ruleAssessments []*RuleAssessment,
+) error {
+	a.mux.Lock()
+	defer a.mux.Unlock()
+	a.resetFlags()
+	for _, ruleAssessment := range ruleAssessments {
+		if err := ruleAssessment.update(a.NumRecords); err != nil {
+			return err
+		}
+		numMatches, ok := ruleAssessment.Aggregators["numMatches"]
+		if !ok {
+			panic("numMatches doesn't exist in aggregators")
+		}
+		numMatchesInt, isInt := numMatches.Int()
+		if !isInt {
+			panic(fmt.Sprintf("can't cast numMatches to Int: %s", numMatches))
+		}
+		if numMatchesInt > 0 {
+			a.RuleAssessments = append(a.RuleAssessments, ruleAssessment.clone())
+		}
+	}
+	return nil
 }
 
 func (sortedAssessment *Assessment) excludeSameRecordsRules() {
@@ -281,105 +329,6 @@ func (sortedAssessment *Assessment) excludePoorerOverlappingRules() {
 		}
 	}
 	sortedAssessment.RuleAssessments = goodRuleAssessments
-}
-
-// by implements sort.Interface for []*RuleAssessments based
-// on the sortFields
-type by struct {
-	ruleAssessments []*RuleAssessment
-	sortFields      []experiment.SortField
-}
-
-func (b by) Len() int { return len(b.ruleAssessments) }
-func (b by) Swap(i, j int) {
-	b.ruleAssessments[i], b.ruleAssessments[j] =
-		b.ruleAssessments[j], b.ruleAssessments[i]
-}
-
-func (b by) Less(i, j int) bool {
-	var vI *dlit.Literal
-	var vJ *dlit.Literal
-	for _, sortField := range b.sortFields {
-		field := sortField.Field
-		direction := sortField.Direction
-		vI = b.ruleAssessments[i].Aggregators[field]
-		vJ = b.ruleAssessments[j].Aggregators[field]
-		c := compareDlitNums(vI, vJ)
-
-		if direction == experiment.DESCENDING {
-			c *= -1
-		}
-		if c < 0 {
-			return true
-		} else if c > 0 {
-			return false
-		}
-	}
-
-	ruleStrI := b.ruleAssessments[i].Rule.String()
-	ruleStrJ := b.ruleAssessments[j].Rule.String()
-	ruleLenI := len(ruleStrI)
-	ruleLenJ := len(ruleStrJ)
-	if ruleLenI != ruleLenJ {
-		return ruleLenI < ruleLenJ
-	}
-
-	return strings.Compare(ruleStrI, ruleStrJ) == -1
-}
-
-func compareDlitNums(l1 *dlit.Literal, l2 *dlit.Literal) int {
-	i1, l1IsInt := l1.Int()
-	i2, l2IsInt := l2.Int()
-	if l1IsInt && l2IsInt {
-		if i1 < i2 {
-			return -1
-		}
-		if i1 > i2 {
-			return 1
-		}
-		return 0
-	}
-
-	f1, l1IsFloat := l1.Float()
-	f2, l2IsFloat := l2.Float()
-
-	if l1IsFloat && l2IsFloat {
-		if f1 < f2 {
-			return -1
-		}
-		if f1 > f2 {
-			return 1
-		}
-		return 0
-	}
-	panic(fmt.Sprintf("Can't compare numbers: %s, %s", l1, l2))
-}
-
-func (r *RuleAssessment) IsEqual(o *RuleAssessment) bool {
-	if r.Rule.String() != o.Rule.String() {
-		return false
-	}
-	if len(r.Aggregators) != len(o.Aggregators) {
-		return false
-	}
-	for aName, value := range r.Aggregators {
-		if o.Aggregators[aName].String() != value.String() {
-			return false
-		}
-	}
-	if len(r.Goals) != len(o.Goals) {
-		return false
-	}
-	for i, goal := range r.Goals {
-		if !goal.IsEqual(o.Goals[i]) {
-			return false
-		}
-	}
-	return true
-}
-
-func (r *RuleAssessment) clone() *RuleAssessment {
-	return &RuleAssessment{r.Rule, r.Aggregators, r.Goals}
 }
 
 func (g *GoalAssessment) IsEqual(o *GoalAssessment) bool {

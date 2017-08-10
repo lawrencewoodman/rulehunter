@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rhkit/aggregators"
+	"github.com/vlifesystems/rhkit/aggregator"
 	rhkassessment "github.com/vlifesystems/rhkit/assessment"
-	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
@@ -19,7 +18,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	assessment := rhkassessment.NewAssessment(20)
+	assessment := rhkassessment.New()
 	assessment.RuleAssessments = []*rhkassessment.RuleAssessment{
 		&rhkassessment.RuleAssessment{
 			Rule: rule.NewEQFV("month", dlit.NewString("may")),
@@ -61,31 +60,31 @@ func TestNew(t *testing.T) {
 			},
 		},
 	}
-	experiment := &experiment.Experiment{
-		Title: "some title",
-		SortOrder: []experiment.SortField{
-			experiment.SortField{
-				Field:     "goalsScore",
-				Direction: experiment.DESCENDING,
-			},
-			experiment.SortField{
-				Field:     "percentMatches",
-				Direction: experiment.ASCENDING,
-			},
+
+	title := "some title"
+	sortOrder := []rhkassessment.SortOrder{
+		rhkassessment.SortOrder{
+			Aggregator: "goalsScore",
+			Direction:  rhkassessment.DESCENDING,
 		},
-		Aggregators: []aggregators.AggregatorSpec{
-			aggregators.MustNew("numMatches", "count", "true()"),
-			aggregators.MustNew(
-				"percentMatches",
-				"calc",
-				"roundto(100.0 * numMatches / numRecords, 2)",
-			),
-			aggregators.MustNew("numIncomeGt2", "count", "income > 2"),
-			aggregators.MustNew("goalsScore", "goalsscore"),
+		rhkassessment.SortOrder{
+			Aggregator: "percentMatches",
+			Direction:  rhkassessment.ASCENDING,
 		},
+	}
+	aggregators := []aggregator.Spec{
+		aggregator.MustNew("numMatches", "count", "true()"),
+		aggregator.MustNew(
+			"percentMatches",
+			"calc",
+			"roundto(100.0 * numMatches / numRecords, 2)",
+		),
+		aggregator.MustNew("numIncomeGt2", "count", "income > 2"),
+		aggregator.MustNew("goalsScore", "goalsscore"),
 	}
 	experimentFilename := "somename.yaml"
 	tags := []string{"bank", "test / fred"}
+
 	wantAggregatorDescs := []AggregatorDesc{
 		AggregatorDesc{Name: "numMatches", Kind: "count", Arg: "true()"},
 		AggregatorDesc{
@@ -137,18 +136,16 @@ func TestNew(t *testing.T) {
 			},
 		},
 	}
-	report := New(assessment, experiment, experimentFilename, tags)
-	if report.Title != experiment.Title {
-		t.Errorf("New report.Title got: %s, want: %s",
-			report.Title, experiment.Title)
+	report :=
+		New(title, assessment, aggregators, sortOrder, experimentFilename, tags)
+	if report.Title != title {
+		t.Errorf("New report.Title got: %s, want: %s", report.Title, title)
 	}
 	if !reflect.DeepEqual(report.Tags, tags) {
-		t.Errorf("New report.Tags got: %s, want: %s",
-			report.Tags, tags)
+		t.Errorf("New report.Tags got: %s, want: %s", report.Tags, tags)
 	}
 	if time.Now().Sub(report.Stamp).Seconds() > 1 {
-		t.Errorf("New report.Stamp got: %s, want: %s",
-			report.Stamp, time.Now())
+		t.Errorf("New report.Stamp got: %s, want: %s", report.Stamp, time.Now())
 	}
 	if report.ExperimentFilename != experimentFilename {
 		t.Errorf("New report.ExperimentFilename got: %s, want: %s",
@@ -158,9 +155,9 @@ func TestNew(t *testing.T) {
 		t.Errorf("New report.NumRecords got: %s, want: %s",
 			report.NumRecords, assessment.NumRecords)
 	}
-	if !reflect.DeepEqual(report.SortOrder, experiment.SortOrder) {
+	if !reflect.DeepEqual(report.SortOrder, sortOrder) {
 		t.Errorf("New report.SortOrder got: %s, want: %s",
-			report.SortOrder, experiment.SortOrder)
+			report.SortOrder, sortOrder)
 	}
 	if !reflect.DeepEqual(report.Aggregators, wantAggregatorDescs) {
 		t.Errorf("New report.Aggregators got: %s, want: %s",
@@ -186,7 +183,7 @@ func TestWriteLoadJSON(t *testing.T) {
 	if err := os.MkdirAll(reportsDir, modePerm); err != nil {
 		t.Fatalf("MkdirAll: %s", err)
 	}
-	assessment := rhkassessment.NewAssessment(20)
+	assessment := rhkassessment.New()
 	assessment.RuleAssessments = []*rhkassessment.RuleAssessment{
 		&rhkassessment.RuleAssessment{
 			Rule: rule.NewEQFV("month", dlit.NewString("may")),
@@ -228,33 +225,33 @@ func TestWriteLoadJSON(t *testing.T) {
 			},
 		},
 	}
-	experiment := &experiment.Experiment{
-		Title: "some title",
-		SortOrder: []experiment.SortField{
-			experiment.SortField{
-				Field:     "goalsScore",
-				Direction: experiment.DESCENDING,
-			},
-			experiment.SortField{
-				Field:     "percentMatches",
-				Direction: experiment.ASCENDING,
-			},
+
+	title := "some title"
+	sortOrder := []rhkassessment.SortOrder{
+		rhkassessment.SortOrder{
+			Aggregator: "goalsScore",
+			Direction:  rhkassessment.DESCENDING,
 		},
-		Aggregators: []aggregators.AggregatorSpec{
-			aggregators.MustNew("numMatches", "count", "true()"),
-			aggregators.MustNew(
-				"percentMatches",
-				"calc",
-				"roundto(100.0 * numMatches / numRecords, 2)",
-			),
-			aggregators.MustNew("numIncomeGt2", "count", "income > 2"),
-			aggregators.MustNew("goalsScore", "goalsscore"),
+		rhkassessment.SortOrder{
+			Aggregator: "percentMatches",
+			Direction:  rhkassessment.ASCENDING,
 		},
+	}
+	aggregators := []aggregator.Spec{
+		aggregator.MustNew("numMatches", "count", "true()"),
+		aggregator.MustNew(
+			"percentMatches",
+			"calc",
+			"roundto(100.0 * numMatches / numRecords, 2)",
+		),
+		aggregator.MustNew("numIncomeGt2", "count", "income > 2"),
+		aggregator.MustNew("goalsScore", "goalsscore"),
 	}
 	experimentFilename := "somename.yaml"
 	tags := []string{"bank", "test / fred"}
 	config := &config.Config{BuildDir: tmpDir}
-	report := New(assessment, experiment, experimentFilename, tags)
+	report :=
+		New(title, assessment, aggregators, sortOrder, experimentFilename, tags)
 
 	if err := report.WriteJSON(config); err != nil {
 		t.Fatalf("WriteJSON: %s", err)

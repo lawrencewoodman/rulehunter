@@ -29,9 +29,10 @@ import (
 	"github.com/lawrencewoodman/ddataset/dsql"
 	"github.com/lawrencewoodman/ddataset/dtruncate"
 	"github.com/lawrencewoodman/dexpr"
+	"github.com/vlifesystems/rhkit/aggregator"
 	rhkassessment "github.com/vlifesystems/rhkit/assessment"
 	"github.com/vlifesystems/rhkit/description"
-	rhkexperiment "github.com/vlifesystems/rhkit/experiment"
+	"github.com/vlifesystems/rhkit/goal"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
@@ -47,20 +48,34 @@ import (
 	"time"
 )
 
+type Experiment struct {
+	Title          string
+	Dataset        ddataset.Dataset
+	RuleFields     []string
+	RuleComplexity rule.Complexity
+	Aggregators    []aggregator.Spec
+	Goals          []*goal.Goal
+	SortOrder      []rhkassessment.SortOrder
+	When           *dexpr.Expr
+	Tags           []string
+	Rules          []rule.Rule
+}
+
 type descFile struct {
-	Title          string                          `yaml:"title"`
-	Tags           []string                        `yaml:"tags"`
-	Dataset        string                          `yaml:"dataset"`
-	Csv            *csvDesc                        `yaml:"csv"`
-	Sql            *sqlDesc                        `yaml:"sql"`
-	Fields         []string                        `yaml:"fields"`
-	RuleFields     []string                        `yaml:"ruleFields"`
-	RuleComplexity *ruleComplexity                 `yaml:"ruleComplexity"`
-	Aggregators    []*rhkexperiment.AggregatorDesc `yaml:"aggregators"`
-	Goals          []string                        `yaml:"goals"`
-	SortOrder      []*sortDesc                     `yaml:"sortOrder"`
+	Title          string             `yaml:"title"`
+	Tags           []string           `yaml:"tags"`
+	Dataset        string             `yaml:"dataset"`
+	Csv            *csvDesc           `yaml:"csv"`
+	Sql            *sqlDesc           `yaml:"sql"`
+	Fields         []string           `yaml:"fields"`
+	RuleFields     []string           `yaml:"ruleFields"`
+	RuleComplexity ruleComplexity     `yaml:"ruleComplexity"`
+	Aggregators    []*aggregator.Desc `yaml:"aggregators"`
+	Goals          []string           `yaml:"goals"`
+	SortOrder      []sortDesc         `yaml:"sortOrder"`
 	// An expression that works out whether to run the experiment
-	When string `yaml:"when"`
+	When  string   `yaml:"when"`
+	Rules []string `yaml:"rules"`
 }
 
 type csvDesc struct {
@@ -97,6 +112,59 @@ func (e InvalidExtError) Error() string {
 	return "invalid extension: " + string(e)
 }
 
+func New(cfg *config.Config, d *descFile) (*Experiment, error) {
+	if err := d.checkValid(); err != nil {
+		return nil, err
+	}
+
+	dataset, err := makeDataset(d)
+	if err != nil {
+		return nil, err
+	}
+
+	if cfg.MaxNumRecords >= 1 {
+		dataset = dtruncate.New(dataset, cfg.MaxNumRecords)
+	}
+
+	if cfg.MaxNumCacheRecords >= 1 {
+		dataset = dcache.New(dataset, cfg.MaxNumCacheRecords)
+	}
+
+	goals, err := goal.MakeGoals(d.Goals)
+	if err != nil {
+		return nil, fmt.Errorf("goals: %s", err)
+	}
+	aggregators, err := aggregator.MakeSpecs(dataset.Fields(), d.Aggregators)
+	if err != nil {
+		return nil, fmt.Errorf("aggregators: %s", err)
+	}
+	sortOrder, err := makeSortOrder(aggregators, d.SortOrder)
+	if err != nil {
+		return nil, fmt.Errorf("sortOrder: %s", err)
+	}
+	when, err := makeWhenExpr(d.When)
+	if err != nil {
+		return nil, InvalidWhenExprError(d.When)
+	}
+	rules, err := rule.MakeDynamicRules(d.Rules)
+	if err != nil {
+		return nil, fmt.Errorf("rules: %s", err)
+	}
+
+	return &Experiment{
+		Title:          d.Title,
+		Dataset:        dataset,
+		RuleFields:     d.RuleFields,
+		RuleComplexity: rule.Complexity{Arithmetic: d.RuleComplexity.Arithmetic},
+		Aggregators:    aggregators,
+		Goals:          goals,
+		SortOrder:      sortOrder,
+		When:           when,
+		Tags:           d.Tags,
+		Rules:          rules,
+	}, nil
+}
+
 const assessRulesNumStages = 4
 
 func Process(
@@ -105,10 +173,6 @@ func Process(
 	l logger.Logger,
 	experimentProgress *progress.Experiment,
 ) error {
-	var assessment *rhkassessment.Assessment
-	var newAssessment *rhkassessment.Assessment
-	var err error
-
 	reportExperimentFail := func(err error, errs ...error) error {
 		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
 			experimentFile.Name(), err))
@@ -122,20 +186,19 @@ func Process(
 	}
 	experimentFullFilename :=
 		filepath.Join(cfg.ExperimentsDir, experimentFile.Name())
-	experiment, tags, whenExpr, err :=
-		loadExperiment(experimentFullFilename, cfg)
+	experiment, err := load(cfg, experimentFullFilename)
 	if err != nil {
 		fullErr := fmt.Errorf("Can't load experiment: %s, %s",
 			experimentFile.Name(), err)
 		return experimentProgress.ReportError(fullErr)
 	}
-	ok, err := shouldProcess(experimentProgress, experimentFile, whenExpr)
+	ok, err := shouldProcess(experimentProgress, experimentFile, experiment.When)
 	if err != nil || !ok {
 		return err
 	}
 
 	l.Info(fmt.Sprintf("Processing experiment: %s", experimentFile.Name()))
-	err = experimentProgress.UpdateDetails(experiment.Title, tags)
+	err = experimentProgress.UpdateDetails(experiment.Title, experiment.Tags)
 	if err != nil {
 		return reportExperimentFail(err)
 	}
@@ -156,14 +219,20 @@ func Process(
 	if err != nil {
 		return reportExperimentFail(err)
 	}
-	rules := rule.Generate(
+	rules, err := rule.Generate(
 		dDescription,
 		experiment.RuleFields,
 		experiment.RuleComplexity,
 	)
+	if err != nil {
+		fullErr := fmt.Errorf("Couldn't generate rules: %s", err)
+		return reportExperimentFail(err, fullErr)
+	}
 
-	assessment, err = assessRules(
+	ass := rhkassessment.New()
+	err = assessRules(
 		1,
+		ass,
 		rules,
 		experiment,
 		experimentProgress,
@@ -174,9 +243,9 @@ func Process(
 		return reportExperimentFail(err, fullErr)
 	}
 
-	assessment.Sort(experiment.SortOrder)
-	assessment.Refine()
-	sortedRules := assessment.Rules()
+	ass.Sort(experiment.SortOrder)
+	ass.Refine()
+	sortedRules := ass.Rules()
 
 	err = experimentProgress.ReportProgress("Tweaking rules", 0)
 	if err != nil {
@@ -184,8 +253,9 @@ func Process(
 	}
 	tweakableRules := rule.Tweak(1, sortedRules, dDescription)
 
-	newAssessment, err = assessRules(
+	err = assessRules(
 		2,
+		ass,
 		tweakableRules,
 		experiment,
 		experimentProgress,
@@ -196,15 +266,10 @@ func Process(
 		return reportExperimentFail(err, fullErr)
 	}
 
-	assessment, err = assessment.Merge(newAssessment)
-	if err != nil {
-		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
-		return reportExperimentFail(err, fullErr)
-	}
-	assessment.Sort(experiment.SortOrder)
-	assessment.Refine()
+	ass.Sort(experiment.SortOrder)
+	ass.Refine()
 
-	sortedRules = assessment.Rules()
+	sortedRules = ass.Rules()
 
 	err = experimentProgress.ReportProgress("Reduce DP of rules", 0)
 	if err != nil {
@@ -212,8 +277,9 @@ func Process(
 	}
 	reducedDPRules := rule.ReduceDP(sortedRules)
 
-	newAssessment, err = assessRules(
+	err = assessRules(
 		3,
+		ass,
 		reducedDPRules,
 		experiment,
 		experimentProgress,
@@ -224,20 +290,16 @@ func Process(
 		return reportExperimentFail(err, fullErr)
 	}
 
-	assessment, err = assessment.Merge(newAssessment)
-	if err != nil {
-		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
-		return reportExperimentFail(err, fullErr)
-	}
-	assessment.Sort(experiment.SortOrder)
-	assessment.Refine()
+	ass.Sort(experiment.SortOrder)
+	ass.Refine()
 
 	numRulesToCombine := 50
-	bestNonCombinedRules := assessment.Rules(numRulesToCombine)
+	bestNonCombinedRules := ass.Rules(numRulesToCombine)
 	combinedRules := rule.Combine(bestNonCombinedRules)
 
-	assessment, err = assessRules(
+	err = assessRules(
 		4,
+		ass,
 		combinedRules,
 		experiment,
 		experimentProgress,
@@ -248,17 +310,18 @@ func Process(
 		return reportExperimentFail(err, fullErr)
 	}
 
-	assessment, err = assessment.Merge(newAssessment)
-	if err != nil {
-		fullErr := fmt.Errorf("Couldn't merge assessments: %s", err)
-		return reportExperimentFail(err, fullErr)
-	}
+	ass.Sort(experiment.SortOrder)
+	ass.Refine()
+	ass = ass.TruncateRuleAssessments(cfg.MaxNumReportRules)
 
-	assessment.Sort(experiment.SortOrder)
-	assessment.Refine()
-	assessment = assessment.TruncateRuleAssessments(cfg.MaxNumReportRules)
-
-	report := report.New(assessment, experiment, experimentFile.Name(), tags)
+	report := report.New(
+		experiment.Title,
+		ass,
+		experiment.Aggregators,
+		experiment.SortOrder,
+		experimentFile.Name(),
+		experiment.Tags,
+	)
 	if err := report.WriteJSON(cfg); err != nil {
 		fullErr := fmt.Errorf("Couldn't write json report: %s", err)
 		return reportExperimentFail(err, fullErr)
@@ -272,77 +335,26 @@ func Process(
 	return nil
 }
 
-func loadExperiment(filename string, cfg *config.Config) (
-	experiment *rhkexperiment.Experiment,
-	tags []string,
-	whenExpr *dexpr.Expr,
+func load(cfg *config.Config, filename string) (
+	e *Experiment,
 	err error,
 ) {
-	var e *descFile
-	var noTags = []string{}
+	var d *descFile
 
 	ext := filepath.Ext(filename)
 	switch ext {
 	case ".json":
-		e, err = loadJSON(filename)
+		d, err = loadJSON(filename)
 	case ".yaml":
-		e, err = loadYAML(filename)
+		d, err = loadYAML(filename)
 	default:
-		return nil, noTags, nil, InvalidExtError(ext)
+		return nil, InvalidExtError(ext)
 	}
 	if err != nil {
-		return nil, noTags, nil, err
+		return nil, err
 	}
 
-	if err := e.checkValid(); err != nil {
-		return nil, noTags, nil, err
-	}
-
-	dataset, err := makeDataset(e)
-	if err != nil {
-		return nil, noTags, nil, err
-	}
-
-	if cfg.MaxNumRecords >= 1 {
-		dataset = dtruncate.New(dataset, cfg.MaxNumRecords)
-	}
-
-	if cfg.MaxNumCacheRecords >= 1 {
-		dataset = dcache.New(dataset, cfg.MaxNumCacheRecords)
-	}
-
-	rc := makeRuleComplexity(e)
-
-	experimentDesc := &rhkexperiment.ExperimentDesc{
-		Title:          e.Title,
-		Dataset:        dataset,
-		RuleFields:     e.RuleFields,
-		RuleComplexity: rc,
-		Aggregators:    e.Aggregators,
-		Goals:          e.Goals,
-		SortOrder:      makeRHSortOrder(e.SortOrder),
-	}
-	experiment, err = rhkexperiment.New(experimentDesc)
-	if err != nil {
-		return nil, noTags, nil, err
-	}
-
-	whenExpr, err = makeWhenExpr(e.When)
-	if err != nil {
-		return nil, noTags, nil, InvalidWhenExprError(e.When)
-	}
-	return experiment, e.Tags, whenExpr, err
-}
-
-func makeRHSortOrder(sortOrder []*sortDesc) []*rhkexperiment.SortDesc {
-	r := make([]*rhkexperiment.SortDesc, len(sortOrder))
-	for i, sd := range sortOrder {
-		r[i] = &rhkexperiment.SortDesc{
-			AggregatorName: sd.AggregatorName,
-			Direction:      sd.Direction,
-		}
-	}
-	return r
+	return New(cfg, d)
 }
 
 func loadJSON(filename string) (*descFile, error) {
@@ -372,6 +384,22 @@ func loadYAML(filename string) (*descFile, error) {
 	return &e, nil
 }
 
+func makeSortOrder(
+	aggregators []aggregator.Spec,
+	sortDescs []sortDesc,
+) ([]rhkassessment.SortOrder, error) {
+	r := make([]rhkassessment.SortOrder, len(sortDescs))
+	for i, sod := range sortDescs {
+		so, err :=
+			rhkassessment.NewSortOrder(aggregators, sod.AggregatorName, sod.Direction)
+		if err != nil {
+			return []rhkassessment.SortOrder{}, err
+		}
+		r[i] = so
+	}
+	return r, nil
+}
+
 func makeDataset(e *descFile) (d ddataset.Dataset, err error) {
 	switch e.Dataset {
 	case "csv":
@@ -396,13 +424,6 @@ func makeDataset(e *descFile) (d ddataset.Dataset, err error) {
 			fmt.Errorf("Experiment field: dataset, has invalid type: %s", e.Dataset)
 	}
 	return
-}
-
-func makeRuleComplexity(e *descFile) rule.Complexity {
-	if e.RuleComplexity == nil {
-		return rule.Complexity{}
-	}
-	return rule.Complexity{Arithmetic: e.RuleComplexity.Arithmetic}
 }
 
 func (e *descFile) checkValid() error {
@@ -459,20 +480,22 @@ func describeDataset(
 
 func assessRulesWorker(
 	wg *sync.WaitGroup,
+	ass *rhkassessment.Assessment,
 	rules []rule.Rule,
-	experiment *rhkexperiment.Experiment,
+	experiment *Experiment,
 	jobs <-chan assessJob,
 	results chan<- assessJobResult,
 ) {
 	defer wg.Done()
 	for j := range jobs {
 		rulesPartial := rules[j.startRuleNum:j.endRuleNum]
-		assessment, err := rhkassessment.AssessRules(rulesPartial, experiment)
-		if err != nil {
-			results <- assessJobResult{assessment: nil, err: err}
-			return
-		}
-		results <- assessJobResult{assessment: assessment, err: nil}
+		err := ass.AssessRules(
+			experiment.Dataset,
+			rulesPartial,
+			experiment.Aggregators,
+			experiment.Goals,
+		)
+		results <- assessJobResult{err: err}
 	}
 }
 
@@ -481,29 +504,19 @@ func assessCollectResults(
 	stage int,
 	numJobs int,
 	results <-chan assessJobResult,
-) (*rhkassessment.Assessment, error) {
-	var assessment *rhkassessment.Assessment
-	var err error
+) error {
 	jobNum := 0
 	for r := range results {
 		jobNum++
 		if r.err != nil {
-			return nil, r.err
-		}
-		if assessment == nil {
-			assessment = r.assessment
-		} else {
-			assessment, err = assessment.Merge(r.assessment)
-			if err != nil {
-				return nil, err
-			}
+			return r.err
 		}
 		err := reportProgress(experimentProgress, stage, jobNum, numJobs)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
-	return assessment, nil
+	return nil
 }
 
 func reportProgress(
@@ -530,11 +543,12 @@ func assessCreateJobs(numRules int, step int, jobs chan<- assessJob) {
 
 func assessRules(
 	stage int,
+	ass *rhkassessment.Assessment,
 	rules []rule.Rule,
-	experiment *rhkexperiment.Experiment,
+	experiment *Experiment,
 	experimentProgress *progress.Experiment,
 	cfg *config.Config,
-) (*rhkassessment.Assessment, error) {
+) error {
 	var wg sync.WaitGroup
 	progressIntervals := 1000
 	numRules := len(rules)
@@ -546,12 +560,12 @@ func assessRules(
 	}
 
 	if err := reportProgress(experimentProgress, stage, 0, 1); err != nil {
-		return nil, err
+		return err
 	}
 
 	wg.Add(cfg.MaxNumProcesses)
 	for i := 0; i < cfg.MaxNumProcesses; i++ {
-		go assessRulesWorker(&wg, rules, experiment, jobs, results)
+		go assessRulesWorker(&wg, ass, rules, experiment, jobs, results)
 	}
 
 	if numRules < progressIntervals {
@@ -568,13 +582,12 @@ func assessRules(
 		close(results)
 	}()
 
-	assessment, err := assessCollectResults(
+	return assessCollectResults(
 		experimentProgress,
 		stage,
 		numJobs,
 		results,
 	)
-	return assessment, err
 }
 
 type assessJob struct {
@@ -583,8 +596,7 @@ type assessJob struct {
 }
 
 type assessJobResult struct {
-	assessment *rhkassessment.Assessment
-	err        error
+	err error
 }
 
 func shouldProcess(

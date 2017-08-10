@@ -73,7 +73,7 @@ func generateGEFF(
 		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
 		isComparable := hasComparableNumberRange(fd, oFd)
 		if fieldNum < oFieldNum && isComparable &&
-			internal.StringInSlice(oField, ruleFields) {
+			internal.IsStringInSlice(oField, ruleFields) {
 			r := NewGEFF(field, oField)
 			rules = append(rules, r)
 		}

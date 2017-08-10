@@ -15,7 +15,7 @@
   "aggregators": [
     {
       "name": "goodFlowMcc",
-      "function": "mcc",
+      "kind": "mcc",
       "arg": "flow > 60"
     }
   ],
@@ -29,5 +29,11 @@
       "aggregatorName": "numMatches",
       "direction": "descending"
     }
+  ],
+  "rules": [
+    "height > 67",
+    "group == \"a\"",
+    "flow <= 9.42",
+    "district != \"northcal\" && group == \"b\""
   ]
 }

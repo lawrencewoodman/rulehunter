@@ -1,7 +1,7 @@
 // Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
-package aggregators
+package aggregator
 
 import (
 	"github.com/lawrencewoodman/dexpr"
@@ -35,7 +35,7 @@ func init() {
 func (a *precisionAggregator) MakeSpec(
 	name string,
 	expr string,
-) (AggregatorSpec, error) {
+) (Spec, error) {
 	dexpr, err := dexpr.New(expr, dexprfuncs.CallFuncs)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (a *precisionAggregator) MakeSpec(
 	return d, nil
 }
 
-func (ad *precisionSpec) New() AggregatorInstance {
+func (ad *precisionSpec) New() Instance {
 	return &precisionInstance{
 		spec:  ad,
 		numTP: 0,
@@ -88,7 +88,7 @@ func (ai *precisionInstance) NextRecord(record map[string]*dlit.Literal,
 }
 
 func (ai *precisionInstance) Result(
-	aggregatorInstances []AggregatorInstance,
+	aggregatorInstances []Instance,
 	goals []*goal.Goal,
 	numRecords int64,
 ) *dlit.Literal {

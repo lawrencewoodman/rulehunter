@@ -85,7 +85,7 @@ func generateNEFF(
 			numSharedValues := calcNumSharedValues(fd, oFd)
 			if fieldNum < oFieldNum &&
 				numSharedValues >= 2 &&
-				internal.StringInSlice(oField, ruleFields) {
+				internal.IsStringInSlice(oField, ruleFields) {
 				r := NewNEFF(field, oField)
 				rules = append(rules, r)
 			}

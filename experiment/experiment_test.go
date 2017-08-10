@@ -7,8 +7,8 @@ import (
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"github.com/lawrencewoodman/ddataset/dtruncate"
 	"github.com/lawrencewoodman/dexpr"
-	"github.com/vlifesystems/rhkit/aggregators"
-	"github.com/vlifesystems/rhkit/experiment"
+	"github.com/vlifesystems/rhkit/aggregator"
+	"github.com/vlifesystems/rhkit/assessment"
 	"github.com/vlifesystems/rhkit/goal"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
@@ -31,15 +31,13 @@ import (
 func TestLoadExperiment(t *testing.T) {
 	funcs := map[string]dexpr.CallFun{}
 	cases := []struct {
-		cfg            *config.Config
-		filename       string
-		wantExperiment *experiment.Experiment
-		wantTags       []string
-		wantWhenExpr   *dexpr.Expr
+		cfg      *config.Config
+		filename string
+		want     *Experiment
 	}{
 		{cfg: &config.Config{MaxNumRecords: -1},
 			filename: filepath.Join("fixtures", "flow.json"),
-			wantExperiment: &experiment.Experiment{
+			want: &Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dcsv.New(
 					filepath.Join("fixtures", "flow.csv"),
@@ -49,28 +47,34 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				RuleFields:     []string{"group", "district", "height"},
 				RuleComplexity: rule.Complexity{Arithmetic: true},
-				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("numMatches", "count", "true()"),
-					aggregators.MustNew(
+				Aggregators: []aggregator.Spec{
+					aggregator.MustNew("numMatches", "count", "true()"),
+					aggregator.MustNew(
 						"percentMatches",
 						"calc",
 						"roundto(100.0 * numMatches / numRecords, 2)",
 					),
-					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
-					aggregators.MustNew("goalsScore", "goalsscore"),
+					aggregator.MustNew("goodFlowMcc", "mcc", "flow > 60"),
+					aggregator.MustNew("goalsScore", "goalsscore"),
 				},
 				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
-				SortOrder: []experiment.SortField{
-					experiment.SortField{"goodFlowMcc", experiment.DESCENDING},
-					experiment.SortField{"numMatches", experiment.DESCENDING},
+				SortOrder: []assessment.SortOrder{
+					assessment.SortOrder{"goodFlowMcc", assessment.DESCENDING},
+					assessment.SortOrder{"numMatches", assessment.DESCENDING},
+				},
+				Tags: []string{"test", "fred / ned"},
+				When: dexpr.MustNew("!hasRun", funcs),
+				Rules: []rule.Rule{
+					mustNewDynamicRule("height > 67"),
+					mustNewDynamicRule("group == \"a\""),
+					mustNewDynamicRule("flow <= 9.42"),
+					mustNewDynamicRule("district != \"northcal\" && group == \"b\""),
 				},
 			},
-			wantTags:     []string{"test", "fred / ned"},
-			wantWhenExpr: dexpr.MustNew("!hasRun", funcs),
 		},
 		{cfg: &config.Config{MaxNumRecords: 4},
 			filename: filepath.Join("fixtures", "flow.json"),
-			wantExperiment: &experiment.Experiment{
+			want: &Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dtruncate.New(
 					dcsv.New(
@@ -83,28 +87,34 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				RuleFields:     []string{"group", "district", "height"},
 				RuleComplexity: rule.Complexity{Arithmetic: true},
-				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("numMatches", "count", "true()"),
-					aggregators.MustNew(
+				Aggregators: []aggregator.Spec{
+					aggregator.MustNew("numMatches", "count", "true()"),
+					aggregator.MustNew(
 						"percentMatches",
 						"calc",
 						"roundto(100.0 * numMatches / numRecords, 2)",
 					),
-					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
-					aggregators.MustNew("goalsScore", "goalsscore"),
+					aggregator.MustNew("goodFlowMcc", "mcc", "flow > 60"),
+					aggregator.MustNew("goalsScore", "goalsscore"),
 				},
 				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
-				SortOrder: []experiment.SortField{
-					experiment.SortField{"goodFlowMcc", experiment.DESCENDING},
-					experiment.SortField{"numMatches", experiment.DESCENDING},
+				SortOrder: []assessment.SortOrder{
+					assessment.SortOrder{"goodFlowMcc", assessment.DESCENDING},
+					assessment.SortOrder{"numMatches", assessment.DESCENDING},
+				},
+				Tags: []string{"test", "fred / ned"},
+				When: dexpr.MustNew("!hasRun", funcs),
+				Rules: []rule.Rule{
+					mustNewDynamicRule("height > 67"),
+					mustNewDynamicRule("group == \"a\""),
+					mustNewDynamicRule("flow <= 9.42"),
+					mustNewDynamicRule("district != \"northcal\" && group == \"b\""),
 				},
 			},
-			wantTags:     []string{"test", "fred / ned"},
-			wantWhenExpr: dexpr.MustNew("!hasRun", funcs),
 		},
 		{cfg: &config.Config{MaxNumRecords: -1},
 			filename: filepath.Join("fixtures", "debt.json"),
-			wantExperiment: &experiment.Experiment{
+			want: &Experiment{
 				Title: "What would predict people being helped to be debt free?",
 				Dataset: dcsv.New(
 					filepath.Join("..", "fixtures", "debt.csv"),
@@ -127,31 +137,31 @@ func TestLoadExperiment(t *testing.T) {
 					"tertiaryEducated",
 				},
 				RuleComplexity: rule.Complexity{Arithmetic: false},
-				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("numMatches", "count", "true()"),
-					aggregators.MustNew(
+				Aggregators: []aggregator.Spec{
+					aggregator.MustNew("numMatches", "count", "true()"),
+					aggregator.MustNew(
 						"percentMatches",
 						"calc",
 						"roundto(100.0 * numMatches / numRecords, 2)",
 					),
-					aggregators.MustNew("helpedMcc", "mcc", "success"),
-					aggregators.MustNew("goalsScore", "goalsscore"),
+					aggregator.MustNew("helpedMcc", "mcc", "success"),
+					aggregator.MustNew("goalsScore", "goalsscore"),
 				},
 				Goals: []*goal.Goal{goal.MustNew("helpedMcc > 0")},
-				SortOrder: []experiment.SortField{
-					experiment.SortField{"helpedMcc", experiment.DESCENDING},
-					experiment.SortField{"numMatches", experiment.DESCENDING},
+				SortOrder: []assessment.SortOrder{
+					assessment.SortOrder{"helpedMcc", assessment.DESCENDING},
+					assessment.SortOrder{"numMatches", assessment.DESCENDING},
 				},
+				Tags: []string{"debt"},
+				When: dexpr.MustNew(
+					"!hasRunToday || sinceLastRunHours > 2",
+					funcs,
+				),
 			},
-			wantTags: []string{"debt"},
-			wantWhenExpr: dexpr.MustNew(
-				"!hasRunToday || sinceLastRunHours > 2",
-				funcs,
-			),
 		},
 		{cfg: &config.Config{MaxNumRecords: -1},
 			filename: filepath.Join("fixtures", "flow.yaml"),
-			wantExperiment: &experiment.Experiment{
+			want: &Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dcsv.New(
 					filepath.Join("fixtures", "flow.csv"),
@@ -161,46 +171,36 @@ func TestLoadExperiment(t *testing.T) {
 				),
 				RuleFields:     []string{"group", "district", "height"},
 				RuleComplexity: rule.Complexity{Arithmetic: false},
-				Aggregators: []aggregators.AggregatorSpec{
-					aggregators.MustNew("numMatches", "count", "true()"),
-					aggregators.MustNew(
+				Aggregators: []aggregator.Spec{
+					aggregator.MustNew("numMatches", "count", "true()"),
+					aggregator.MustNew(
 						"percentMatches",
 						"calc",
 						"roundto(100.0 * numMatches / numRecords, 2)",
 					),
-					aggregators.MustNew("goodFlowMcc", "mcc", "flow > 60"),
-					aggregators.MustNew("goalsScore", "goalsscore"),
+					aggregator.MustNew("goodFlowMcc", "mcc", "flow > 60"),
+					aggregator.MustNew("goalsScore", "goalsscore"),
 				},
 				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
-				SortOrder: []experiment.SortField{
-					experiment.SortField{"goodFlowMcc", experiment.DESCENDING},
-					experiment.SortField{"numMatches", experiment.DESCENDING},
+				SortOrder: []assessment.SortOrder{
+					assessment.SortOrder{"goodFlowMcc", assessment.DESCENDING},
+					assessment.SortOrder{"numMatches", assessment.DESCENDING},
 				},
+				Tags: []string{"test", "fred / ned"},
+				When: dexpr.MustNew("!hasRun", funcs),
 			},
-			wantTags:     []string{"test", "fred / ned"},
-			wantWhenExpr: dexpr.MustNew("!hasRun", funcs),
 		},
 	}
 	for _, c := range cases {
-		gotExperiment, gotTags, gotWhenExpr, err :=
-			loadExperiment(c.filename, c.cfg)
+		gotExperiment, err := load(c.cfg, c.filename)
 		if err != nil {
-			t.Fatalf("loadExperiment(%s) err: %s", c.filename, err)
+			t.Fatalf("load(%s) err: %s", c.filename, err)
 			return
 		}
-		err = checkExperimentMatch(gotExperiment, c.wantExperiment)
-		if err != nil {
-			t.Errorf("loadExperiment(%s) experiments don't match: %s\n"+
+		if err := checkExperimentMatch(gotExperiment, c.want); err != nil {
+			t.Errorf("load(%s) experiments don't match: %s\n"+
 				"gotExperiment: %s, wantExperiment: %s",
-				c.filename, err, gotExperiment, c.wantExperiment)
-		}
-		if gotWhenExpr.String() != c.wantWhenExpr.String() {
-			t.Errorf("loadExperiment(%s) gotWhenExpr: %s, wantWhenExpr: %s",
-				c.filename, gotWhenExpr, c.wantWhenExpr)
-		}
-		if !reflect.DeepEqual(gotTags, c.wantTags) {
-			t.Errorf("loadExperiment(%s) gotTags: %s, wantTags: %s",
-				c.filename, gotTags, c.wantTags)
+				c.filename, err, gotExperiment, c.want)
 		}
 	}
 }
@@ -255,17 +255,20 @@ func TestLoadExperiment_error(t *testing.T) {
 		{filepath.Join("fixtures", "flow_invalid.yaml"),
 			errors.New("yaml: line 3: did not find expected key"),
 		},
+		{filepath.Join("fixtures", "flow_invalid_rules.json"),
+			fmt.Errorf("rules: %s", rule.InvalidExprError{Expr: "flow < <= 9.42"}),
+		},
 	}
 	cfg := &config.Config{MaxNumRecords: -1}
 	for _, c := range cases {
-		_, _, _, err := loadExperiment(c.filename, cfg)
+		_, err := load(cfg, c.filename)
 		if err == nil {
-			t.Errorf("loadExperiment(%s) no error, wantErr:%s",
+			t.Errorf("load(%s) no error, wantErr:%s",
 				c.filename, c.wantErr)
 			continue
 		}
 		if err.Error() != c.wantErr.Error() {
-			t.Errorf("loadExperiment(%s) gotErr: %s, wantErr:%s",
+			t.Errorf("load(%s) gotErr: %s, wantErr:%s",
 				c.filename, err, c.wantErr)
 		}
 	}
@@ -822,14 +825,17 @@ func BenchmarkProcess_sql(b *testing.B) {
 ************************/
 
 func checkExperimentMatch(
-	e1 *experiment.Experiment,
-	e2 *experiment.Experiment,
+	e1 *Experiment,
+	e2 *Experiment,
 ) error {
 	if e1.Title != e2.Title {
 		return errors.New("Titles don't match")
 	}
 	if !areStringArraysEqual(e1.RuleFields, e2.RuleFields) {
 		return errors.New("RuleFields don't match")
+	}
+	if !areStringArraysEqual(e1.Tags, e2.Tags) {
+		return errors.New("Tags don't match")
 	}
 	if !areRuleComplexitiesEqual(e1.RuleComplexity, e2.RuleComplexity) {
 		return errors.New("RuleComplexities don't match")
@@ -842,6 +848,12 @@ func checkExperimentMatch(
 	}
 	if !areSortOrdersEqual(e1.SortOrder, e2.SortOrder) {
 		return errors.New("Sort Orders don't match")
+	}
+	if e1.When.String() != e2.When.String() {
+		return errors.New("Whens don't match")
+	}
+	if !areRulesEqual(e1.Rules, e2.Rules) {
+		return errors.New("Rules don't match")
 	}
 	return checkDatasetsEqual(e1.Dataset, e2.Dataset)
 }
@@ -907,8 +919,8 @@ func areGoalExpressionsEqual(g1 []*goal.Goal, g2 []*goal.Goal) bool {
 }
 
 func areAggregatorsEqual(
-	a1 []aggregators.AggregatorSpec,
-	a2 []aggregators.AggregatorSpec,
+	a1 []aggregator.Spec,
+	a2 []aggregator.Spec,
 ) bool {
 	if len(a1) != len(a2) {
 		return false
@@ -924,17 +936,40 @@ func areAggregatorsEqual(
 }
 
 func areSortOrdersEqual(
-	so1 []experiment.SortField,
-	so2 []experiment.SortField,
+	so1 []assessment.SortOrder,
+	so2 []assessment.SortOrder,
 ) bool {
 	if len(so1) != len(so2) {
 		return false
 	}
 	for i, sf1 := range so1 {
 		sf2 := so2[i]
-		if sf1.Field != sf2.Field || sf1.Direction != sf2.Direction {
+		if sf1.Aggregator != sf2.Aggregator || sf1.Direction != sf2.Direction {
 			return false
 		}
 	}
 	return true
+}
+
+func areRulesEqual(
+	rs1 []rule.Rule,
+	rs2 []rule.Rule,
+) bool {
+	if len(rs1) != len(rs2) {
+		return false
+	}
+	for i, r1 := range rs1 {
+		if r1.String() != rs2[i].String() {
+			return false
+		}
+	}
+	return true
+}
+
+func mustNewDynamicRule(e string) rule.Rule {
+	r, err := rule.NewDynamic(e)
+	if err != nil {
+		panic(err)
+	}
+	return r
 }

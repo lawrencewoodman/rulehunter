@@ -133,7 +133,7 @@ func generateAddLEF(
 		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
 		if fieldNum < oFieldNum &&
 			oFd.Kind == fieldtype.Number &&
-			internal.StringInSlice(oField, ruleFields) {
+			internal.IsStringInSlice(oField, ruleFields) {
 			vars := map[string]*dlit.Literal{
 				"min":  fd.Min,
 				"max":  fd.Max,

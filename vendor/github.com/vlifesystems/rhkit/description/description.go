@@ -39,9 +39,18 @@ type Value struct {
 	Num   int
 }
 
+type InvalidFieldError string
+
+func (e InvalidFieldError) Error() string {
+	return "invalid field: " + string(e)
+}
+
 // DescribeDataset analyses a Dataset and returns a Description of it
 func DescribeDataset(dataset ddataset.Dataset) (*Description, error) {
-	desc := New()
+	if err := checkFieldsValid(dataset.Fields()); err != nil {
+		return nil, err
+	}
+	desc := newDescription()
 	conn, err := dataset.Open()
 	if err != nil {
 		return nil, err
@@ -50,7 +59,7 @@ func DescribeDataset(dataset ddataset.Dataset) (*Description, error) {
 
 	for conn.Next() {
 		record := conn.Read()
-		desc.NextRecord(record)
+		desc.nextRecord(record)
 	}
 
 	return desc, conn.Err()
@@ -117,7 +126,7 @@ func CalcFieldNum(fieldDescriptions map[string]*Field, fieldN string) int {
 func (d *Description) WriteJSON(filename string) error {
 	fields := make(map[string]*fieldJ, len(d.Fields))
 	for field, fd := range d.Fields {
-		fields[field] = newFieldDescriptionJ(fd)
+		fields[field] = newFieldJ(fd)
 	}
 	dj := descriptionJ{Fields: fields}
 	json, err := json.Marshal(dj)
@@ -147,8 +156,18 @@ func (d *Description) CheckEqual(o *Description) error {
 	return nil
 }
 
-// New creates a new Description
-func New() *Description {
+func (d *Description) FieldNames() []string {
+	names := make([]string, len(d.Fields))
+	i := 0
+	for n := range d.Fields {
+		names[i] = n
+		i++
+	}
+	return names
+}
+
+// newDescription creates a new Description
+func newDescription() *Description {
 	fd := map[string]*Field{}
 	return &Description{fd}
 }
@@ -162,19 +181,19 @@ type fieldJ struct {
 	Min       string
 	Max       string
 	MaxDP     int
-	Values    map[string]valueDescriptionJ
+	Values    map[string]valueJ
 	NumValues int
 }
 
-type valueDescriptionJ struct {
+type valueJ struct {
 	Value string
 	Num   int
 }
 
-func newFieldDescriptionJ(fd *Field) *fieldJ {
-	values := make(map[string]valueDescriptionJ, len(fd.Values))
+func newFieldJ(fd *Field) *fieldJ {
+	values := make(map[string]valueJ, len(fd.Values))
 	for v, vd := range fd.Values {
-		values[v] = valueDescriptionJ{
+		values[v] = valueJ{
 			Value: vd.Value.String(),
 			Num:   vd.Num,
 		}
@@ -203,8 +222,8 @@ func (fd *Field) String() string {
 		fd.Kind, fd.Min, fd.Max, fd.MaxDP, fd.Values)
 }
 
-// NextRecord updates the description after analysing the supplied record
-func (d *Description) NextRecord(record ddataset.Record) {
+// nextRecord updates the description after analysing the supplied record
+func (d *Description) nextRecord(record ddataset.Record) {
 	if len(d.Fields) == 0 {
 		for field, value := range record {
 			d.Fields[field] = &Field{
@@ -317,6 +336,15 @@ func fieldValuesEqual(
 		}
 		if vA.Num != vB.Num || vA.Value.String() != vB.Value.String() {
 			return fmt.Errorf("Value not equal for: %s, %v != %v", k, vA, vB)
+		}
+	}
+	return nil
+}
+
+func checkFieldsValid(fields []string) error {
+	for _, field := range fields {
+		if !internal.IsIdentifierValid(field) {
+			return InvalidFieldError(field)
 		}
 	}
 	return nil

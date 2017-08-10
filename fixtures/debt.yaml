@@ -20,7 +20,7 @@ csv:
   separator:  ","
 aggregators:
   - name: "successMcc"
-    function: "mcc"
+    kind: "mcc"
     arg: "success"
 goals:
   - "successMcc > 0"

@@ -49,7 +49,7 @@ const reportTpl = `
 					</tr>
 					{{range .SortOrder}}
 						<tr>
-							<td>{{ .Field }}</td><td>{{ .Direction }}</td>
+							<td>{{ .Aggregator }}</td><td>{{ .Direction }}</td>
 						</tr>
 					{{end}}
 				</table>
@@ -57,7 +57,7 @@ const reportTpl = `
 				{{if .Aggregators}}
 					<table class="table table-bordered">
 						<tr>
-							<th>Aggregator Name</th><th>Function</th><th>Arg</th>
+							<th>Aggregator Name</th><th>Kind</th><th>Arg</th>
 						</tr>
 						{{range .Aggregators}}
 							<tr>

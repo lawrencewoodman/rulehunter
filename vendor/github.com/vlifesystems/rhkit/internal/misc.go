@@ -95,7 +95,7 @@ func (bn byNumber) Less(i, j int) bool {
 	}
 }
 
-func StringInSlice(s string, strings []string) bool {
+func IsStringInSlice(s string, strings []string) bool {
 	for _, x := range strings {
 		if x == s {
 			return true

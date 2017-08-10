@@ -23,8 +23,8 @@ import (
 	"errors"
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
+	rhkaggregator "github.com/vlifesystems/rhkit/aggregator"
 	rhkassessment "github.com/vlifesystems/rhkit/assessment"
-	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"io/ioutil"
@@ -52,7 +52,7 @@ type Report struct {
 	Stamp              time.Time
 	ExperimentFilename string
 	NumRecords         int64
-	SortOrder          []experiment.SortField
+	SortOrder          []rhkassessment.SortOrder
 	Aggregators        []AggregatorDesc
 	Assessments        []*Assessment
 }
@@ -64,12 +64,14 @@ type AggregatorDesc struct {
 }
 
 func New(
+	title string,
 	assessment *rhkassessment.Assessment,
-	experiment *experiment.Experiment,
+	aggregators []rhkaggregator.Spec,
+	sortOrder []rhkassessment.SortOrder,
 	experimentFilename string,
 	tags []string,
 ) *Report {
-	assessment.Sort(experiment.SortOrder)
+	assessment.Sort(sortOrder)
 	assessment.Refine()
 
 	trueAggregators, err := getTrueAggregators(assessment)
@@ -77,8 +79,8 @@ func New(
 		panic(err)
 	}
 
-	aggregatorDescs := make([]AggregatorDesc, len(experiment.Aggregators))
-	for i, as := range experiment.Aggregators {
+	aggregatorDescs := make([]AggregatorDesc, len(aggregators))
+	for i, as := range aggregators {
 		aggregatorDescs[i] = AggregatorDesc{
 			Name: as.Name(),
 			Kind: as.Kind(),
@@ -107,12 +109,12 @@ func New(
 		}
 	}
 	return &Report{
-		experiment.Title,
+		title,
 		tags,
 		time.Now(),
 		experimentFilename,
 		assessment.NumRecords,
-		experiment.SortOrder,
+		sortOrder,
 		aggregatorDescs,
 		assessments,
 	}

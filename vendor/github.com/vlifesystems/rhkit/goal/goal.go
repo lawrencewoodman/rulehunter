@@ -29,6 +29,19 @@ func New(exprStr string) (*Goal, error) {
 	return &Goal{expr}, nil
 }
 
+// MakeGoals creates a slice of goals from the supplied expressions
+func MakeGoals(exprs []string) ([]*Goal, error) {
+	var err error
+	r := make([]*Goal, len(exprs))
+	for i, expr := range exprs {
+		r[i], err = New(expr)
+		if err != nil {
+			return r, err
+		}
+	}
+	return r, nil
+}
+
 // This should only be used for testing
 func MustNew(expr string) *Goal {
 	g, err := New(expr)

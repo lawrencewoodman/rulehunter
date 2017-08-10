@@ -52,24 +52,8 @@ type Valuer interface {
 	Value() *dlit.Literal
 }
 
-type InvalidRuleError struct {
-	Rule Rule
-}
-
-type IncompatibleTypesRuleError struct {
-	Rule Rule
-}
-
 type Complexity struct {
 	Arithmetic bool
-}
-
-func (e InvalidRuleError) Error() string {
-	return "invalid rule: " + e.Rule.String()
-}
-
-func (e IncompatibleTypesRuleError) Error() string {
-	return "incompatible types in rule: " + e.Rule.String()
 }
 
 // Generate generates rules for rules that have registered a generator.
@@ -79,11 +63,14 @@ func Generate(
 	inputDescription *description.Description,
 	ruleFields []string,
 	complexity Complexity,
-) []Rule {
+) ([]Rule, error) {
+	if err := checkRuleFieldsValid(inputDescription, ruleFields); err != nil {
+		return []Rule{}, err
+	}
 	rules := make([]Rule, 1)
 	rules[0] = NewTrue()
 	for field := range inputDescription.Fields {
-		if internal.StringInSlice(field, ruleFields) {
+		if internal.IsStringInSlice(field, ruleFields) {
 			for _, generator := range generators {
 				newRules := generator(inputDescription, ruleFields, complexity, field)
 				rules = append(rules, newRules...)
@@ -95,7 +82,7 @@ func Generate(
 		rules = append(rules, cRules...)
 	}
 	Sort(rules)
-	return Uniq(rules)
+	return Uniq(rules), nil
 }
 
 func Combine(rules []Rule) []Rule {
@@ -263,4 +250,20 @@ func hasComparableNumberRange(
 	}
 	isComparable, err := compareExpr.EvalBool(vars)
 	return err == nil && isComparable
+}
+
+func checkRuleFieldsValid(
+	inputDescription *description.Description,
+	ruleFields []string,
+) error {
+	if len(ruleFields) == 0 {
+		return ErrNoRuleFieldsSpecified
+	}
+	fields := inputDescription.FieldNames()
+	for _, ruleField := range ruleFields {
+		if !internal.IsStringInSlice(ruleField, fields) {
+			return InvalidRuleFieldError(ruleField)
+		}
+	}
+	return nil
 }

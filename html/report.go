@@ -20,8 +20,8 @@
 package html
 
 import (
+	"github.com/vlifesystems/rhkit/assessment"
 	"github.com/vlifesystems/rhkit/description"
-	"github.com/vlifesystems/rhkit/experiment"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/report"
 	"html/template"
@@ -41,7 +41,7 @@ func generateReport(
 		ExperimentFilename string
 		NumRecords         int64
 		Description        *description.Description
-		SortOrder          []experiment.SortField
+		SortOrder          []assessment.SortOrder
 		Aggregators        []report.AggregatorDesc
 		Assessments        []*report.Assessment
 		Html               map[string]template.HTML

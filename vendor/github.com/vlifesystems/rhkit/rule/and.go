@@ -62,7 +62,7 @@ func tryInRule(ruleA, ruleB Rule) (skip bool, newRule Rule) {
 func tryEqNeRule(ruleA, ruleB Rule) (skip bool, newRule Rule) {
 	ruleAFields := ruleA.Fields()
 	ruleBFields := ruleB.Fields()
-	if len(ruleAFields) != 1 && len(ruleBFields) != 1 {
+	if len(ruleAFields) != 1 || len(ruleBFields) != 1 {
 		return true, nil
 	}
 	fieldA := ruleA.Fields()[0]

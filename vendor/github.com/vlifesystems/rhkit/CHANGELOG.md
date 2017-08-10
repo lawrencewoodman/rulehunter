@@ -2,7 +2,33 @@
 
   * Switch to MIT Licence
   * s/`DescribingError`/`DescribeError`/
-  * Correct MergeError error message
+  * s/`aggregators`/`aggregator`/ for package name
+  * Create `aggregator.MakeSpecs`
+  * s/`aggregator.AggregatorSpec`/`aggregator.Spec`/
+  * s/`aggregator.AggregatorInstance`/`aggregator.Instance`/
+  * Create `rule.MakeDynamicRules` and allow these to be passed to `Process`
+  * Create `goal.MakeGoals`
+  * Move sort descriptions to `assessment`
+  * Add `FieldNames` method to `Description`
+  * Move `experiment.AggregatorDesc` to `aggregator.Desc` and rename
+    its `Function` variable to `Kind`
+  * Move aggregator specific errors from `experiment` to a consolidated
+    `DescError` type in `aggregator`
+  * Remove `experiment` package
+  * Have `rule.Generate` return an error if rule fields not valid
+  * Create `GenerateRulesError`
+  * Create `Options` struct to pass some parameters to `Process`
+  * Add `GenerateRules` option to `Options`
+  * Unexport `description.New` and `Description.NextRecord` method
+  * Change error for `Assessment.Merge`
+  * Create `Assessment.AssessRules` method to replace `assessment.AssessRules`
+    function
+  * Remove `experiment.Experiment`
+  * Change `Assessment.AssessRules` and `Process` so that an `Experiment` is
+    no longer passed in, instead the needed fields from the `Experiment` are
+    passed
+  * Consolidate `assessment.RuleAssessment` and `assessment.RuleAssessor` into
+    `assessment.RuleAssessment`
 
 ## 0.2 (15th July 2017)
 

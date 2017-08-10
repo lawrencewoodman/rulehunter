@@ -18,7 +18,7 @@ ruleFields:
   - height
 aggregators:
   - name: "goodFlowMcc"
-    function: "mcc"
+    kind: "mcc"
     arg: "flow > 60"
 goals:
   - "goodFlowMcc > 0"
