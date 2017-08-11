@@ -1,0 +1,39 @@
+{
+  "title": "What would indicate good flow?",
+  "tags": ["test", "fred / ned"],
+  "dataset": "csv",
+  "csv": {
+    "filename": "fixtures/flow.csv",
+    "hasHeader": true,
+    "separator":  ","
+  },
+  "fields": ["group","district","height","flow"],
+  "ruleFields": ["group","district","height"],
+  "ruleComplexity": {
+    "arithmetic": true
+  },
+  "aggregators": [
+    {
+      "name": "goodFlowMcc",
+      "kind": "mcc",
+      "arg": "flow > 60"
+    }
+  ],
+  "goals": ["goodFlowMcc > 0"],
+  "sortOrder": [
+    {
+      "aggregatorName": "goodFlowMcc",
+      "direction": "descending"
+    },
+    {
+      "aggregatorName": "numMatches",
+      "direction": "descending"
+    }
+  ],
+  "rules": [
+    "height > 67",
+    "group == \"a\"",
+    "flow < <= 9.42",
+    "district != \"northcal\" && group == \"b\""
+  ]
+}
