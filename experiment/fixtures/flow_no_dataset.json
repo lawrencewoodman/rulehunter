@@ -13,11 +13,11 @@
   "goals": ["goodFlowAccuracy > 10"],
   "sortOrder": [
     {
-      "aggregatorName": "goodFlowAccuracy",
+      "aggregator": "goodFlowAccuracy",
       "direction": "descending"
     },
     {
-      "aggregatorName": "numMatches",
+      "aggregator": "numMatches",
       "direction": "descending"
     }
   ]

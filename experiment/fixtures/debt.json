@@ -32,11 +32,11 @@
   "goals": ["helpedMcc > 0"],
   "sortOrder": [
     {
-      "aggregatorName": "helpedMcc",
+      "aggregator": "helpedMcc",
       "direction": "descending"
     },
     {
-      "aggregatorName": "numMatches",
+      "aggregator": "numMatches",
       "direction": "descending"
     }
   ],

@@ -21,7 +21,7 @@
   "goals": ["accuracySuccess > 10"],
   "sortOrder": [
     {
-      "aggregatorName": "accuracySuccess",
+      "aggregator": "accuracySuccess",
       "direction": "descending"
     }
   ]

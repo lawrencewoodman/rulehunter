@@ -95,8 +95,8 @@ type ruleComplexity struct {
 }
 
 type sortDesc struct {
-	AggregatorName string `yaml:"aggregatorName"`
-	Direction      string `yaml:"direction"`
+	Aggregator string `yaml:"aggregator"`
+	Direction  string `yaml:"direction"`
 }
 
 type InvalidWhenExprError string
@@ -391,7 +391,7 @@ func makeSortOrder(
 	r := make([]rhkassessment.SortOrder, len(sortDescs))
 	for i, sod := range sortDescs {
 		so, err :=
-			rhkassessment.NewSortOrder(aggregators, sod.AggregatorName, sod.Direction)
+			rhkassessment.NewSortOrder(aggregators, sod.Aggregator, sod.Direction)
 		if err != nil {
 			return []rhkassessment.SortOrder{}, err
 		}

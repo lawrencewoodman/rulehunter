@@ -19,11 +19,11 @@
   "goals": ["goodFlowMcc > 10"],
   "sortOrder": [
     {
-      "aggregatorName": "goodFlowMcc",
+      "aggregator": "goodFlowMcc",
       "direction": "descending"
     },
     {
-      "aggregatorName": "numMatches",
+      "aggregator": "numMatches",
       "direction": "descending"
     }
   ],

@@ -23,5 +23,5 @@ aggregators:
 goals:
   - "goodFlowMcc > 0"
 sortOrder:
-  - aggregatorName: "numMatches"
+  - aggregator: "numMatches"
     direction: "descending"

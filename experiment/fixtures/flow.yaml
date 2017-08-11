@@ -23,7 +23,7 @@ aggregators:
 goals:
   - "goodFlowMcc > 0"
 sortOrder:
-  - aggregatorName: "goodFlowMcc"
+  - aggregator: "goodFlowMcc"
     direction: "descending"
-  - aggregatorName: "numMatches"
+  - aggregator: "numMatches"
     direction: "descending"

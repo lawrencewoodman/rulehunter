@@ -25,5 +25,5 @@ aggregators:
 goals:
   - "successMcc > 0"
 sortOrder:
-  - aggregatorName: "successMcc"
+  - aggregator: "successMcc"
     direction: "descending"
