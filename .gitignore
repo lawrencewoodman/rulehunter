@@ -3,3 +3,9 @@
 
 # Goreleaser build directory
 dist
+
+# Directories used while experimenting locally
+build
+csv
+experiments
+www
