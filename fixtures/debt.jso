@@ -14,7 +14,7 @@
   "aggregators": [
     {
       "name": "accuracySuccess",
-      "function": "accuracy",
+      "kind": "accuracy",
       "arg": "success"
     }
   ],

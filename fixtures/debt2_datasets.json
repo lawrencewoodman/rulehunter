@@ -14,7 +14,7 @@
   "aggregators": [
     {
       "name": "successMcc",
-      "function": "mcc",
+      "kind": "mcc",
       "arg": "success"
     }
   ],

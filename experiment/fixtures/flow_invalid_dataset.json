@@ -12,7 +12,7 @@
   "aggregators": [
     {
       "name": "goodFlowAccuracy",
-      "function": "accuracy",
+      "kind": "accuracy",
       "arg": "flow > 60"
     }
   ],

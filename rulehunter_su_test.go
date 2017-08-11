@@ -106,6 +106,7 @@ func TestRulehunter_service(t *testing.T) {
 		case <-timeoutC:
 			t.Errorf("didn't generate correct files with time period, got: %v, want: %v",
 				files, wantFiles)
+			return
 		}
 	}
 }

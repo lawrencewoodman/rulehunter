@@ -14,7 +14,7 @@
   "aggregators": [
     {
       "name": "goodFlowMcc",
-      "function": "mcc",
+      "kind": "mcc",
       "arg": "flow > 60"
     }
   ],
