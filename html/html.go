@@ -203,7 +203,10 @@ func makeHtmlHead(c *config.Config) template.HTML {
 		panic(fmt.Sprintf("Couldn't create head html: %s", err))
 	}
 
-	tplData := struct{ BaseURL string }{c.BaseURL}
+	tplData := struct {
+		BaseURL   string
+		JSComment template.HTML
+	}{BaseURL: c.BaseURL, JSComment: template.HTML(headJSComment)}
 
 	if err := t.Execute(&doc, tplData); err != nil {
 		panic(fmt.Sprintf("Couldn't create head html: %s", err))
