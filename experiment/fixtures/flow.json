@@ -32,6 +32,7 @@
   ],
   "rules": [
     "height > 67",
+    "height >= 129",
     "group == \"a\"",
     "flow <= 9.42",
     "district != \"northcal\" && group == \"b\""

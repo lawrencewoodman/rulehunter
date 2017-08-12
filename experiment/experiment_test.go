@@ -18,11 +18,13 @@ import (
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/quitter"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
 	"runtime"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -66,6 +68,7 @@ func TestLoadExperiment(t *testing.T) {
 				When: dexpr.MustNew("!hasRun", funcs),
 				Rules: []rule.Rule{
 					mustNewDynamicRule("height > 67"),
+					mustNewDynamicRule("height >= 129"),
 					mustNewDynamicRule("group == \"a\""),
 					mustNewDynamicRule("flow <= 9.42"),
 					mustNewDynamicRule("district != \"northcal\" && group == \"b\""),
@@ -106,6 +109,7 @@ func TestLoadExperiment(t *testing.T) {
 				When: dexpr.MustNew("!hasRun", funcs),
 				Rules: []rule.Rule{
 					mustNewDynamicRule("height > 67"),
+					mustNewDynamicRule("height >= 129"),
 					mustNewDynamicRule("group == \"a\""),
 					mustNewDynamicRule("flow <= 9.42"),
 					mustNewDynamicRule("district != \"northcal\" && group == \"b\""),
@@ -463,6 +467,83 @@ func TestProcess(t *testing.T) {
 			)
 		}
 	}
+	// TODO: Test files generated
+}
+
+func TestProcess_supplied_rules(t *testing.T) {
+	cfgDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(cfgDir)
+	cfg := &config.Config{
+		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+		WWWDir:            filepath.Join(cfgDir, "www"),
+		BuildDir:          filepath.Join(cfgDir, "build"),
+		MaxNumRecords:     100,
+		MaxNumProcesses:   4,
+		MaxNumReportRules: 100,
+	}
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "flow.json"),
+		cfg.ExperimentsDir,
+	)
+	file := testhelpers.NewFileInfo("flow.json", time.Now())
+	wantLogEntries := []testhelpers.Entry{
+		{Level: testhelpers.Info,
+			Msg: "Processing experiment: flow.json"},
+		{Level: testhelpers.Info,
+			Msg: "Successfully processed experiment: flow.json"},
+	}
+
+	quit := quitter.New()
+	defer quit.Quit()
+	l := testhelpers.NewLogger()
+	go l.Run(quit)
+	htmlCmds := make(chan cmd.Cmd, 100)
+	defer close(htmlCmds)
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
+	pm, err := progress.NewMonitor(
+		filepath.Join(cfg.BuildDir, "progress"),
+		htmlCmds,
+	)
+	if err != nil {
+		t.Fatalf("progress.NewMonitor: err: %v", err)
+	}
+	experimentProgress, err := pm.AddExperiment(file.Name())
+	if err != nil {
+		t.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+	}
+	if err := Process(file, cfg, l, experimentProgress); err != nil {
+		t.Fatalf("Process: err: %v", err)
+	}
+
+	timeoutC := time.NewTimer(5 * time.Second).C
+	tickerC := time.NewTicker(400 * time.Millisecond).C
+	quitSelect := false
+	for !quitSelect {
+		select {
+		case <-tickerC:
+			if reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
+				quitSelect = true
+			}
+		case <-timeoutC:
+			t.Errorf("l.GetEntries() got: %v, want: %v",
+				l.GetEntries(), wantLogEntries)
+			quitSelect = true
+		}
+	}
+
+	flowBuildFilename := filepath.Join(cfgDir, "build", "reports", "flow.json")
+	b, err := ioutil.ReadFile(flowBuildFilename)
+	if err != nil {
+		t.Fatalf("ReadFile: %s", err)
+	}
+	s := string(b)
+	wantRule := "height \\u003e= 129"
+	if !strings.Contains(s, wantRule) {
+		t.Errorf("rule: %s, missing from: %s", wantRule, flowBuildFilename)
+	}
+
 	// TODO: Test files generated
 }
 

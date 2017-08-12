@@ -165,7 +165,7 @@ func New(cfg *config.Config, d *descFile) (*Experiment, error) {
 	}, nil
 }
 
-const assessRulesNumStages = 4
+const assessRulesNumStages = 5
 
 func Process(
 	experimentFile fileinfo.FileInfo,
@@ -215,11 +215,28 @@ func Process(
 		return reportExperimentFail(err, fullErr)
 	}
 
+	ass := rhkassessment.New()
+
+	if len(experiment.Rules) > 0 {
+		err = assessRules(
+			1,
+			ass,
+			experiment.Rules,
+			experiment,
+			experimentProgress,
+			cfg,
+		)
+		if err != nil {
+			fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
+			return reportExperimentFail(err, fullErr)
+		}
+	}
+
 	err = experimentProgress.ReportProgress("Generating rules", 0)
 	if err != nil {
 		return reportExperimentFail(err)
 	}
-	rules, err := rule.Generate(
+	generatedRules, err := rule.Generate(
 		dDescription,
 		experiment.RuleFields,
 		experiment.RuleComplexity,
@@ -229,11 +246,10 @@ func Process(
 		return reportExperimentFail(err, fullErr)
 	}
 
-	ass := rhkassessment.New()
 	err = assessRules(
-		1,
+		2,
 		ass,
-		rules,
+		generatedRules,
 		experiment,
 		experimentProgress,
 		cfg,
@@ -254,7 +270,7 @@ func Process(
 	tweakableRules := rule.Tweak(1, sortedRules, dDescription)
 
 	err = assessRules(
-		2,
+		3,
 		ass,
 		tweakableRules,
 		experiment,
@@ -278,7 +294,7 @@ func Process(
 	reducedDPRules := rule.ReduceDP(sortedRules)
 
 	err = assessRules(
-		3,
+		4,
 		ass,
 		reducedDPRules,
 		experiment,
@@ -298,7 +314,7 @@ func Process(
 	combinedRules := rule.Combine(bestNonCombinedRules)
 
 	err = assessRules(
-		4,
+		5,
 		ass,
 		combinedRules,
 		experiment,
