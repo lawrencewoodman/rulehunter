@@ -30,14 +30,18 @@ func checkExperimentMatch(e1, e2 *progress.Experiment) error {
 	if e1.Filename != e2.Filename {
 		return errors.New("ExperimentFilename doesn't match")
 	}
-	if e1.Msg != e2.Msg {
-		return fmt.Errorf("Msg doesn't match: %s != %s", e1.Msg, e2.Msg)
+	if e1.Status.Msg != e2.Status.Msg {
+		return fmt.Errorf("Status.Msg doesn't match: %s != %s",
+			e1.Status.Msg, e2.Status.Msg)
 	}
-	if e1.Status != e2.Status {
-		return errors.New("Status doesn't match")
+	if e1.Status.Percent != e2.Status.Percent {
+		return errors.New("Status.Percent doesn't match")
 	}
-	if !timesClose(e1.Stamp, e2.Stamp, 10) {
-		return errors.New("Stamp not close in time")
+	if e1.Status.State != e2.Status.State {
+		return errors.New("Status.State doesn't match")
+	}
+	if !timesClose(e1.Status.Stamp, e2.Status.Stamp, 10) {
+		return errors.New("Status.Stamp not close in time")
 	}
 	if len(e1.Tags) != len(e2.Tags) {
 		return errors.New("Tags doesn't match")

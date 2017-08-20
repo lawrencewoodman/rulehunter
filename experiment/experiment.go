@@ -36,8 +36,6 @@ import (
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
-	"github.com/vlifesystems/rulehunter/logger"
-	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/report"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -50,6 +48,7 @@ import (
 
 type Experiment struct {
 	Title          string
+	File           fileinfo.FileInfo
 	Dataset        ddataset.Dataset
 	RuleFields     []string
 	RuleComplexity rule.Complexity
@@ -112,7 +111,15 @@ func (e InvalidExtError) Error() string {
 	return "invalid extension: " + string(e)
 }
 
-func New(cfg *config.Config, d *descFile) (*Experiment, error) {
+type progressReporter interface {
+	ReportProgress(string, string, float64) error
+}
+
+func New(
+	cfg *config.Config,
+	file fileinfo.FileInfo,
+	d *descFile,
+) (*Experiment, error) {
 	if err := d.checkValid(); err != nil {
 		return nil, err
 	}
@@ -153,6 +160,7 @@ func New(cfg *config.Config, d *descFile) (*Experiment, error) {
 
 	return &Experiment{
 		Title:          d.Title,
+		File:           file,
 		Dataset:        dataset,
 		RuleFields:     d.RuleFields,
 		RuleComplexity: rule.Complexity{Arithmetic: d.RuleComplexity.Arithmetic},
@@ -167,202 +175,17 @@ func New(cfg *config.Config, d *descFile) (*Experiment, error) {
 
 const assessRulesNumStages = 5
 
-func Process(
-	experimentFile fileinfo.FileInfo,
-	cfg *config.Config,
-	l logger.Logger,
-	experimentProgress *progress.Experiment,
-) error {
-	reportExperimentFail := func(err error, errs ...error) error {
-		l.Error(fmt.Sprintf("Failed processing experiment: %s - %s",
-			experimentFile.Name(), err))
-		switch len(errs) {
-		case 0:
-			return err
-		case 1:
-			return experimentProgress.ReportError(errs[0])
-		}
-		panic("wrong number of errors")
-	}
-	experimentFullFilename :=
-		filepath.Join(cfg.ExperimentsDir, experimentFile.Name())
-	experiment, err := load(cfg, experimentFullFilename)
-	if err != nil {
-		fullErr := fmt.Errorf("Can't load experiment: %s, %s",
-			experimentFile.Name(), err)
-		return experimentProgress.ReportError(fullErr)
-	}
-	ok, err := shouldProcess(experimentProgress, experimentFile, experiment.When)
-	if err != nil || !ok {
-		return err
-	}
-
-	l.Info(fmt.Sprintf("Processing experiment: %s", experimentFile.Name()))
-	err = experimentProgress.UpdateDetails(experiment.Title, experiment.Tags)
-	if err != nil {
-		return reportExperimentFail(err)
-	}
-
-	err = experimentProgress.ReportProgress("Describing dataset", 0)
-	if err != nil {
-		return reportExperimentFail(err)
-	}
-
-	dDescription, err :=
-		describeDataset(cfg, experimentFile.Name(), experiment.Dataset)
-	if err != nil {
-		fullErr := fmt.Errorf("Couldn't describe dataset: %s", err)
-		return reportExperimentFail(err, fullErr)
-	}
-
-	ass := rhkassessment.New()
-
-	if len(experiment.Rules) > 0 {
-		err = assessRules(
-			1,
-			ass,
-			experiment.Rules,
-			experiment,
-			experimentProgress,
-			cfg,
-		)
-		if err != nil {
-			fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
-			return reportExperimentFail(err, fullErr)
-		}
-	}
-
-	err = experimentProgress.ReportProgress("Generating rules", 0)
-	if err != nil {
-		return reportExperimentFail(err)
-	}
-	generatedRules, err := rule.Generate(
-		dDescription,
-		experiment.RuleFields,
-		experiment.RuleComplexity,
-	)
-	if err != nil {
-		fullErr := fmt.Errorf("Couldn't generate rules: %s", err)
-		return reportExperimentFail(err, fullErr)
-	}
-
-	err = assessRules(
-		2,
-		ass,
-		generatedRules,
-		experiment,
-		experimentProgress,
-		cfg,
-	)
-	if err != nil {
-		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
-		return reportExperimentFail(err, fullErr)
-	}
-
-	ass.Sort(experiment.SortOrder)
-	ass.Refine()
-	sortedRules := ass.Rules()
-
-	err = experimentProgress.ReportProgress("Tweaking rules", 0)
-	if err != nil {
-		return reportExperimentFail(err)
-	}
-	tweakableRules := rule.Tweak(1, sortedRules, dDescription)
-
-	err = assessRules(
-		3,
-		ass,
-		tweakableRules,
-		experiment,
-		experimentProgress,
-		cfg,
-	)
-	if err != nil {
-		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
-		return reportExperimentFail(err, fullErr)
-	}
-
-	ass.Sort(experiment.SortOrder)
-	ass.Refine()
-
-	sortedRules = ass.Rules()
-
-	err = experimentProgress.ReportProgress("Reduce DP of rules", 0)
-	if err != nil {
-		return reportExperimentFail(err)
-	}
-	reducedDPRules := rule.ReduceDP(sortedRules)
-
-	err = assessRules(
-		4,
-		ass,
-		reducedDPRules,
-		experiment,
-		experimentProgress,
-		cfg,
-	)
-	if err != nil {
-		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
-		return reportExperimentFail(err, fullErr)
-	}
-
-	ass.Sort(experiment.SortOrder)
-	ass.Refine()
-
-	numRulesToCombine := 50
-	bestNonCombinedRules := ass.Rules(numRulesToCombine)
-	combinedRules := rule.Combine(bestNonCombinedRules)
-
-	err = assessRules(
-		5,
-		ass,
-		combinedRules,
-		experiment,
-		experimentProgress,
-		cfg,
-	)
-	if err != nil {
-		fullErr := fmt.Errorf("Couldn't assess rules: %s", err)
-		return reportExperimentFail(err, fullErr)
-	}
-
-	ass.Sort(experiment.SortOrder)
-	ass.Refine()
-	ass = ass.TruncateRuleAssessments(cfg.MaxNumReportRules)
-
-	report := report.New(
-		experiment.Title,
-		ass,
-		experiment.Aggregators,
-		experiment.SortOrder,
-		experimentFile.Name(),
-		experiment.Tags,
-	)
-	if err := report.WriteJSON(cfg); err != nil {
-		fullErr := fmt.Errorf("Couldn't write json report: %s", err)
-		return reportExperimentFail(err, fullErr)
-	}
-
-	if err := experimentProgress.ReportSuccess(); err != nil {
-		return reportExperimentFail(err)
-	}
-
-	l.Info("Successfully processed experiment: " + experimentFile.Name())
-	return nil
-}
-
-func load(cfg *config.Config, filename string) (
-	e *Experiment,
-	err error,
-) {
+func Load(cfg *config.Config, file fileinfo.FileInfo) (*Experiment, error) {
 	var d *descFile
+	var err error
+	fullFilename := filepath.Join(cfg.ExperimentsDir, file.Name())
 
-	ext := filepath.Ext(filename)
+	ext := filepath.Ext(fullFilename)
 	switch ext {
 	case ".json":
-		d, err = loadJSON(filename)
+		d, err = loadJSON(fullFilename)
 	case ".yaml":
-		d, err = loadYAML(filename)
+		d, err = loadYAML(fullFilename)
 	default:
 		return nil, InvalidExtError(ext)
 	}
@@ -370,7 +193,122 @@ func load(cfg *config.Config, filename string) (
 		return nil, err
 	}
 
-	return New(cfg, d)
+	return New(cfg, file, d)
+}
+
+func (e *Experiment) Process(
+	cfg *config.Config,
+	pr progressReporter,
+) error {
+	reportProgress := func(msg string, percent float64) error {
+		return pr.ReportProgress(e.File.Name(), msg, percent)
+	}
+	filename := e.File.Name()
+	if err := reportProgress("Describing dataset", 0); err != nil {
+		return err
+	}
+
+	dDescription, err := describeDataset(cfg, filename, e.Dataset)
+	if err != nil {
+		return fmt.Errorf("Couldn't describe dataset: %s", err)
+	}
+
+	ass := rhkassessment.New()
+
+	if len(e.Rules) > 0 {
+		err = e.assessRules(1, ass, e.Rules, pr, cfg)
+		if err != nil {
+			return fmt.Errorf("Couldn't assess rules: %s", err)
+		}
+	}
+
+	if err := reportProgress("Generating rules", 0); err != nil {
+		return err
+	}
+	generatedRules, err := rule.Generate(
+		dDescription,
+		e.RuleFields,
+		e.RuleComplexity,
+	)
+	if err != nil {
+		return fmt.Errorf("Couldn't generate rules: %s", err)
+	}
+
+	err = e.assessRules(2, ass, generatedRules, pr, cfg)
+	if err != nil {
+		return fmt.Errorf("Couldn't assess rules: %s", err)
+	}
+
+	ass.Sort(e.SortOrder)
+	ass.Refine()
+	sortedRules := ass.Rules()
+
+	err = reportProgress("Tweaking rules", 0)
+	if err != nil {
+		return err
+	}
+	tweakableRules := rule.Tweak(1, sortedRules, dDescription)
+
+	err = e.assessRules(3, ass, tweakableRules, pr, cfg)
+	if err != nil {
+		return fmt.Errorf("Couldn't assess rules: %s", err)
+	}
+
+	ass.Sort(e.SortOrder)
+	ass.Refine()
+
+	sortedRules = ass.Rules()
+
+	err = reportProgress("Reduce DP of rules", 0)
+	if err != nil {
+		return err
+	}
+	reducedDPRules := rule.ReduceDP(sortedRules)
+
+	err = e.assessRules(4, ass, reducedDPRules, pr, cfg)
+	if err != nil {
+		return fmt.Errorf("Couldn't assess rules: %s", err)
+	}
+
+	ass.Sort(e.SortOrder)
+	ass.Refine()
+
+	numRulesToCombine := 50
+	bestNonCombinedRules := ass.Rules(numRulesToCombine)
+	combinedRules := rule.Combine(bestNonCombinedRules)
+
+	err = e.assessRules(5, ass, combinedRules, pr, cfg)
+	if err != nil {
+		return fmt.Errorf("Couldn't assess rules: %s", err)
+	}
+
+	ass.Sort(e.SortOrder)
+	ass.Refine()
+	ass = ass.TruncateRuleAssessments(cfg.MaxNumReportRules)
+
+	report := report.New(
+		e.Title,
+		ass,
+		e.Aggregators,
+		e.SortOrder,
+		e.File.Name(),
+		e.Tags,
+	)
+	if err := report.WriteJSON(cfg); err != nil {
+		return fmt.Errorf("Couldn't write json report: %s", err)
+	}
+
+	return nil
+}
+
+func (e *Experiment) ShouldProcess(
+	isFinished bool,
+	stamp time.Time,
+) (bool, error) {
+	if isFinished && e.File.ModTime().After(stamp) {
+		isFinished, stamp = false, time.Now()
+	}
+	return evalWhenExpr(time.Now(), isFinished, stamp, e.When)
 }
 
 func loadJSON(filename string) (*descFile, error) {
@@ -516,7 +454,8 @@ func assessRulesWorker(
 }
 
 func assessCollectResults(
-	experimentProgress *progress.Experiment,
+	pr progressReporter,
+	filename string,
 	stage int,
 	numJobs int,
 	results <-chan assessJobResult,
@@ -527,7 +466,7 @@ func assessCollectResults(
 		if r.err != nil {
 			return r.err
 		}
-		err := reportProgress(experimentProgress, stage, jobNum, numJobs)
+		err := reportAssessProgress(pr, filename, stage, jobNum, numJobs)
 		if err != nil {
 			return err
 		}
@@ -535,15 +474,16 @@ func assessCollectResults(
 	return nil
 }
 
-func reportProgress(
-	experimentProgress *progress.Experiment,
+func reportAssessProgress(
+	pr progressReporter,
+	filename string,
 	stage int,
 	jobNum int,
 	numJobs int,
 ) error {
 	progress := 100.0 * float64(jobNum) / float64(numJobs)
 	msg := fmt.Sprintf("Assessing rules %d/%d", stage, assessRulesNumStages)
-	return experimentProgress.ReportProgress(msg, progress)
+	return pr.ReportProgress(filename, msg, progress)
 }
 
 func assessCreateJobs(numRules int, step int, jobs chan<- assessJob) {
@@ -557,12 +497,11 @@ func assessCreateJobs(numRules int, step int, jobs chan<- assessJob) {
 	close(jobs)
 }
 
-func assessRules(
+func (e *Experiment) assessRules(
 	stage int,
 	ass *rhkassessment.Assessment,
 	rules []rule.Rule,
-	experiment *Experiment,
-	experimentProgress *progress.Experiment,
+	pr progressReporter,
 	cfg *config.Config,
 ) error {
 	var wg sync.WaitGroup
@@ -575,13 +514,13 @@ func assessRules(
 		panic("assessRules: stage > assessRulesNumStages")
 	}
 
-	if err := reportProgress(experimentProgress, stage, 0, 1); err != nil {
+	if err := reportAssessProgress(pr, e.File.Name(), stage, 0, 1); err != nil {
 		return err
 	}
 
 	wg.Add(cfg.MaxNumProcesses)
 	for i := 0; i < cfg.MaxNumProcesses; i++ {
-		go assessRulesWorker(&wg, ass, rules, experiment, jobs, results)
+		go assessRulesWorker(&wg, ass, rules, e, jobs, results)
 	}
 
 	if numRules < progressIntervals {
@@ -598,12 +537,7 @@ func assessRules(
 		close(results)
 	}()
 
-	return assessCollectResults(
-		experimentProgress,
-		stage,
-		numJobs,
-		results,
-	)
+	return assessCollectResults(pr, e.File.Name(), stage, numJobs, results)
 }
 
 type assessJob struct {
@@ -613,19 +547,4 @@ type assessJob struct {
 
 type assessJobResult struct {
 	err error
-}
-
-func shouldProcess(
-	experimentProgress *progress.Experiment,
-	experimentFile fileinfo.FileInfo,
-	whenExpr *dexpr.Expr,
-) (bool, error) {
-	isFinished, stamp := experimentProgress.GetFinishStamp()
-	if isFinished && experimentFile.ModTime().After(stamp) {
-		isFinished, stamp := false, time.Now()
-		ok, err := evalWhenExpr(time.Now(), isFinished, stamp, whenExpr)
-		return ok, err
-	}
-	ok, err := evalWhenExpr(time.Now(), isFinished, stamp, whenExpr)
-	return ok, err
 }

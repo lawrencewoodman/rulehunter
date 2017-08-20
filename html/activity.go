@@ -54,11 +54,11 @@ func generateActivityPage(
 		tplExperiments[i] = &TplExperiment{
 			experiment.Title,
 			makeTagLinks(experiment.Tags),
-			experiment.Stamp.Format(time.RFC822),
+			experiment.Status.Stamp.Format(time.RFC822),
 			experiment.Filename,
-			experiment.Status.String(),
-			experiment.Msg,
-			experiment.Percent,
+			experiment.Status.State.String(),
+			experiment.Status.Msg,
+			experiment.Status.Percent,
 		}
 	}
 	tplData := TplData{tplExperiments, makeHtml(config, "activity")}

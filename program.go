@@ -20,6 +20,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/experiment"
@@ -70,20 +71,65 @@ func (p *program) Start(s service.Service) error {
 	return nil
 }
 
+// ProcessFile tries to process an Experiment file.  It only returns an
+// error if it is out of the ordinary for example if an error occurs when
+// reporting to the progress monitor, not if it can't load an experiment
+// nor if there is a problem processing the experiment.
 func (p *program) ProcessFile(file fileinfo.FileInfo) error {
-	experimentProgress, err := p.progressMonitor.AddExperiment(file.Name())
+	var err error
+	pm := p.progressMonitor
+	stamp := time.Now()
+
+	e, err := experiment.Load(p.config, file)
 	if err != nil {
-		p.logger.Error(err.Error())
-		return err
+		logErr := fmt.Sprintf("Can't load experiment: %s, %s", file.Name(), err)
+		p.logger.Error(logErr)
+		if pmErr := pm.ReportLoadFailure(file.Name(), err); pmErr != nil {
+			p.logger.Error(pmErr.Error())
+			return pmErr
+		}
+		return nil
 	}
-	err = experiment.Process(
-		file,
-		p.config,
-		p.logger,
-		experimentProgress,
-	)
+
+	if pmErr := pm.AddExperiment(file.Name(), e.Title, e.Tags); pmErr != nil {
+		p.logger.Error(pmErr.Error())
+		return pmErr
+	}
+
+	isFinished, stamp := pm.GetFinishStamp(file.Name())
+
+	ok, err := e.ShouldProcess(isFinished, stamp)
 	if err != nil {
-		p.logger.Error(err.Error())
+		logErr :=
+			fmt.Sprintf("Failed processing experiment: %s, %s", file.Name(), err)
+		p.logger.Error(logErr)
+		if pmErr := pm.ReportFailure(file.Name(), err); pmErr != nil {
+			p.logger.Error(pmErr.Error())
+			return pmErr
+		}
+		return nil
+	}
+	if !ok {
+		return nil
+	}
+
+	p.logger.Info("Processing experiment: " + file.Name())
+	if err := e.Process(p.config, p.progressMonitor); err != nil {
+		logErr :=
+			fmt.Sprintf("Failed processing experiment: %s, %s", file.Name(), err)
+		p.logger.Error(logErr)
+		if pmErr := pm.ReportFailure(file.Name(), err); pmErr != nil {
+			p.logger.Error(pmErr.Error())
+			return pmErr
+		}
+		return nil
+	}
+
+	logInfo := "Successfully processed experiment: " + file.Name()
+	p.logger.Info(logInfo)
+	if pmErr := pm.ReportSuccess(file.Name()); pmErr != nil {
+		p.logger.Error(pmErr.Error())
+		return pmErr
 	}
 	return nil
 }

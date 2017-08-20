@@ -30,15 +30,18 @@ import (
 	"time"
 )
 
-func TestLoadExperiment(t *testing.T) {
+func TestLoad(t *testing.T) {
 	funcs := map[string]dexpr.CallFun{}
 	cases := []struct {
-		cfg      *config.Config
-		filename string
-		want     *Experiment
+		cfg  *config.Config
+		file fileinfo.FileInfo
+		want *Experiment
 	}{
 		{cfg: &config.Config{MaxNumRecords: -1},
-			filename: filepath.Join("fixtures", "flow.json"),
+			file: testhelpers.NewFileInfo(
+				filepath.Join("fixtures", "flow.json"),
+				time.Now(),
+			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dcsv.New(
@@ -76,7 +79,10 @@ func TestLoadExperiment(t *testing.T) {
 			},
 		},
 		{cfg: &config.Config{MaxNumRecords: 4},
-			filename: filepath.Join("fixtures", "flow.json"),
+			file: testhelpers.NewFileInfo(
+				filepath.Join("fixtures", "flow.json"),
+				time.Now(),
+			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dtruncate.New(
@@ -117,7 +123,10 @@ func TestLoadExperiment(t *testing.T) {
 			},
 		},
 		{cfg: &config.Config{MaxNumRecords: -1},
-			filename: filepath.Join("fixtures", "debt.json"),
+			file: testhelpers.NewFileInfo(
+				filepath.Join("fixtures", "debt.json"),
+				time.Now(),
+			),
 			want: &Experiment{
 				Title: "What would predict people being helped to be debt free?",
 				Dataset: dcsv.New(
@@ -164,7 +173,10 @@ func TestLoadExperiment(t *testing.T) {
 			},
 		},
 		{cfg: &config.Config{MaxNumRecords: -1},
-			filename: filepath.Join("fixtures", "flow.yaml"),
+			file: testhelpers.NewFileInfo(
+				filepath.Join("fixtures", "flow.yaml"),
+				time.Now(),
+			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
 				Dataset: dcsv.New(
@@ -196,84 +208,136 @@ func TestLoadExperiment(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		gotExperiment, err := load(c.cfg, c.filename)
+		gotExperiment, err := Load(c.cfg, c.file)
 		if err != nil {
-			t.Fatalf("load(%s) err: %s", c.filename, err)
-			return
+			t.Errorf("load(%s) err: %s", c.file, err)
+			continue
 		}
 		if err := checkExperimentMatch(gotExperiment, c.want); err != nil {
 			t.Errorf("load(%s) experiments don't match: %s\n"+
 				"gotExperiment: %s, wantExperiment: %s",
-				c.filename, err, gotExperiment, c.want)
+				c.file, err, gotExperiment, c.want)
 		}
 	}
 }
 
-func TestLoadExperiment_error(t *testing.T) {
+func TestLoad_error(t *testing.T) {
 	cases := []struct {
-		filename string
-		wantErr  error
+		file    fileinfo.FileInfo
+		wantErr error
 	}{
-		{filepath.Join("fixtures", "flow_no_title.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_no_title.json"),
+			time.Now(),
+		),
 			errors.New("Experiment field missing: title")},
-		{filepath.Join("fixtures", "flow_no_dataset.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_no_dataset.json"),
+			time.Now(),
+		),
 			errors.New("Experiment field missing: dataset")},
-		{filepath.Join("fixtures", "flow_invalid_dataset.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_invalid_dataset.json"),
+			time.Now(),
+		),
 			errors.New("Experiment field: dataset, has invalid type: llwyd")},
-		{filepath.Join("fixtures", "flow_no_csv.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_no_csv.json"),
+			time.Now(),
+		),
 			errors.New("Experiment field missing: csv")},
-		{filepath.Join("fixtures", "flow_no_csv_filename.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_no_csv_filename.json"),
+			time.Now(),
+		),
 			errors.New("Experiment field missing: csv > filename")},
-		{filepath.Join("fixtures", "flow_no_csv_separator.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_no_csv_separator.json"),
+			time.Now(),
+		),
 			errors.New("Experiment field missing: csv > separator")},
-		{filepath.Join("fixtures", "flow_no_sql.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_no_sql.json"),
+			time.Now(),
+		),
 			errors.New("Experiment field missing: sql")},
-		{filepath.Join("fixtures", "flow_no_sql_drivername.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_no_sql_drivername.json"),
+			time.Now(),
+		),
 			errors.New("Experiment field missing: sql > driverName")},
-		{filepath.Join("fixtures", "flow_invalid_sql_drivername.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_invalid_sql_drivername.json"),
+			time.Now(),
+		),
 			errors.New("Experiment field: sql, has invalid driverName: bob")},
-		{filepath.Join("fixtures", "flow_no_sql_datasourcename.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_no_sql_datasourcename.json"),
+			time.Now(),
+		),
 			errors.New("Experiment field missing: sql > dataSourceName")},
-		{filepath.Join("fixtures", "flow_no_sql_query.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_no_sql_query.json"),
+			time.Now(),
+		),
 			errors.New("Experiment field missing: sql > query")},
-		{filepath.Join("fixtures", "flow_invalid_when.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_invalid_when.json"),
+			time.Now(),
+		),
 			InvalidWhenExprError("has(twolegs")},
-		{filepath.Join("fixtures", "flow_invalid.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_invalid.json"),
+			time.Now(),
+		),
 			errors.New("invalid character '\\n' in string literal")},
-		{filepath.Join("fixtures", "flow.bob"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow.bob"),
+			time.Now(),
+		),
 			InvalidExtError(".bob")},
-		{filepath.Join("fixtures", "flow_nonexistant.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_nonexistant.json"),
+			time.Now(),
+		),
 			&os.PathError{
 				"open",
 				filepath.Join("fixtures", "flow_nonexistant.json"),
 				syscall.ENOENT,
 			},
 		},
-		{filepath.Join("fixtures", "flow_nonexistant.yaml"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_nonexistant.yaml"),
+			time.Now(),
+		),
 			&os.PathError{
 				"open",
 				filepath.Join("fixtures", "flow_nonexistant.yaml"),
 				syscall.ENOENT,
 			},
 		},
-		{filepath.Join("fixtures", "flow_invalid.yaml"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_invalid.yaml"),
+			time.Now(),
+		),
 			errors.New("yaml: line 3: did not find expected key"),
 		},
-		{filepath.Join("fixtures", "flow_invalid_rules.json"),
+		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_invalid_rules.json"),
+			time.Now(),
+		),
 			fmt.Errorf("rules: %s", rule.InvalidExprError{Expr: "flow < <= 9.42"}),
 		},
 	}
 	cfg := &config.Config{MaxNumRecords: -1}
 	for _, c := range cases {
-		_, err := load(cfg, c.filename)
+		_, err := Load(cfg, c.file)
 		if err == nil {
-			t.Errorf("load(%s) no error, wantErr:%s",
-				c.filename, c.wantErr)
+			t.Errorf("load(%s) no error, wantErr:%s", c.file, c.wantErr)
 			continue
 		}
 		if err.Error() != c.wantErr.Error() {
-			t.Errorf("load(%s) gotErr: %s, wantErr:%s",
-				c.filename, err, c.wantErr)
+			t.Errorf("load(%s) gotErr: %s, wantErr:%s", c.file, err, c.wantErr)
 		}
 	}
 }
@@ -298,37 +362,66 @@ func TestInvalidExtErrorError(t *testing.T) {
 func TestShouldProcess(t *testing.T) {
 	funcs := map[string]dexpr.CallFun{}
 	cases := []struct {
-		file fileinfo.FileInfo
-		when string
-		want bool
+		e          *Experiment
+		isFinished bool
+		stamp      time.Time
+		want       bool
 	}{
-		{file: testhelpers.NewFileInfo("bank-divorced.json", time.Now()),
-			when: "!hasRun",
+		{e: &Experiment{
+			File: testhelpers.NewFileInfo("bank-divorced.json", time.Now()),
+			When: dexpr.MustNew("!hasRun", funcs),
+		},
+			isFinished: true,
+			stamp: testhelpers.MustParse(time.RFC3339Nano,
+				"2016-05-04T14:53:00.570347516+01:00"),
 			want: true,
 		},
-		{file: testhelpers.NewFileInfo("bank-divorced.json",
-			testhelpers.MustParse(time.RFC3339Nano,
-				"2016-05-04T14:53:00.570347516+01:00")),
-			when: "!hasRun",
+		{e: &Experiment{
+			File: testhelpers.NewFileInfo("bank-divorced.json",
+				testhelpers.MustParse(time.RFC3339Nano,
+					"2016-05-04T14:53:00.570347516+01:00")),
+			When: dexpr.MustNew("!hasRun", funcs),
+		},
+			isFinished: true,
+			stamp: testhelpers.MustParse(time.RFC3339Nano,
+				"2016-05-04T14:53:00.570347516+01:00"),
 			want: false,
 		},
-		{file: testhelpers.NewFileInfo("bank-tiny.json", time.Now()),
-			when: "!hasRun",
+		{e: &Experiment{
+			File: testhelpers.NewFileInfo("bank-tiny.json", time.Now()),
+			When: dexpr.MustNew("!hasRun", funcs),
+		},
+			isFinished: true,
+			stamp: testhelpers.MustParse(time.RFC3339Nano,
+				"2016-05-05T09:37:58.220312223+01:00"),
 			want: true,
 		},
-		{file: testhelpers.NewFileInfo("bank-tiny.json",
-			testhelpers.MustParse(time.RFC3339Nano,
-				"2016-05-05T09:37:58.220312223+01:00")),
-			when: "!hasRun",
+		{e: &Experiment{
+			File: testhelpers.NewFileInfo("bank-tiny.json",
+				testhelpers.MustParse(time.RFC3339Nano,
+					"2016-05-05T09:37:58.220312223+01:00")),
+			When: dexpr.MustNew("!hasRun", funcs),
+		},
+			isFinished: true,
+			stamp: testhelpers.MustParse(time.RFC3339Nano,
+				"2016-05-05T09:37:58.220312223+01:00"),
 			want: false,
 		},
-		{file: testhelpers.NewFileInfo("bank-full-divorced.json", time.Now()),
-			when: "!hasRun",
-			want: true,
+		{e: &Experiment{
+			File: testhelpers.NewFileInfo("bank-full-divorced.json", time.Now()),
+			When: dexpr.MustNew("!hasRun", funcs),
 		},
-		{file: testhelpers.NewFileInfo("bank-full-divorced.json", time.Now()),
-			when: "!hasRun",
-			want: true,
+			isFinished: false,
+			stamp:      time.Now(),
+			want:       true,
+		},
+		{e: &Experiment{
+			File: testhelpers.NewFileInfo("bank-full-divorced.json", time.Now()),
+			When: dexpr.MustNew("!hasRun", funcs),
+		},
+			isFinished: false,
+			stamp:      time.Now(),
+			want:       true,
 		},
 	}
 	tmpDir := testhelpers.TempDir(t)
@@ -339,28 +432,14 @@ func TestShouldProcess(t *testing.T) {
 		tmpDir,
 	)
 
-	htmlCmds := make(chan cmd.Cmd)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
-	pm, err := progress.NewMonitor(tmpDir, htmlCmds)
-	if err != nil {
-		t.Fatalf("NewMonitor() err: %v", err)
-	}
-
-	for _, c := range cases {
-		whenExpr := dexpr.MustNew(c.when, funcs)
-		experimentProgress, err := pm.AddExperiment(c.file.Name())
+	for i, c := range cases {
+		got, err := c.e.ShouldProcess(c.isFinished, c.stamp)
 		if err != nil {
-			t.Fatalf("AddExperiment(%s): %s", c.file.Name(), err)
-		}
-		got, err := shouldProcess(experimentProgress, c.file, whenExpr)
-		if err != nil {
-			t.Errorf("shouldProcess(pm, %v, %v) err: %s", c.file, c.when, err)
+			t.Errorf("(%d) shouldProcess: %s", i, err)
 			continue
 		}
 		if got != c.want {
-			t.Errorf("shouldProcess(pm, %v, %v) got: %t, want: %t",
-				c.file, c.when, got, c.want)
+			t.Errorf("(%d) shouldProcess, got: %t, want: %t", i, got, c.want)
 		}
 	}
 }
@@ -382,27 +461,22 @@ func TestProcess(t *testing.T) {
 		cfg.ExperimentsDir,
 	)
 	file := testhelpers.NewFileInfo("flow.json", time.Now())
-	wantLogEntries := []testhelpers.Entry{
-		{Level: testhelpers.Info,
-			Msg: "Processing experiment: flow.json"},
-		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: flow.json"},
-	}
 	wantPMExperiments := []*progress.Experiment{
 		&progress.Experiment{
 			Title:    "What would indicate good flow?",
-			Tags:     []string{"test", "fred / ned"},
-			Stamp:    time.Now(),
 			Filename: "flow.json",
-			Msg:      "Finished processing successfully",
-			Status:   progress.Success,
+			Tags:     []string{"test", "fred / ned"},
+			Status: &progress.Status{
+				Stamp:   time.Now(),
+				Msg:     "Assessing rules 5/5",
+				Percent: 100,
+				State:   progress.Processing,
+			},
 		},
 	}
 
 	quit := quitter.New()
 	defer quit.Quit()
-	l := testhelpers.NewLogger()
-	go l.Run(quit)
 	htmlCmds := make(chan cmd.Cmd, 100)
 	defer close(htmlCmds)
 	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
@@ -414,28 +488,15 @@ func TestProcess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: err: %v", err)
 	}
-	experimentProgress, err := pm.AddExperiment(file.Name())
+	e, err := Load(cfg, file)
 	if err != nil {
-		t.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+		t.Fatalf("Load: %s", err)
 	}
-	if err := Process(file, cfg, l, experimentProgress); err != nil {
-		t.Fatalf("Process: err: %v", err)
+	if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+		t.Fatalf("AddExperiment: %s", err)
 	}
-
-	timeoutC := time.NewTimer(5 * time.Second).C
-	tickerC := time.NewTicker(400 * time.Millisecond).C
-	quitSelect := false
-	for !quitSelect {
-		select {
-		case <-tickerC:
-			if reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
-				quitSelect = true
-			}
-		case <-timeoutC:
-			t.Errorf("l.GetEntries() got: %v, want: %v",
-				l.GetEntries(), wantLogEntries)
-			quitSelect = true
-		}
+	if err := e.Process(cfg, pm); err != nil {
+		t.Fatalf("Process: %s", err)
 	}
 
 	err = progresstest.CheckExperimentsMatch(
@@ -447,22 +508,17 @@ func TestProcess(t *testing.T) {
 	}
 
 	/*
-	 *	Check html commands received == {Progress,Progress,Progress,...,Reports}
+	 *	Check html commands received == {Progress,Progress,Progress,...}
 	 */
 	htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
 	numCmds := len(htmlCmdsReceived)
 	if numCmds < 2 {
 		t.Errorf("GetCmdsRecevied() received less than 2 commands")
 	}
-	lastCmd := htmlCmdsReceived[numCmds-1]
-	if lastCmd != cmd.Reports {
-		t.Errorf("GetCmdsRecevied() last command got: %s, want: %s",
-			lastCmd, cmd.Reports)
-	}
-	for _, c := range htmlCmdsReceived[:numCmds-1] {
+	for _, c := range htmlCmdsReceived {
 		if c != cmd.Progress {
 			t.Errorf(
-				"GetCmdsRecevied() rest of commands not all equal to Progress, found: %s",
+				"GetCmdsRecevied() commands not all equal to Progress, found: %s",
 				c,
 			)
 		}
@@ -487,12 +543,6 @@ func TestProcess_supplied_rules(t *testing.T) {
 		cfg.ExperimentsDir,
 	)
 	file := testhelpers.NewFileInfo("flow.json", time.Now())
-	wantLogEntries := []testhelpers.Entry{
-		{Level: testhelpers.Info,
-			Msg: "Processing experiment: flow.json"},
-		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: flow.json"},
-	}
 
 	quit := quitter.New()
 	defer quit.Quit()
@@ -507,30 +557,18 @@ func TestProcess_supplied_rules(t *testing.T) {
 		htmlCmds,
 	)
 	if err != nil {
-		t.Fatalf("progress.NewMonitor: err: %v", err)
+		t.Fatalf("progress.NewMonitor: %s", err)
 	}
-	experimentProgress, err := pm.AddExperiment(file.Name())
+	e, err := Load(cfg, file)
 	if err != nil {
-		t.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+		t.Fatalf("Load: %s", err)
 	}
-	if err := Process(file, cfg, l, experimentProgress); err != nil {
-		t.Fatalf("Process: err: %v", err)
+	if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+		t.Fatalf("AddExperiment: %s", err)
 	}
 
-	timeoutC := time.NewTimer(5 * time.Second).C
-	tickerC := time.NewTicker(400 * time.Millisecond).C
-	quitSelect := false
-	for !quitSelect {
-		select {
-		case <-tickerC:
-			if reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
-				quitSelect = true
-			}
-		case <-timeoutC:
-			t.Errorf("l.GetEntries() got: %v, want: %v",
-				l.GetEntries(), wantLogEntries)
-			quitSelect = true
-		}
+	if err := e.Process(cfg, pm); err != nil {
+		t.Fatalf("Process: %s", err)
 	}
 
 	flowBuildFilename := filepath.Join(cfgDir, "build", "reports", "flow.json")
@@ -588,17 +626,23 @@ func TestProcess_multiProcesses(t *testing.T) {
 			htmlCmds,
 		)
 		if err != nil {
-			t.Fatalf("progress.NewMonitor: err: %v", err)
+			t.Fatalf("progress.NewMonitor: %s", err)
 		}
-		start := time.Now()
-		experimentProgress, err := pm.AddExperiment(file.Name())
+
+		e, err := Load(cfg, file)
 		if err != nil {
-			t.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+			t.Fatalf("Load: %s", err)
 		}
-		if err := Process(file, cfg, l, experimentProgress); err != nil {
-			t.Fatalf("Process: err: %v", err)
+		if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+			t.Fatalf("AddExperiment: %s", err)
+		}
+
+		start := time.Now()
+		if err := e.Process(cfg, pm); err != nil {
+			t.Fatalf("Process: %s", err)
 		}
 		elapsed := time.Since(start).Nanoseconds()
+
 		if numProcesses == 1 {
 			singleCPUTime = elapsed
 		} else {
@@ -627,22 +671,16 @@ func TestProcess_errors(t *testing.T) {
 		cfg.ExperimentsDir,
 	)
 	file := testhelpers.NewFileInfo("flow_div_zero.yaml", time.Now())
-	wantLogEntries := []testhelpers.Entry{
-		{Level: testhelpers.Info,
-			Msg: "Processing experiment: flow_div_zero.yaml",
-		},
-		{Level: testhelpers.Error,
-			Msg: "Failed processing experiment: flow_div_zero.yaml - invalid expression: numMatches / 0 (divide by zero)",
-		},
-	}
 	wantPMExperiments := []*progress.Experiment{
 		&progress.Experiment{
 			Title:    "What would indicate good flow?",
-			Tags:     []string{"test", "fred / ned"},
-			Stamp:    time.Now(),
 			Filename: "flow_div_zero.yaml",
-			Msg:      "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)",
-			Status:   progress.Failure,
+			Tags:     []string{"test", "fred / ned"},
+			Status: &progress.Status{
+				Stamp: time.Now(),
+				Msg:   "Assessing rules 2/5",
+				State: progress.Processing,
+			},
 		},
 	}
 
@@ -659,32 +697,20 @@ func TestProcess_errors(t *testing.T) {
 		htmlCmds,
 	)
 	if err != nil {
-		t.Fatalf("progress.NewMonitor: err: %v", err)
+		t.Fatalf("progress.NewMonitor: %s", err)
 	}
 	wantErr := "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)"
-	experimentProgress, err := pm.AddExperiment(file.Name())
+
+	e, err := Load(cfg, file)
 	if err != nil {
-		t.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+		t.Fatalf("Load: %s", err)
 	}
-	err = Process(file, cfg, l, experimentProgress)
-	if err.Error() != wantErr {
-		t.Fatalf("Process: got err: %v, wantErr: %v", err, wantErr)
+	if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+		t.Fatalf("AddExperiment: %s", err)
 	}
 
-	timeoutC := time.NewTimer(5 * time.Second).C
-	tickerC := time.NewTicker(400 * time.Millisecond).C
-	quitSelect := false
-	for !quitSelect {
-		select {
-		case <-tickerC:
-			if reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
-				quitSelect = true
-			}
-		case <-timeoutC:
-			t.Errorf("l.GetEntries() got: %v, want: %v",
-				l.GetEntries(), wantLogEntries)
-			quitSelect = true
-		}
+	if err := e.Process(cfg, pm); err == nil || err.Error() != wantErr {
+		t.Fatalf("Process: gotErr: %s, wantErr: %s", err, wantErr)
 	}
 
 	err = progresstest.CheckExperimentsMatch(
@@ -833,13 +859,16 @@ func BenchmarkProcess_csv(b *testing.B) {
 				if err != nil {
 					b.Fatalf("progress.NewMonitor: err: %v", err)
 				}
-				experimentProgress, err := pm.AddExperiment(file.Name())
+				e, err := Load(cfg, file)
 				if err != nil {
-					b.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+					b.Fatalf("Load: %s", err)
+				}
+				if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+					b.Fatalf("AddExperiment: %s", err)
 				}
 				b.StartTimer()
-				if err := Process(file, cfg, l, experimentProgress); err != nil {
-					b.Fatalf("Process: err: %v", err)
+				if err := e.Process(cfg, pm); err != nil {
+					b.Fatalf("Process: %s", err)
 				}
 			}
 		})
@@ -888,13 +917,16 @@ func BenchmarkProcess_sql(b *testing.B) {
 				if err != nil {
 					b.Fatalf("progress.NewMonitor: err: %v", err)
 				}
-				experimentProgress, err := pm.AddExperiment(file.Name())
+				e, err := Load(cfg, file)
 				if err != nil {
-					b.Fatalf("AddExperiment(%s): %s", file.Name(), err)
+					b.Fatalf("Load: %s", err)
+				}
+				if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+					b.Fatalf("AddExperiment: %s", err)
 				}
 				b.StartTimer()
-				if err := Process(file, cfg, l, experimentProgress); err != nil {
-					b.Fatalf("Process: err: %v", err)
+				if err := e.Process(cfg, pm); err != nil {
+					b.Fatalf("Process: %s", err)
 				}
 			}
 		})

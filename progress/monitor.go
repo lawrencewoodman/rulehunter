@@ -20,6 +20,7 @@ package progress
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"io/ioutil"
 	"os"
@@ -28,29 +29,23 @@ import (
 	"time"
 )
 
-// Monitor represents a progress monitor.
+// Monitor represents an experiment progress monitor.
 type Monitor struct {
 	filename    string
 	htmlCmds    chan<- cmd.Cmd
-	experiments []*Experiment
+	experiments map[string]*Experiment
 }
 
 type progressFile struct {
 	Experiments []*Experiment
 }
 
-func (s StatusKind) String() string {
-	switch s {
-	case Waiting:
-		return "waiting"
-	case Processing:
-		return "processing"
-	case Success:
-		return "success"
-	case Failure:
-		return "failure"
-	}
-	panic("Unrecognized status")
+type ExperimentNotFoundError struct {
+	filename string
+}
+
+func (e ExperimentNotFoundError) Error() string {
+	return fmt.Sprintf("progress for experiment file not found: %s", e.filename)
 }
 
 func NewMonitor(
@@ -58,7 +53,7 @@ func NewMonitor(
 	htmlCmds chan<- cmd.Cmd,
 ) (*Monitor, error) {
 	var progress progressFile
-	experiments := []*Experiment{}
+	experiments := map[string]*Experiment{}
 	filename := filepath.Join(progressDir, "progress.json")
 
 	f, err := os.Open(filename)
@@ -71,66 +66,125 @@ func NewMonitor(
 		if err = dec.Decode(&progress); err != nil {
 			return nil, err
 		}
-		experiments = progress.Experiments
+		for _, e := range progress.Experiments {
+			experiments[e.Filename] = e
+		}
 	}
 
-	m := &Monitor{
+	return &Monitor{
 		filename:    filename,
 		htmlCmds:    htmlCmds,
 		experiments: experiments,
-	}
-	for _, e := range experiments {
-		e.monitor = m
-	}
-	sort.Sort(m)
-	return m, nil
+	}, nil
 }
 
-func (m *Monitor) AddExperiment(filename string) (*Experiment, error) {
-	e := m.findExperiment(filename)
-	if e == nil {
-		newExperiment := &Experiment{
-			Title:    "",
-			Tags:     []string{},
-			Stamp:    time.Now(),
-			Filename: filename,
-			Msg:      "Waiting to be processed",
-			Percent:  0,
-			Status:   Waiting,
-			monitor:  m,
-		}
-		m.experiments = append(m.experiments, newExperiment)
-		e = newExperiment
-	} else {
-		if isFinished(e) {
-			return e, nil
-		}
-		e.Title = ""
-		e.Tags = []string{}
-		e.Stamp = time.Now()
-		e.Msg = "Waiting to be processed"
-		e.Percent = 0
-		e.Status = Waiting
-	}
+func (m *Monitor) AddExperiment(
+	filename string,
+	title string,
+	tags []string,
+) error {
+	m.experiments[filename] = newExperiment(filename, title, tags)
 	if err := m.writeJSON(); err != nil {
-		return e, err
+		return err
 	}
 	m.htmlCmds <- cmd.Progress
-	return e, nil
+	return nil
+}
+
+// ReportProgress reports a message and percent progress (0.0-1.0) for
+// an experiment
+func (m *Monitor) ReportProgress(
+	file string,
+	msg string,
+	percent float64,
+) error {
+	e, ok := m.experiments[file]
+	if !ok {
+		return ExperimentNotFoundError{file}
+	} else {
+		e.Status.SetProgress(msg, percent)
+	}
+	if err := m.writeJSON(); err != nil {
+		return err
+	}
+	m.htmlCmds <- cmd.Progress
+	return nil
+}
+
+// ReportLoadFailure reports that an experiment failed to load
+func (m *Monitor) ReportLoadFailure(file string, err error) error {
+	e, ok := m.experiments[file]
+	if !ok {
+		e = newExperiment(file, "", []string{})
+		m.experiments[file] = e
+	} else {
+		fullErr := fmt.Errorf("Error loading experiment: %s, %s", file, err)
+		e.Status.SetFailure(fullErr)
+	}
+	if err := m.writeJSON(); err != nil {
+		return err
+	}
+	m.htmlCmds <- cmd.Progress
+	return nil
+}
+
+// ReportFailure sets experiment to having failed with an error
+func (m *Monitor) ReportFailure(file string, err error) error {
+	e, ok := m.experiments[file]
+	if !ok {
+		return ExperimentNotFoundError{file}
+	} else {
+		e.Status.SetFailure(err)
+	}
+	if err := m.writeJSON(); err != nil {
+		return err
+	}
+	m.htmlCmds <- cmd.Progress
+	return nil
+}
+
+// ReportSuccess reports experiment has been successful
+func (m *Monitor) ReportSuccess(file string) error {
+	e, ok := m.experiments[file]
+	if !ok {
+		return ExperimentNotFoundError{file}
+	} else {
+		e.Status.SetSuccess()
+	}
+	if err := m.writeJSON(); err != nil {
+		return err
+	}
+	m.htmlCmds <- cmd.Progress
+	return nil
+}
+
+// GetFinishStamp returns whether a file has finished and its last update
+// time stamp.  If the file isn't known then it will return false and the
+// current time.
+func (m *Monitor) GetFinishStamp(file string) (bool, time.Time) {
+	e, ok := m.experiments[file]
+	if !ok {
+		return false, time.Now()
+	}
+	return e.Status.IsFinished(), e.Status.Stamp
 }
 
 func (m *Monitor) GetExperiments() []*Experiment {
-	return m.experiments
-}
-
-// Returns experiment if found experiment or nil if not found
-func (m *Monitor) findExperiment(filename string) *Experiment {
-	for _, experiment := range m.experiments {
-		if experiment.Filename == filename {
-			return experiment
+	experiments := make([]*Experiment, len(m.experiments))
+	i := 0
+	for f, e := range m.experiments {
+		experiments[i] = &Experiment{
+			Filename: f,
+			Title:    e.Title,
+			Tags:     e.Tags,
+			Status:   e.Status,
 		}
+		i++
 	}
-	return nil
+	sort.Slice(experiments, func(i, j int) bool {
+		return experiments[j].Status.Stamp.Before(experiments[i].Status.Stamp)
+	})
+	return experiments
 }
 
 func (m *Monitor) writeJSON() error {
@@ -141,10 +195,10 @@ func (m *Monitor) writeJSON() error {
 	// Other: None
 	const modePerm = 0640
 
-	sort.Sort(m)
+	experiments := m.GetExperiments()
 	successfulExperiments := []*Experiment{}
-	for _, e := range m.experiments {
-		if e.Status == Success {
+	for _, e := range experiments {
+		if e.Status.State == Success {
 			successfulExperiments = append(successfulExperiments, e)
 		}
 	}
@@ -154,17 +208,4 @@ func (m *Monitor) writeJSON() error {
 		return err
 	}
 	return ioutil.WriteFile(m.filename, json, modePerm)
-}
-
-// Implements sort.Interface
-func (m *Monitor) Len() int {
-	return len(m.experiments)
-}
-func (m *Monitor) Swap(i, j int) {
-	m.experiments[i], m.experiments[j] =
-		m.experiments[j], m.experiments[i]
-}
-
-func (m *Monitor) Less(i, j int) bool {
-	return m.experiments[j].Stamp.Before(m.experiments[i].Stamp)
 }
