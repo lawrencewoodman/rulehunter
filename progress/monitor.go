@@ -37,7 +37,7 @@ type Monitor struct {
 }
 
 type progressFile struct {
-	Experiments []*Experiment
+	Experiments []*Experiment `json:"experiments"`
 }
 
 type ExperimentNotFoundError struct {

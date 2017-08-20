@@ -20,10 +20,10 @@
 package progress
 
 type Experiment struct {
-	Filename string
-	Title    string
-	Tags     []string
-	Status   *Status
+	Filename string   `json:"filename"`
+	Title    string   `json:"title"`
+	Tags     []string `json:"tags"`
+	Status   *Status  `json:"status"`
 }
 
 func newExperiment(filename string, title string, tags []string) *Experiment {

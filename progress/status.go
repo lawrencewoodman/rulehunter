@@ -46,10 +46,10 @@ func (s StatusKind) String() string {
 }
 
 type Status struct {
-	Stamp   time.Time // Time of last update
-	Msg     string
-	Percent float64
-	State   StatusKind
+	Stamp   time.Time  `json:"stamp"` // Time of last update
+	Msg     string     `json:"msg"`
+	Percent float64    `json:"-"`
+	State   StatusKind `json:"state"`
 }
 
 func NewStatus() *Status {
