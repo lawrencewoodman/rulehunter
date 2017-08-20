@@ -41,12 +41,13 @@ func (l *Logger) Run(quit *quitter.Quitter) {
 func (l *Logger) SetSvcLogger(logger service.Logger) {
 }
 
-func (l *Logger) Error(msg string) {
+func (l *Logger) Error(err error) error {
 	entry := Entry{
 		Level: Error,
-		Msg:   msg,
+		Msg:   err.Error(),
 	}
 	l.entries = append(l.entries, entry)
+	return err
 }
 
 func (l *Logger) Info(msg string) {

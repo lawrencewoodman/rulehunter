@@ -45,14 +45,13 @@ func Watch(
 	quit *quitter.Quitter,
 	files chan<- fileinfo.FileInfo,
 ) {
+	var lastLogErr error
 	quit.Add()
 	defer quit.Done()
-	lastLogMsg := ""
 	ticker := time.NewTicker(period).C
 	allFiles, err := getFilesToMap(dir)
 	if err != nil {
-		lastLogMsg = err.Error()
-		l.Error(err.Error())
+		lastLogErr = l.Error(err)
 	}
 
 	for _, file := range allFiles {
@@ -69,13 +68,12 @@ func Watch(
 		case <-ticker:
 			newFiles, err := getFilesToMap(dir)
 			if err != nil {
-				if lastLogMsg != err.Error() {
-					lastLogMsg = err.Error()
-					l.Error(err.Error())
+				if lastLogErr == nil || lastLogErr.Error() != err.Error() {
+					lastLogErr = l.Error(err)
 				}
 				break
 			}
-			lastLogMsg = ""
+			lastLogErr = nil
 
 			for filename, file := range newFiles {
 				if lastFile, ok := allFiles[filename]; ok {

@@ -53,18 +53,18 @@ func Run(
 	quit.Add()
 	defer quit.Done()
 	if err := generate(cmd.All, config, pm); err != nil {
-		l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
+		l.Error(fmt.Errorf("Couldn't generate report: %s", err))
 	}
 
 	for {
 		select {
 		case c := <-cmds:
 			if err := generate(c, config, pm); err != nil {
-				l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
+				l.Error(fmt.Errorf("Couldn't generate report: %s", err))
 			}
 		case <-quit.C:
 			if err := generate(cmd.All, config, pm); err != nil {
-				l.Error(fmt.Sprintf("Couldn't generate report: %s", err))
+				l.Error(fmt.Errorf("Couldn't generate report: %s", err))
 			}
 			return
 		}

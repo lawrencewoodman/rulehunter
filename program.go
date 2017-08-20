@@ -82,18 +82,16 @@ func (p *program) ProcessFile(file fileinfo.FileInfo) error {
 
 	e, err := experiment.Load(p.config, file)
 	if err != nil {
-		logErr := fmt.Sprintf("Can't load experiment: %s, %s", file.Name(), err)
+		logErr := fmt.Errorf("Can't load experiment: %s, %s", file.Name(), err)
 		p.logger.Error(logErr)
 		if pmErr := pm.ReportLoadFailure(file.Name(), err); pmErr != nil {
-			p.logger.Error(pmErr.Error())
-			return pmErr
+			return p.logger.Error(pmErr)
 		}
 		return nil
 	}
 
 	if pmErr := pm.AddExperiment(file.Name(), e.Title, e.Tags); pmErr != nil {
-		p.logger.Error(pmErr.Error())
-		return pmErr
+		return p.logger.Error(pmErr)
 	}
 
 	isFinished, stamp := pm.GetFinishStamp(file.Name())
@@ -101,11 +99,10 @@ func (p *program) ProcessFile(file fileinfo.FileInfo) error {
 	ok, err := e.ShouldProcess(isFinished, stamp)
 	if err != nil {
 		logErr :=
-			fmt.Sprintf("Failed processing experiment: %s, %s", file.Name(), err)
+			fmt.Errorf("Failed processing experiment: %s, %s", file.Name(), err)
 		p.logger.Error(logErr)
 		if pmErr := pm.ReportFailure(file.Name(), err); pmErr != nil {
-			p.logger.Error(pmErr.Error())
-			return pmErr
+			return p.logger.Error(pmErr)
 		}
 		return nil
 	}
@@ -116,11 +113,10 @@ func (p *program) ProcessFile(file fileinfo.FileInfo) error {
 	p.logger.Info("Processing experiment: " + file.Name())
 	if err := e.Process(p.config, p.progressMonitor); err != nil {
 		logErr :=
-			fmt.Sprintf("Failed processing experiment: %s, %s", file.Name(), err)
+			fmt.Errorf("Failed processing experiment: %s, %s", file.Name(), err)
 		p.logger.Error(logErr)
 		if pmErr := pm.ReportFailure(file.Name(), err); pmErr != nil {
-			p.logger.Error(pmErr.Error())
-			return pmErr
+			return p.logger.Error(pmErr)
 		}
 		return nil
 	}
@@ -128,8 +124,7 @@ func (p *program) ProcessFile(file fileinfo.FileInfo) error {
 	logInfo := "Successfully processed experiment: " + file.Name()
 	p.logger.Info(logInfo)
 	if pmErr := pm.ReportSuccess(file.Name()); pmErr != nil {
-		p.logger.Error(pmErr.Error())
-		return pmErr
+		return p.logger.Error(pmErr)
 	}
 	return nil
 }

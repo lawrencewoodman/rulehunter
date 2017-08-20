@@ -27,7 +27,7 @@ import (
 type Logger interface {
 	Run(*quitter.Quitter)
 	Info(string)
-	Error(string)
+	Error(error) error
 	SetSvcLogger(service.Logger)
 }
 
@@ -60,8 +60,10 @@ func (l *SvcLogger) SetSvcLogger(logger service.Logger) {
 	l.svcLogger = logger
 }
 
-func (l *SvcLogger) Error(msg string) {
-	l.svcLogger.Error(msg)
+// Error logs an error and returns the same error
+func (l *SvcLogger) Error(err error) error {
+	l.svcLogger.Error(err.Error())
+	return err
 }
 
 func (l *SvcLogger) Info(msg string) {
