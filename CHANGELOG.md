@@ -5,6 +5,7 @@
  * Add `rules` to experiment files to allow user defined rules
  * Fix support for HTML5 in IE8
  * Restructure `progress.json` file
+ * Up Go requirement to v1.8+
 
 ## 0.1 (7th July 2017)
 
