@@ -28,7 +28,7 @@ const (
 	Waiting StatusKind = iota
 	Processing
 	Success
-	Failure
+	Error
 )
 
 func (s StatusKind) String() string {
@@ -39,8 +39,8 @@ func (s StatusKind) String() string {
 		return "processing"
 	case Success:
 		return "success"
-	case Failure:
-		return "failure"
+	case Error:
+		return "error"
 	}
 	panic("Unrecognized status")
 }
@@ -61,9 +61,9 @@ func NewStatus() *Status {
 	}
 }
 
-// IsFinished returns whether the status is either Success or Failure
+// IsFinished returns whether the status is either Success or Error
 func (s *Status) IsFinished() bool {
-	return s.State == Success || s.State == Failure
+	return s.State == Success || s.State == Error
 }
 
 // SetProgress sets the progress with a message
@@ -75,14 +75,12 @@ func (s *Status) SetProgress(msg string, percent float64) {
 	s.State = Processing
 }
 
-// SetFailure sets Msg to the error and State to Failure.
-// It returns the error passed as a parameter.
-func (s *Status) SetFailure(err error) error {
+// SetError sets Msg to the error and State to Error.
+func (s *Status) SetError(err error) {
 	s.Stamp = time.Now()
 	s.Msg = err.Error()
 	s.Percent = 0.0
-	s.State = Failure
-	return err
+	s.State = Error
 }
 
 // SetSuccess sets the Msg to report success and State to Success

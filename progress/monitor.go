@@ -111,30 +111,24 @@ func (m *Monitor) ReportProgress(
 	return nil
 }
 
-// ReportLoadFailure reports that an experiment failed to load
-func (m *Monitor) ReportLoadFailure(file string, err error) error {
+// ReportLoadError reports that an experiment failed to load
+func (m *Monitor) ReportLoadError(file string, err error) error {
 	e, ok := m.experiments[file]
 	if !ok {
 		e = newExperiment(file, "", []string{})
 		m.experiments[file] = e
-	} else {
-		fullErr := fmt.Errorf("Error loading experiment: %s, %s", file, err)
-		e.Status.SetFailure(fullErr)
 	}
-	if err := m.writeJSON(); err != nil {
-		return err
-	}
-	m.htmlCmds <- cmd.Progress
-	return nil
+	fullErr := fmt.Errorf("Error loading experiment: %s, %s", file, err)
+	return m.ReportError(file, fullErr)
 }
 
-// ReportFailure sets experiment to having failed with an error
-func (m *Monitor) ReportFailure(file string, err error) error {
+// ReportError sets experiment to having failed with an error
+func (m *Monitor) ReportError(file string, err error) error {
 	e, ok := m.experiments[file]
 	if !ok {
 		return ExperimentNotFoundError{file}
 	} else {
-		e.Status.SetFailure(err)
+		e.Status.SetError(err)
 	}
 	if err := m.writeJSON(); err != nil {
 		return err

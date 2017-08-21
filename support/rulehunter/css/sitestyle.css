@@ -82,7 +82,7 @@ table td.status-success {
   color: green;
 }
 
-table td.status-failure {
+table td.status-error {
   font-weight: bold;
   color: red;
 }

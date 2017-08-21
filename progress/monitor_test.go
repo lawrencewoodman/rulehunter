@@ -21,7 +21,7 @@ func TestExperimentString(t *testing.T) {
 		{status: Waiting, want: "waiting"},
 		{status: Processing, want: "processing"},
 		{status: Success, want: "success"},
-		{status: Failure, want: "failure"},
+		{status: Error, want: "error"},
 	}
 	for _, c := range cases {
 		got := c.status.String()
@@ -386,7 +386,7 @@ func TestReportProgress(t *testing.T) {
 	}
 }
 
-func TestReportFailure(t *testing.T) {
+func TestReportError(t *testing.T) {
 	wantExperimentsMemory := []*Experiment{
 		&Experiment{
 			Title:    "Who is more likely to be divorced",
@@ -396,7 +396,7 @@ func TestReportFailure(t *testing.T) {
 				Stamp:   time.Now(),
 				Msg:     "Couldn't load experiment file: open csv/bank-divorced.cs: no such file or directory",
 				Percent: 0.0,
-				State:   Failure,
+				State:   Error,
 			},
 		},
 		&Experiment{
@@ -448,9 +448,85 @@ func TestReportFailure(t *testing.T) {
 			t.Fatalf("NewMonitor() err: %v", err)
 		}
 		if c.run == 0 {
-			pm.ReportFailure(
+			pm.ReportError(
 				"bank-divorced.json",
 				errors.New("Couldn't load experiment file: open csv/bank-divorced.cs: no such file or directory"),
+			)
+		}
+		got := pm.GetExperiments()
+		if err := checkExperimentsMatch(got, c.wantExperiments); err != nil {
+			t.Errorf("checkExperimentsMatch() err: %s", err)
+		}
+		time.Sleep(1 * time.Second)
+		close(htmlCmds)
+	}
+}
+
+func TestReportLoadError(t *testing.T) {
+	wantExperimentsMemory := []*Experiment{
+		&Experiment{
+			Title:    "Who is more likely to be divorced",
+			Filename: "bank-divorced.json",
+			Tags:     []string{"test", "bank"},
+			Status: &Status{
+				Stamp:   time.Now(),
+				Msg:     "Error loading experiment: bank-divorced.json, open csv/bank-divorced.cs: no such file or directory",
+				Percent: 0.0,
+				State:   Error,
+			},
+		},
+		&Experiment{
+			Title:    "This is a jolly nice title",
+			Filename: "bank-tiny.json",
+			Tags:     []string{"test", "bank", "fred / ned"},
+			Status: &Status{
+				Stamp:   mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
+				Msg:     "Finished processing successfully",
+				Percent: 0.0,
+				State:   Success,
+			},
+		},
+	}
+	wantExperimentsFile := []*Experiment{
+		&Experiment{
+			Title:    "This is a jolly nice title",
+			Filename: "bank-tiny.json",
+			Tags:     []string{"test", "bank", "fred / ned"},
+			Status: &Status{
+				Stamp:   mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
+				Msg:     "Finished processing successfully",
+				Percent: 0.0,
+				State:   Success,
+			},
+		},
+	}
+	cases := []struct {
+		run             int
+		wantExperiments []*Experiment
+	}{
+		{run: 0,
+			wantExperiments: wantExperimentsMemory,
+		},
+		{run: 1,
+			wantExperiments: wantExperimentsFile,
+		},
+	}
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
+
+	for _, c := range cases {
+		htmlCmds := make(chan cmd.Cmd)
+		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+		go cmdMonitor.Run()
+		pm, err := NewMonitor(tmpDir, htmlCmds)
+		if err != nil {
+			t.Fatalf("NewMonitor() err: %v", err)
+		}
+		if c.run == 0 {
+			pm.ReportLoadError(
+				"bank-divorced.json",
+				errors.New("open csv/bank-divorced.cs: no such file or directory"),
 			)
 		}
 		got := pm.GetExperiments()

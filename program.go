@@ -84,7 +84,7 @@ func (p *program) ProcessFile(file fileinfo.FileInfo) error {
 	if err != nil {
 		logErr := fmt.Errorf("Can't load experiment: %s, %s", file.Name(), err)
 		p.logger.Error(logErr)
-		if pmErr := pm.ReportLoadFailure(file.Name(), err); pmErr != nil {
+		if pmErr := pm.ReportLoadError(file.Name(), err); pmErr != nil {
 			return p.logger.Error(pmErr)
 		}
 		return nil
@@ -99,9 +99,9 @@ func (p *program) ProcessFile(file fileinfo.FileInfo) error {
 	ok, err := e.ShouldProcess(isFinished, stamp)
 	if err != nil {
 		logErr :=
-			fmt.Errorf("Failed processing experiment: %s, %s", file.Name(), err)
+			fmt.Errorf("Error processing experiment: %s, %s", file.Name(), err)
 		p.logger.Error(logErr)
-		if pmErr := pm.ReportFailure(file.Name(), err); pmErr != nil {
+		if pmErr := pm.ReportError(file.Name(), err); pmErr != nil {
 			return p.logger.Error(pmErr)
 		}
 		return nil
@@ -113,9 +113,9 @@ func (p *program) ProcessFile(file fileinfo.FileInfo) error {
 	p.logger.Info("Processing experiment: " + file.Name())
 	if err := e.Process(p.config, p.progressMonitor); err != nil {
 		logErr :=
-			fmt.Errorf("Failed processing experiment: %s, %s", file.Name(), err)
+			fmt.Errorf("Error processing experiment: %s, %s", file.Name(), err)
 		p.logger.Error(logErr)
-		if pmErr := pm.ReportFailure(file.Name(), err); pmErr != nil {
+		if pmErr := pm.ReportError(file.Name(), err); pmErr != nil {
 			return p.logger.Error(pmErr)
 		}
 		return nil

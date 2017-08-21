@@ -6,6 +6,7 @@
  * Fix support for HTML5 in IE8
  * Restructure `progress.json` file
  * Up Go requirement to v1.8+
+ * s/failure/error/ in activity
 
 ## 0.1 (7th July 2017)
 
