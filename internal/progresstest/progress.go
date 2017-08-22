@@ -13,7 +13,8 @@ func CheckExperimentsMatch(
 	experiments2 []*progress.Experiment,
 ) error {
 	if len(experiments1) != len(experiments2) {
-		return errors.New("Lengths of experiments don't match")
+		return fmt.Errorf("Lengths of experiments don't match: %d != %d",
+			len(experiments1), len(experiments2))
 	}
 	for i, e := range experiments1 {
 		if err := checkExperimentMatch(e, experiments2[i]); err != nil {
@@ -28,7 +29,8 @@ func checkExperimentMatch(e1, e2 *progress.Experiment) error {
 		return fmt.Errorf("Title doesn't match: %s != %s", e1.Title, e2.Title)
 	}
 	if e1.Filename != e2.Filename {
-		return errors.New("ExperimentFilename doesn't match")
+		return fmt.Errorf("Filename doesn't match: %s != %s",
+			e1.Filename, e2.Filename)
 	}
 	if e1.Status.Msg != e2.Status.Msg {
 		return fmt.Errorf("Status.Msg doesn't match: %s != %s",

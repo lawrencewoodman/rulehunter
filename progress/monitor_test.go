@@ -470,7 +470,7 @@ func TestReportLoadError(t *testing.T) {
 			Tags:     []string{"test", "bank"},
 			Status: &Status{
 				Stamp:   time.Now(),
-				Msg:     "Error loading experiment: bank-divorced.json, open csv/bank-divorced.cs: no such file or directory",
+				Msg:     "Error loading experiment: open csv/bank-divorced.cs: no such file or directory",
 				Percent: 0.0,
 				State:   Error,
 			},

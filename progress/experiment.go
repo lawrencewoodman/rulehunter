@@ -19,6 +19,8 @@
 
 package progress
 
+import "fmt"
+
 type Experiment struct {
 	Filename string   `json:"filename"`
 	Title    string   `json:"title"`
@@ -33,4 +35,9 @@ func newExperiment(filename string, title string, tags []string) *Experiment {
 		Tags:     tags,
 		Status:   NewStatus(),
 	}
+}
+
+func (e *Experiment) String() string {
+	return fmt.Sprintf("{Filename: %s, Title: %s, Tags: %v, Status: %v}",
+		e.Filename, e.Title, e.Tags, e.Status)
 }

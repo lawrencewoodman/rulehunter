@@ -118,7 +118,7 @@ func (m *Monitor) ReportLoadError(file string, err error) error {
 		e = newExperiment(file, "", []string{})
 		m.experiments[file] = e
 	}
-	fullErr := fmt.Errorf("Error loading experiment: %s, %s", file, err)
+	fullErr := fmt.Errorf("Error loading experiment: %s", err)
 	return m.ReportError(file, fullErr)
 }
 

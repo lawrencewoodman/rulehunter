@@ -1,8 +1,5 @@
 fileFormatVersion: "0.1"
 title: "What is most likely to indicate success"
-tags:
-  - bank
-  - loan
 fields:
   - "name"
   - "balance"
@@ -30,3 +27,4 @@ goals:
 sortOrder:
   - aggregator: "successMcc"
     direction: "descending"
+when: "never"
