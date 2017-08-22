@@ -113,10 +113,8 @@ func (m *Monitor) ReportProgress(
 
 // ReportLoadError reports that an experiment failed to load
 func (m *Monitor) ReportLoadError(file string, err error) error {
-	e, ok := m.experiments[file]
-	if !ok {
-		e = newExperiment(file, "", []string{})
-		m.experiments[file] = e
+	if _, ok := m.experiments[file]; !ok {
+		m.experiments[file] = newExperiment(file, "", []string{})
 	}
 	fullErr := fmt.Errorf("Error loading experiment: %s", err)
 	return m.ReportError(file, fullErr)
