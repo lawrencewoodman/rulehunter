@@ -67,8 +67,9 @@ func TestLoad(t *testing.T) {
 					assessment.SortOrder{"goodFlowMcc", assessment.DESCENDING},
 					assessment.SortOrder{"numMatches", assessment.DESCENDING},
 				},
-				Tags: []string{"test", "fred / ned"},
-				When: dexpr.MustNew("!hasRun", funcs),
+				Tags:     []string{"test", "fred / ned"},
+				Category: "testing",
+				When:     dexpr.MustNew("!hasRun", funcs),
 				Rules: []rule.Rule{
 					mustNewDynamicRule("height > 67"),
 					mustNewDynamicRule("height >= 129"),
@@ -111,8 +112,9 @@ func TestLoad(t *testing.T) {
 					assessment.SortOrder{"goodFlowMcc", assessment.DESCENDING},
 					assessment.SortOrder{"numMatches", assessment.DESCENDING},
 				},
-				Tags: []string{"test", "fred / ned"},
-				When: dexpr.MustNew("!hasRun", funcs),
+				Tags:     []string{"test", "fred / ned"},
+				Category: "testing",
+				When:     dexpr.MustNew("!hasRun", funcs),
 				Rules: []rule.Rule{
 					mustNewDynamicRule("height > 67"),
 					mustNewDynamicRule("height >= 129"),
@@ -466,6 +468,7 @@ func TestProcess(t *testing.T) {
 			Title:    "What would indicate good flow?",
 			Filename: "flow.json",
 			Tags:     []string{"test", "fred / ned"},
+			Category: "testing",
 			Status: &progress.Status{
 				Stamp:   time.Now(),
 				Msg:     "Assessing rules 5/5",
@@ -492,7 +495,8 @@ func TestProcess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %s", err)
 	}
-	if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+	err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
+	if err != nil {
 		t.Fatalf("AddExperiment: %s", err)
 	}
 	if err := e.Process(cfg, pm); err != nil {
@@ -563,7 +567,8 @@ func TestProcess_supplied_rules(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %s", err)
 	}
-	if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+	err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
+	if err != nil {
 		t.Fatalf("AddExperiment: %s", err)
 	}
 
@@ -633,7 +638,8 @@ func TestProcess_multiProcesses(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Load: %s", err)
 		}
-		if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+		err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
+		if err != nil {
 			t.Fatalf("AddExperiment: %s", err)
 		}
 
@@ -676,6 +682,7 @@ func TestProcess_errors(t *testing.T) {
 			Title:    "What would indicate good flow?",
 			Filename: "flow_div_zero.yaml",
 			Tags:     []string{"test", "fred / ned"},
+			Category: "testing",
 			Status: &progress.Status{
 				Stamp: time.Now(),
 				Msg:   "Assessing rules 2/5",
@@ -705,7 +712,8 @@ func TestProcess_errors(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %s", err)
 	}
-	if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+	err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
+	if err != nil {
 		t.Fatalf("AddExperiment: %s", err)
 	}
 
@@ -863,7 +871,8 @@ func BenchmarkProcess_csv(b *testing.B) {
 				if err != nil {
 					b.Fatalf("Load: %s", err)
 				}
-				if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+				err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
+				if err != nil {
 					b.Fatalf("AddExperiment: %s", err)
 				}
 				b.StartTimer()
@@ -921,7 +930,8 @@ func BenchmarkProcess_sql(b *testing.B) {
 				if err != nil {
 					b.Fatalf("Load: %s", err)
 				}
-				if err := pm.AddExperiment(file.Name(), e.Title, e.Tags); err != nil {
+				err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
+				if err != nil {
 					b.Fatalf("AddExperiment: %s", err)
 				}
 				b.StartTimer()
@@ -949,6 +959,9 @@ func checkExperimentMatch(
 	}
 	if !areStringArraysEqual(e1.Tags, e2.Tags) {
 		return errors.New("Tags don't match")
+	}
+	if e1.Category != e2.Category {
+		return errors.New("Categories don't match")
 	}
 	if !areRuleComplexitiesEqual(e1.RuleComplexity, e2.RuleComplexity) {
 		return errors.New("RuleComplexities don't match")

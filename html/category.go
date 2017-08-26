@@ -28,41 +28,39 @@ import (
 	"path/filepath"
 )
 
-func generateTagPages(config *config.Config) error {
+func generateCategoryPages(config *config.Config) error {
 	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
 	if err != nil {
 		return err
 	}
 
-	tagsLen := make(map[string]int)
+	categorysLen := make(map[string]int)
 	for _, file := range reportFiles {
 		if !file.IsDir() {
 			report, err := report.LoadJSON(config, file.Name())
 			if err != nil {
 				return err
 			}
-			for _, tag := range report.Tags {
-				escapedTag := escapeString(tag)
-				if _, ok := tagsLen[escapedTag]; !ok ||
-					len(tag) < tagsLen[escapedTag] {
-					if err := generateTagPage(config, tag); err != nil {
-						return err
-					}
-					// Use the shortest tag out of those that resolve to the
-					// same escaped tag
-					tagsLen[escapedTag] = len(tag)
+			escapedCategory := escapeString(report.Category)
+			if _, ok := categorysLen[escapedCategory]; !ok ||
+				len(report.Category) < categorysLen[escapedCategory] {
+				if err := generateCategoryPage(config, report.Category); err != nil {
+					return err
 				}
+				// Use the shortest category out of those that resolve to the
+				// same escaped category
+				categorysLen[escapedCategory] = len(report.Category)
 			}
 		}
 	}
 	return nil
 }
 
-func generateTagPage(config *config.Config, tagName string) error {
+func generateCategoryPage(config *config.Config, categoryName string) error {
 	type TplData struct {
-		Tag     string
-		Reports []*TplReport
-		Html    map[string]template.HTML
+		Category string
+		Reports  []*TplReport
+		Html     map[string]template.HTML
 	}
 
 	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
@@ -80,50 +78,35 @@ func generateTagPage(config *config.Config, tagName string) error {
 			if err != nil {
 				return err
 			}
-			escapedTagname := escapeString(tagName)
-			for _, reportTag := range report.Tags {
-				if escapedTagname == escapeString(reportTag) {
-					reportURLDir := genReportURLDir(report.Title)
-					tplReports[i] = newTplReport(
-						report.Title,
-						makeTagLinks(report.Tags),
-						report.Category,
-						makeCategoryLink(report.Category),
-						reportURLDir,
-						report.Stamp,
-					)
-					i++
-				}
+			if escapeString(categoryName) == escapeString(report.Category) {
+				reportURLDir := genReportURLDir(report.Title)
+				tplReports[i] = newTplReport(
+					report.Title,
+					makeTagLinks(report.Tags),
+					report.Category,
+					makeCategoryLink(report.Category),
+					reportURLDir,
+					report.Stamp,
+				)
+				i++
 			}
 		}
 	}
 	tplReports = tplReports[:i]
 	sortTplReportsByDate(tplReports)
 	tplData := TplData{
-		Tag:     tagName,
-		Reports: tplReports,
-		Html:    makeHtml(config, "tag"),
+		Category: categoryName,
+		Reports:  tplReports,
+		Html:     makeHtml(config, "category"),
 	}
 	outputFilename := filepath.Join(
-		"tag",
-		escapeString(tagName),
+		"category",
+		escapeString(categoryName),
 		"index.html",
 	)
-
-	return writeTemplate(config, outputFilename, tagTpl, tplData)
+	return writeTemplate(config, outputFilename, categoryTpl, tplData)
 }
 
-func makeTagLinks(tags []string) map[string]string {
-	links := make(map[string]string, len(tags))
-	for _, tag := range tags {
-		links[tag] = makeTagLink(tag)
-	}
-	return links
-}
-
-func makeTagLink(tag string) string {
-	return fmt.Sprintf(
-		"tag/%s/",
-		escapeString(tag),
-	)
+func makeCategoryLink(category string) string {
+	return fmt.Sprintf("category/%s/", escapeString(category))
 }

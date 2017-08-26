@@ -49,6 +49,7 @@ type Assessment struct {
 type Report struct {
 	Title              string
 	Tags               []string
+	Category           string
 	Stamp              time.Time
 	ExperimentFilename string
 	NumRecords         int64
@@ -70,6 +71,7 @@ func New(
 	sortOrder []rhkassessment.SortOrder,
 	experimentFilename string,
 	tags []string,
+	category string,
 ) *Report {
 	assessment.Sort(sortOrder)
 	assessment.Refine()
@@ -109,14 +111,15 @@ func New(
 		}
 	}
 	return &Report{
-		title,
-		tags,
-		time.Now(),
-		experimentFilename,
-		assessment.NumRecords,
-		sortOrder,
-		aggregatorDescs,
-		assessments,
+		Title:              title,
+		Tags:               tags,
+		Category:           category,
+		Stamp:              time.Now(),
+		ExperimentFilename: experimentFilename,
+		NumRecords:         assessment.NumRecords,
+		SortOrder:          sortOrder,
+		Aggregators:        aggregatorDescs,
+		Assessments:        assessments,
 	}
 }
 

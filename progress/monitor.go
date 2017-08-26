@@ -82,8 +82,9 @@ func (m *Monitor) AddExperiment(
 	filename string,
 	title string,
 	tags []string,
+	category string,
 ) error {
-	m.experiments[filename] = newExperiment(filename, title, tags)
+	m.experiments[filename] = newExperiment(filename, title, tags, category)
 	if err := m.writeJSON(); err != nil {
 		return err
 	}
@@ -113,9 +114,7 @@ func (m *Monitor) ReportProgress(
 
 // ReportLoadError reports that an experiment failed to load
 func (m *Monitor) ReportLoadError(file string, err error) error {
-	if _, ok := m.experiments[file]; !ok {
-		m.experiments[file] = newExperiment(file, "", []string{})
-	}
+	m.experiments[file] = newExperiment(file, "", []string{}, "")
 	fullErr := fmt.Errorf("Error loading experiment: %s", err)
 	return m.ReportError(file, fullErr)
 }
@@ -169,6 +168,7 @@ func (m *Monitor) GetExperiments() []*Experiment {
 			Filename: f,
 			Title:    e.Title,
 			Tags:     e.Tags,
+			Category: e.Category,
 			Status:   e.Status,
 		}
 		i++

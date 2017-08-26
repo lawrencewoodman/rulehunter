@@ -13,24 +13,6 @@ import (
 	"time"
 )
 
-func TestExperimentString(t *testing.T) {
-	cases := []struct {
-		status StatusKind
-		want   string
-	}{
-		{status: Waiting, want: "waiting"},
-		{status: Processing, want: "processing"},
-		{status: Success, want: "success"},
-		{status: Error, want: "error"},
-	}
-	for _, c := range cases {
-		got := c.status.String()
-		if got != c.want {
-			t.Errorf("String() got: %s, want: %s", got, c.want)
-		}
-	}
-}
-
 func TestNewMonitor_errors(t *testing.T) {
 	tmpDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tmpDir)
@@ -58,6 +40,7 @@ func TestGetExperiments(t *testing.T) {
 			Title:    "This is a jolly nice title",
 			Filename: "bank-tiny.json",
 			Tags:     []string{"test", "bank", "fred / ned"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp: mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 				Msg:   "Finished processing successfully",
@@ -68,6 +51,7 @@ func TestGetExperiments(t *testing.T) {
 			Title:    "Who is more likely to be divorced",
 			Filename: "bank-divorced.json",
 			Tags:     []string{"test", "bank"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp: mustNewTime("2016-05-04T14:53:00.570347516+01:00"),
 				Msg:   "Finished processing successfully",
@@ -117,6 +101,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 			Title:    "Who is more likely to be married",
 			Filename: "bank-married.json",
 			Tags:     []string{"test", "bank"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   time.Now(),
 				Msg:     "Waiting to be processed",
@@ -128,6 +113,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 			Title:    "Who is more likely to be divorced (full)",
 			Filename: "bank-full-divorced.json",
 			Tags:     []string{"test", "bank", "full"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   time.Now(),
 				Msg:     "Waiting to be processed",
@@ -139,6 +125,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 			Title:    "Who is more likely to be divorced (normal)",
 			Filename: "bank-divorced.json",
 			Tags:     []string{"test", "bank", "normal"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   time.Now(),
 				Msg:     "Waiting to be processed",
@@ -150,6 +137,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 			Title:    "This is a jolly nice title",
 			Filename: "bank-tiny.json",
 			Tags:     []string{"test", "bank", "fred / ned"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 				Msg:     "Finished processing successfully",
@@ -174,6 +162,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		"bank-divorced.json",
 		"Who is more likely to be divorced (normal)",
 		[]string{"test", "bank", "normal"},
+		"contracts",
 	)
 	if err != nil {
 		t.Fatalf("AddExperiment: %s", err)
@@ -182,12 +171,14 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		"bank-full-divorced.json",
 		"Who is more likely to be divorced (full)",
 		[]string{"test", "bank", "full"},
+		"contracts",
 	)
 	time.Sleep(200 * time.Millisecond)
 	err = pm.AddExperiment(
 		"bank-married.json",
 		"Who is more likely to be married",
 		[]string{"test", "bank"},
+		"contracts",
 	)
 	if err != nil {
 		t.Fatalf("AddExperiment: %s", err)
@@ -197,6 +188,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		"bank-married.json",
 		"Who is more likely to be married",
 		[]string{"test", "bank"},
+		"contracts",
 	)
 	if err != nil {
 		t.Fatalf("AddExperiment: %s", err)
@@ -224,6 +216,7 @@ func TestReportSuccess(t *testing.T) {
 			Title:    "This is a jolly nice title",
 			Filename: "bank-tiny.json",
 			Tags:     []string{"test", "bank", "fred / ned"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 				Msg:     "Finished processing successfully",
@@ -235,6 +228,7 @@ func TestReportSuccess(t *testing.T) {
 			Title:    "Who is more likely to be divorced",
 			Filename: "bank-divorced.json",
 			Tags:     []string{"test", "bank"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   mustNewTime("2016-05-04T14:53:00.570347516+01:00"),
 				Msg:     "Finished processing successfully",
@@ -269,7 +263,7 @@ func TestReportSuccess(t *testing.T) {
 			t.Fatalf("NewMonitor() err: %v", err)
 		}
 		if c.run == 0 {
-			err := pm.AddExperiment(filename, "", []string{})
+			err := pm.AddExperiment(filename, "", []string{}, "")
 			if err != nil {
 				t.Fatal("AddExperiment: %s", err)
 			}
@@ -296,6 +290,7 @@ func TestReportProgress(t *testing.T) {
 			Title:    "A nice full title",
 			Filename: "bank-full-divorced.json",
 			Tags:     []string{"bank", "full"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   time.Now(),
 				Msg:     "Assessing rules",
@@ -307,6 +302,7 @@ func TestReportProgress(t *testing.T) {
 			Title:    "Who is more likely to be divorced",
 			Filename: "bank-divorced.json",
 			Tags:     []string{"test", "bank"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   time.Now(),
 				Msg:     "Describing dataset",
@@ -318,6 +314,7 @@ func TestReportProgress(t *testing.T) {
 			Title:    "This is a jolly nice title",
 			Filename: "bank-tiny.json",
 			Tags:     []string{"test", "bank", "fred / ned"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 				Msg:     "Finished processing successfully",
@@ -331,6 +328,7 @@ func TestReportProgress(t *testing.T) {
 			Title:    "This is a jolly nice title",
 			Filename: "bank-tiny.json",
 			Tags:     []string{"test", "bank", "fred / ned"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 				Msg:     "Finished processing successfully",
@@ -367,6 +365,7 @@ func TestReportProgress(t *testing.T) {
 				"bank-full-divorced.json",
 				"A nice full title",
 				[]string{"bank", "full"},
+				"contracts",
 			)
 			if err != nil {
 				t.Fatalf("AddExperiment: %s", err)
@@ -392,6 +391,7 @@ func TestReportError(t *testing.T) {
 			Title:    "Who is more likely to be divorced",
 			Filename: "bank-divorced.json",
 			Tags:     []string{"test", "bank"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   time.Now(),
 				Msg:     "Couldn't load experiment file: open csv/bank-divorced.cs: no such file or directory",
@@ -403,6 +403,7 @@ func TestReportError(t *testing.T) {
 			Title:    "This is a jolly nice title",
 			Filename: "bank-tiny.json",
 			Tags:     []string{"test", "bank", "fred / ned"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 				Msg:     "Finished processing successfully",
@@ -416,6 +417,7 @@ func TestReportError(t *testing.T) {
 			Title:    "This is a jolly nice title",
 			Filename: "bank-tiny.json",
 			Tags:     []string{"test", "bank", "fred / ned"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 				Msg:     "Finished processing successfully",
@@ -465,9 +467,9 @@ func TestReportError(t *testing.T) {
 func TestReportLoadError(t *testing.T) {
 	wantExperimentsMemory := []*Experiment{
 		&Experiment{
-			Title:    "Who is more likely to be divorced",
+			Title:    "",
 			Filename: "bank-divorced.json",
-			Tags:     []string{"test", "bank"},
+			Tags:     []string{},
 			Status: &Status{
 				Stamp:   time.Now(),
 				Msg:     "Error loading experiment: open csv/bank-divorced.cs: no such file or directory",
@@ -479,6 +481,7 @@ func TestReportLoadError(t *testing.T) {
 			Title:    "This is a jolly nice title",
 			Filename: "bank-tiny.json",
 			Tags:     []string{"test", "bank", "fred / ned"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 				Msg:     "Finished processing successfully",
@@ -492,6 +495,7 @@ func TestReportLoadError(t *testing.T) {
 			Title:    "This is a jolly nice title",
 			Filename: "bank-tiny.json",
 			Tags:     []string{"test", "bank", "fred / ned"},
+			Category: "contracts",
 			Status: &Status{
 				Stamp:   mustNewTime("2016-05-05T09:37:58.220312223+01:00"),
 				Msg:     "Finished processing successfully",
@@ -649,6 +653,10 @@ func checkExperimentMatch(e1, e2 *Experiment) error {
 		if t != e2.Tags[i] {
 			return errors.New("Tags doesn't match")
 		}
+	}
+	if e1.Category != e2.Category {
+		return fmt.Errorf("Categories don't match: %s != %s",
+			e1.Category, e2.Category)
 	}
 	return nil
 }

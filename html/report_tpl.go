@@ -34,9 +34,14 @@ const reportTpl = `
 			<div class="container">
 				<h1>{{.Title}}</h1>
 				Date: {{ .DateTime }} &nbsp;
-				Tags:
-				{{range $tag, $catLink := .Tags}}
-					<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
+				{{if .Category}}
+					Category: <a href="{{ .CategoryURL }}">{{ .Category }}</a> &nbsp;
+				{{end}}
+				{{if .Tags}}
+					Tags:
+					{{range $tag, $catLink := .Tags}}
+						<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
+					{{end}}
 				{{end}}
 				<br />
 				<br />

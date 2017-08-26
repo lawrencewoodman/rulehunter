@@ -25,25 +25,31 @@ import (
 )
 
 type TplReport struct {
-	Title    string
-	Tags     map[string]string
-	DateTime string
-	Filename string
-	Stamp    time.Time
+	Title       string
+	Tags        map[string]string
+	Category    string
+	CategoryURL string
+	DateTime    string
+	Filename    string
+	Stamp       time.Time
 }
 
 func newTplReport(
 	title string,
 	tags map[string]string,
+	category string,
+	categoryURL string,
 	filename string,
 	stamp time.Time,
 ) *TplReport {
 	return &TplReport{
-		title,
-		tags,
-		stamp.Format(time.RFC822),
-		filename,
-		stamp,
+		Title:       title,
+		Tags:        tags,
+		Category:    category,
+		CategoryURL: categoryURL,
+		DateTime:    stamp.Format(time.RFC822),
+		Filename:    filename,
+		Stamp:       stamp,
 	}
 }
 

@@ -53,6 +53,9 @@ func checkExperimentMatch(e1, e2 *progress.Experiment) error {
 			return errors.New("Tags doesn't match")
 		}
 	}
+	if e1.Category != e2.Category {
+		return errors.New("Categories don't match")
+	}
 	return nil
 }
 

@@ -1,6 +1,7 @@
 {
   "title": "What would indicate good flow?",
   "tags": ["test", "fred / ned"],
+  "category": "testing",
   "dataset": "csv",
   "csv": {
     "filename": "fixtures/flow.csv",

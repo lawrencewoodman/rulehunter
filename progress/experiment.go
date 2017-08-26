@@ -25,19 +25,28 @@ type Experiment struct {
 	Filename string   `json:"filename"`
 	Title    string   `json:"title"`
 	Tags     []string `json:"tags"`
+	Category string   `json:"category"`
 	Status   *Status  `json:"status"`
 }
 
-func newExperiment(filename string, title string, tags []string) *Experiment {
+func newExperiment(
+	filename string,
+	title string,
+	tags []string,
+	category string,
+) *Experiment {
 	return &Experiment{
 		Filename: filename,
 		Title:    title,
 		Tags:     tags,
+		Category: category,
 		Status:   NewStatus(),
 	}
 }
 
 func (e *Experiment) String() string {
-	return fmt.Sprintf("{Filename: %s, Title: %s, Tags: %v, Status: %v}",
-		e.Filename, e.Title, e.Tags, e.Status)
+	return fmt.Sprintf(
+		"{Filename: %s, Title: %s, Tags: %v, Category: %s, Status: %v}",
+		e.Filename, e.Title, e.Tags, e.Category, e.Status,
+	)
 }

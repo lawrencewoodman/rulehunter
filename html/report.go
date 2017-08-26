@@ -37,6 +37,8 @@ func generateReport(
 	type TplData struct {
 		Title              string
 		Tags               map[string]string
+		Category           string
+		CategoryURL        string
 		DateTime           string
 		ExperimentFilename string
 		NumRecords         int64
@@ -47,11 +49,11 @@ func generateReport(
 		Html               map[string]template.HTML
 	}
 
-	tagLinks := makeTagLinks(_report.Tags)
-
 	tplData := TplData{
 		Title:              _report.Title,
-		Tags:               tagLinks,
+		Tags:               makeTagLinks(_report.Tags),
+		Category:           _report.Category,
+		CategoryURL:        makeCategoryLink(_report.Category),
 		DateTime:           _report.Stamp.Format(time.RFC822),
 		ExperimentFilename: _report.ExperimentFilename,
 		NumRecords:         _report.NumRecords,

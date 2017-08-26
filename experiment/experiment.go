@@ -56,12 +56,14 @@ type Experiment struct {
 	Goals          []*goal.Goal
 	SortOrder      []rhkassessment.SortOrder
 	When           *dexpr.Expr
+	Category       string
 	Tags           []string
 	Rules          []rule.Rule
 }
 
 type descFile struct {
 	Title          string             `yaml:"title"`
+	Category       string             `yaml:"category"`
 	Tags           []string           `yaml:"tags"`
 	Dataset        string             `yaml:"dataset"`
 	Csv            *csvDesc           `yaml:"csv"`
@@ -169,6 +171,7 @@ func New(
 		SortOrder:      sortOrder,
 		When:           when,
 		Tags:           d.Tags,
+		Category:       d.Category,
 		Rules:          rules,
 	}, nil
 }
@@ -293,6 +296,7 @@ func (e *Experiment) Process(
 		e.SortOrder,
 		e.File.Name(),
 		e.Tags,
+		e.Category,
 	)
 	if err := report.WriteJSON(cfg); err != nil {
 		return fmt.Errorf("Couldn't write json report: %s", err)

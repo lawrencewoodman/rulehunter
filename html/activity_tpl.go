@@ -46,6 +46,12 @@ const activityTpl = `
 								{{if .Title}}
 									<tr><th>Title</th><td>{{ .Title }}</td></tr>
 								{{end}}
+								{{if .Category}}
+									<tr>
+										<th>Category</th>
+										<td><a href="{{ .CategoryURL }}">{{ .Category }}</a></td>
+									</tr>
+								{{end}}
 								{{if .Tags}}
 									<tr>
 										<th>Tags</th>

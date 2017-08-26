@@ -7,6 +7,7 @@
  * Restructure `progress.json` file
  * Up Go requirement to v1.8+
  * s/failure/error/ in activity
+ * Add `category` to experiment files
 
 ## 0.1 (7th July 2017)
 

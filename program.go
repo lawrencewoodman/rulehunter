@@ -90,7 +90,8 @@ func (p *program) ProcessFile(file fileinfo.FileInfo) error {
 		return nil
 	}
 
-	if pmErr := pm.AddExperiment(file.Name(), e.Title, e.Tags); pmErr != nil {
+	pmErr := pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
+	if pmErr != nil {
 		return p.logger.Error(pmErr)
 	}
 

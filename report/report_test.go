@@ -84,6 +84,7 @@ func TestNew(t *testing.T) {
 	}
 	experimentFilename := "somename.yaml"
 	tags := []string{"bank", "test / fred"}
+	category := "testing"
 
 	wantAggregatorDescs := []AggregatorDesc{
 		AggregatorDesc{Name: "numMatches", Kind: "count", Arg: "true()"},
@@ -136,13 +137,23 @@ func TestNew(t *testing.T) {
 			},
 		},
 	}
-	report :=
-		New(title, assessment, aggregators, sortOrder, experimentFilename, tags)
+	report := New(
+		title,
+		assessment,
+		aggregators,
+		sortOrder,
+		experimentFilename,
+		tags,
+		category,
+	)
 	if report.Title != title {
 		t.Errorf("New report.Title got: %s, want: %s", report.Title, title)
 	}
 	if !reflect.DeepEqual(report.Tags, tags) {
 		t.Errorf("New report.Tags got: %s, want: %s", report.Tags, tags)
+	}
+	if report.Category != category {
+		t.Errorf("New report.Category got: %s, want: %s", report.Category, category)
 	}
 	if time.Now().Sub(report.Stamp).Seconds() > 1 {
 		t.Errorf("New report.Stamp got: %s, want: %s", report.Stamp, time.Now())
@@ -249,9 +260,17 @@ func TestWriteLoadJSON(t *testing.T) {
 	}
 	experimentFilename := "somename.yaml"
 	tags := []string{"bank", "test / fred"}
+	category := "testing"
 	config := &config.Config{BuildDir: tmpDir}
-	report :=
-		New(title, assessment, aggregators, sortOrder, experimentFilename, tags)
+	report := New(
+		title,
+		assessment,
+		aggregators,
+		sortOrder,
+		experimentFilename,
+		tags,
+		category,
+	)
 
 	if err := report.WriteJSON(config); err != nil {
 		t.Fatalf("WriteJSON: %s", err)

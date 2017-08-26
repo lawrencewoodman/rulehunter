@@ -62,6 +62,8 @@ func generateReports(config *config.Config) error {
 			tplReports[i] = newTplReport(
 				report.Title,
 				makeTagLinks(report.Tags),
+				report.Category,
+				makeCategoryLink(report.Category),
 				reportURLDir,
 				report.Stamp,
 			)

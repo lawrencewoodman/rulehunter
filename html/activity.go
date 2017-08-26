@@ -1,6 +1,6 @@
 /*
 	rulehunter - A server to find rules in data based on user specified goals
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Affero General Public License as published by
@@ -32,13 +32,15 @@ func generateActivityPage(
 	progressMonitor *progress.Monitor,
 ) error {
 	type TplExperiment struct {
-		Title    string
-		Tags     map[string]string
-		Stamp    string
-		Filename string
-		Status   string
-		Msg      string
-		Percent  float64
+		Title       string
+		Category    string
+		CategoryURL string
+		Tags        map[string]string
+		Stamp       string
+		Filename    string
+		Status      string
+		Msg         string
+		Percent     float64
 	}
 
 	type TplData struct {
@@ -53,6 +55,8 @@ func generateActivityPage(
 	for i, experiment := range experiments {
 		tplExperiments[i] = &TplExperiment{
 			experiment.Title,
+			experiment.Category,
+			makeCategoryLink(experiment.Category),
 			makeTagLinks(experiment.Tags),
 			experiment.Status.Stamp.Format(time.RFC822),
 			experiment.Filename,

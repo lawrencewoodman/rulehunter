@@ -19,12 +19,12 @@
 
 package html
 
-const reportsTpl = `
+const categoryTpl = `
 <!DOCTYPE html>
 <html>
 	<head>
 		{{ index .Html "head" }}
-		<title>Reports</title>
+		<title>Reports for category: {{ .Category }}</title>
 	</head>
 
 	<body>
@@ -32,7 +32,7 @@ const reportsTpl = `
 
 		<div id="content">
 			<div class="container">
-				<h1>Reports</h1>
+				<h1>Reports for category: {{ .Category }}</h1>
 
 				<ul class="reports">
 					{{range .Reports}}

@@ -39,6 +39,9 @@ const tagTpl = `
 						<li>
 							<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
 							Date: {{ .DateTime }} &nbsp;
+							{{if .Category}}
+								Category: <a href="{{ .CategoryURL }}">{{ .Category }}</a> &nbsp;
+							{{end}}
 							Tags:
 							{{range $tag, $catLink := .Tags}}
 								<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
