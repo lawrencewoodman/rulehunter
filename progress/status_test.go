@@ -2,7 +2,7 @@ package progress
 
 import "testing"
 
-func TestStatusString(t *testing.T) {
+func TestStatusKindString(t *testing.T) {
 	cases := []struct {
 		status StatusKind
 		want   string

@@ -46,7 +46,7 @@ func newExperiment(
 
 func (e *Experiment) String() string {
 	return fmt.Sprintf(
-		"{Filename: %s, Title: %s, Tags: %v, Category: %s, Status: %v}",
+		"{filename: %s, title: %s, tags: %v, category: %s, status: %v}",
 		e.Filename, e.Title, e.Tags, e.Category, e.Status,
 	)
 }

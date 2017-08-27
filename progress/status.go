@@ -19,7 +19,10 @@
 
 package progress
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // StatusKind represents the status of an experiment
 type StatusKind int
@@ -59,6 +62,13 @@ func NewStatus() *Status {
 		Percent: 0,
 		State:   Waiting,
 	}
+}
+
+func (s *Status) String() string {
+	return fmt.Sprintf(
+		"{stamp: %s, msg: %s, percent: %.2f, state: %s}",
+		s.Stamp, s.Msg, s.Percent, s.State,
+	)
 }
 
 // IsFinished returns whether the status is either Success or Error
