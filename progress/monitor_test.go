@@ -6,9 +6,11 @@ import (
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"math"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 )
@@ -74,6 +76,44 @@ func TestGetExperiments(t *testing.T) {
 	got := pm.GetExperiments()
 	if err := checkExperimentsMatch(got, expected); err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
+	}
+}
+
+func TestGetExperiments_goroutines(t *testing.T) {
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	//testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
+
+	htmlCmds := make(chan cmd.Cmd)
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
+	pm, err := NewMonitor(tmpDir, htmlCmds)
+	if err != nil {
+		t.Fatalf("NewMonitor: %s", err)
+	}
+	rand.Seed(47)
+	numGoRoutines := 200
+	wantNumExperiments := numGoRoutines / 2
+	var wg sync.WaitGroup
+	wg.Add(numGoRoutines)
+	for i := 0; i < numGoRoutines/2; i++ {
+		n := i
+		go func() {
+			time.Sleep(time.Duration(rand.Int63n(100)) * time.Millisecond)
+			pm.AddExperiment(fmt.Sprintf("experiment%d", n), "", []string{}, "")
+			wg.Done()
+		}()
+		go func() {
+			time.Sleep(time.Duration(rand.Int63n(100)) * time.Millisecond)
+			pm.GetExperiments()
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	got := pm.GetExperiments()
+	if len(got) != wantNumExperiments {
+		t.Errorf("GetExperiments - len(got): %d, want: %d",
+			len(got), wantNumExperiments)
 	}
 }
 

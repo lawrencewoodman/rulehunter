@@ -26,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -34,6 +35,7 @@ type Monitor struct {
 	filename    string
 	htmlCmds    chan<- cmd.Cmd
 	experiments map[string]*Experiment
+	sync.Mutex
 }
 
 type progressFile struct {
@@ -84,10 +86,9 @@ func (m *Monitor) AddExperiment(
 	tags []string,
 	category string,
 ) error {
+	m.Lock()
+	defer m.Unlock()
 	m.experiments[filename] = newExperiment(filename, title, tags, category)
-	if err := m.writeJSON(); err != nil {
-		return err
-	}
 	m.htmlCmds <- cmd.Progress
 	return nil
 }
@@ -99,12 +100,11 @@ func (m *Monitor) ReportProgress(
 	msg string,
 	percent float64,
 ) error {
-	e, ok := m.experiments[file]
-	if !ok {
+	e := m.getExperiment(file)
+	if e == nil {
 		return ExperimentNotFoundError{file}
-	} else {
-		e.Status.SetProgress(msg, percent)
 	}
+	e.Status.SetProgress(msg, percent)
 	if err := m.writeJSON(); err != nil {
 		return err
 	}
@@ -112,21 +112,30 @@ func (m *Monitor) ReportProgress(
 	return nil
 }
 
+func (m *Monitor) getExperiment(file string) *Experiment {
+	m.Lock()
+	defer m.Unlock()
+	e, ok := m.experiments[file]
+	if !ok {
+		return nil
+	}
+	return e
+}
+
 // ReportLoadError reports that an experiment failed to load
 func (m *Monitor) ReportLoadError(file string, err error) error {
-	m.experiments[file] = newExperiment(file, "", []string{}, "")
+	m.AddExperiment(file, "", []string{}, "")
 	fullErr := fmt.Errorf("Error loading experiment: %s", err)
 	return m.ReportError(file, fullErr)
 }
 
 // ReportError sets experiment to having failed with an error
 func (m *Monitor) ReportError(file string, err error) error {
-	e, ok := m.experiments[file]
-	if !ok {
+	e := m.getExperiment(file)
+	if e == nil {
 		return ExperimentNotFoundError{file}
-	} else {
-		e.Status.SetError(err)
 	}
+	e.Status.SetError(err)
 	if err := m.writeJSON(); err != nil {
 		return err
 	}
@@ -136,12 +145,11 @@ func (m *Monitor) ReportError(file string, err error) error {
 
 // ReportSuccess reports experiment has been successful
 func (m *Monitor) ReportSuccess(file string) error {
-	e, ok := m.experiments[file]
-	if !ok {
+	e := m.getExperiment(file)
+	if e == nil {
 		return ExperimentNotFoundError{file}
-	} else {
-		e.Status.SetSuccess()
 	}
+	e.Status.SetSuccess()
 	if err := m.writeJSON(); err != nil {
 		return err
 	}
@@ -153,6 +161,8 @@ func (m *Monitor) ReportSuccess(file string) error {
 // time stamp.  If the file isn't known then it will return false and the
 // current time.
 func (m *Monitor) GetFinishStamp(file string) (bool, time.Time) {
+	m.Lock()
+	defer m.Unlock()
 	e, ok := m.experiments[file]
 	if !ok {
 		return false, time.Now()
@@ -161,6 +171,8 @@ func (m *Monitor) GetFinishStamp(file string) (bool, time.Time) {
 }
 
 func (m *Monitor) GetExperiments() []*Experiment {
+	m.Lock()
+	defer m.Unlock()
 	experiments := make([]*Experiment, len(m.experiments))
 	i := 0
 	for f, e := range m.experiments {
