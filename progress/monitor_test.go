@@ -198,6 +198,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewMonitor() err: %s", err)
 	}
+	time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
 	err = pm.AddExperiment(
 		"bank-divorced.json",
 		"Who is more likely to be divorced (normal)",
@@ -207,6 +208,7 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("AddExperiment: %s", err)
 	}
+	time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
 	err = pm.AddExperiment(
 		"bank-full-divorced.json",
 		"Who is more likely to be divorced (full)",
@@ -223,7 +225,9 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("AddExperiment: %s", err)
 	}
+	time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
 	pm.ReportProgress("bank-married.json", "something is happening", 0)
+	time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
 	err = pm.AddExperiment(
 		"bank-married.json",
 		"Who is more likely to be married",
