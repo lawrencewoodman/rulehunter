@@ -234,6 +234,7 @@ func TestProcessFile(t *testing.T) {
 		if err := p.ProcessFile(f); err != nil {
 			t.Fatalf("ProcessFile(%s): %s", f.Name(), err)
 		}
+		time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
 	}
 
 	if !reflect.DeepEqual(l.GetEntries(), wantEntries) {
