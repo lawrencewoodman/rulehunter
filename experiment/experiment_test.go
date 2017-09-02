@@ -591,17 +591,14 @@ func TestProcess_supplied_rules(t *testing.T) {
 }
 
 func TestProcess_multiProcesses(t *testing.T) {
-	var singleCPUTime int64
-	maxNumProcesses := runtime.NumCPU()
-	if maxNumProcesses < 2 {
+	if runtime.NumCPU() < 2 {
 		t.Skip("This test isn't implemented on single cpu systems.")
 	}
 	if testing.Short() {
 		t.Skip("This test is skipped in short mode.")
 	}
 
-	t.Logf("Testing with %d processes.", maxNumProcesses)
-	for numProcesses := 1; numProcesses <= maxNumProcesses; numProcesses++ {
+	timeProcess := func(numProcesses int) (nanoseconds int64) {
 		cfgDir := testhelpers.BuildConfigDirs(t, true)
 		defer os.RemoveAll(cfgDir)
 		cfg := &config.Config{
@@ -647,16 +644,15 @@ func TestProcess_multiProcesses(t *testing.T) {
 		if err := e.Process(cfg, pm); err != nil {
 			t.Fatalf("Process: %s", err)
 		}
-		elapsed := time.Since(start).Nanoseconds()
+		return time.Since(start).Nanoseconds()
+	}
 
-		if numProcesses == 1 {
-			singleCPUTime = elapsed
-		} else {
-			if elapsed >= singleCPUTime {
-				t.Errorf("Process was slower with %d processes than with 1",
-					numProcesses)
-			}
-		}
+	t.Logf("Testing with %d processes.", runtime.NumCPU())
+	singleProcessTime := timeProcess(1)
+	multiProcessTime := timeProcess(runtime.NumCPU())
+	if multiProcessTime >= singleProcessTime {
+		t.Errorf("Process was slower with %d processes than with 1",
+			runtime.NumCPU())
 	}
 }
 
