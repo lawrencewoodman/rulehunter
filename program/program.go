@@ -1,6 +1,6 @@
 /*
 	rulehunter - A server to find rules in data based on user specified goals
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Affero General Public License as published by
@@ -17,7 +17,7 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package main
+package program
 
 import (
 	"fmt"
@@ -32,9 +32,8 @@ import (
 	"time"
 )
 
-type program struct {
+type Program struct {
 	config          *config.Config
-	cmdFlags        cmdFlags
 	progressMonitor *progress.Monitor
 	logger          logger.Logger
 	quit            *quitter.Quitter
@@ -42,13 +41,13 @@ type program struct {
 	shouldStop      chan struct{}
 }
 
-func newProgram(
+func New(
 	c *config.Config,
 	p *progress.Monitor,
 	l logger.Logger,
 	q *quitter.Quitter,
-) *program {
-	return &program{
+) *Program {
+	return &Program{
 		config:          c,
 		progressMonitor: p,
 		logger:          l,
@@ -58,7 +57,7 @@ func newProgram(
 	}
 }
 
-func (p *program) Start(s service.Service) error {
+func (p *Program) Start(s service.Service) error {
 	watchPeriod := 2.0 * time.Second
 	go watcher.Watch(
 		p.config.ExperimentsDir,
@@ -75,7 +74,7 @@ func (p *program) Start(s service.Service) error {
 // error if it is out of the ordinary for example if an error occurs when
 // reporting to the progress monitor, not if it can't load an experiment
 // nor if there is a problem processing the experiment.
-func (p *program) ProcessFile(file fileinfo.FileInfo) error {
+func (p *Program) ProcessFile(file fileinfo.FileInfo) error {
 	var err error
 	pm := p.progressMonitor
 	stamp := time.Now()
@@ -130,7 +129,20 @@ func (p *program) ProcessFile(file fileinfo.FileInfo) error {
 	return nil
 }
 
-func (p *program) run() {
+func (p *Program) ProcessDir(dir string) error {
+	files, err := watcher.GetExperimentFiles(dir)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if err := p.ProcessFile(file); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *Program) run() {
 	for {
 		select {
 		case <-p.quit.C:
@@ -146,7 +158,7 @@ func (p *program) run() {
 	}
 }
 
-func (p *program) Stop(s service.Service) error {
+func (p *Program) Stop(s service.Service) error {
 	close(p.shouldStop)
 	return nil
 }

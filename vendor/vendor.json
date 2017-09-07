@@ -19,6 +19,12 @@
 			"revisionTime": "2016-08-02T11:38:42Z"
 		},
 		{
+			"checksumSHA1": "40vJyUB4ezQSn/NSadsKEOrudMc=",
+			"path": "github.com/inconshreveable/mousetrap",
+			"revision": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75",
+			"revisionTime": "2014-10-17T20:07:13Z"
+		},
+		{
 			"checksumSHA1": "gEjGS03N1eysvpQ+FCHTxPcbxXc=",
 			"path": "github.com/kardianos/osext",
 			"revision": "ae77be60afb1dcacde03767a8c37337fad28ac14",
@@ -77,6 +83,18 @@
 			"path": "github.com/mattn/go-sqlite3",
 			"revision": "38ee283dabf11c9cbdb968eebd79b1fa7acbabe6",
 			"revisionTime": "2016-05-14T12:23:48Z"
+		},
+		{
+			"checksumSHA1": "CJxJs5h5+CPUPI497KC/mvWSG84=",
+			"path": "github.com/spf13/cobra",
+			"revision": "3c0b56b677e04926dfa835a1b3f11cd4f62f076e",
+			"revisionTime": "2017-09-01T15:16:37Z"
+		},
+		{
+			"checksumSHA1": "Q52Y7t0lEtk/wcDn5q7tS7B+jqs=",
+			"path": "github.com/spf13/pflag",
+			"revision": "7aff26db30c1be810f9de5038ec5ef96ac41fd7c",
+			"revisionTime": "2017-08-24T17:57:12Z"
 		},
 		{
 			"checksumSHA1": "WI+7+o+aZ4nc4fknmZpYrxT7S24=",

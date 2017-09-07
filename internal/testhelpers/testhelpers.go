@@ -6,10 +6,31 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/vlifesystems/rulehunter/config"
+	"gopkg.in/yaml.v2"
 )
 
 type errorReporter interface {
 	Fatalf(format string, args ...interface{})
+}
+
+func MustWriteConfig(e errorReporter, baseDir string, maxNumRecords int) {
+	const mode = 0600
+	cfg := &config.Config{
+		ExperimentsDir: filepath.Join(baseDir, "experiments"),
+		WWWDir:         filepath.Join(baseDir, "www"),
+		BuildDir:       filepath.Join(baseDir, "build"),
+		MaxNumRecords:  maxNumRecords,
+	}
+	cfgFilename := filepath.Join(baseDir, "config.yaml")
+	y, err := yaml.Marshal(cfg)
+	if err != nil {
+		e.Fatalf("Marshal: %s", err)
+	}
+	if err := ioutil.WriteFile(cfgFilename, y, mode); err != nil {
+		e.Fatalf("WriteFile(%s, ...) err: %s", cfgFilename, err)
+	}
 }
 
 func BuildConfigDirs(e errorReporter, buildAllDirs bool) string {

@@ -1,4 +1,4 @@
-package main
+package program
 
 import (
 	"github.com/vlifesystems/rulehunter/config"
@@ -228,7 +228,7 @@ func TestProcessFile(t *testing.T) {
 		t.Fatalf("progress.NewMonitor: err: %v", err)
 	}
 
-	p := newProgram(cfg, pm, l, quit)
+	p := New(cfg, pm, l, quit)
 
 	for _, f := range files {
 		if err := p.ProcessFile(f); err != nil {
@@ -238,7 +238,7 @@ func TestProcessFile(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(l.GetEntries(), wantEntries) {
-		t.Errorf("GetEntries() got: %v, want: %v", l.GetEntries(), wantEntries)
+		t.Errorf("GetEntries() got: %v\n want: %v", l.GetEntries(), wantEntries)
 	}
 
 	got := pm.GetExperiments()

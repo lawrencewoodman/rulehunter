@@ -1,6 +1,6 @@
 /*
 	rulehunter - A server to find rules in data based on user specified goals
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Affero General Public License as published by
@@ -17,50 +17,34 @@
 	<http://www.gnu.org/licenses/>.
 */
 
-package main
+package cmd
 
 import (
-	"flag"
+	"github.com/spf13/cobra"
+	"github.com/vlifesystems/rulehunter/logger"
+	"github.com/vlifesystems/rulehunter/quitter"
 )
 
-type cmdFlags struct {
-	configDir string
-	install   bool
-	serve     bool
+var ServiceCmd = &cobra.Command{
+	Use:   "service",
+	Short: "Install Rulehunter as a service",
+	Long:  `Install the Rulehunter server as an operating system service.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		l := logger.NewSvcLogger()
+		return runService(l, flagConfigDir)
+	},
 }
 
-func parseFlags(args []string) *cmdFlags {
-	flags := &cmdFlags{}
-	fs := flag.NewFlagSet("cmd", flag.ExitOnError)
-
-	fs.StringVar(
-		&flags.configDir,
-		"configdir",
-		"",
-		"The configuration directory",
-	)
-	fs.BoolVar(
-		&flags.install,
-		"install",
-		false,
-		"Install the server as a service",
-	)
-	fs.BoolVar(
-		&flags.serve,
-		"serve",
-		false,
-		"Run the program as a local server",
-	)
-	fs.Parse(args)
-	return flags
-}
-
-func handleFlags(flags *cmdFlags) error {
-	if flags.install && flags.serve {
-		return errInstallAndServeArg
+func runService(l logger.Logger, configDir string) error {
+	q := quitter.New()
+	defer q.Quit()
+	s, err := InitSetup(l, q, configDir)
+	if err != nil {
+		return err
 	}
-	if flags.install && flags.configDir == "" {
-		return errNoConfigDirArg
+	s.svc.Uninstall()
+	if err := s.svc.Install(); err != nil {
+		return err
 	}
 	return nil
 }

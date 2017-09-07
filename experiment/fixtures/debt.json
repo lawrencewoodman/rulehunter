@@ -4,7 +4,7 @@
   "dataset": "sql",
   "sql": {
     "driverName": "sqlite3",
-    "dataSourceName": "../fixtures/debt.db",
+    "dataSourceName": "fixtures/debt.db",
     "query": "select * from \"people\""
   },
   "fields": [

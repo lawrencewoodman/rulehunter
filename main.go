@@ -1,6 +1,6 @@
 /*
 	rulehunter - A server to find rules in data based on user specified goals
-	Copyright (C) 2016 vLife Systems Ltd <http://vlifesystems.com>
+	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Affero General Public License as published by
@@ -20,18 +20,14 @@
 package main
 
 import (
-	"errors"
-	"fmt"
+	"github.com/vlifesystems/rulehunter/cmd"
+	"log"
+	"os"
 )
 
-var errNoConfigDirArg = errors.New("no -configdir argument")
-var errInstallAndServeArg = errors.New("can't have -install and -serve argument")
-
-type errConfigLoad struct {
-	filename string
-	err      error
-}
-
-func (e errConfigLoad) Error() string {
-	return fmt.Sprintf("couldn't load configuration file: %s: %s", e.filename, e.err)
+func main() {
+	if err := cmd.RootCmd.Execute(); err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
 }

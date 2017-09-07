@@ -13,47 +13,43 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vlifesystems/rulehunter/cmd"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
-	"github.com/vlifesystems/rulehunter/logger"
 )
 
 func TestMain(m *testing.M) {
-	if strings.HasPrefix(os.Args[1], "-configdir") {
-		cfgDir := strings.Split(os.Args[1], "=")[1]
-		flags := &cmdFlags{
-			configDir: cfgDir,
-			install:   len(os.Args) == 3 && os.Args[2] == "-install",
-			serve:     len(os.Args) == 3 && os.Args[2] == "-serve",
+	if len(os.Args) >= 2 && (os.Args[1] == "serve" || os.Args[1] == "service") {
+		if len(os.Args) >= 3 && strings.HasPrefix(os.Args[2], "--configdir") {
+			cfgDir := strings.Split(os.Args[2], "=")[1]
+			pwd, err := os.Getwd()
+			if err != nil {
+				log.Fatalf("os.Getwd: %s", err)
+			}
+			if err := os.Chdir(cfgDir); err != nil {
+				log.Fatalf("os.Chdir: %s", err)
+			}
+			defer os.Chdir(pwd)
 		}
-		l := logger.NewSvcLogger()
-		pwd, err := os.Getwd()
-		if err != nil {
-			log.Fatalf("os.Getwd: %v", err)
-		}
-		if err := os.Chdir(cfgDir); err != nil {
-			log.Fatalf("os.Chdir: %v", err)
-		}
-		defer os.Chdir(pwd)
-		exitCode, err := subMain(flags, l)
-		if err != nil {
+		if err := cmd.RootCmd.Execute(); err != nil {
 			log.Fatal(err)
+			os.Exit(1)
 		}
-		os.Exit(exitCode)
+		os.Exit(0)
 	}
-
 	os.Exit(m.Run())
 }
 
 func TestRulehunter_service(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, false)
 	defer os.RemoveAll(cfgDir)
-	mustWriteConfig(t, cfgDir, 10)
+	testhelpers.MustWriteConfig(t, cfgDir, 10)
 
-	runCmd(t,
+	runOSCmd(t,
 		os.Args[0],
-		fmt.Sprintf("-configdir=%s", cfgDir),
-		"-install",
+		"service",
+		fmt.Sprintf("--configdir=%s", cfgDir),
 	)
+
 	startService(t, "rulehunter")
 	defer stopService(t, "rulehunter")
 

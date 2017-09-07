@@ -132,7 +132,7 @@ func TestLoad(t *testing.T) {
 			want: &Experiment{
 				Title: "What would predict people being helped to be debt free?",
 				Dataset: dcsv.New(
-					filepath.Join("..", "fixtures", "debt.csv"),
+					filepath.Join("fixtures", "debt.csv"),
 					true,
 					rune(','),
 					[]string{
