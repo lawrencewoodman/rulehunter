@@ -51,6 +51,7 @@ func init() {
 	)
 	RootCmd.AddCommand(ServeCmd)
 	RootCmd.AddCommand(ServiceCmd)
+	RootCmd.AddCommand(VersionCmd)
 }
 
 func runRoot(l logger.Logger, configDir string) error {

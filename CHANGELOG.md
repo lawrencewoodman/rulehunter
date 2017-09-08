@@ -9,6 +9,7 @@
  * s/failure/error/ in activity
  * Add `category` to experiment files
  * Change CLI to use a command structure. E.G. rulehunter serve --configdir=.
+ * Add version command to CLI
 
 ## 0.1 (7th July 2017)
 
