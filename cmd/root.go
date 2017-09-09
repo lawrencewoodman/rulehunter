@@ -33,31 +33,31 @@ var RootCmd = &cobra.Command{
                 Complete documentation is available at http://rulehunter.com`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.NewSvcLogger()
-		return runRoot(l, flagConfigDir)
+		return runRoot(l, flagConfigFilename)
 	},
 }
 
 var (
-	flagUser      string
-	flagConfigDir string
+	flagUser           string
+	flagConfigFilename string
 )
 
 func init() {
 	RootCmd.PersistentFlags().StringVar(
-		&flagConfigDir,
-		"configdir",
-		".",
-		"config file directory (default: .)",
+		&flagConfigFilename,
+		"config",
+		"config.yaml",
+		"config file (default: config.yaml)",
 	)
 	RootCmd.AddCommand(ServeCmd)
 	RootCmd.AddCommand(ServiceCmd)
 	RootCmd.AddCommand(VersionCmd)
 }
 
-func runRoot(l logger.Logger, configDir string) error {
+func runRoot(l logger.Logger, configFilename string) error {
 	q := quitter.New()
 	defer q.Quit()
-	s, err := InitSetup(l, q, configDir)
+	s, err := InitSetup(l, q, configFilename)
 	if err != nil {
 		return err
 	}

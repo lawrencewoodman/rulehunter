@@ -42,9 +42,8 @@ type Setup struct {
 func InitSetup(
 	l logger.Logger,
 	q *quitter.Quitter,
-	configDir string,
+	configFilename string,
 ) (*Setup, error) {
-	configFilename := filepath.Join(configDir, "config.yaml")
 	config, err := config.Load(configFilename)
 	if err != nil {
 		return nil, errConfigLoad{filename: configFilename, err: err}
@@ -64,7 +63,7 @@ func InitSetup(
 	}
 	prg := program.New(config, pm, l, q)
 
-	s, err := newService(prg, flagUser, configDir)
+	s, err := newService(prg, flagUser)
 	if err != nil {
 		return nil, err
 	}
@@ -83,11 +82,7 @@ func InitSetup(
 	}, nil
 }
 
-func newService(
-	prg *program.Program,
-	user string,
-	configDir string,
-) (service.Service, error) {
+func newService(prg *program.Program, user string) (service.Service, error) {
 	svcConfig := &service.Config{
 		Name:        "rulehunter",
 		DisplayName: "Rulehunter server",

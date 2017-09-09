@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -13,12 +14,13 @@ import (
 func TestRunRoot_interrupt(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, false)
 	defer os.RemoveAll(cfgDir)
+	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	testhelpers.MustWriteConfig(t, cfgDir, 100)
 
 	l := testhelpers.NewLogger()
 	hasQuitC := make(chan bool)
 	go func() {
-		if err := runRoot(l, cfgDir); err != nil {
+		if err := runRoot(l, cfgFilename); err != nil {
 			t.Errorf("runRoot: %s", err)
 		}
 		hasQuitC <- true

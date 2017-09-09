@@ -19,8 +19,9 @@ import (
 
 func TestMain(m *testing.M) {
 	if len(os.Args) >= 2 && (os.Args[1] == "serve" || os.Args[1] == "service") {
-		if len(os.Args) >= 3 && strings.HasPrefix(os.Args[2], "--configdir") {
-			cfgDir := strings.Split(os.Args[2], "=")[1]
+		if len(os.Args) >= 3 && strings.HasPrefix(os.Args[2], "--config") {
+			cfgFilename := strings.Split(os.Args[2], "=")[1]
+			cfgDir := filepath.Dir(cfgFilename)
 			pwd, err := os.Getwd()
 			if err != nil {
 				log.Fatalf("os.Getwd: %s", err)
@@ -47,7 +48,7 @@ func TestRulehunter_service(t *testing.T) {
 	runOSCmd(t,
 		os.Args[0],
 		"service",
-		fmt.Sprintf("--configdir=%s", cfgDir),
+		fmt.Sprintf("--config=%s", filepath.Join(cfgDir, "config.yaml")),
 	)
 
 	startService(t, "rulehunter")

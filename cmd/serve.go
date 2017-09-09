@@ -32,14 +32,14 @@ var ServeCmd = &cobra.Command{
          directory and processing its contents.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.NewSvcLogger()
-		return runServe(l, flagConfigDir)
+		return runServe(l, flagConfigFilename)
 	},
 }
 
-func runServe(l logger.Logger, configDir string) error {
+func runServe(l logger.Logger, configFilename string) error {
 	q := quitter.New()
 	defer q.Quit()
-	s, err := InitSetup(l, q, configDir)
+	s, err := InitSetup(l, q, configFilename)
 	if err != nil {
 		return err
 	}

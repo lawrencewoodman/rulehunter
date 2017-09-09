@@ -31,14 +31,14 @@ var ServiceCmd = &cobra.Command{
 	Long:  `Install the Rulehunter server as an operating system service.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.NewSvcLogger()
-		return runService(l, flagConfigDir)
+		return runService(l, flagConfigFilename)
 	},
 }
 
-func runService(l logger.Logger, configDir string) error {
+func runService(l logger.Logger, configFilename string) error {
 	q := quitter.New()
 	defer q.Quit()
-	s, err := InitSetup(l, q, configDir)
+	s, err := InitSetup(l, q, configFilename)
 	if err != nil {
 		return err
 	}

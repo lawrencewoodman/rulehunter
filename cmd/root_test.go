@@ -28,6 +28,7 @@ func TestRunRoot(t *testing.T) {
 			Msg: "Successfully processed experiment: debt2.json"},
 	}
 	cfgDir := testhelpers.BuildConfigDirs(t, false)
+	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	defer os.RemoveAll(cfgDir)
 	if testing.Short() {
 		testhelpers.MustWriteConfig(t, cfgDir, 100)
@@ -60,7 +61,7 @@ func TestRunRoot(t *testing.T) {
 		filepath.Join(cfgDir, "experiments"),
 	)
 	l := testhelpers.NewLogger()
-	if err := runRoot(l, cfgDir); err != nil {
+	if err := runRoot(l, cfgFilename); err != nil {
 		t.Errorf("runRoot: %s", err)
 	}
 	if !reflect.DeepEqual(l.GetEntries(), wantEntries) {
@@ -74,18 +75,18 @@ func TestRunRoot_errors(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	cases := []struct {
-		configDir string
-		wantErr   error
+		configFilename string
+		wantErr        error
 	}{
 		{
-			configDir: "",
+			configFilename: "config.yaml",
 			wantErr: errConfigLoad{
 				filename: "config.yaml",
 				err:      &os.PathError{"open", "config.yaml", syscall.ENOENT},
 			},
 		},
 		{
-			configDir: tmpDir,
+			configFilename: filepath.Join(tmpDir, "config.yaml"),
 			wantErr: errConfigLoad{
 				filename: filepath.Join(tmpDir, "config.yaml"),
 				err: &os.PathError{
@@ -99,7 +100,7 @@ func TestRunRoot_errors(t *testing.T) {
 
 	for i, c := range cases {
 		l := testhelpers.NewLogger()
-		err := runRoot(l, c.configDir)
+		err := runRoot(l, c.configFilename)
 		if err := checkErrorMatch(err, c.wantErr); err != nil {
 			t.Errorf("(%d) subMain: %s", i, err)
 		}
