@@ -18,102 +18,34 @@ Getting Started
 Testing
 -------
 To make testing simpler under Linux, where root is needed, you can use the following (replace _systemd_ with _upstart_ if using the latter init system):
-```
+
+```Shell
 sudo ./linux-test-su.sh $GOPATH `which go` systemd
 ```
 
 To test the output of the server you can create a simple static webserver using something like the following from the `wwwDir` directory specified in the `config.yaml`:
+
 ```Shell
 ruby -run -ehttpd . -p8000
 ```
 
 If you don't like ruby there is this [list of one-liner static webservers](https://gist.github.com/willurd/5720255).
 
-Requirements
-------------
-These have all be vendored into the `vendor/` directory using the
-[govendor](https://github.com/kardianos/govendor) tool.
-
-* [dexpr](https://github.com/lawrencewoodman/dexpr) package
-* [ddataset](https://github.com/lawrencewoodman/ddataset) package
-* [dlit](https://github.com/lawrencewoodman/dlit) package
-* [rhkit](https://github.com/vlifesystems/rhkit) package
-* [osext](https://github.com/kardianos/osext) package
-* [service](https://github.com/kardianos/service) package
-* [go-mssqldb](https://github.com/denisenkom/go-mssqldb) package
-* [go-sqlite3](https://github.com/mattn/go-sqlite3) package
-* [mysql](https://github.com/go-sql-driver/mysql) package
-* [yaml.v2](https://gopkg.in/yaml.v2) package
-
-
-To format the html pages properly [Twitter Boostrap](http://getbootstrap.com) is used and hence has been included in the `support/` directory.
-
 Contributing
 ------------
-If you want to improve this program make a pull request to the [repo](https://github.com/vlifesystems/rulehunter) on github.  Please put any pull requests in a separate branch to ease integration and add a test to prove that it works.  If you find a bug, please report it at the project's [issues tracker](https://github.com/vlifesystems/rulehunter/issues) also on github.
+We would love contributions to improve this project.  You can help by reporting bugs, improving the documentation, submitting feature requests, fixing bugs, etc.
+
+Please see the [Contributing Guide](https://github.com/vlifesystems/rulehunter/blob/master/CONTRIBUTING.md) for more details.
+
+Reporting Issues
+----------------
+We want your help to find bugs as quickly as possible and would welcome your help by reporting any found.  Please see the [Contributing Guide](https://github.com/vlifesystems/rulehunter/blob/master/CONTRIBUTING.md) for more details of how to report them.
 
 Licence
 -------
-Rulehunter - A server to find rules in data based on user specified goals
+
+Rulehunter - Find rules in data based on user specified goals
 
 Copyright (C) 2016-2017 [vLife Systems Ltd](http://vlifesystems.com)
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program; see the file COPYING.  If not, see
-[http://www.gnu.org/licenses/](http://www.gnu.org/licenses/).
-
-Additional Licences and Attribution
------------------------------------
-
-### Twitter Boostrap
-
-[Twitter Boostrap](http://getbootstrap.com) has been included in the repository under `support/bootstrap`.
-
-Copyright 2011-2015 Twitter, Inc.
-
-Licensed under the MIT license.  For details see: [http://getbootstrap.com](http://getbootstrap.com).
-
-### jQuery
-
-[jQuery](https://jquery.org) has been included in the repository under `support/jquery`.
-
-Copyright jQuery Foundation
-
-Licensed under the MIT license.  For details see [https://jquery.org/license/](https://jquery.org/license/).
-
-### Html5 Shiv
-
-[Html5 Shiv](https://github.com/aFarkas/html5shiv) has been included in part in the repository under `support/html5shiv`
-
-Copyright (c) 2014 Alexander Farkas (aFarkas).
-
-This is dual licensed under the MIT and GPL version 2 licence.  For the sake of Rulehunter we will take it to be the MIT license as this makes it easier to combine with the Affero GPL version 3 license that Rulehunter is licenced under.  For details see the licence file in `support/html5shiv`.
-
-### Respond
-
-[Respond](https://github.com/scottjehl/Respond) has been included in part in the repository under `support/respond`
-
-Copyright (c) 2013 Scott Jehl
-
-Licensed under the MIT license.  For details see the license file in `support/respond`.
-
-### loading.io
-
-A loading icon called `ring.gif` has been included under `support/rulehunter/img`.  This came from the [loading.io](http://loading.io) website and their terms of uses state:
-
-    All materials used in generating animated icons in this website, except the g0v icon, are created by loading.io. You can use them freely for any purpose.
-
-
-### Vendored Go Packages
-
-This repository includes other packages in the `vendor/` directory.  Please see those packages for the licences that cover those works.
+Rulehunter is licensed under the GNU Affero General Public License version 3 (AGPLv3). Please see the [licence](https://github.com/vlifesystems/rulehunter/blob/master/CONTRIBUTING.md#licence) section of the [Contributing Guide](https://github.com/vlifesystems/rulehunter/blob/master/CONTRIBUTING.md) for more details about this and the licences used by other code included with Rulehunter.
