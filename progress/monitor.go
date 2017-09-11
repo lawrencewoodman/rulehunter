@@ -140,6 +140,7 @@ func (m *Monitor) ReportError(file string, err error) error {
 		return err
 	}
 	m.htmlCmds <- cmd.Progress
+	m.htmlCmds <- cmd.Reports
 	return nil
 }
 
@@ -154,6 +155,7 @@ func (m *Monitor) ReportSuccess(file string) error {
 		return err
 	}
 	m.htmlCmds <- cmd.Progress
+	m.htmlCmds <- cmd.Reports
 	return nil
 }
 

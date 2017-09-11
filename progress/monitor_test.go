@@ -286,7 +286,7 @@ func TestReportSuccess(t *testing.T) {
 		wantHtmlCmdsReceived []cmd.Cmd
 	}{
 		{run: 0,
-			wantHtmlCmdsReceived: []cmd.Cmd{cmd.Progress, cmd.Progress},
+			wantHtmlCmdsReceived: []cmd.Cmd{cmd.Progress, cmd.Progress, cmd.Reports},
 		},
 		{run: 1,
 			wantHtmlCmdsReceived: []cmd.Cmd{},
@@ -471,21 +471,24 @@ func TestReportError(t *testing.T) {
 		},
 	}
 	cases := []struct {
-		run             int
-		wantExperiments []*Experiment
+		run                  int
+		wantExperiments      []*Experiment
+		wantHtmlCmdsReceived []cmd.Cmd
 	}{
 		{run: 0,
-			wantExperiments: wantExperimentsMemory,
+			wantExperiments:      wantExperimentsMemory,
+			wantHtmlCmdsReceived: []cmd.Cmd{cmd.Progress, cmd.Reports},
 		},
 		{run: 1,
-			wantExperiments: wantExperimentsFile,
+			wantExperiments:      wantExperimentsFile,
+			wantHtmlCmdsReceived: []cmd.Cmd{},
 		},
 	}
 	tmpDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tmpDir)
 	testhelpers.CopyFile(t, filepath.Join("fixtures", "progress.json"), tmpDir)
 
-	for _, c := range cases {
+	for i, c := range cases {
 		htmlCmds := make(chan cmd.Cmd)
 		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
 		go cmdMonitor.Run()
@@ -501,10 +504,15 @@ func TestReportError(t *testing.T) {
 		}
 		got := pm.GetExperiments()
 		if err := checkExperimentsMatch(got, c.wantExperiments); err != nil {
-			t.Errorf("checkExperimentsMatch() err: %s", err)
+			t.Errorf("(%d) checkExperimentsMatch() err: %s", i, err)
 		}
 		time.Sleep(1 * time.Second)
 		close(htmlCmds)
+		htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
+		if !reflect.DeepEqual(htmlCmdsReceived, c.wantHtmlCmdsReceived) {
+			t.Errorf("(%d) GetCmdsRecevied() received commands - got: %s, want: %s",
+				i, htmlCmdsReceived, c.wantHtmlCmdsReceived)
+		}
 	}
 }
 
