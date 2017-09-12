@@ -85,41 +85,28 @@ func TestRulehunter_service(t *testing.T) {
 		filepath.Join(cfgDir, "experiments"),
 	)
 
-	files := []string{}
 	wantFiles := []string{
 		"debt2_datasets.json",
 		"debt_datasets.json",
 		"debt_datasets.yaml",
 	}
+	files := []string{}
 	timeoutC := time.NewTimer(10 * time.Second).C
 	tickerC := time.NewTicker(400 * time.Millisecond).C
 	for {
 		select {
 		case <-tickerC:
-			files = getFilesInDir(t, filepath.Join(cfgDir, "build", "reports"))
+			files = testhelpers.GetFilesInDir(
+				t,
+				filepath.Join(cfgDir, "build", "reports"),
+			)
 			if reflect.DeepEqual(files, wantFiles) {
 				return
 			}
 		case <-timeoutC:
-			t.Errorf("didn't generate correct files with time period, got: %v, want: %v",
+			t.Errorf("didn't generate correct files within time period, got: %v, want: %v",
 				files, wantFiles)
 			return
 		}
 	}
-}
-
-func getFilesInDir(t *testing.T, dir string) []string {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		t.Fatalf("ioutil.ReadDir(%s) err: %s", dir, err)
-	}
-
-	r := []string{}
-	for _, file := range files {
-		if !file.IsDir() {
-			r = append(r, file.Name())
-		}
-	}
-	return r
-
 }

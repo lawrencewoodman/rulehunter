@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"testing"
 	"time"
 
 	"github.com/vlifesystems/rulehunter/config"
@@ -102,4 +103,19 @@ func MustParse(layout, s string) time.Time {
 		panic(err)
 	}
 	return t
+}
+
+func GetFilesInDir(t *testing.T, dir string) []string {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("ioutil.ReadDir(%s) err: %s", dir, err)
+	}
+
+	r := []string{}
+	for _, file := range files {
+		if !file.IsDir() {
+			r = append(r, file.Name())
+		}
+	}
+	return r
 }
