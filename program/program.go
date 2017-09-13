@@ -89,12 +89,14 @@ func (p *Program) ProcessFile(file fileinfo.FileInfo) error {
 		return nil
 	}
 
-	pmErr := pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
-	if pmErr != nil {
-		return p.logger.Error(pmErr)
-	}
-
 	isFinished, stamp := pm.GetFinishStamp(file.Name())
+
+	if !isFinished {
+		pmErr := pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
+		if pmErr != nil {
+			return p.logger.Error(pmErr)
+		}
+	}
 
 	ok, err := e.ShouldProcess(isFinished, stamp)
 	if err != nil {

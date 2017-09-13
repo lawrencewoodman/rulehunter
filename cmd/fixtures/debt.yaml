@@ -30,3 +30,4 @@ goals:
 sortOrder:
   - aggregator: "successMcc"
     direction: "descending"
+when: "!hasRun"
