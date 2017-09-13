@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"os"
 	"path/filepath"
 	"reflect"
 	"syscall"
 	"testing"
+
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 )
 
 func TestRunRoot(t *testing.T) {
@@ -27,6 +28,8 @@ func TestRunRoot(t *testing.T) {
 		{Level: testhelpers.Info,
 			Msg: "Successfully processed experiment: debt2.json"},
 	}
+	wantReportFiles := []string{"debt.json", "debt.yaml", "debt2.json"}
+
 	cfgDir := testhelpers.BuildConfigDirs(t, false)
 	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	defer os.RemoveAll(cfgDir)
@@ -35,39 +38,39 @@ func TestRunRoot(t *testing.T) {
 	} else {
 		testhelpers.MustWriteConfig(t, cfgDir, 2000)
 	}
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "0debt_broken.yaml"),
-		filepath.Join(cfgDir, "experiments"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "debt.json"),
-		filepath.Join(cfgDir, "experiments"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "debt.yaml"),
-		filepath.Join(cfgDir, "experiments"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "debt.jso"),
-		filepath.Join(cfgDir, "experiments"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "debt2.json"),
-		filepath.Join(cfgDir, "experiments"),
-	)
+
+	experimentFiles := []string{
+		"0debt_broken.yaml",
+		"debt.json",
+		"debt.yaml",
+		"debt2.json",
+		"debt.jso",
+	}
+	for _, f := range experimentFiles {
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", f),
+			filepath.Join(cfgDir, "experiments"),
+		)
+	}
+
 	l := testhelpers.NewLogger()
 	if err := runRoot(l, cfgFilename); err != nil {
 		t.Errorf("runRoot: %s", err)
 	}
-	if !reflect.DeepEqual(l.GetEntries(), wantEntries) {
-		t.Errorf("GetEntries() got: %v, want: %v", l.GetEntries(), wantEntries)
+	gotReportFiles := testhelpers.GetFilesInDir(
+		t,
+		filepath.Join(cfgDir, "build", "reports"),
+	)
+	if !reflect.DeepEqual(gotReportFiles, wantReportFiles) {
+		t.Errorf("GetFilesInDir - got: %v\n want: %v",
+			gotReportFiles, wantReportFiles)
 	}
-	// TODO: Test files generated
+
+	if !reflect.DeepEqual(l.GetEntries(), wantEntries) {
+		t.Errorf("GetEntries() got: %v\n want: %v", l.GetEntries(), wantEntries)
+	}
+	// TODO: Test all files generated
 }
 
 func TestRunRoot_errors(t *testing.T) {
