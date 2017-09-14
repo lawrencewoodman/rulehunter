@@ -47,9 +47,9 @@ func TestRunServe(t *testing.T) {
 	}
 
 	experimentFiles := []string{
-		"0debt_broken.yaml",
 		"debt.json",
 		"debt.yaml",
+		"0debt_broken.yaml",
 		"debt2.json",
 		"debt.jso",
 	}
@@ -127,9 +127,9 @@ func TestRunServe_interrupt(t *testing.T) {
 	}
 
 	experimentFiles := []string{
-		"0debt_broken.yaml",
 		"debt.json",
 		"debt.yaml",
+		"0debt_broken.yaml",
 		"debt2.json",
 		"debt.jso",
 	}
