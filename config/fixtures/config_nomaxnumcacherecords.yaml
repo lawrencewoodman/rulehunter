@@ -3,6 +3,5 @@ wwwDir: "www"
 buildDir: "build"
 sourceUrl: "https://example.com/rulehunter/src"
 baseUrl: "/rulehunter/"
-user: "rhuser"
 maxNumReportRules: 2000
 maxNumProcesses: 4

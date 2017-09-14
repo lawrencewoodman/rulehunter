@@ -35,6 +35,15 @@ var ServiceCmd = &cobra.Command{
 	},
 }
 
+func init() {
+	ServiceCmd.Flags().StringVar(
+		&flagUser,
+		"user",
+		"",
+		"The name of a user to run the service under",
+	)
+}
+
 func runService(l logger.Logger, configFilename string) error {
 	q := quitter.New()
 	defer q.Quit()

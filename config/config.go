@@ -34,7 +34,6 @@ type Config struct {
 	BuildDir           string `yaml:"buildDir"`
 	SourceURL          string `yaml:"sourceUrl"`
 	BaseURL            string `yaml:"baseUrl"`
-	User               string `yaml:"user"`
 	MaxNumReportRules  int    `yaml:"maxNumReportRules"`
 	MaxNumProcesses    int    `yaml:"maxNumProcesses"`
 	MaxNumRecords      int    `yaml:"maxNumRecords"`

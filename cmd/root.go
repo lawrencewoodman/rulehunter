@@ -37,6 +37,7 @@ var RootCmd = &cobra.Command{
 	},
 }
 
+// The contents of the flags specified on the command line
 var (
 	flagUser           string
 	flagConfigFilename string
