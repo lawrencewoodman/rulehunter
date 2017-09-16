@@ -22,6 +22,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehunter/config"
@@ -93,9 +94,15 @@ func newService(prg *program.Program, user string) (service.Service, error) {
 		svcConfig.UserName = user
 	}
 
-	svcConfig.Arguments = os.Args[1:]
-	if len(svcConfig.Arguments) >= 1 && svcConfig.Arguments[0] == "service" {
-		svcConfig.Arguments[0] = "serve"
+	if len(os.Args) >= 2 && os.Args[1] == "service" {
+		svcConfig.Arguments = []string{"serve"}
+		for _, arg := range os.Args[2:] {
+			if !strings.HasPrefix(arg, "--user") {
+				svcConfig.Arguments = append(svcConfig.Arguments, arg)
+			}
+		}
+	} else {
+		svcConfig.Arguments = os.Args[1:]
 	}
 	return service.New(prg, svcConfig)
 }

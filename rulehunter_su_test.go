@@ -40,72 +40,88 @@ func TestMain(m *testing.M) {
 }
 
 func TestRulehunter_service(t *testing.T) {
-	cfgDir := testhelpers.BuildConfigDirs(t, false)
-	defer os.RemoveAll(cfgDir)
-	testhelpers.MustWriteConfig(t, cfgDir, 10)
+	users := []string{"", "root"}
+	for _, user := range users {
+		cfgDir := testhelpers.BuildConfigDirs(t, false)
+		defer os.RemoveAll(cfgDir)
+		testhelpers.MustWriteConfig(t, cfgDir, 10)
 
-	runOSCmd(t,
-		os.Args[0],
-		"service",
-		fmt.Sprintf("--config=%s", filepath.Join(cfgDir, "config.yaml")),
-	)
-
-	startService(t, "rulehunter")
-	defer stopService(t, "rulehunter")
-
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "debt.csv"),
-		filepath.Join(cfgDir, "datasets"),
-	)
-
-	if !testing.Short() {
-		time.Sleep(4 * time.Second)
-	}
-
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "debt_datasets.json"),
-		filepath.Join(cfgDir, "experiments"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "debt_datasets.yaml"),
-		filepath.Join(cfgDir, "experiments"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "debt_datasets.jso"),
-		filepath.Join(cfgDir, "experiments"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "debt2_datasets.json"),
-		filepath.Join(cfgDir, "experiments"),
-	)
-
-	wantFiles := []string{
-		"debt2_datasets.json",
-		"debt_datasets.json",
-		"debt_datasets.yaml",
-	}
-	files := []string{}
-	timeoutC := time.NewTimer(10 * time.Second).C
-	tickerC := time.NewTicker(400 * time.Millisecond).C
-	for {
-		select {
-		case <-tickerC:
-			files = testhelpers.GetFilesInDir(
-				t,
-				filepath.Join(cfgDir, "build", "reports"),
+		if user != "" {
+			runOSCmd(t,
+				os.Args[0],
+				"service",
+				fmt.Sprintf("--config=%s", filepath.Join(cfgDir, "config.yaml")),
+				fmt.Sprintf("--user=%s", user),
 			)
-			if reflect.DeepEqual(files, wantFiles) {
-				return
-			}
-		case <-timeoutC:
-			t.Errorf("didn't generate correct files within time period, got: %v, want: %v",
-				files, wantFiles)
-			return
+		} else {
+			runOSCmd(t,
+				os.Args[0],
+				"service",
+				fmt.Sprintf("--config=%s", filepath.Join(cfgDir, "config.yaml")),
+			)
 		}
+
+		startService(t, "rulehunter")
+		defer stopService(t, "rulehunter")
+
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", "debt.csv"),
+			filepath.Join(cfgDir, "datasets"),
+		)
+
+		if !testing.Short() {
+			time.Sleep(4 * time.Second)
+		}
+
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", "debt_datasets.json"),
+			filepath.Join(cfgDir, "experiments"),
+		)
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", "debt_datasets.yaml"),
+			filepath.Join(cfgDir, "experiments"),
+		)
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", "debt_datasets.jso"),
+			filepath.Join(cfgDir, "experiments"),
+		)
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", "debt2_datasets.json"),
+			filepath.Join(cfgDir, "experiments"),
+		)
+
+		wantFiles := []string{
+			"debt2_datasets.json",
+			"debt_datasets.json",
+			"debt_datasets.yaml",
+		}
+		isFinished := false
+		files := []string{}
+		timeoutC := time.NewTimer(10 * time.Second).C
+		tickerC := time.NewTicker(400 * time.Millisecond).C
+		for !isFinished {
+			select {
+			case <-tickerC:
+				files = testhelpers.GetFilesInDir(
+					t,
+					filepath.Join(cfgDir, "build", "reports"),
+				)
+				if reflect.DeepEqual(files, wantFiles) {
+					isFinished = true
+					break
+				}
+			case <-timeoutC:
+				t.Errorf("(user: %s) didn't generate correct files within time period, got: %v, want: %v",
+					user, files, wantFiles)
+				isFinished = true
+				break
+			}
+		}
+		stopService(t, "rulehunter")
 	}
 }
