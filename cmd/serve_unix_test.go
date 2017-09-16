@@ -33,7 +33,7 @@ func TestRunServe(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, false)
 	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	defer os.RemoveAll(cfgDir)
-	testhelpers.MustWriteConfig(t, cfgDir, 100)
+	testhelpers.MustWriteConfig(t, cfgDir, 500)
 	l := testhelpers.NewLogger()
 
 	go func() {
@@ -59,6 +59,7 @@ func TestRunServe(t *testing.T) {
 			filepath.Join("fixtures", f),
 			filepath.Join(cfgDir, "experiments"),
 		)
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	hasInterrupted := false
