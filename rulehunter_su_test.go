@@ -18,17 +18,19 @@ import (
 
 func TestMain(m *testing.M) {
 	if len(os.Args) >= 2 && (os.Args[1] == "serve" || os.Args[1] == "service") {
-		if len(os.Args) >= 3 && strings.HasPrefix(os.Args[2], "--config") {
-			cfgFilename := strings.Split(os.Args[2], "=")[1]
-			cfgDir := filepath.Dir(cfgFilename)
-			pwd, err := os.Getwd()
-			if err != nil {
-				log.Fatalf("os.Getwd: %s", err)
+		for _, arg := range os.Args[2:] {
+			if strings.HasPrefix(arg, "--config") {
+				cfgFilename := strings.Split(arg, "=")[1]
+				cfgDir := filepath.Dir(cfgFilename)
+				pwd, err := os.Getwd()
+				if err != nil {
+					log.Fatalf("os.Getwd: %s", err)
+				}
+				if err := os.Chdir(cfgDir); err != nil {
+					log.Fatalf("os.Chdir: %s", err)
+				}
+				defer os.Chdir(pwd)
 			}
-			if err := os.Chdir(cfgDir); err != nil {
-				log.Fatalf("os.Chdir: %s", err)
-			}
-			defer os.Chdir(pwd)
 		}
 		if err := cmd.RootCmd.Execute(); err != nil {
 			log.Fatal(err)
@@ -39,7 +41,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestRulehunter_service(t *testing.T) {
+func TestRulehunter_service_install(t *testing.T) {
 	users := []string{"", "root"}
 	for _, user := range users {
 		cfgDir := testhelpers.BuildConfigDirs(t, false)
@@ -50,6 +52,7 @@ func TestRulehunter_service(t *testing.T) {
 			runOSCmd(t,
 				os.Args[0],
 				"service",
+				"install",
 				fmt.Sprintf("--config=%s", filepath.Join(cfgDir, "config.yaml")),
 				fmt.Sprintf("--user=%s", user),
 			)
@@ -57,6 +60,7 @@ func TestRulehunter_service(t *testing.T) {
 			runOSCmd(t,
 				os.Args[0],
 				"service",
+				"install",
 				fmt.Sprintf("--config=%s", filepath.Join(cfgDir, "config.yaml")),
 			)
 		}
@@ -124,4 +128,25 @@ func TestRulehunter_service(t *testing.T) {
 		}
 		stopService(t, "rulehunter")
 	}
+}
+
+func TestRulehunter_service_uninstall(t *testing.T) {
+	cfgDir := testhelpers.BuildConfigDirs(t, false)
+	defer os.RemoveAll(cfgDir)
+	testhelpers.MustWriteConfig(t, cfgDir, 10)
+	runOSCmd(t,
+		os.Args[0],
+		"service",
+		"install",
+		fmt.Sprintf("--config=%s", filepath.Join(cfgDir, "config.yaml")),
+	)
+
+	startService(t, "rulehunter")
+	defer stopService(t, "rulehunter")
+	runOSCmd(t,
+		os.Args[0],
+		"service",
+		"uninstall",
+		fmt.Sprintf("--config=%s", filepath.Join(cfgDir, "config.yaml")),
+	)
 }

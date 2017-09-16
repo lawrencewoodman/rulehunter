@@ -27,24 +27,42 @@ import (
 
 var ServiceCmd = &cobra.Command{
 	Use:   "service",
+	Short: "Control Rulehunter service",
+	Long:  `Control Rulehunter operating system service.`,
+}
+
+var ServiceInstallCmd = &cobra.Command{
+	Use:   "install",
 	Short: "Install Rulehunter as a service",
 	Long:  `Install the Rulehunter server as an operating system service.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.NewSvcLogger()
-		return runService(l, flagConfigFilename)
+		return runInstallService(l, flagConfigFilename)
+	},
+}
+
+var ServiceUninstallCmd = &cobra.Command{
+	Use:   "uninstall",
+	Short: "Uninstall Rulehunter service",
+	Long:  `Uninstall the Rulehunter operating system service.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		l := logger.NewSvcLogger()
+		return runUninstallService(l, flagConfigFilename)
 	},
 }
 
 func init() {
-	ServiceCmd.Flags().StringVar(
+	ServiceCmd.PersistentFlags().StringVar(
 		&flagUser,
 		"user",
 		"",
 		"The name of a user to run the service under",
 	)
+	ServiceCmd.AddCommand(ServiceInstallCmd)
+	ServiceCmd.AddCommand(ServiceUninstallCmd)
 }
 
-func runService(l logger.Logger, configFilename string) error {
+func runInstallService(l logger.Logger, configFilename string) error {
 	q := quitter.New()
 	defer q.Quit()
 	s, err := InitSetup(l, q, configFilename)
@@ -56,4 +74,14 @@ func runService(l logger.Logger, configFilename string) error {
 		return err
 	}
 	return nil
+}
+
+func runUninstallService(l logger.Logger, configFilename string) error {
+	q := quitter.New()
+	defer q.Quit()
+	s, err := InitSetup(l, q, configFilename)
+	if err != nil {
+		return err
+	}
+	return s.svc.Uninstall()
 }

@@ -48,7 +48,7 @@ func init() {
 		&flagConfigFilename,
 		"config",
 		"config.yaml",
-		"config file (default: config.yaml)",
+		"config file",
 	)
 	RootCmd.AddCommand(ServeCmd)
 	RootCmd.AddCommand(ServiceCmd)
