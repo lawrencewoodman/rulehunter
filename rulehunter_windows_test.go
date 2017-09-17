@@ -11,9 +11,9 @@ func TestSubMain_interrupt(t *testing.T) {
  *************************************/
 
 func startService(t *testing.T, serviceName string) {
-	runOSCmd(t, "net", "start", serviceName)
+	runOSCmd(t, true, "net", "start", serviceName)
 }
 
 func stopService(t *testing.T, serviceName string) {
-	runOSCmd(t, "net", "stop", serviceName)
+	runOSCmd(t, false, "net", "stop", serviceName)
 }

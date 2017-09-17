@@ -9,9 +9,9 @@ import "testing"
  *************************************/
 
 func startService(t *testing.T, serviceName string) {
-	runOSCmd(t, "service", serviceName, "start")
+	runOSCmd(t, true, "service", serviceName, "start")
 }
 
 func stopService(t *testing.T, serviceName string) {
-	runOSCmd(t, "service", serviceName, "stop")
+	runOSCmd(t, false, "service", serviceName, "stop")
 }

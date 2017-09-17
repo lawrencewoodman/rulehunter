@@ -50,6 +50,7 @@ func TestRulehunter_service_install(t *testing.T) {
 
 		if user != "" {
 			runOSCmd(t,
+				true,
 				os.Args[0],
 				"service",
 				"install",
@@ -58,6 +59,7 @@ func TestRulehunter_service_install(t *testing.T) {
 			)
 		} else {
 			runOSCmd(t,
+				true,
 				os.Args[0],
 				"service",
 				"install",
@@ -135,6 +137,7 @@ func TestRulehunter_service_uninstall(t *testing.T) {
 	defer os.RemoveAll(cfgDir)
 	testhelpers.MustWriteConfig(t, cfgDir, 10)
 	runOSCmd(t,
+		true,
 		os.Args[0],
 		"service",
 		"install",
@@ -144,6 +147,7 @@ func TestRulehunter_service_uninstall(t *testing.T) {
 	startService(t, "rulehunter")
 	defer stopService(t, "rulehunter")
 	runOSCmd(t,
+		true,
 		os.Args[0],
 		"service",
 		"uninstall",
