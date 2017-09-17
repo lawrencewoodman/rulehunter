@@ -14,10 +14,10 @@ func runOSCmd(t *testing.T, fatalError bool, name string, arg ...string) {
 	cmd.Stderr = &cmdErr
 	if err := cmd.Run(); err != nil {
 		if fatalError {
-			t.Fatalf("runOSCmd(%s, %v), err: %v, stdout: %s, stderr: %s",
+			t.Fatalf("runOSCmd(%s, %v), err: %s, stdout: %s, stderr: %s",
 				name, arg, err, cmdOut.String(), cmdErr.String())
 		} else {
-			t.Errorf("runOSCmd(%s, %v), err: %v, stdout: %v, stderr: %s",
+			t.Logf("runOSCmd(%s, %v), err: %s, stdout: %s, stderr: %s",
 				name, arg, err, cmdOut.String(), cmdErr.String())
 		}
 	}
