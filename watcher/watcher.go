@@ -59,7 +59,7 @@ func Watch(
 	}
 
 	// Used to only send old files every other run
-	flipFlop := false
+	flipFlop := true
 	for {
 		select {
 		case <-quit.C:

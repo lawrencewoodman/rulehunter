@@ -35,7 +35,13 @@ func TestWatch_1(t *testing.T) {
 		"debt.yaml": 1,
 		"flow.yaml": 1,
 	}
-	if err := checkCorrectFileChan(wantNewFiles, files); err != nil {
+	wantNonNewFiles := map[string]int{
+		"debt.json": 2,
+		"debt.yaml": 2,
+		"flow.yaml": 2,
+	}
+	err := checkCorrectFileChan(wantNewFiles, wantNonNewFiles, files)
+	if err != nil {
 		t.Error("Watch:", err)
 	}
 
@@ -60,7 +66,7 @@ func TestWatch_2(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	testhelpers.CopyFile(t, filepath.Join("fixtures", "debt.yaml"), tmpDir)
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(60 * time.Millisecond)
 	quit.Quit()
 
 	wantNewFiles := map[string]int{
@@ -68,7 +74,13 @@ func TestWatch_2(t *testing.T) {
 		"debt.yaml": 1,
 		"flow.yaml": 1,
 	}
-	if err := checkCorrectFileChan(wantNewFiles, files); err != nil {
+	wantNonNewFiles := map[string]int{
+		"debt.json": 2,
+		"flow.yaml": 2,
+		"debt.yaml": 0,
+	}
+	err := checkCorrectFileChan(wantNewFiles, wantNonNewFiles, files)
+	if err != nil {
 		t.Error("Watch:", err)
 	}
 	if logEntries := logger.GetEntries(); len(logEntries) != 0 {
@@ -99,7 +111,12 @@ func TestWatch_3(t *testing.T) {
 		"debt.json": 2,
 		"flow.yaml": 1,
 	}
-	if err := checkCorrectFileChan(wantNewFiles, files); err != nil {
+	wantNonNewFiles := map[string]int{
+		"debt.json": 1,
+		"flow.yaml": 2,
+	}
+	err := checkCorrectFileChan(wantNewFiles, wantNonNewFiles, files)
+	if err != nil {
 		t.Error("Watch:", err)
 	}
 	if logEntries := logger.GetEntries(); len(logEntries) != 0 {
@@ -121,6 +138,7 @@ func TestWatch_errors(t *testing.T) {
 	quit.Quit()
 
 	wantNewFiles := map[string]int{}
+	wantNonNewFiles := map[string]int{}
 	wantLogEntries := []testhelpers.Entry{
 		testhelpers.Entry{
 			Level: testhelpers.Error,
@@ -128,7 +146,8 @@ func TestWatch_errors(t *testing.T) {
 		},
 	}
 
-	if err := checkCorrectFileChan(wantNewFiles, files); err != nil {
+	err := checkCorrectFileChan(wantNewFiles, wantNonNewFiles, files)
+	if err != nil {
 		t.Error("Watch:", err)
 	}
 	if !reflect.DeepEqual(wantLogEntries, logger.GetEntries()) {
@@ -153,6 +172,7 @@ func TestWatch_errors2(t *testing.T) {
 	quit.Quit()
 
 	wantNewFiles := map[string]int{}
+	wantNonNewFiles := map[string]int{}
 	wantLogEntries := []testhelpers.Entry{
 		testhelpers.Entry{
 			Level: testhelpers.Error,
@@ -160,7 +180,8 @@ func TestWatch_errors2(t *testing.T) {
 		},
 	}
 
-	if err := checkCorrectFileChan(wantNewFiles, files); err != nil {
+	err := checkCorrectFileChan(wantNewFiles, wantNonNewFiles, files)
+	if err != nil {
 		t.Error("Watch:", err)
 	}
 	if !reflect.DeepEqual(wantLogEntries, logger.GetEntries()) {
@@ -241,8 +262,10 @@ func checkCorrectFiles(
 	return nil
 }
 
+// The int in the maps below indicates that has been seen at least x times
 func checkCorrectFileChan(
 	wantNewFiles map[string]int,
+	wantNonNewFiles map[string]int,
 	files <-chan fileinfo.FileInfo,
 ) error {
 	allFiles := []fileinfo.FileInfo{}
@@ -263,18 +286,28 @@ func checkCorrectFileChan(
 		}
 		allFiles = append(allFiles, file)
 	}
-	if !reflect.DeepEqual(gotNewFiles, wantNewFiles) {
+	if len(gotNewFiles) != len(wantNewFiles) {
 		return fmt.Errorf("gotNewFiles: %v, wantNewFiles: %v",
 			gotNewFiles, wantNewFiles)
 	}
-	if len(wantNewFiles) != len(gotNonNewFiles) {
-		return fmt.Errorf("gotNonNewFiles: %v, wanted: %d",
-			gotNonNewFiles, len(wantNewFiles))
+	if len(gotNewFiles) > len(wantNewFiles) {
+		return fmt.Errorf("gotNewFiles: %v, wantNewFiles: %v",
+			gotNewFiles, wantNewFiles)
 	}
-	for name, _ := range wantNewFiles {
-		if gotNonNewFiles[name] < 1 {
-			return fmt.Errorf("gotNonNewFiles: %v, with: %v < 1",
-				gotNonNewFiles, name)
+	for name, n := range wantNewFiles {
+		if n > gotNewFiles[name] {
+			return fmt.Errorf("gotNewFiles: %v, wantNewFiles: %v",
+				gotNewFiles, wantNewFiles)
+		}
+	}
+	if len(gotNonNewFiles) > len(wantNonNewFiles) {
+		return fmt.Errorf("gotNonNewFiles: %v, wantNonNewFiles: %v",
+			gotNonNewFiles, wantNonNewFiles)
+	}
+	for name, n := range wantNonNewFiles {
+		if n > gotNonNewFiles[name] {
+			return fmt.Errorf("gotNonNewFiles: %v, wantNonNewFiles: %v",
+				gotNonNewFiles, wantNonNewFiles)
 		}
 	}
 	return nil

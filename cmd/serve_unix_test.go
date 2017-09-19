@@ -33,7 +33,7 @@ func TestRunServe(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, false)
 	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	defer os.RemoveAll(cfgDir)
-	testhelpers.MustWriteConfig(t, cfgDir, 500)
+	testhelpers.MustWriteConfig(t, cfgDir, 100)
 	l := testhelpers.NewLogger()
 
 	go func() {
@@ -59,11 +59,10 @@ func TestRunServe(t *testing.T) {
 			filepath.Join("fixtures", f),
 			filepath.Join(cfgDir, "experiments"),
 		)
-		time.Sleep(500 * time.Millisecond)
 	}
 
 	hasInterrupted := false
-	tickerC := time.NewTicker(10 * time.Millisecond).C
+	tickerC := time.NewTicker(100 * time.Millisecond).C
 	timeoutC := time.NewTimer(20 * time.Second).C
 	for !hasInterrupted {
 		select {
@@ -158,7 +157,7 @@ func TestRunServe_interrupt(t *testing.T) {
 				break
 			}
 		case <-timeoutC:
-			t.Fatal("runRoot hasn't stopped")
+			t.Fatal("runServe hasn't stopped")
 		}
 	}
 
