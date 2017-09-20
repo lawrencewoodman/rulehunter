@@ -82,6 +82,9 @@ func generate(
 			return err
 		}
 	case cmd.Reports:
+		if err := generateFront(config); err != nil {
+			return err
+		}
 		if err := generateReports(config); err != nil {
 			return err
 		}
@@ -95,6 +98,9 @@ func generate(
 			return err
 		}
 	case cmd.All:
+		if err := generateFront(config); err != nil {
+			return err
+		}
 		if err := generateLicencePage(config); err != nil {
 			return err
 		}
@@ -173,6 +179,7 @@ func countFiles(files []os.FileInfo) int {
 func makeHtmlNav(menuItem string) template.HTML {
 	var doc bytes.Buffer
 	validMenuItems := []string{
+		"front",
 		"licence",
 		"reports",
 		"tag",

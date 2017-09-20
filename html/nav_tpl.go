@@ -31,15 +31,19 @@ const navTpl = `
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand" href="">Rulehunter</a>
+			{{ if eq .MenuItem "front"}}
+				<a class="navbar-brand active" href="">Rulehunter</a>
+			{{else}}
+				<a class="navbar-brand" href="">Rulehunter</a>
+			{{end}}
 		</div>
 
 		<div id="navbar" class="collapse navbar-collapse">
 			<ul class="nav navbar-nav">
 				{{if eq .MenuItem "reports"}}
-					<li class="active"><a href="">Reports</a></li>
+					<li class="active"><a href="reports/">Reports</a></li>
 				{{else}}
-					<li><a href="">Reports</a></li>
+					<li><a href="reports/">Reports</a></li>
 				{{end}}
 
 				{{if eq .MenuItem "category"}}

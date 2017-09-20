@@ -75,6 +75,6 @@ func generateReports(config *config.Config) error {
 		Html:    makeHtml(config, "reports"),
 	}
 
-	outputFilename := "index.html"
+	outputFilename := filepath.Join("reports", "index.html")
 	return writeTemplate(config, outputFilename, reportsTpl, tplData)
 }

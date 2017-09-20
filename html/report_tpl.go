@@ -39,8 +39,8 @@ const reportTpl = `
 				{{end}}
 				{{if .Tags}}
 					Tags:
-					{{range $tag, $catLink := .Tags}}
-						<a href="{{ $catLink }}">{{ $tag }}</a> &nbsp;
+					{{range $tag, $tagLink := .Tags}}
+						<a href="{{ $tagLink }}">{{ $tag }}</a> &nbsp;
 					{{end}}
 				{{end}}
 				<br />

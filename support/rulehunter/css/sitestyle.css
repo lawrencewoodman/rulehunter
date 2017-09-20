@@ -17,8 +17,38 @@
 	<http://www.gnu.org/licenses/>.
 */
 
+a.navbar-brand.active {
+  color: white;
+}
+
 div#content {
   padding: 60px 15px;
+}
+
+ul#front-categories, #front-tags, #front-reports {
+  margin-top: 2em;
+  margin-bottom: 2em;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 0;
+  list-style: none;
+}
+ul#front-categories li, #front-tags li {
+  display: inline-block;
+  font-size: 120%;
+  font-weight: bold;
+  padding-bottom: 0.5em;
+  padding-right: 1em;
+}
+ul#front-reports li {
+  display: block;
+  font-size: 120%;
+  font-weight: bold;
+  padding-bottom: 0.5em;
+  padding-right: 1em;
+}
+ul#front-reports span.details {
+  font-weight: normal;
 }
 
 ul.reports {

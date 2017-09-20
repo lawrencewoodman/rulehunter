@@ -83,13 +83,12 @@ func generateTagPage(config *config.Config, tagName string) error {
 			escapedTagname := escapeString(tagName)
 			for _, reportTag := range report.Tags {
 				if escapedTagname == escapeString(reportTag) {
-					reportURLDir := genReportURLDir(report.Title)
 					tplReports[i] = newTplReport(
 						report.Title,
 						makeTagLinks(report.Tags),
 						report.Category,
 						makeCategoryLink(report.Category),
-						reportURLDir,
+						genReportURLDir(report.Title),
 						report.Stamp,
 					)
 					i++
@@ -116,7 +115,9 @@ func generateTagPage(config *config.Config, tagName string) error {
 func makeTagLinks(tags []string) map[string]string {
 	links := make(map[string]string, len(tags))
 	for _, tag := range tags {
-		links[tag] = makeTagLink(tag)
+		if escapeString(tag) != "" {
+			links[tag] = makeTagLink(tag)
+		}
 	}
 	return links
 }

@@ -79,13 +79,12 @@ func generateCategoryPage(config *config.Config, categoryName string) error {
 				return err
 			}
 			if escapeString(categoryName) == escapeString(report.Category) {
-				reportURLDir := genReportURLDir(report.Title)
 				tplReports[i] = newTplReport(
 					report.Title,
 					makeTagLinks(report.Tags),
 					report.Category,
 					makeCategoryLink(report.Category),
-					reportURLDir,
+					genReportURLDir(report.Title),
 					report.Stamp,
 				)
 				i++
