@@ -49,7 +49,6 @@ func generateActivityPage(
 	}
 
 	experiments := progressMonitor.GetExperiments()
-
 	tplExperiments := make([]*TplExperiment, len(experiments))
 
 	for i, experiment := range experiments {

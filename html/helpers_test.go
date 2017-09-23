@@ -15,7 +15,7 @@ func getReportUrls(filename string) ([]string, error) {
 	reportUrls := make([]string, len(urls))
 	numReportUrls := 0
 	for _, url := range urls {
-		if strings.HasPrefix(url, "reports/") {
+		if strings.HasPrefix(url, "reports/") && len(url) > len("reports/") {
 			reportUrls[numReportUrls] = url
 			numReportUrls++
 		}

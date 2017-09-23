@@ -20,22 +20,34 @@
 package html
 
 import (
-	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/report"
 	"html/template"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
+
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/report"
 )
 
 func generateFront(
 	config *config.Config,
+	progressMonitor *progress.Monitor,
 ) error {
 	const maxNumReports = 10
+	type TplExperiment struct {
+		Title    string
+		Category string
+		Status   string
+		Msg      string
+		Percent  float64
+	}
 	type TplData struct {
-		Categories map[string]string
-		Tags       map[string]string
-		Reports    []*TplReport
-		Html       map[string]template.HTML
+		Categories  map[string]string
+		Tags        map[string]string
+		Reports     []*TplReport
+		Experiments []*TplExperiment
+		Html        map[string]template.HTML
 	}
 	categories := map[string]string{}
 	tags := map[string]string{}
@@ -47,6 +59,9 @@ func generateFront(
 
 	tplReports := []*TplReport{}
 	numReports := 0
+	sort.Slice(reportFiles, func(i, j int) bool {
+		return reportFiles[i].ModTime().After(reportFiles[j].ModTime())
+	})
 	for _, file := range reportFiles {
 		if !file.IsDir() {
 			r, err := report.LoadJSON(config, file.Name())
@@ -75,11 +90,30 @@ func generateFront(
 		}
 	}
 
+	tplExperiments := []*TplExperiment{}
+	experiments := progressMonitor.GetExperiments()
+	for _, experiment := range experiments {
+		if experiment.Status.State == progress.Processing {
+			tplExperiments = append(
+				tplExperiments,
+				&TplExperiment{
+					experiment.Title,
+					experiment.Category,
+					experiment.Status.State.String(),
+					experiment.Status.Msg,
+					experiment.Status.Percent,
+				},
+			)
+			break
+		}
+	}
+
 	tplData := TplData{
-		Categories: categories,
-		Tags:       tags,
-		Reports:    tplReports,
-		Html:       makeHtml(config, "front"),
+		Categories:  categories,
+		Tags:        tags,
+		Reports:     tplReports,
+		Experiments: tplExperiments,
+		Html:        makeHtml(config, "front"),
 	}
 
 	outputFilename := "index.html"

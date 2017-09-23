@@ -97,22 +97,22 @@ ul.reports-activity th {
   background-color: #E4E4E4
 }
 
-table td.status-processing {
+.status-processing {
   font-weight: bold;
   color: orange;
 }
 
-table td.status-waiting {
+.status-waiting {
   font-weight: bold;
   color: black;
 }
 
-table td.status-success {
+.status-success {
   font-weight: bold;
   color: green;
 }
 
-table td.status-error {
+.status-error {
   font-weight: bold;
   color: red;
 }

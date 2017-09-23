@@ -84,7 +84,7 @@ const activityTpl = `
 								</tr>
 								<tr>
 									<th>Status</th>
-									<td class="status-{{ .Status }}">{{ .Status }}</td>
+									<td class="status-{{ .Status }}">{{ .Status | ToTitle }}</td>
 								</tr>
 							</table>
 						</li>

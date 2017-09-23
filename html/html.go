@@ -81,8 +81,11 @@ func generate(
 		if err := generateActivityPage(config, pm); err != nil {
 			return err
 		}
+		if err := generateFront(config, pm); err != nil {
+			return err
+		}
 	case cmd.Reports:
-		if err := generateFront(config); err != nil {
+		if err := generateFront(config, pm); err != nil {
 			return err
 		}
 		if err := generateReports(config); err != nil {
@@ -98,7 +101,7 @@ func generate(
 			return err
 		}
 	case cmd.All:
-		if err := generateFront(config); err != nil {
+		if err := generateFront(config, pm); err != nil {
 			return err
 		}
 		if err := generateLicencePage(config); err != nil {
@@ -138,7 +141,10 @@ func writeTemplate(
 	tpl string,
 	tplData interface{},
 ) error {
-	t, err := template.New("webpage").Parse(tpl)
+	funcMap := template.FuncMap{
+		"ToTitle": strings.Title,
+	}
+	t, err := template.New("webpage").Funcs(funcMap).Parse(tpl)
 	if err != nil {
 		return err
 	}

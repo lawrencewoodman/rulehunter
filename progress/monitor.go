@@ -87,8 +87,8 @@ func (m *Monitor) AddExperiment(
 	category string,
 ) error {
 	m.Lock()
-	defer m.Unlock()
 	m.experiments[filename] = newExperiment(filename, title, tags, category)
+	m.Unlock()
 	m.htmlCmds <- cmd.Progress
 	return nil
 }

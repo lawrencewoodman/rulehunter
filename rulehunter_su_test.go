@@ -79,7 +79,6 @@ func TestRulehunter_service_install(t *testing.T) {
 		if !testing.Short() {
 			time.Sleep(4 * time.Second)
 		}
-
 		testhelpers.CopyFile(
 			t,
 			filepath.Join("fixtures", "debt_datasets.json"),
