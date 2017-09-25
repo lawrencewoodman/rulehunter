@@ -5,7 +5,3 @@ import "fmt"
 
 // Users that are known on a Unix system to try using
 var knownUsers = []string{"", "root"}
-
-func init() {
-	fmt.Printf("in unix\n")
-}

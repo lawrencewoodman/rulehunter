@@ -105,7 +105,7 @@ func TestRunRoot_errors(t *testing.T) {
 		l := testhelpers.NewLogger()
 		err := runRoot(l, c.configFilename)
 		if err := checkErrorMatch(err, c.wantErr); err != nil {
-			t.Errorf("(%d) subMain: %s", i, err)
+			t.Errorf("(%d) runRoot: %s", i, err)
 		}
 		if len(l.GetEntries()) != 0 {
 			t.Errorf("GetEntries() got: %s, want: {}", l.GetEntries())

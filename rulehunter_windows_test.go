@@ -5,10 +5,6 @@ import "testing"
 // Users that are known on a Windows system to try using
 var knownUsers = []string{"", "administrator"}
 
-func TestSubMain_interrupt(t *testing.T) {
-	t.Skip("This test isn't implemented for Windows yet")
-}
-
 /*************************************
  *  Helper functions
  *************************************/
