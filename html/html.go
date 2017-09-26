@@ -167,9 +167,13 @@ func writeTemplate(
 	return nil
 }
 
-func genReportURLDir(title string) string {
+func genReportURLDir(category string, title string) string {
 	escapedTitle := escapeString(title)
-	return fmt.Sprintf("reports/%s/", escapedTitle)
+	escapedCategory := escapeString(category)
+	if category != "" {
+		return fmt.Sprintf("reports/category/%s/%s/", escapedCategory, escapedTitle)
+	}
+	return fmt.Sprintf("reports/nocategory/%s/", escapedTitle)
 }
 
 func countFiles(files []os.FileInfo) int {

@@ -64,13 +64,24 @@ func generateReport(
 		Html:               makeHtml(config, "reports"),
 	}
 
-	reportURLDir := genReportURLDir(_report.Title)
-	reportFilename := genReportFilename(_report.Stamp, _report.Title)
+	reportURLDir := genReportURLDir(_report.Category, _report.Title)
+	reportFilename :=
+		genReportFilename(_report.Category, _report.Title)
 	err := writeTemplate(config, reportFilename, reportTpl, tplData)
 	return reportURLDir, err
 }
 
-func genReportFilename(stamp time.Time, title string) string {
+func genReportFilename(category string, title string) string {
 	escapedTitle := escapeString(title)
-	return filepath.Join("reports", escapedTitle, "index.html")
+	escapedCategory := escapeString(category)
+	if category != "" {
+		return filepath.Join(
+			"reports",
+			"category",
+			escapedCategory,
+			escapedTitle,
+			"index.html",
+		)
+	}
+	return filepath.Join("reports", "nocategory", escapedTitle, "index.html")
 }

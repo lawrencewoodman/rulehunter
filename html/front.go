@@ -81,7 +81,7 @@ func generateFront(
 						makeTagLinks(r.Tags),
 						r.Category,
 						makeCategoryLink(r.Category),
-						genReportURLDir(r.Title),
+						genReportURLDir(r.Category, r.Title),
 						r.Stamp,
 					),
 				)

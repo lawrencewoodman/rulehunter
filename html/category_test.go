@@ -53,14 +53,14 @@ func TestGenerateCategoryPages(t *testing.T) {
 		"groupa": &categoryInfo{
 			"Reports for category: groupA",
 			[]string{
-				"reports/how-to-make-a-loss/",
+				"reports/category/groupa/how-to-make-a-loss/",
 			},
 		},
 		"groupb": &categoryInfo{
 			"Reports for category: group^^^B",
 			[]string{
-				"reports/how-to-keep-costs-low/",
-				"reports/how-to-make-a-profit/",
+				"reports/category/groupb/how-to-keep-costs-low/",
+				"reports/category/groupb/how-to-make-a-profit/",
 			},
 		},
 	}

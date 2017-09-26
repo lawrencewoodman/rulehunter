@@ -112,10 +112,24 @@ func TestRun_cmd_all(t *testing.T) {
 		filepath.Join(cfgDir, "www", "index.html"),
 		filepath.Join(cfgDir, "www", "activity", "index.html"),
 		filepath.Join(cfgDir, "www", "licence", "index.html"),
-		filepath.Join(cfgDir, "www", "reports", "how-to-make-a-loss",
-			"index.html"),
-		filepath.Join(cfgDir, "www", "reports", "how-to-make-a-profit",
-			"index.html"),
+		filepath.Join(
+			cfgDir,
+			"www",
+			"reports",
+			"category",
+			"groupa",
+			"how-to-make-a-loss",
+			"index.html",
+		),
+		filepath.Join(
+			cfgDir,
+			"www",
+			"reports",
+			"category",
+			"groupb",
+			"how-to-make-a-profit",
+			"index.html",
+		),
 		filepath.Join(cfgDir, "www", "tag", "test",
 			"index.html"),
 		filepath.Join(cfgDir, "www", "tag", "bank",
@@ -210,10 +224,24 @@ func TestRun_cmd_reports(t *testing.T) {
 	wantFiles := []string{
 		filepath.Join(cfgDir, "www", "index.html"),
 		filepath.Join(cfgDir, "www", "activity", "index.html"),
-		filepath.Join(cfgDir, "www", "reports", "how-to-make-a-loss",
-			"index.html"),
-		filepath.Join(cfgDir, "www", "reports", "how-to-make-a-profit",
-			"index.html"),
+		filepath.Join(
+			cfgDir,
+			"www",
+			"reports",
+			"category",
+			"groupa",
+			"how-to-make-a-loss",
+			"index.html",
+		),
+		filepath.Join(
+			cfgDir,
+			"www",
+			"reports",
+			"category",
+			"groupb",
+			"how-to-make-a-profit",
+			"index.html",
+		),
 		filepath.Join(cfgDir, "www", "tag", "test",
 			"index.html"),
 		filepath.Join(cfgDir, "www", "tag", "bank",
@@ -344,18 +372,24 @@ func TestRun_cmd_progress(t *testing.T) {
 
 func TestGenReportURLDir(t *testing.T) {
 	cases := []struct {
-		title   string
-		wantDir string
+		category string
+		title    string
+		want     string
 	}{
-		{"This could be very interesting",
-			"reports/this-could-be-very-interesting/",
+		{category: "",
+			title: "This could be very interesting",
+			want:  "reports/nocategory/this-could-be-very-interesting/",
+		},
+		{category: "acme or emca",
+			title: "This could be very interesting",
+			want:  "reports/category/acme-or-emca/this-could-be-very-interesting/",
 		},
 	}
 	for _, c := range cases {
-		got := genReportURLDir(c.title)
-		if got != c.wantDir {
-			t.Errorf("genReportFilename(%s) got: %s, want: %s",
-				c.title, got, c.wantDir)
+		got := genReportURLDir(c.category, c.title)
+		if got != c.want {
+			t.Errorf("genReportFilename(%s, %s) got: %s, want: %s",
+				c.category, c.title, got, c.want)
 		}
 	}
 }

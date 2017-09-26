@@ -88,7 +88,7 @@ func generateTagPage(config *config.Config, tagName string) error {
 						makeTagLinks(report.Tags),
 						report.Category,
 						makeCategoryLink(report.Category),
-						genReportURLDir(report.Title),
+						genReportURLDir(report.Category, report.Title),
 						report.Stamp,
 					)
 					i++
