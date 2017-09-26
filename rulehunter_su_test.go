@@ -139,6 +139,13 @@ func TestRulehunter_service_uninstall(t *testing.T) {
 		true,
 		os.Args[0],
 		"service",
+		"uninstall",
+		fmt.Sprintf("--config=%s", filepath.Join(cfgDir, "config.yaml")),
+	)
+	runOSCmd(t,
+		true,
+		os.Args[0],
+		"service",
 		"install",
 		fmt.Sprintf("--config=%s", filepath.Join(cfgDir, "config.yaml")),
 	)
