@@ -16,9 +16,18 @@ func CheckExperimentsMatch(
 		return fmt.Errorf("Lengths of experiments don't match: %d != %d",
 			len(experiments1), len(experiments2))
 	}
-	for i, e := range experiments1 {
-		if err := checkExperimentMatch(e, experiments2[i]); err != nil {
-			return err
+	for _, e1 := range experiments1 {
+		filenameFound := false
+		for _, e2 := range experiments2 {
+			if e1.Filename == e2.Filename {
+				filenameFound = true
+				if err := checkExperimentMatch(e1, e2); err != nil {
+					return err
+				}
+			}
+		}
+		if !filenameFound {
+			return fmt.Errorf("experiment filename: %s, not found", e1.Filename)
 		}
 	}
 	return nil
