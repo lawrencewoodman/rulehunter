@@ -3,7 +3,7 @@ package main
 import "testing"
 
 // Users that are known on a Windows system to try using
-var knownUsers = []string{"", "administrator"}
+var knownUsers = []string{""}
 
 /*************************************
  *  Helper functions

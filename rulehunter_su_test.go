@@ -43,6 +43,7 @@ func TestMain(m *testing.M) {
 
 func TestRulehunter_service_install(t *testing.T) {
 	for _, user := range knownUsers {
+		t.Logf("user: %s", user)
 		cfgDir := testhelpers.BuildConfigDirs(t, false)
 		defer os.RemoveAll(cfgDir)
 		testhelpers.MustWriteConfig(t, cfgDir, 10)
