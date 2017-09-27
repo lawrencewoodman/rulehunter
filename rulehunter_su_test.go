@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/vlifesystems/rulehunter/cmd"
+	"github.com/vlifesystems/rulehunter/internal"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 )
 
@@ -100,10 +101,19 @@ func TestRulehunter_service_install(t *testing.T) {
 			filepath.Join(cfgDir, "experiments"),
 		)
 
-		wantFiles := []string{
-			"debt2_datasets.json",
-			"debt_datasets.json",
-			"debt_datasets.yaml",
+		wantReportFiles := []string{
+			// "debt2_datasets.json"
+			internal.MakeBuildFilename(
+				"",
+				"What is most likely to indicate success (2)",
+			),
+			// "debt_datasets.yaml"
+			internal.MakeBuildFilename(
+				"testing",
+				"What is most likely to indicate success",
+			),
+			// "debt_datasets.json"
+			internal.MakeBuildFilename("", "What is most likely to indicate success"),
 		}
 		isFinished := false
 		files := []string{}
@@ -116,13 +126,13 @@ func TestRulehunter_service_install(t *testing.T) {
 					t,
 					filepath.Join(cfgDir, "build", "reports"),
 				)
-				if reflect.DeepEqual(files, wantFiles) {
+				if reflect.DeepEqual(files, wantReportFiles) {
 					isFinished = true
 					break
 				}
 			case <-timeoutC:
 				t.Errorf("(user: %s) didn't generate correct files within time period, got: %v, want: %v",
-					user, files, wantFiles)
+					user, files, wantReportFiles)
 				isFinished = true
 				break
 			}
