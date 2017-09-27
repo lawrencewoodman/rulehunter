@@ -3,6 +3,17 @@ package experiment
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"reflect"
+	"regexp"
+	"runtime"
+	"strings"
+	"syscall"
+	"testing"
+	"time"
+
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"github.com/lawrencewoodman/ddataset/dtruncate"
@@ -14,20 +25,11 @@ import (
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
 	"github.com/vlifesystems/rulehunter/html/cmd"
+	"github.com/vlifesystems/rulehunter/internal"
 	"github.com/vlifesystems/rulehunter/internal/progresstest"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/quitter"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"reflect"
-	"regexp"
-	"runtime"
-	"strings"
-	"syscall"
-	"testing"
-	"time"
 )
 
 func TestLoad(t *testing.T) {
@@ -576,15 +578,20 @@ func TestProcess_supplied_rules(t *testing.T) {
 		t.Fatalf("Process: %s", err)
 	}
 
-	flowBuildFilename := filepath.Join(cfgDir, "build", "reports", "flow.json")
-	b, err := ioutil.ReadFile(flowBuildFilename)
+	flowBuildFullFilename := filepath.Join(
+		cfgDir,
+		"build",
+		"reports",
+		internal.MakeBuildFilename(e.Category, e.Title),
+	)
+	b, err := ioutil.ReadFile(flowBuildFullFilename)
 	if err != nil {
 		t.Fatalf("ReadFile: %s", err)
 	}
 	s := string(b)
 	wantRule := "height \\u003e= 129"
 	if !strings.Contains(s, wantRule) {
-		t.Errorf("rule: %s, missing from: %s", wantRule, flowBuildFilename)
+		t.Errorf("rule: %s, missing from: %s", wantRule, flowBuildFullFilename)
 	}
 
 	// TODO: Test files generated

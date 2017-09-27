@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/vlifesystems/rulehunter/internal"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 )
 
@@ -28,7 +29,20 @@ func TestRunRoot(t *testing.T) {
 		{Level: testhelpers.Info,
 			Msg: "Successfully processed experiment: debt2.json"},
 	}
-	wantReportFiles := []string{"debt.json", "debt.yaml", "debt2.json"}
+	wantReportFiles := []string{
+		// "debt2.json"
+		internal.MakeBuildFilename(
+			"",
+			"What is most likely to indicate success (2)",
+		),
+		// "debt.yaml"
+		internal.MakeBuildFilename(
+			"testing",
+			"What is most likely to indicate success",
+		),
+		// "debt.json"
+		internal.MakeBuildFilename("", "What is most likely to indicate success"),
+	}
 
 	cfgDir := testhelpers.BuildConfigDirs(t, false)
 	cfgFilename := filepath.Join(cfgDir, "config.yaml")

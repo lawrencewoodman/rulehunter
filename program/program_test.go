@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"testing"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
 	"github.com/vlifesystems/rulehunter/html/cmd"
+	"github.com/vlifesystems/rulehunter/internal"
 	"github.com/vlifesystems/rulehunter/internal/progresstest"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"github.com/vlifesystems/rulehunter/progress"
@@ -41,7 +43,7 @@ var wantPMExperiments = []*progress.Experiment{
 		},
 	},
 	&progress.Experiment{
-		Title:    "What is most likely to indicate success",
+		Title:    "What is most likely to indicate success (norun)",
 		Filename: "debt_when_nothasrun.yaml",
 		Tags:     []string{},
 		Status: &progress.Status{
@@ -63,7 +65,7 @@ var wantPMExperiments = []*progress.Experiment{
 		},
 	},
 	&progress.Experiment{
-		Title:    "What is most likely to indicate success",
+		Title:    "What is most likely to indicate success (2)",
 		Filename: "debt2.json",
 		Tags:     []string{},
 		Status: &progress.Status{
@@ -88,6 +90,7 @@ var wantPMExperiments = []*progress.Experiment{
 		Title:    "What is most likely to indicate success",
 		Filename: "debt.yaml",
 		Tags:     []string{"bank", "loan"},
+		Category: "testing",
 		Status: &progress.Status{
 			Stamp:   time.Now(),
 			Msg:     "Finished processing successfully",
@@ -149,10 +152,23 @@ var wantLogEntries = []testhelpers.Entry{
 }
 
 var wantReportFiles = []string{
-	"debt.json",
-	"debt.yaml",
-	"debt2.json",
-	"debt_when_nothasrun.yaml",
+	// "debt_when_nothasrun.yaml"
+	internal.MakeBuildFilename(
+		"",
+		"What is most likely to indicate success (norun)",
+	),
+	// "debt2.json"
+	internal.MakeBuildFilename(
+		"",
+		"What is most likely to indicate success (2)",
+	),
+	// "debt.yaml"
+	internal.MakeBuildFilename(
+		"testing",
+		"What is most likely to indicate success",
+	),
+	// "debt.json"
+	internal.MakeBuildFilename("", "What is most likely to indicate success"),
 }
 
 var experimentFiles = []string{
@@ -225,6 +241,8 @@ func TestProcessFile(t *testing.T) {
 		t,
 		filepath.Join(cfgDir, "build", "reports"),
 	)
+	sort.Strings(gotReportFiles)
+	sort.Strings(wantReportFiles)
 	if !reflect.DeepEqual(gotReportFiles, wantReportFiles) {
 		t.Errorf("GetFilesInDir - got: %v\n want: %v",
 			gotReportFiles, wantReportFiles)
@@ -270,7 +288,7 @@ func TestProcessDir(t *testing.T) {
 	}
 	wantPMExperiments := []*progress.Experiment{
 		&progress.Experiment{
-			Title:    "What is most likely to indicate success",
+			Title:    "What is most likely to indicate success (norun)",
 			Filename: "debt_when_nothasrun.yaml",
 			Tags:     []string{},
 			Status: &progress.Status{
@@ -314,7 +332,7 @@ func TestProcessDir(t *testing.T) {
 			},
 		},
 		&progress.Experiment{
-			Title:    "What is most likely to indicate success",
+			Title:    "What is most likely to indicate success (2)",
 			Filename: "debt2.json",
 			Tags:     []string{},
 			Status: &progress.Status{
@@ -328,6 +346,7 @@ func TestProcessDir(t *testing.T) {
 			Title:    "What is most likely to indicate success",
 			Filename: "debt.yaml",
 			Tags:     []string{"bank", "loan"},
+			Category: "testing",
 			Status: &progress.Status{
 				Stamp:   time.Now(),
 				Msg:     "Finished processing successfully",
@@ -402,6 +421,8 @@ func TestProcessDir(t *testing.T) {
 		t,
 		filepath.Join(cfgDir, "build", "reports"),
 	)
+	sort.Strings(gotReportFiles)
+	sort.Strings(wantReportFiles)
 	if !reflect.DeepEqual(gotReportFiles, wantReportFiles) {
 		t.Errorf("GetFilesInDir - got: %v\n want: %v",
 			gotReportFiles, wantReportFiles)

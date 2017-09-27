@@ -3,18 +3,20 @@ package report
 import (
 	"errors"
 	"fmt"
-	"github.com/lawrencewoodman/dlit"
-	"github.com/vlifesystems/rhkit/aggregator"
-	rhkassessment "github.com/vlifesystems/rhkit/assessment"
-	"github.com/vlifesystems/rhkit/rule"
-	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"math"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/lawrencewoodman/dlit"
+	"github.com/vlifesystems/rhkit/aggregator"
+	rhkassessment "github.com/vlifesystems/rhkit/assessment"
+	"github.com/vlifesystems/rhkit/rule"
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/internal"
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 )
 
 func TestNew(t *testing.T) {
@@ -275,7 +277,8 @@ func TestWriteLoadJSON(t *testing.T) {
 	if err := report.WriteJSON(config); err != nil {
 		t.Fatalf("WriteJSON: %s", err)
 	}
-	loadedReport, err := LoadJSON(config, experimentFilename)
+	buildFilename := internal.MakeBuildFilename(category, title)
+	loadedReport, err := LoadJSON(config, buildFilename)
 	if err != nil {
 		t.Fatalf("LoadJSON: %s", err)
 	}

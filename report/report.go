@@ -16,22 +16,25 @@
 	along with this program; see the file COPYING.  If not, see
 	<http://www.gnu.org/licenses/>.
 */
+
 package report
 
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"sort"
+	"time"
+
 	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	rhkaggregator "github.com/vlifesystems/rhkit/aggregator"
 	rhkassessment "github.com/vlifesystems/rhkit/assessment"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"sort"
-	"time"
+	"github.com/vlifesystems/rulehunter/internal"
 )
 
 type Aggregator struct {
@@ -134,8 +137,8 @@ func (r *Report) WriteJSON(config *config.Config) error {
 	if err != nil {
 		return err
 	}
-	reportFilename :=
-		filepath.Join(config.BuildDir, "reports", r.ExperimentFilename)
+	buildFilename := internal.MakeBuildFilename(r.Category, r.Title)
+	reportFilename := filepath.Join(config.BuildDir, "reports", buildFilename)
 	return ioutil.WriteFile(reportFilename, json, modePerm)
 }
 

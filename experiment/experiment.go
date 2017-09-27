@@ -23,6 +23,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"math"
+	"os"
+	"path/filepath"
+	"sync"
+	"time"
+
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcache"
 	"github.com/lawrencewoodman/ddataset/dcsv"
@@ -36,14 +43,9 @@ import (
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
+	"github.com/vlifesystems/rulehunter/internal"
 	"github.com/vlifesystems/rulehunter/report"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"math"
-	"os"
-	"path/filepath"
-	"sync"
-	"time"
 )
 
 type Experiment struct {
@@ -206,12 +208,11 @@ func (e *Experiment) Process(
 	reportProgress := func(msg string, percent float64) error {
 		return pr.ReportProgress(e.File.Name(), msg, percent)
 	}
-	filename := e.File.Name()
 	if err := reportProgress("Describing dataset", 0); err != nil {
 		return err
 	}
 
-	dDescription, err := describeDataset(cfg, filename, e.Dataset)
+	dDescription, err := e.describeDataset(cfg)
 	if err != nil {
 		return fmt.Errorf("Couldn't describe dataset: %s", err)
 	}
@@ -419,17 +420,16 @@ func (e *descFile) checkValid() error {
 	return nil
 }
 
-func describeDataset(
+func (e *Experiment) describeDataset(
 	cfg *config.Config,
-	filename string,
-	dataset ddataset.Dataset,
 ) (*description.Description, error) {
-	_description, err := description.DescribeDataset(dataset)
+	_description, err := description.DescribeDataset(e.Dataset)
 	if err != nil {
 		return nil, err
 	}
 
-	fdFilename := filepath.Join(cfg.BuildDir, "descriptions", filename)
+	buildFilename := internal.MakeBuildFilename(e.Category, e.Title)
+	fdFilename := filepath.Join(cfg.BuildDir, "descriptions", buildFilename)
 	if err := _description.WriteJSON(fdFilename); err != nil {
 		return nil, err
 	}
