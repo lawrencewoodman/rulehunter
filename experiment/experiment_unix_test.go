@@ -3,7 +3,6 @@
 package experiment
 
 import (
-	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/internal"
@@ -20,7 +19,6 @@ func TestDescribeDataset_errors(t *testing.T) {
 	cases := []struct {
 		cfg        *config.Config
 		experiment *Experiment
-		dataset    ddataset.Dataset
 		wantErr    error
 	}{
 		{cfg: &config.Config{BuildDir: filepath.Join(cfgDir, "build")},

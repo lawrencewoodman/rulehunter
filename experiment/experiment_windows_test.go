@@ -1,9 +1,9 @@
 package experiment
 
 import (
-	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/internal"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"os"
 	"path/filepath"
@@ -58,7 +58,7 @@ func TestDescribeDataset_errors(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		_, err := describeDataset(c.cfg, "aname", c.dataset)
+		_, err := c.experiment.describeDataset(c.cfg)
 		if err == nil || err.Error() != c.wantErr.Error() {
 			t.Errorf("describeDataset - gotErr: %s, wantErr: %s", err, c.wantErr)
 		}
