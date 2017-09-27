@@ -56,6 +56,9 @@ const frontTpl = `
 							<p>No categories are currently being used.</p>
 						{{end}}
 
+						<p><a href="reports/nocategory/">See uncategorized reports</a></p>
+						<br />
+
 						<h2>Tags</h2>
 						{{if .Tags}}
 							<ul id="front-tags">

@@ -2,9 +2,11 @@ package html
 
 import (
 	"bytes"
-	"golang.org/x/net/html"
 	"io/ioutil"
+	"regexp"
 	"strings"
+
+	"golang.org/x/net/html"
 )
 
 func getReportUrls(filename string) ([]string, error) {
@@ -15,7 +17,13 @@ func getReportUrls(filename string) ([]string, error) {
 	reportUrls := make([]string, len(urls))
 	numReportUrls := 0
 	for _, url := range urls {
-		if strings.HasPrefix(url, "reports/") && len(url) > len("reports/") {
+		isCategoryIndexUrl, err := regexp.MatchString("category\\/[^/]+\\/$", url)
+		if err != nil {
+			return []string{}, err
+		}
+		if (strings.HasPrefix(url, "reports/category/") && !isCategoryIndexUrl) ||
+			(strings.HasPrefix(url, "reports/nocategory/") &&
+				len(url) > len("reports/nocategory")) {
 			reportUrls[numReportUrls] = url
 			numReportUrls++
 		}

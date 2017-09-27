@@ -29,7 +29,7 @@ func TestGenerateCategoryPages(t *testing.T) {
 	}
 
 	categoryFiles, err :=
-		ioutil.ReadDir(filepath.Join(config.WWWDir, "category"))
+		ioutil.ReadDir(filepath.Join(config.WWWDir, "reports", "category"))
 	if err != nil {
 		t.Fatalf("ioutil.ReadDir(...) err: %s", err)
 	}
@@ -38,6 +38,7 @@ func TestGenerateCategoryPages(t *testing.T) {
 		if file.IsDir() {
 			categoryIndexFilename := filepath.Join(
 				config.WWWDir,
+				"reports",
 				"category",
 				file.Name(),
 				"index.html",

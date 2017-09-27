@@ -99,13 +99,17 @@ func generateCategoryPage(config *config.Config, categoryName string) error {
 		Html:     makeHtml(config, "category"),
 	}
 	outputFilename := filepath.Join(
+		"reports",
 		"category",
 		escapeString(categoryName),
 		"index.html",
 	)
+	if len(escapeString(categoryName)) == 0 {
+		outputFilename = filepath.Join("reports", "nocategory", "index.html")
+	}
 	return writeTemplate(config, outputFilename, categoryTpl, tplData)
 }
 
 func makeCategoryLink(category string) string {
-	return fmt.Sprintf("category/%s/", escapeString(category))
+	return fmt.Sprintf("reports/category/%s/", escapeString(category))
 }
