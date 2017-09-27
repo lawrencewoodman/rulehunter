@@ -74,26 +74,24 @@ func TestRun_cmd_all(t *testing.T) {
 	defer os.Chdir(wd)
 	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "reports", "bank-loss.json"),
-		filepath.Join(cfgDir, "build", "reports"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "reports", "bank-profit.json"),
-		filepath.Join(cfgDir, "build", "reports"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "descriptions", "bank-loss.json"),
-		filepath.Join(cfgDir, "build", "descriptions"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "descriptions", "bank-profit.json"),
-		filepath.Join(cfgDir, "build", "descriptions"),
-	)
+
+	testFiles := []string{
+		"bank-loss.json",
+		"bank-profit.json",
+		"bank-notagsnocats.json",
+	}
+	for _, f := range testFiles {
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", "reports", f),
+			filepath.Join(cfgDir, "build", "reports"),
+		)
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", "descriptions", f),
+			filepath.Join(cfgDir, "build", "descriptions"),
+		)
+	}
 
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfgDir, "build", "progress"),
@@ -130,15 +128,21 @@ func TestRun_cmd_all(t *testing.T) {
 			"how-to-make-a-profit",
 			"index.html",
 		),
-		filepath.Join(cfgDir, "www", "tag", "test",
+		filepath.Join(cfgDir, "www", "reports", "notag", "index.html"),
+		filepath.Join(cfgDir, "www", "reports", "tag", "test",
 			"index.html"),
-		filepath.Join(cfgDir, "www", "tag", "bank",
+		filepath.Join(cfgDir, "www", "reports", "tag", "bank",
 			"index.html"),
-		filepath.Join(cfgDir, "www", "tag", "fahrenheit-451",
+		filepath.Join(cfgDir, "www", "reports", "tag", "fahrenheit-451",
 			"index.html"),
-		filepath.Join(cfgDir, "www", "tag", "fred-ned",
+		filepath.Join(cfgDir, "www", "reports", "tag", "fred-ned",
 			"index.html"),
-		filepath.Join(cfgDir, "www", "tag", "hot-in-the-city",
+		filepath.Join(cfgDir, "www", "reports", "tag", "hot-in-the-city",
+			"index.html"),
+		filepath.Join(cfgDir, "www", "reports", "nocategory", "index.html"),
+		filepath.Join(cfgDir, "www", "reports", "category", "groupa",
+			"index.html"),
+		filepath.Join(cfgDir, "www", "reports", "category", "groupb",
 			"index.html"),
 	}
 
@@ -187,26 +191,24 @@ func TestRun_cmd_reports(t *testing.T) {
 	defer os.Chdir(wd)
 	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "reports", "bank-loss.json"),
-		filepath.Join(cfgDir, "build", "reports"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "reports", "bank-profit.json"),
-		filepath.Join(cfgDir, "build", "reports"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "descriptions", "bank-loss.json"),
-		filepath.Join(cfgDir, "build", "descriptions"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "descriptions", "bank-profit.json"),
-		filepath.Join(cfgDir, "build", "descriptions"),
-	)
+
+	testFiles := []string{
+		"bank-loss.json",
+		"bank-profit.json",
+		"bank-notagsnocats.json",
+	}
+	for _, f := range testFiles {
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", "reports", f),
+			filepath.Join(cfgDir, "build", "reports"),
+		)
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", "descriptions", f),
+			filepath.Join(cfgDir, "build", "descriptions"),
+		)
+	}
 
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfgDir, "build", "progress"),
@@ -242,15 +244,21 @@ func TestRun_cmd_reports(t *testing.T) {
 			"how-to-make-a-profit",
 			"index.html",
 		),
-		filepath.Join(cfgDir, "www", "tag", "test",
+		filepath.Join(cfgDir, "www", "reports", "notag", "index.html"),
+		filepath.Join(cfgDir, "www", "reports", "tag", "test",
 			"index.html"),
-		filepath.Join(cfgDir, "www", "tag", "bank",
+		filepath.Join(cfgDir, "www", "reports", "tag", "bank",
 			"index.html"),
-		filepath.Join(cfgDir, "www", "tag", "fahrenheit-451",
+		filepath.Join(cfgDir, "www", "reports", "tag", "fahrenheit-451",
 			"index.html"),
-		filepath.Join(cfgDir, "www", "tag", "fred-ned",
+		filepath.Join(cfgDir, "www", "reports", "tag", "fred-ned",
 			"index.html"),
-		filepath.Join(cfgDir, "www", "tag", "hot-in-the-city",
+		filepath.Join(cfgDir, "www", "reports", "tag", "hot-in-the-city",
+			"index.html"),
+		filepath.Join(cfgDir, "www", "reports", "nocategory", "index.html"),
+		filepath.Join(cfgDir, "www", "reports", "category", "groupa",
+			"index.html"),
+		filepath.Join(cfgDir, "www", "reports", "category", "groupb",
 			"index.html"),
 	}
 

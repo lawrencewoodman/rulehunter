@@ -29,7 +29,7 @@ func TestGenerateTagPages(t *testing.T) {
 	}
 
 	tagFiles, err :=
-		ioutil.ReadDir(filepath.Join(config.WWWDir, "tag"))
+		ioutil.ReadDir(filepath.Join(config.WWWDir, "reports", "tag"))
 	if err != nil {
 		t.Fatalf("ioutil.ReadDir(...) err: %s", err)
 	}
@@ -39,17 +39,38 @@ func TestGenerateTagPages(t *testing.T) {
 		if file.IsDir() {
 			tagIndexFilename := filepath.Join(
 				config.WWWDir,
+				"reports",
 				"tag",
 				file.Name(),
 				"index.html",
 			)
 			if tagInfo, err := getTagInfo(tagIndexFilename); err == nil {
 				tagsInfo[file.Name()] = tagInfo
+			} else {
+				t.Fatalf("getTagInfo: %s", err)
 			}
 		}
 	}
 
+	noTagIndexFilename := filepath.Join(
+		config.WWWDir,
+		"reports",
+		"notag",
+		"index.html",
+	)
+	if tagInfo, err := getTagInfo(noTagIndexFilename); err == nil {
+		tagsInfo[""] = tagInfo
+	} else {
+		t.Fatalf("getTagInfo: %s", err)
+	}
+
 	wantTagsInfo := map[string]*tagInfo{
+		"": &tagInfo{
+			"Reports for tag: ",
+			[]string{
+				"reports/nocategory/how-to-not-contain-tags-or-cats/",
+			},
+		},
 		"bank": &tagInfo{
 			"Reports for tag: bank",
 			[]string{

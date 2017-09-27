@@ -55,6 +55,11 @@ func generateTagPages(config *config.Config) error {
 			}
 		}
 	}
+
+	if err := generateTagPage(config, ""); err != nil {
+		return err
+	}
+	tagsLen[""] = 0
 	return nil
 }
 
@@ -81,8 +86,22 @@ func generateTagPage(config *config.Config, tagName string) error {
 				return err
 			}
 			escapedTagname := escapeString(tagName)
-			for _, reportTag := range report.Tags {
-				if escapedTagname == escapeString(reportTag) {
+			if len(report.Tags) > 0 {
+				for _, reportTag := range report.Tags {
+					if escapedTagname == escapeString(reportTag) {
+						tplReports[i] = newTplReport(
+							report.Title,
+							makeTagLinks(report.Tags),
+							report.Category,
+							makeCategoryLink(report.Category),
+							genReportURLDir(report.Category, report.Title),
+							report.Stamp,
+						)
+						i++
+					}
+				}
+			} else {
+				if len(escapedTagname) == 0 {
 					tplReports[i] = newTplReport(
 						report.Title,
 						makeTagLinks(report.Tags),
@@ -104,11 +123,14 @@ func generateTagPage(config *config.Config, tagName string) error {
 		Html:    makeHtml(config, "tag"),
 	}
 	outputFilename := filepath.Join(
+		"reports",
 		"tag",
 		escapeString(tagName),
 		"index.html",
 	)
-
+	if len(escapeString(tagName)) == 0 {
+		outputFilename = filepath.Join("reports", "notag", "index.html")
+	}
 	return writeTemplate(config, outputFilename, tagTpl, tplData)
 }
 
@@ -124,7 +146,7 @@ func makeTagLinks(tags []string) map[string]string {
 
 func makeTagLink(tag string) string {
 	return fmt.Sprintf(
-		"tag/%s/",
+		"reports/tag/%s/",
 		escapeString(tag),
 	)
 }
