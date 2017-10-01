@@ -35,7 +35,7 @@ To submit code contributions we ask the following:
   * Make a pull request to the [repo](https://github.com/vlifesystems/rulehunter) on github.
 
 #### Developer Certificate of Origin
-Rather than a use a full-blown _Contributor License Agreement_, this project uses a simple _Developer Certificate of Origin_ to confirm that any contributions can be included.  The text of the certificate is listed below and the easiest way to confirm this is via [cla-assistant](https://cla-assistant.io/vlifesystems/rulehunter).
+Rather than use a full-blown _Contributor License Agreement_, this project uses a simple _Developer Certificate of Origin_ to confirm that any contributions can be included.  The text of the certificate is listed below and the easiest way to confirm this is via [cla-assistant](https://cla-assistant.io/vlifesystems/rulehunter).
 
     Developer Certificate of Origin
     Version 1.1
