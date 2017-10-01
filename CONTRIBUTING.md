@@ -8,6 +8,7 @@ Table of Contents
 
   * [Code](#code)
     * [Reporting Issues](#reporting-issues)
+    * [Code Contributions](#code-contributions)
     * [Licence](#licence)
     * [Additional Licences and attribution](#additional-licences-and-attribution)
   * [Documentation](#documentation)
@@ -18,6 +19,13 @@ Rulehunter is written in [Go](https://golang.org/) (v1.8+) and the code can be f
 
     go get github.com/vlifesystems/rulehunter
 
+Rulehunter uses [govendor](https://github.com/kardianos/govendor) to vendor dependencies and these are included in the repository's `vendor/` directory.
+
+### Reporting Issues
+If you find a an issue with the code, please report it using the project's [issue tracker](https://github.com/vlifesystems/rulehunter/issues).  When reporting the issue please provide the version of Rulehunter (`rulehunter version`) and operating system being used.
+
+### Code Contributions
+
 To submit code contributions we ask the following:
 
   * Confirm that your contributions can be included via a simple [Developer Certificate of Origin](#developer-certificate-of-origin) which we use instead of a full CLA. This can be signed via [cla-assistant](https://cla-assistant.io/vlifesystems/rulehunter).
@@ -26,7 +34,7 @@ To submit code contributions we ask the following:
   * Update [CHANGELOG.md](https://github.com/vlifesystems/rulehunter/blob/master/CHANGELOG.md) if appropriate.
   * Make a pull request to the [repo](https://github.com/vlifesystems/rulehunter) on github.
 
-### Developer Certificate of Origin
+#### Developer Certificate of Origin
 Rather than a use a full-blown _Contributor License Agreement_, this project uses a simple _Developer Certificate of Origin_ to confirm that any contributions can be included.  The text of the certificate is listed below and the easiest way to confirm this is via [cla-assistant](https://cla-assistant.io/vlifesystems/rulehunter).
 
     Developer Certificate of Origin
@@ -67,12 +75,6 @@ Rather than a use a full-blown _Contributor License Agreement_, this project use
         maintained indefinitely and may be redistributed consistent with
         this project or the open source license(s) involved.
 
-### Vendored Dependencies
-
-Rulehunter uses [govendor](https://github.com/kardianos/govendor) to vendor dependencies and these are included in the repository's `vendor/` directory.
-
-### Reporting Issues
-If you find a an issue with the code, please report it using the project's [issue tracker](https://github.com/vlifesystems/rulehunter/issues).  When reporting the issue please provide the version of Rulehunter (`rulehunter version`) and operating system being used.
 
 ### Licence
 Copyright (C) 2016-2017 [vLife Systems Ltd](http://vlifesystems.com)
