@@ -1,21 +1,5 @@
-/*
-	rulehunter - A server to find rules in data based on user specified goals
-	Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
-
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU Affero General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU Affero General Public License for more details.
-
-	You should have received a copy of the GNU Affero General Public License
-	along with this program; see the file COPYING.  If not, see
-	<http://www.gnu.org/licenses/>.
-*/
+// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 // Package config handles the loading of a config file
 package config
@@ -32,7 +16,6 @@ type Config struct {
 	ExperimentsDir     string `yaml:"experimentsDir"`
 	WWWDir             string `yaml:"wwwDir"`
 	BuildDir           string `yaml:"buildDir"`
-	SourceURL          string `yaml:"sourceUrl"`
 	BaseURL            string `yaml:"baseUrl"`
 	MaxNumReportRules  int    `yaml:"maxNumReportRules"`
 	MaxNumProcesses    int    `yaml:"maxNumProcesses"`
@@ -71,10 +54,6 @@ func Load(filename string) (*Config, error) {
 
 	if c.MaxNumCacheRecords < 1 {
 		c.MaxNumCacheRecords = 0
-	}
-
-	if c.SourceURL == "" {
-		c.SourceURL = "https://github.com/vlifesystems/rulehunter"
 	}
 
 	if c.BaseURL == "" {

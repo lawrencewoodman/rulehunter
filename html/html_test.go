@@ -109,7 +109,6 @@ func TestRun_cmd_all(t *testing.T) {
 	wantFiles := []string{
 		filepath.Join(cfgDir, "www", "index.html"),
 		filepath.Join(cfgDir, "www", "activity", "index.html"),
-		filepath.Join(cfgDir, "www", "licence", "index.html"),
 		filepath.Join(
 			cfgDir,
 			"www",

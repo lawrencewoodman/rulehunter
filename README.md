@@ -43,9 +43,8 @@ We want your help to find bugs as quickly as possible and would welcome your hel
 
 Licence
 -------
-
-Rulehunter - Find rules in data based on user specified goals
-
 Copyright (C) 2016-2017 [vLife Systems Ltd](http://vlifesystems.com)
 
-Rulehunter is licensed under the GNU Affero General Public License version 3 (AGPLv3). Please see the [licence](https://github.com/vlifesystems/rulehunter/blob/master/CONTRIBUTING.md#licence) section of the [Contributing Guide](https://github.com/vlifesystems/rulehunter/blob/master/CONTRIBUTING.md) for more details about this and the licences used by other code included with Rulehunter.
+Rulehunter is licensed under an MIT licence.  Please see [LICENSE.md](https://github.com/vlifesystems/rulehunter/blob/master/LICENSE.md) for details.
+
+Rulehunter also includes various libraries.  For more details about their licences please see the [licence](https://github.com/vlifesystems/rulehunter/blob/master/CONTRIBUTING.md#licence) section of the [Contributing Guide](https://github.com/vlifesystems/rulehunter/blob/master/CONTRIBUTING.md).

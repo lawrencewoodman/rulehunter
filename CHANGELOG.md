@@ -1,5 +1,9 @@
 ## Master
 
+### Config
+
+ * Remove sourceURL
+
 ### Experiment Files
 
  * s/`function`/`kind`/ for `aggregators` in experiment files
@@ -13,6 +17,7 @@
  * Change directory structure of generated html
  * Create dashboard style front page for generated html
  * s/failure/error/ in activity
+ * Remove 'licence' page in generated html
 
 ### CLI
 
@@ -28,6 +33,7 @@
 
 ### Development
 
+ * Switch to MIT licence
  * Up Go requirement to v1.8+
 
 ## 0.1 (7th July 2017)

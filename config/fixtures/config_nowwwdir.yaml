@@ -1,6 +1,5 @@
 experimentsDir: "experiments"
 buildDir: "build"
-sourceUrl: "https://example.com/rulehunter/src"
 baseUrl: "/rulehunter/"
 maxNumReportRules: 2000
 maxNumProcesses: 4
