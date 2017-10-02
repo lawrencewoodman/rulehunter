@@ -69,6 +69,8 @@ func generateFront(
 						r.Stamp,
 					),
 				)
+			} else {
+				break
 			}
 			numReports++
 		}
