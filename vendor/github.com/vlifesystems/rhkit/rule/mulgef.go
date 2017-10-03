@@ -120,12 +120,11 @@ func (r *MulGEF) DPReduce() []Rule {
 
 func generateMulGEF(
 	inputDescription *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]
-	if !complexity.Arithmetic || fd.Kind != fieldtype.Number {
+	if !generationDesc.Arithmetic() || fd.Kind != fieldtype.Number {
 		return []Rule{}
 	}
 	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
@@ -135,7 +134,7 @@ func generateMulGEF(
 		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
 		if fieldNum < oFieldNum &&
 			oFd.Kind == fieldtype.Number &&
-			internal.IsStringInSlice(oField, ruleFields) {
+			internal.IsStringInSlice(oField, generationDesc.Fields()) {
 			vars := map[string]*dlit.Literal{
 				"min":  fd.Min,
 				"max":  fd.Max,

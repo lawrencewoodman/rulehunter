@@ -29,7 +29,7 @@ We would love contributions to improve this project.  To do so easily we ask the
 If you find a bug, please report it at the project's [issues tracker](https://github.com/vlifesystems/rhkit/issues) also on github.
 
 ### Developer Certificate of Origin
-Rather than a use a full-blown _Contributor License Agreement_, this project uses a simple _Developer Certificate of Origin_ to confirm that any contributions can be included.  The text of the certificate is listed below and the easiest way to confirm this is via [cla-assistant](https://cla-assistant.io/vlifesystems/rhkit).
+Rather than use a full-blown _Contributor License Agreement_, this project uses a simple _Developer Certificate of Origin_ to confirm that any contributions can be included.  The text of the certificate is listed below and the easiest way to confirm this is via [cla-assistant](https://cla-assistant.io/vlifesystems/rhkit).
 
     Developer Certificate of Origin
     Version 1.1

@@ -13,10 +13,11 @@ fields:
   - district
   - height
   - flow
-ruleFields:
-  - group
-  - district
-  - height
+ruleGeneration:
+  fields:
+    - group
+    - district
+    - height
 aggregators:
   - name: "badToTheBone"
     kind: "calc"

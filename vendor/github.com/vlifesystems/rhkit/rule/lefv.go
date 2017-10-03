@@ -94,8 +94,7 @@ func (r *LEFV) DPReduce() []Rule {
 
 func generateLEFV(
 	inputDescription *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]

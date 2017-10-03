@@ -15,13 +15,15 @@
 		"tertiaryEducated",
 		"success"
   ],
-  "ruleFields": [
-		"name",
-		"balance",
-		"numCards",
-		"martialStatus",
-		"tertiaryEducated"
-  ],
+  "ruleGeneration": {
+    "fields": [
+      "name",
+      "balance",
+      "numCards",
+      "martialStatus",
+      "tertiaryEducated"
+    ]
+  },
   "aggregators": [
     {
       "name": "helpedMcc",

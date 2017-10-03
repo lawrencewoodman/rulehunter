@@ -59,8 +59,7 @@ func (r *LEFF) Fields() []string {
 
 func generateLEFF(
 	inputDescription *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]
@@ -73,7 +72,7 @@ func generateLEFF(
 		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
 		isComparable := hasComparableNumberRange(fd, oFd)
 		if fieldNum < oFieldNum && isComparable &&
-			internal.IsStringInSlice(oField, ruleFields) {
+			internal.IsStringInSlice(oField, generationDesc.Fields()) {
 			r := NewLEFF(field, oField)
 			rules = append(rules, r)
 		}

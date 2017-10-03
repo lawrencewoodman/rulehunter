@@ -61,8 +61,7 @@ func (r *NEFV) Fields() []string {
 
 func generateNEFV(
 	inputDescription *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]

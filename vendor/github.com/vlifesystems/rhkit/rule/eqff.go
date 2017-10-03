@@ -68,8 +68,7 @@ func (r *EQFF) Fields() []string {
 
 func generateEQFF(
 	inputDescription *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]
@@ -85,7 +84,7 @@ func generateEQFF(
 			numSharedValues := calcNumSharedValues(fd, oFd)
 			if fieldNum < oFieldNum &&
 				numSharedValues >= 2 &&
-				internal.IsStringInSlice(oField, ruleFields) {
+				internal.IsStringInSlice(oField, generationDesc.Fields()) {
 				r := NewEQFF(field, oField)
 				rules = append(rules, r)
 			}

@@ -59,8 +59,7 @@ func (r *GTFF) Fields() []string {
 
 func generateGTFF(
 	inputDescription *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]
@@ -73,7 +72,7 @@ func generateGTFF(
 		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
 		isComparable := hasComparableNumberRange(fd, oFd)
 		if fieldNum < oFieldNum && isComparable &&
-			internal.IsStringInSlice(oField, ruleFields) {
+			internal.IsStringInSlice(oField, generationDesc.Fields()) {
 			r := NewGTFF(field, oField)
 			rules = append(rules, r)
 		}

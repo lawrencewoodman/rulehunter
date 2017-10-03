@@ -84,12 +84,11 @@ func (r *InFV) Overlaps(o Rule) bool {
 
 func generateInFV(
 	inputDescription *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 	field string,
 ) []Rule {
 	extra := 0
-	if len(ruleFields) == 2 {
+	if len(generationDesc.Fields()) == 2 {
 		extra += 3
 	}
 	fd := inputDescription.Fields[field]

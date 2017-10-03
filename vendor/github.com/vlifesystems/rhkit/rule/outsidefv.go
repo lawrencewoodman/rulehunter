@@ -145,8 +145,7 @@ func (r *OutsideFV) Overlaps(o Rule) bool {
 
 func generateOutsideFV(
 	inputDescription *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]

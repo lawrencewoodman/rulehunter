@@ -158,8 +158,7 @@ func (r *BetweenFV) Overlaps(o Rule) bool {
 
 func generateBetweenFV(
 	inputDescription *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]

@@ -68,8 +68,7 @@ func (r *NEFF) Fields() []string {
 
 func generateNEFF(
 	inputDescription *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]
@@ -85,7 +84,7 @@ func generateNEFF(
 			numSharedValues := calcNumSharedValues(fd, oFd)
 			if fieldNum < oFieldNum &&
 				numSharedValues >= 2 &&
-				internal.IsStringInSlice(oField, ruleFields) {
+				internal.IsStringInSlice(oField, generationDesc.Fields()) {
 				r := NewNEFF(field, oField)
 				rules = append(rules, r)
 			}

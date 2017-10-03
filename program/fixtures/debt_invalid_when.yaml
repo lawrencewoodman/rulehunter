@@ -7,12 +7,13 @@ fields:
   - "marital_status"
   - "tertiary_educated"
   - "success"
-ruleFields:
-  - "name"
-  - "balance"
-  - "num_cards"
-  - "marital_status"
-  - "tertiary_educated"
+ruleGeneration:
+  fields:
+    - "name"
+    - "balance"
+    - "num_cards"
+    - "marital_status"
+    - "tertiary_educated"
 dataset: "csv"
 csv:
   filename: "fixtures/debt.csv"

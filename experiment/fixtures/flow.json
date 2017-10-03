@@ -9,8 +9,8 @@
     "separator":  ","
   },
   "fields": ["group","district","height","flow"],
-  "ruleFields": ["group","district","height"],
-  "ruleComplexity": {
+  "ruleGeneration": {
+    "fields": ["group","district","height"],
     "arithmetic": true
   },
   "aggregators": [

@@ -10,6 +10,8 @@
  * s/`aggregatorName`/`aggregator`/ for `sortOrder` in experiment files
  * Add `rules` to experiment files to allow user defined rules
  * Add `category` to experiment files
+ * Replace `complexity` and `ruleFields` in experiment files
+   with `ruleGeneration`
 
 ### HTML
 

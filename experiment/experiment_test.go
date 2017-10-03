@@ -52,8 +52,10 @@ func TestLoad(t *testing.T) {
 					rune(','),
 					[]string{"group", "district", "height", "flow"},
 				),
-				RuleFields:     []string{"group", "district", "height"},
-				RuleComplexity: rule.Complexity{Arithmetic: true},
+				RuleGeneration: ruleGeneration{
+					fields:     []string{"group", "district", "height"},
+					arithmetic: true,
+				},
 				Aggregators: []aggregator.Spec{
 					aggregator.MustNew("numMatches", "count", "true()"),
 					aggregator.MustNew(
@@ -97,8 +99,10 @@ func TestLoad(t *testing.T) {
 					),
 					4,
 				),
-				RuleFields:     []string{"group", "district", "height"},
-				RuleComplexity: rule.Complexity{Arithmetic: true},
+				RuleGeneration: ruleGeneration{
+					fields:     []string{"group", "district", "height"},
+					arithmetic: true,
+				},
 				Aggregators: []aggregator.Spec{
 					aggregator.MustNew("numMatches", "count", "true()"),
 					aggregator.MustNew(
@@ -146,14 +150,16 @@ func TestLoad(t *testing.T) {
 						"success",
 					},
 				),
-				RuleFields: []string{
-					"name",
-					"balance",
-					"numCards",
-					"martialStatus",
-					"tertiaryEducated",
+				RuleGeneration: ruleGeneration{
+					fields: []string{
+						"name",
+						"balance",
+						"numCards",
+						"martialStatus",
+						"tertiaryEducated",
+					},
+					arithmetic: false,
 				},
-				RuleComplexity: rule.Complexity{Arithmetic: false},
 				Aggregators: []aggregator.Spec{
 					aggregator.MustNew("numMatches", "count", "true()"),
 					aggregator.MustNew(
@@ -189,8 +195,10 @@ func TestLoad(t *testing.T) {
 					rune(','),
 					[]string{"group", "district", "height", "flow"},
 				),
-				RuleFields:     []string{"group", "district", "height"},
-				RuleComplexity: rule.Complexity{Arithmetic: false},
+				RuleGeneration: ruleGeneration{
+					fields:     []string{"group", "district", "height"},
+					arithmetic: false,
+				},
 				Aggregators: []aggregator.Spec{
 					aggregator.MustNew("numMatches", "count", "true()"),
 					aggregator.MustNew(
@@ -960,17 +968,14 @@ func checkExperimentMatch(
 	if e1.Title != e2.Title {
 		return errors.New("Titles don't match")
 	}
-	if !areStringArraysEqual(e1.RuleFields, e2.RuleFields) {
-		return errors.New("RuleFields don't match")
-	}
 	if !areStringArraysEqual(e1.Tags, e2.Tags) {
 		return errors.New("Tags don't match")
 	}
 	if e1.Category != e2.Category {
 		return errors.New("Categories don't match")
 	}
-	if !areRuleComplexitiesEqual(e1.RuleComplexity, e2.RuleComplexity) {
-		return errors.New("RuleComplexities don't match")
+	if !areGenerationDescribersEqual(e1.RuleGeneration, e2.RuleGeneration) {
+		return errors.New("RuleGeneration don't match")
 	}
 	if !areGoalExpressionsEqual(e1.Goals, e2.Goals) {
 		return errors.New("Goals don't match")
@@ -1033,10 +1038,6 @@ func areStringArraysEqual(a1 []string, a2 []string) bool {
 	return true
 }
 
-func areRuleComplexitiesEqual(c1, c2 rule.Complexity) bool {
-	return c1.Arithmetic == c2.Arithmetic
-}
-
 func areGoalExpressionsEqual(g1 []*goal.Goal, g2 []*goal.Goal) bool {
 	if len(g1) != len(g2) {
 		return false
@@ -1081,6 +1082,16 @@ func areSortOrdersEqual(
 		}
 	}
 	return true
+}
+
+func areGenerationDescribersEqual(
+	gd1 rule.GenerationDescriber,
+	gd2 rule.GenerationDescriber,
+) bool {
+	if !areStringArraysEqual(gd1.Fields(), gd2.Fields()) {
+		return false
+	}
+	return gd1.Arithmetic() == gd2.Arithmetic()
 }
 
 func areRulesEqual(

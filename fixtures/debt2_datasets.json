@@ -4,8 +4,10 @@
   "dataset": "csv",
   "fields": ["name", "balance", "num_cards", "marital_status",
                  "tertiary_educated", "success"],
-  "ruleFields": ["name", "balance", "num_cards", "marital_status",
-                     "tertiary_educated"],
+  "ruleGeneration": {
+    "fields": ["name", "balance", "num_cards", "marital_status",
+                       "tertiary_educated"]
+  },
   "csv": {
     "filename": "datasets/debt.csv",
     "hasHeader": true,

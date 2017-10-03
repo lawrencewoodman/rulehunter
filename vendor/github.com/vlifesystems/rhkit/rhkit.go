@@ -46,15 +46,22 @@ func (e AssessError) Error() string {
 }
 
 type Options struct {
-	MaxNumRules    int
-	GenerateRules  bool
-	RuleComplexity rule.Complexity
+	MaxNumRules             int
+	RuleFields              []string
+	GenerateArithmeticRules bool
+}
+
+func (o Options) Fields() []string {
+	return o.RuleFields
+}
+
+func (o Options) Arithmetic() bool {
+	return o.GenerateArithmeticRules
 }
 
 // Process processes a Dataset to find Rules to meet the supplied requirements
 func Process(
 	dataset ddataset.Dataset,
-	ruleFields []string,
 	aggregators []aggregator.Spec,
 	goals []*goal.Goal,
 	sortOrder []assessment.SortOrder,
@@ -65,20 +72,18 @@ func Process(
 	if err != nil {
 		return nil, DescribeError{Err: err}
 	}
-	if !opts.GenerateRules {
+	if len(opts.RuleFields) == 0 {
 		rules = append(rules, rule.NewTrue())
 	}
 	ass := assessment.New()
-	err = ass.AssessRules(dataset, rules, aggregators, goals)
-	if err != nil {
+	if err := ass.AssessRules(dataset, rules, aggregators, goals); err != nil {
 		return nil, AssessError{Err: err}
 	}
 
-	if opts.GenerateRules {
+	if len(opts.RuleFields) > 0 {
 		err := processGenerate(
 			ass,
 			dataset,
-			ruleFields,
 			fieldDescriptions,
 			aggregators,
 			goals,
@@ -102,7 +107,6 @@ func Process(
 func processGenerate(
 	ass *assessment.Assessment,
 	dataset ddataset.Dataset,
-	ruleFields []string,
 	fieldDescriptions *description.Description,
 	aggregators []aggregator.Spec,
 	goals []*goal.Goal,
@@ -110,11 +114,7 @@ func processGenerate(
 	numUserRules int,
 	opts Options,
 ) error {
-	generatedRules, err := rule.Generate(
-		fieldDescriptions,
-		ruleFields,
-		opts.RuleComplexity,
-	)
+	generatedRules, err := rule.Generate(fieldDescriptions, opts)
 	if err != nil {
 		return GenerateRulesError{Err: err}
 	}

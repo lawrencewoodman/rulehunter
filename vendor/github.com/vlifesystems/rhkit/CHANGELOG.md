@@ -1,4 +1,4 @@
-### Master branch
+## Master
 
   * Switch to MIT Licence
   * s/`DescribingError`/`DescribeError`/
@@ -15,10 +15,8 @@
   * Move aggregator specific errors from `experiment` to a consolidated
     `DescError` type in `aggregator`
   * Remove `experiment` package
-  * Have `rule.Generate` return an error if rule fields not valid
   * Create `GenerateRulesError`
   * Create `Options` struct to pass some parameters to `Process`
-  * Add `GenerateRules` option to `Options`
   * Unexport `description.New` and `Description.NextRecord` method
   * Change error for `Assessment.Merge`
   * Create `Assessment.AssessRules` method to replace `assessment.AssessRules`
@@ -29,6 +27,9 @@
     passed
   * Consolidate `assessment.RuleAssessment` and `assessment.RuleAssessor` into
     `assessment.RuleAssessment`
+  * Change fields in `Options` struct and therefore `Process` function
+  * Have `rule.Generate` return an error if rule fields not valid
+  * Change `rule.Generate` to use `GenerationDescriber` interface
 
 ## 0.2 (15th July 2017)
 

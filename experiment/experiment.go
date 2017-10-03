@@ -36,8 +36,7 @@ type Experiment struct {
 	Title          string
 	File           fileinfo.FileInfo
 	Dataset        ddataset.Dataset
-	RuleFields     []string
-	RuleComplexity rule.Complexity
+	RuleGeneration rule.GenerationDescriber
 	Aggregators    []aggregator.Spec
 	Goals          []*goal.Goal
 	SortOrder      []rhkassessment.SortOrder
@@ -55,8 +54,7 @@ type descFile struct {
 	Csv            *csvDesc           `yaml:"csv"`
 	Sql            *sqlDesc           `yaml:"sql"`
 	Fields         []string           `yaml:"fields"`
-	RuleFields     []string           `yaml:"ruleFields"`
-	RuleComplexity ruleComplexity     `yaml:"ruleComplexity"`
+	RuleGeneration ruleGenerationDesc `yaml:"ruleGeneration"`
 	Aggregators    []*aggregator.Desc `yaml:"aggregators"`
 	Goals          []string           `yaml:"goals"`
 	SortOrder      []sortDesc         `yaml:"sortOrder"`
@@ -77,8 +75,22 @@ type sqlDesc struct {
 	Query          string `yaml:"query"`
 }
 
-type ruleComplexity struct {
-	Arithmetic bool `yaml:"arithmetic"`
+type ruleGenerationDesc struct {
+	Fields     []string `yaml:"fields"`
+	Arithmetic bool     `yaml:"arithmetic"`
+}
+
+type ruleGeneration struct {
+	fields     []string
+	arithmetic bool
+}
+
+func (rg ruleGeneration) Fields() []string {
+	return rg.fields
+}
+
+func (rg ruleGeneration) Arithmetic() bool {
+	return rg.arithmetic
 }
 
 type sortDesc struct {
@@ -147,18 +159,20 @@ func New(
 	}
 
 	return &Experiment{
-		Title:          d.Title,
-		File:           file,
-		Dataset:        dataset,
-		RuleFields:     d.RuleFields,
-		RuleComplexity: rule.Complexity{Arithmetic: d.RuleComplexity.Arithmetic},
-		Aggregators:    aggregators,
-		Goals:          goals,
-		SortOrder:      sortOrder,
-		When:           when,
-		Tags:           d.Tags,
-		Category:       d.Category,
-		Rules:          rules,
+		Title:   d.Title,
+		File:    file,
+		Dataset: dataset,
+		RuleGeneration: ruleGeneration{
+			fields:     d.RuleGeneration.Fields,
+			arithmetic: d.RuleGeneration.Arithmetic,
+		},
+		Aggregators: aggregators,
+		Goals:       goals,
+		SortOrder:   sortOrder,
+		When:        when,
+		Tags:        d.Tags,
+		Category:    d.Category,
+		Rules:       rules,
 	}, nil
 }
 
@@ -213,11 +227,7 @@ func (e *Experiment) Process(
 	if err := reportProgress("Generating rules", 0); err != nil {
 		return err
 	}
-	generatedRules, err := rule.Generate(
-		dDescription,
-		e.RuleFields,
-		e.RuleComplexity,
-	)
+	generatedRules, err := rule.Generate(dDescription, e.RuleGeneration)
 	if err != nil {
 		return fmt.Errorf("Couldn't generate rules: %s", err)
 	}

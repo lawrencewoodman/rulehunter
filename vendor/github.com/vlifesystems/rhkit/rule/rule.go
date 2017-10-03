@@ -23,10 +23,17 @@ var (
 	generators   = make(map[string]generatorFunc)
 )
 
+// GenerationDescriber describes what sort of rules should be generated
+type GenerationDescriber interface {
+	// Fields indicates which fields should be used to generate rules
+	Fields() []string
+	// Arithmetic indicates whether to generate arithmetic rules
+	Arithmetic() bool
+}
+
 type generatorFunc func(
 	desc *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 	field string,
 ) []Rule
 
@@ -61,23 +68,23 @@ type Complexity struct {
 // has an impact on how many rules are generated.
 func Generate(
 	inputDescription *description.Description,
-	ruleFields []string,
-	complexity Complexity,
+	generationDesc GenerationDescriber,
 ) ([]Rule, error) {
-	if err := checkRuleFieldsValid(inputDescription, ruleFields); err != nil {
+	err := checkRuleFieldsValid(inputDescription, generationDesc.Fields())
+	if err != nil {
 		return []Rule{}, err
 	}
 	rules := make([]Rule, 1)
 	rules[0] = NewTrue()
 	for field := range inputDescription.Fields {
-		if internal.IsStringInSlice(field, ruleFields) {
+		if internal.IsStringInSlice(field, generationDesc.Fields()) {
 			for _, generator := range generators {
-				newRules := generator(inputDescription, ruleFields, complexity, field)
+				newRules := generator(inputDescription, generationDesc, field)
 				rules = append(rules, newRules...)
 			}
 		}
 	}
-	if len(ruleFields) == 2 {
+	if len(generationDesc.Fields()) == 2 {
 		cRules := Combine(rules)
 		rules = append(rules, cRules...)
 	}
