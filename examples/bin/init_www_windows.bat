@@ -1,7 +1,7 @@
 @echo off
-#
-#  This command prepares the www directory for the examples
-#
+rem
+rem  This command prepares the www directory for the examples
+rem
 
 set SCRIPT_DIR=%~dp0
 set SUPPORT_DIR=%SCRIPT_DIR%..\..\support
