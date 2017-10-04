@@ -663,13 +663,23 @@ func TestProcess_multiProcesses(t *testing.T) {
 	}
 
 	singleProcessTime := timeProcess(1)
-	multiProcessTime := timeProcess(runtime.NumCPU())
-	t.Logf("Tested with %d processes. Speed-up over single process: %0.2fx",
-		runtime.NumCPU(),
-		float64(singleProcessTime)/float64(multiProcessTime),
-	)
-	if multiProcessTime >= singleProcessTime {
-		t.Errorf("Process was slower with %d processes than with 1",
+	pass := false
+	for attempts := 0; attempts < 5 && !pass; attempts++ {
+		multiProcessTime := timeProcess(runtime.NumCPU())
+		t.Logf("Tested with %d processes. Speed-up over single process: %0.2fx (attempt: %d)",
+			runtime.NumCPU(),
+			float64(singleProcessTime)/float64(multiProcessTime),
+			attempts+1,
+		)
+		if multiProcessTime < singleProcessTime {
+			pass = true
+		} else {
+			t.Logf("Process was slower with %d processes than with 1 (attempt: %d)",
+				runtime.NumCPU(), attempts+1)
+		}
+	}
+	if !pass {
+		t.Errorf("Process was slower with %d processes than with 1 (after 5 attempts)",
 			runtime.NumCPU())
 	}
 }
