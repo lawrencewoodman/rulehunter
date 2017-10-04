@@ -37,6 +37,11 @@ func generateCategoryPages(config *config.Config) error {
 			}
 		}
 	}
+
+	if err := generateCategoryPage(config, ""); err != nil {
+		return err
+	}
+	categorysLen[""] = 0
 	return nil
 }
 
