@@ -1,0 +1,60 @@
+title: "Who should call which segment?"
+category: "acme"
+tags:
+  - repair
+  - sales
+  - printers
+dataset: "csv"
+csv:
+  filename: "csv/printer_repairs_callerstats.csv"
+  hasHeader: true
+  separator: ","
+fields:
+  - name
+  - segment
+  - conversion
+  - roi
+  - value
+  - ccCost
+  - ccIncome
+ruleGeneration:
+  fields:
+    - name
+    - segment
+aggregators:
+  - name: "totalCCCost"
+    kind: "sum"
+    arg: "ccCost"
+  - name: "totalCCIncome"
+    kind: "sum"
+    arg: "ccIncome"
+  - name: "totalCCROI"
+    kind: "calc"
+    arg: "totalCCIncome / totalCCCost"
+  - name: "totalCCProfit"
+    kind: "calc"
+    arg: "totalCCIncome - totalCCCost"
+  - name: "totalValue"
+    kind: "sum"
+    arg: "value"
+  - name: "meanConversion"
+    kind: "mean"
+    arg: "conversion"
+  - name: "clientMeanROI"
+    kind: "mean"
+    arg: "roi"
+goals:
+  - "totalCCROI >= 1.10"
+  - "clientMeanROI >= 2"
+  - "meanConversion > 0.25"
+  - "totalCCROI >= 1.20"
+  - "clientMeanROI > 3"
+  - "totalCCROI >= 1.30"
+sortOrder:
+  - aggregator: "goalsScore"
+    direction: "descending"
+  - aggregator: "totalValue"
+    direction: "descending"
+  - aggregator: "totalCCProfit"
+    direction: "descending"
+when: "!hasRun || sinceLastRunMinutes > 40"

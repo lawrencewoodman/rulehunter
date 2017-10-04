@@ -1,0 +1,40 @@
+title: "Is it Iris Setosa?"
+category: "botany"
+tags:
+  - iris
+  - life
+dataset: "csv"
+csv:
+  filename: "csv/iris.csv"
+  hasHeader: false
+  separator: ","
+fields:
+   - sepalLength
+   - sepalWidth
+   - petalLength
+   - petalWidth
+   - class
+ruleGeneration:
+  fields:
+     - sepalLength
+     - sepalWidth
+     - petalLength
+     - petalWidth
+  arithmetic: true
+aggregators:
+  - name: "mccIrisSetosa"
+    kind: "mcc"
+    arg: "class == \"Iris-setosa\""
+  - name: "numIrisSetosa"
+    kind: "count"
+    arg: "class == \"Iris-setosa\""
+  - name: "recallIrisSetosa"
+    kind: "recall"
+    arg: "class == \"Iris-setosa\""
+  - name: "precisionIrisSetosa"
+    kind: "precision"
+    arg: "class == \"Iris-setosa\""
+sortOrder:
+  - aggregator: "mccIrisSetosa"
+    direction: "descending"
+when: "!hasRun"

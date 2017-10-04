@@ -1,0 +1,40 @@
+title: "Is it Iris Versicolor?"
+category: "botany"
+tags:
+  - iris
+  - life
+dataset: "csv"
+csv:
+  filename: "csv/iris.csv"
+  hasHeader: false
+  separator: ","
+fields:
+   - sepalLength
+   - sepalWidth
+   - petalLength
+   - petalWidth
+   - class
+ruleGeneration:
+  fields:
+     - sepalLength
+     - sepalWidth
+     - petalLength
+     - petalWidth
+  arithmetic: true
+aggregators:
+  - name: "mccIrisVersicolor"
+    kind: "mcc"
+    arg: "class == \"Iris-versicolor\""
+  - name: "numIrisVersicolor"
+    kind: "count"
+    arg: "class == \"Iris-versicolor\""
+  - name: "recallIrisVersicolor"
+    kind: "recall"
+    arg: "class == \"Iris-versicolor\""
+  - name: "precisionIrisVersicolor"
+    kind: "precision"
+    arg: "class == \"Iris-versicolor\""
+sortOrder:
+  - aggregator: "mccIrisVersicolor"
+    direction: "descending"
+when: "!hasRun"

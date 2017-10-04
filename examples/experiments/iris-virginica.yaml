@@ -1,0 +1,40 @@
+title: "Is it Iris Virginica?"
+category: "botany"
+tags:
+  - iris
+  - life
+dataset: "csv"
+csv:
+  filename: "csv/iris.csv"
+  hasHeader: false
+  separator: ","
+fields:
+   - sepalLength
+   - sepalWidth
+   - petalLength
+   - petalWidth
+   - class
+ruleGeneration:
+  fields:
+     - sepalLength
+     - sepalWidth
+     - petalLength
+     - petalWidth
+  arithmetic: true
+aggregators:
+  - name: "mccIrisVirginica"
+    kind: "mcc"
+    arg: "class == \"Iris-virginica\""
+  - name: "numIrisVirginica"
+    kind: "count"
+    arg: "class == \"Iris-virginica\""
+  - name: "recallIrisVirginica"
+    kind: "recall"
+    arg: "class == \"Iris-virginica\""
+  - name: "precisionIrisVirginica"
+    kind: "precision"
+    arg: "class == \"Iris-virginica\""
+sortOrder:
+  - aggregator: "mccIrisVirginica"
+    direction: "descending"
+when: "!hasRun"

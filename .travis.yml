@@ -18,5 +18,7 @@ before_install:
 script:
   - chmod +x linux-test-su.sh
   - sudo ./linux-test-su.sh $GOPATH `which go` upstart
+  - chmod +x examples/bin/init_www_unix.sh
+  - examples/bin/init_www_unix.sh
   - $HOME/gopath/bin/roveralls
   - $HOME/gopath/bin/goveralls -coverprofile=roveralls.coverprofile -service=travis-ci

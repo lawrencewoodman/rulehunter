@@ -1,0 +1,17 @@
+name,segment,conversion,roi,value,ccCost,ccIncome
+"fred wilkins",a,0.10,1.8,6000,20,30
+"fred wilkins",b,0.19,2.76,1200,7,9
+"fred wilkins",c,0.5,3.33,20000,2,8
+"fred wilkins",d,0.80,9.2,9020,8,2
+"mary harris",a,0.70,0.7,8700,10,10
+"mary harris",b,0.15,8.3,1000,8,7
+"mary harris",c,0.73,6.2,300,7,8
+"mary harris",d,0.72,5.4,4800,2,6
+"bob andrews",a,0.80,5.6,2300,9,18
+"bob andrews",b,0.79,2.3,900,6,12
+"bob andrews",c,0.20,7.9,100,3,1
+"bob andrews",d,0.10,8.4,7800,8,2
+"martha stuart",a,0.50,2,1600,1,4
+"martha stuart",b,0.57,3.1,2300,6,3
+"martha stuart",c,0.90,0.5,23878,7,8
+"martha stuart",d,0.62,1.1,150,2,3

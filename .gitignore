@@ -2,10 +2,10 @@
 *.swp
 
 # Goreleaser build directory
-dist
+/dist
 
 # Directories used while experimenting locally
 build
-csv
-experiments
-www
+/csv
+/experiments
+/www

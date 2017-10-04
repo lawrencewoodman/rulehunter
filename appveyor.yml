@@ -31,3 +31,4 @@ build_script:
 
 test_script:
   - go test -v -tags="appveyor su" ./...
+  - examples\bin\init_www_windows.bat

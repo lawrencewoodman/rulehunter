@@ -18,13 +18,9 @@ builds:
 archive:
   format: zip
   files:
-  - licence*
-  - LICENCE*
-  - license*
   - LICENSE*
-  - readme*
   - README*
-  - changelog*
   - CHANGELOG*
-  - COPYING
+  - CONTRIBUTING*
   - support/**/**/**/**
+  - examples/**/**/**/**
