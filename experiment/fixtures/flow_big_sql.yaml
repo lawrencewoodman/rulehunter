@@ -2,6 +2,7 @@ title: "What would indicate good flow?"
 tags:
   - test
   - "fred / ned"
+category: "testing"
 dataset: "sql"
 sql:
   driverName: "sqlite3"
@@ -12,10 +13,11 @@ fields:
   - district
   - height
   - flow
-ruleFields:
-  - group
-  - district
-  - height
+ruleGeneration:
+  fields:
+    - group
+    - district
+    - height
 aggregators:
   - name: "goodFlowMcc"
     kind: "mcc"
