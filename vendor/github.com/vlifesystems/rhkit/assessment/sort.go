@@ -17,8 +17,8 @@ type SortDesc struct {
 }
 
 type SortOrder struct {
-	Aggregator string
-	Direction  direction
+	Aggregator string    `json:"aggregator"`
+	Direction  direction `json:"direction"`
 }
 
 type direction int

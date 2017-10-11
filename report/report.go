@@ -23,34 +23,34 @@ import (
 )
 
 type Aggregator struct {
-	Name       string
-	Value      string
-	Difference string
+	Name       string `json:"name"`
+	Value      string `json:"value"`
+	Difference string `json:"difference"`
 }
 
 type Assessment struct {
-	Rule        string
-	Aggregators []*Aggregator
-	Goals       []*rhkassessment.GoalAssessment
+	Rule        string                          `json:"rule"`
+	Aggregators []*Aggregator                   `json:"aggregators"`
+	Goals       []*rhkassessment.GoalAssessment `json:"goals"`
 }
 
 type Report struct {
-	Title              string
-	Tags               []string
-	Category           string
-	Stamp              time.Time
-	ExperimentFilename string
-	NumRecords         int64
-	SortOrder          []rhkassessment.SortOrder
-	Aggregators        []AggregatorDesc
-	Description        *description.Description
-	Assessments        []*Assessment
+	Title              string                    `json:"title"`
+	Tags               []string                  `json:"tags"`
+	Category           string                    `json:"category"`
+	Stamp              time.Time                 `json:"stamp"`
+	ExperimentFilename string                    `json:"experimentFilename"`
+	NumRecords         int64                     `json:"numRecords"`
+	SortOrder          []rhkassessment.SortOrder `json:"sortOrder"`
+	Aggregators        []AggregatorDesc          `json:"aggregators"`
+	Description        *description.Description  `json:"description"`
+	Assessments        []*Assessment             `json:"assessments"`
 }
 
 type AggregatorDesc struct {
-	Name string
-	Kind string
-	Arg  string
+	Name string `json:"name"`
+	Kind string `json:"kind"`
+	Arg  string `json:"arg"`
 }
 
 func New(

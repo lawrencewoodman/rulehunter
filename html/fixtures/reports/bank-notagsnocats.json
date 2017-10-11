@@ -1,25 +1,25 @@
 {
-  "Title":"How to not contain tags or cats",
-  "Stamp":"2016-05-23T16:26:20.801239819+01:00",
-  "ExperimentFilename":"bank-tiny.json",
-  "NumRecords":9,
-  "SortOrder":[{"Field":"profit","Direction":0},{"Field":"numSignedUp","Direction":1}],
-  "Assessments":[
+  "title":"How to not contain tags or cats",
+  "stamp":"2016-05-23T16:26:20.801239819+01:00",
+  "experimentFilename":"bank-tiny.json",
+  "numRecords":9,
+  "sortOrder":[{"field":"profit","direction":0},{"field":"numSignedUp","direction":1}],
+  "assessments":[
     {
-      "Rule":"age \u003c= 27",
-      "Aggregators":[
-        {"Name":"cost","Value":"5","Difference":"-17.5"},
-        {"Name":"goalsScore","Value":"0","Difference":"0"},
-        {"Name":"income","Value":"0","Difference":"0"},
-        {"Name":"numMatches","Value":"2","Difference":"-7"},
-        {"Name":"numSignedUp","Value":"0","Difference":"0"},
-        {"Name":"percentMatches","Value":"22.22","Difference":"-77.78"},
-        {"Name":"profit","Value":"-5","Difference":"17.5"}
+      "rule":"age \u003c= 27",
+      "aggregators":[
+        {"name":"cost","value":"5","difference":"-17.5"},
+        {"name":"goalsScore","value":"0","difference":"0"},
+        {"name":"income","value":"0","difference":"0"},
+        {"name":"numMatches","value":"2","difference":"-7"},
+        {"name":"numSignedUp","value":"0","difference":"0"},
+        {"name":"percentMatches","value":"22.22","difference":"-77.78"},
+        {"name":"profit","value":"-5","difference":"17.5"}
       ],
-      "Goals":[{"Expr":"profit \u003e 0","Passed":false}]
+      "goals":[{"expr":"profit \u003e 0","passed":false}]
     }
   ],
-  "Description": {
+  "description": {
     "fields":{
       "ccCost":{
         "kind":"Number",

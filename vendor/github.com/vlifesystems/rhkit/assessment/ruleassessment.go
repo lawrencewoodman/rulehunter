@@ -12,9 +12,9 @@ import (
 )
 
 type RuleAssessment struct {
-	Rule        rule.Rule
-	Aggregators map[string]*dlit.Literal
-	Goals       []*GoalAssessment
+	Rule        rule.Rule                `json:"rule"`
+	Aggregators map[string]*dlit.Literal `json:"aggregators"`
+	Goals       []*GoalAssessment        `json:"goals"`
 	aggregators []aggregator.Instance
 	goals       []*goal.Goal
 }

@@ -18,15 +18,15 @@ import (
 var ErrNumRecordsChanged = errors.New("number of records changed in dataset")
 
 type Assessment struct {
-	NumRecords      int64
-	RuleAssessments []*RuleAssessment
+	NumRecords      int64             `json:"numRecords"`
+	RuleAssessments []*RuleAssessment `json:"ruleAssessments"`
 	flags           map[string]bool
 	mux             sync.RWMutex
 }
 
 type GoalAssessment struct {
-	Expr   string
-	Passed bool
+	Expr   string `json:"expr"`
+	Passed bool   `json:"passed"`
 }
 
 func New() *Assessment {

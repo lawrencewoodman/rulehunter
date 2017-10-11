@@ -30,6 +30,9 @@
   * Change fields in `Options` struct and therefore `Process` function
   * Have `rule.Generate` return an error if rule fields not valid
   * Change `rule.Generate` to use `GenerationDescriber` interface
+  * Move `FieldType` into `description` package
+  * Replace `Description` `LoadJSON` / `WriteJSON` with
+    `UnmarshalJSON` / `MarshalJSON`
 
 ## 0.2 (15th July 2017)
 

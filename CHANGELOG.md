@@ -31,8 +31,9 @@
 ### Build
 
  * Restructure `progress.json` file
- * Put dataset 'Description' into 'Report'
- * Use sha-512 hash to create 'reports' filenames
+ * Put dataset `Description` into `Report`
+ * Use sha-512 hash to create 'report' filenames
+ * Make all fields in JSON 'report' lowercase
 
 ### Development
 
