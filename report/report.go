@@ -16,6 +16,7 @@ import (
 	"github.com/lawrencewoodman/dlit"
 	rhkaggregator "github.com/vlifesystems/rhkit/aggregator"
 	rhkassessment "github.com/vlifesystems/rhkit/assessment"
+	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/internal"
@@ -42,6 +43,7 @@ type Report struct {
 	NumRecords         int64
 	SortOrder          []rhkassessment.SortOrder
 	Aggregators        []AggregatorDesc
+	Description        *description.Description
 	Assessments        []*Assessment
 }
 
@@ -53,6 +55,7 @@ type AggregatorDesc struct {
 
 func New(
 	title string,
+	desc *description.Description,
 	assessment *rhkassessment.Assessment,
 	aggregators []rhkaggregator.Spec,
 	sortOrder []rhkassessment.SortOrder,
@@ -107,6 +110,7 @@ func New(
 		SortOrder:          sortOrder,
 		Aggregators:        aggregatorDescs,
 		Assessments:        assessments,
+		Description:        desc,
 	}
 }
 

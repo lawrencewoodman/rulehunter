@@ -27,7 +27,6 @@ import (
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
-	"github.com/vlifesystems/rulehunter/internal"
 	"github.com/vlifesystems/rulehunter/report"
 	"gopkg.in/yaml.v2"
 )
@@ -210,7 +209,7 @@ func (e *Experiment) Process(
 		return err
 	}
 
-	dDescription, err := e.describeDataset(cfg)
+	desc, err := description.DescribeDataset(e.Dataset)
 	if err != nil {
 		return fmt.Errorf("Couldn't describe dataset: %s", err)
 	}
@@ -227,7 +226,7 @@ func (e *Experiment) Process(
 	if err := reportProgress("Generating rules", 0); err != nil {
 		return err
 	}
-	generatedRules, err := rule.Generate(dDescription, e.RuleGeneration)
+	generatedRules, err := rule.Generate(desc, e.RuleGeneration)
 	if err != nil {
 		return fmt.Errorf("Couldn't generate rules: %s", err)
 	}
@@ -245,7 +244,7 @@ func (e *Experiment) Process(
 	if err != nil {
 		return err
 	}
-	tweakableRules := rule.Tweak(1, sortedRules, dDescription)
+	tweakableRules := rule.Tweak(1, sortedRules, desc)
 
 	err = e.assessRules(3, ass, tweakableRules, pr, cfg)
 	if err != nil {
@@ -286,6 +285,7 @@ func (e *Experiment) Process(
 
 	report := report.New(
 		e.Title,
+		desc,
 		ass,
 		e.Aggregators,
 		e.SortOrder,
@@ -412,22 +412,6 @@ func (e *descFile) checkValid() error {
 		}
 	}
 	return nil
-}
-
-func (e *Experiment) describeDataset(
-	cfg *config.Config,
-) (*description.Description, error) {
-	_description, err := description.DescribeDataset(e.Dataset)
-	if err != nil {
-		return nil, err
-	}
-
-	buildFilename := internal.MakeBuildFilename(e.Category, e.Title)
-	fdFilename := filepath.Join(cfg.BuildDir, "descriptions", buildFilename)
-	if err := _description.WriteJSON(fdFilename); err != nil {
-		return nil, err
-	}
-	return _description, nil
 }
 
 func assessRulesWorker(

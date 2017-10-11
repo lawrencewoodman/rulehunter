@@ -4,7 +4,6 @@
 package html
 
 import (
-	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/report"
 	"html/template"
@@ -13,7 +12,6 @@ import (
 )
 
 func generateReports(config *config.Config) error {
-
 	type TplData struct {
 		Reports []*TplReport
 		Html    map[string]template.HTML
@@ -33,13 +31,7 @@ func generateReports(config *config.Config) error {
 			if err != nil {
 				return err
 			}
-			_description, err := description.LoadJSON(
-				filepath.Join(config.BuildDir, "descriptions", file.Name()),
-			)
-			if err != nil {
-				return err
-			}
-			reportURLDir, err := generateReport(report, _description, config)
+			reportURLDir, err := generateReport(report, config)
 			if err != nil {
 				return err
 			}

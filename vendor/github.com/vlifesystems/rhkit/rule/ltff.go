@@ -7,7 +7,6 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rhkit/internal"
-	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // LTFF represents a rule determining if fieldA < fieldB
@@ -63,7 +62,7 @@ func generateLTFF(
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]
-	if fd.Kind != fieldtype.Number {
+	if fd.Kind != description.Number {
 		return []Rule{}
 	}
 	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)

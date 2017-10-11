@@ -5,32 +5,17 @@
 package description
 
 import (
-	"encoding/json"
 	"fmt"
+	"sort"
+
 	"github.com/lawrencewoodman/ddataset"
-	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/internal"
-	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
-	"github.com/vlifesystems/rhkit/internal/fieldtype"
-	"io/ioutil"
-	"os"
-	"sort"
 )
 
 // Description describes a Dataset
 type Description struct {
-	Fields map[string]*Field
-}
-
-// Field describes a field
-type Field struct {
-	Kind      fieldtype.FieldType
-	Min       *dlit.Literal
-	Max       *dlit.Literal
-	MaxDP     int
-	Values    map[string]Value
-	NumValues int
+	Fields map[string]*Field `json:"fields"`
 }
 
 // Value describes a value in a field
@@ -65,43 +50,6 @@ func DescribeDataset(dataset ddataset.Dataset) (*Description, error) {
 	return desc, conn.Err()
 }
 
-// LoadJSON loads a Dataset Description that has been saved as a JSON file
-func LoadJSON(filename string) (*Description, error) {
-	var dj descriptionJ
-
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	dec := json.NewDecoder(f)
-	if err := dec.Decode(&dj); err != nil {
-		return nil, err
-	}
-
-	fields := make(map[string]*Field, len(dj.Fields))
-	for field, fd := range dj.Fields {
-		values := make(map[string]Value, len(fd.Values))
-		for v, vd := range fd.Values {
-			values[v] = Value{
-				Value: dlit.NewString(vd.Value),
-				Num:   vd.Num,
-			}
-		}
-		fields[field] = &Field{
-			Kind:      fieldtype.New(fd.Kind),
-			Min:       dlit.NewString(fd.Min),
-			Max:       dlit.NewString(fd.Max),
-			MaxDP:     fd.MaxDP,
-			Values:    values,
-			NumValues: fd.NumValues,
-		}
-	}
-	d := &Description{Fields: fields}
-	return d, nil
-}
-
 // Calculates the field number based on the string sorted order of
 // the field names
 func CalcFieldNum(fieldDescriptions map[string]*Field, fieldN string) int {
@@ -120,20 +68,6 @@ func CalcFieldNum(fieldDescriptions map[string]*Field, fieldN string) int {
 		j++
 	}
 	panic("can't find field in Field descriptions: " + fieldN)
-}
-
-// WriteJSON writes the Description to a JSON file
-func (d *Description) WriteJSON(filename string) error {
-	fields := make(map[string]*fieldJ, len(d.Fields))
-	for field, fd := range d.Fields {
-		fields[field] = newFieldJ(fd)
-	}
-	dj := descriptionJ{Fields: fields}
-	json, err := json.Marshal(dj)
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(filename, json, 0640)
 }
 
 // CheckEqual checks if two Descriptions are equal
@@ -172,62 +106,12 @@ func newDescription() *Description {
 	return &Description{fd}
 }
 
-type descriptionJ struct {
-	Fields map[string]*fieldJ
-}
-
-type fieldJ struct {
-	Kind      string
-	Min       string
-	Max       string
-	MaxDP     int
-	Values    map[string]valueJ
-	NumValues int
-}
-
-type valueJ struct {
-	Value string
-	Num   int
-}
-
-func newFieldJ(fd *Field) *fieldJ {
-	values := make(map[string]valueJ, len(fd.Values))
-	for v, vd := range fd.Values {
-		values[v] = valueJ{
-			Value: vd.Value.String(),
-			Num:   vd.Num,
-		}
-	}
-	min := ""
-	max := ""
-	if fd.Min != nil {
-		min = fd.Min.String()
-	}
-	if fd.Max != nil {
-		max = fd.Max.String()
-	}
-	return &fieldJ{
-		Kind:      fd.Kind.String(),
-		Min:       min,
-		Max:       max,
-		MaxDP:     fd.MaxDP,
-		Values:    values,
-		NumValues: fd.NumValues,
-	}
-}
-
-// String outputs a string representation of the field
-func (fd *Field) String() string {
-	return fmt.Sprintf("Kind: %s, Min: %s, Max: %s, MaxDP: %d, Values: %v",
-		fd.Kind, fd.Min, fd.Max, fd.MaxDP, fd.Values)
-}
-
 // nextRecord updates the description after analysing the supplied record
 func (d *Description) nextRecord(record ddataset.Record) {
 	if len(d.Fields) == 0 {
 		for field, value := range record {
 			d.Fields[field] = &Field{
-				Kind:   fieldtype.Unknown,
+				Kind:   Unknown,
 				Min:    value,
 				Max:    value,
 				Values: map[string]Value{},
@@ -238,87 +122,6 @@ func (d *Description) nextRecord(record ddataset.Record) {
 	for field, value := range record {
 		d.Fields[field].processValue(value)
 	}
-}
-
-func (f *Field) processValue(value *dlit.Literal) {
-	f.updateKind(value)
-	f.updateValues(value)
-	f.updateNumBoundaries(value)
-}
-
-func (f *Field) updateKind(value *dlit.Literal) {
-	switch f.Kind {
-	case fieldtype.Unknown:
-		fallthrough
-	case fieldtype.Number:
-		if _, isInt := value.Int(); isInt {
-			f.Kind = fieldtype.Number
-			break
-		}
-		if _, isFloat := value.Float(); isFloat {
-			f.Kind = fieldtype.Number
-			break
-		}
-		f.Kind = fieldtype.String
-	}
-}
-
-func (f *Field) updateValues(value *dlit.Literal) {
-	// Chose 31 so could hold each day in month
-	const maxNumValues = 31
-	if f.Kind == fieldtype.Ignore ||
-		f.Kind == fieldtype.Unknown ||
-		f.NumValues == -1 {
-		return
-	}
-	if vd, ok := f.Values[value.String()]; ok {
-		f.Values[value.String()] = Value{vd.Value, vd.Num + 1}
-		return
-	}
-	if f.NumValues >= maxNumValues {
-		if f.Kind == fieldtype.String {
-			f.Kind = fieldtype.Ignore
-		}
-		f.Values = map[string]Value{}
-		f.NumValues = -1
-		return
-	}
-	f.NumValues++
-	f.Values[value.String()] = Value{value, 1}
-}
-
-func (f *Field) updateNumBoundaries(value *dlit.Literal) {
-	if f.Kind == fieldtype.Number {
-		vars := map[string]*dlit.Literal{"min": f.Min, "max": f.Max, "v": value}
-		f.Min = dexpr.Eval("min(min, v)", dexprfuncs.CallFuncs, vars)
-		f.Max = dexpr.Eval("max(max, v)", dexprfuncs.CallFuncs, vars)
-		numDP := internal.NumDecPlaces(value.String())
-		if numDP > f.MaxDP {
-			f.MaxDP = numDP
-		}
-	}
-}
-
-func (f *Field) checkEqual(o *Field) error {
-	if f.Kind != o.Kind {
-		return fmt.Errorf("Kind not equal: %s != %s", f.Kind, o.Kind)
-	}
-	if f.NumValues != o.NumValues {
-		return fmt.Errorf("NumValues not equal: %d != %d", f.NumValues, o.NumValues)
-	}
-
-	if f.Kind == fieldtype.Number {
-		if f.Min.String() != o.Min.String() {
-			return fmt.Errorf("Min not equal: %s != %s", f.Min, o.Min)
-		}
-		if f.Max.String() != o.Max.String() {
-			return fmt.Errorf("Max not equal: %s != %s", f.Max, o.Max)
-		}
-		if f.MaxDP != o.MaxDP {
-			return fmt.Errorf("MaxDP not equal: %d != %d", f.MaxDP, o.MaxDP)
-		}
-	}
-	return fieldValuesEqual(f.Values, o.Values)
 }
 
 func fieldValuesEqual(

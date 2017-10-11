@@ -13,11 +13,7 @@ import (
 	"time"
 )
 
-func generateReport(
-	_report *report.Report,
-	_description *description.Description,
-	config *config.Config,
-) (string, error) {
+func generateReport(r *report.Report, config *config.Config) (string, error) {
 	type TplData struct {
 		Title              string
 		Tags               map[string]string
@@ -34,23 +30,22 @@ func generateReport(
 	}
 
 	tplData := TplData{
-		Title:              _report.Title,
-		Tags:               makeTagLinks(_report.Tags),
-		Category:           _report.Category,
-		CategoryURL:        makeCategoryLink(_report.Category),
-		DateTime:           _report.Stamp.Format(time.RFC822),
-		ExperimentFilename: _report.ExperimentFilename,
-		NumRecords:         _report.NumRecords,
-		Description:        _description,
-		SortOrder:          _report.SortOrder,
-		Aggregators:        _report.Aggregators,
-		Assessments:        _report.Assessments,
+		Title:              r.Title,
+		Tags:               makeTagLinks(r.Tags),
+		Category:           r.Category,
+		CategoryURL:        makeCategoryLink(r.Category),
+		DateTime:           r.Stamp.Format(time.RFC822),
+		ExperimentFilename: r.ExperimentFilename,
+		NumRecords:         r.NumRecords,
+		Description:        r.Description,
+		SortOrder:          r.SortOrder,
+		Aggregators:        r.Aggregators,
+		Assessments:        r.Assessments,
 		Html:               makeHtml(config, "reports"),
 	}
 
-	reportURLDir := genReportURLDir(_report.Category, _report.Title)
-	reportFilename :=
-		genReportFilename(_report.Category, _report.Title)
+	reportURLDir := genReportURLDir(r.Category, r.Title)
+	reportFilename := genReportFilename(r.Category, r.Title)
 	err := writeTemplate(config, reportFilename, reportTpl, tplData)
 	return reportURLDir, err
 }

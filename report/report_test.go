@@ -13,11 +13,39 @@ import (
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/aggregator"
 	rhkassessment "github.com/vlifesystems/rhkit/assessment"
+	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/internal"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 )
+
+var testDescription = &description.Description{
+	map[string]*description.Field{
+		"month": {description.String, nil, nil, 0,
+			map[string]description.Value{
+				"feb":  {dlit.MustNew("feb"), 3},
+				"may":  {dlit.MustNew("may"), 2},
+				"june": {dlit.MustNew("june"), 9},
+			},
+			3,
+		},
+		"rate": {
+			description.Number,
+			dlit.MustNew(0.3),
+			dlit.MustNew(15.1),
+			3,
+			map[string]description.Value{
+				"0.3":   {dlit.MustNew(0.3), 7},
+				"7":     {dlit.MustNew(7), 2},
+				"7.3":   {dlit.MustNew(7.3), 9},
+				"9.278": {dlit.MustNew(9.278), 4},
+			},
+			4,
+		},
+		"method": {description.Ignore, nil, nil, 0,
+			map[string]description.Value{}, -1},
+	}}
 
 func TestNew(t *testing.T) {
 	assessment := rhkassessment.New()
@@ -141,6 +169,7 @@ func TestNew(t *testing.T) {
 	}
 	report := New(
 		title,
+		testDescription,
 		assessment,
 		aggregators,
 		sortOrder,
@@ -179,6 +208,10 @@ func TestNew(t *testing.T) {
 	err := checkAssessmentsMatch(report.Assessments, wantAssessments)
 	if err != nil {
 		t.Errorf("New report.Assessments don't match: %s", err)
+	}
+
+	if err := testDescription.CheckEqual(report.Description); err != nil {
+		t.Errorf("New report.Descriptions don't match: %s", err)
 	}
 }
 
@@ -266,6 +299,7 @@ func TestWriteLoadJSON(t *testing.T) {
 	config := &config.Config{BuildDir: tmpDir}
 	report := New(
 		title,
+		testDescription,
 		assessment,
 		aggregators,
 		sortOrder,

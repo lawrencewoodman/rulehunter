@@ -12,7 +12,6 @@ import (
 	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rhkit/internal"
 	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
-	"github.com/vlifesystems/rhkit/internal/fieldtype"
 	"sort"
 	"strings"
 	"sync"
@@ -245,7 +244,7 @@ func hasComparableNumberRange(
 	fd1 *description.Field,
 	fd2 *description.Field,
 ) bool {
-	if fd1.Kind != fieldtype.Number || fd2.Kind != fieldtype.Number {
+	if fd1.Kind != description.Number || fd2.Kind != description.Number {
 		return false
 	}
 	var isComparable bool

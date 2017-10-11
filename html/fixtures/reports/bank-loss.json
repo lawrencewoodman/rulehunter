@@ -5,7 +5,10 @@
   "Stamp":"2016-05-23T16:26:20.801239819+01:00",
   "ExperimentFilename":"bank-tiny.json",
   "NumRecords":9,
-  "SortOrder":[{"Field":"profit","Direction":0},{"Field":"numSignedUp","Direction":1}],
+  "SortOrder":[
+    {"Field":"profit","Direction":0},
+    {"Field":"numSignedUp","Direction":1}
+  ],
   "Assessments":[
     {
       "Rule":"age \u003c= 27",
@@ -20,5 +23,59 @@
       ],
       "Goals":[{"Expr":"profit \u003e 0","Passed":false}]
     }
-  ]
+  ],
+  "Description": {
+    "fields":{
+      "ccCost":{
+        "kind":"Number",
+        "min":"1",
+        "max":"20",
+        "maxDP":0,
+        "values":{
+          "1":1,
+          "10":1,
+          "2":3,
+          "20":1,
+          "3":1,
+          "6":2,
+          "7":3,
+          "8":3,
+          "9":1
+        },
+        "numValues":9
+      },
+      "ccIncome":{
+        "kind":"Number",
+        "min":"1",
+        "max":"30",
+        "maxDP":0,
+        "values":{
+          "1":1,
+          "10":1,
+          "12":1,
+          "18":1,
+          "2":2,
+          "3":2,
+          "30":1,
+          "4":1,
+          "6":1,
+          "7":1,
+          "8":3,
+          "9":1
+        },
+        "numValues":12
+      },
+      "signup":{
+        "kind":"String",
+        "min":"",
+        "max":"",
+        "maxDP":0,
+        "values":{
+          "yes":72,
+          "no":89
+        },
+        "numValues":2
+      }
+    }
+  }
 }

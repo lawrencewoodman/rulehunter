@@ -11,7 +11,6 @@ import (
 	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rhkit/internal"
 	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
-	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // OutsideFV represents a rule determining if:
@@ -149,7 +148,7 @@ func generateOutsideFV(
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]
-	if fd.Kind != fieldtype.Number {
+	if fd.Kind != description.Number {
 		return []Rule{}
 	}
 	rulesMap := make(map[string]Rule)

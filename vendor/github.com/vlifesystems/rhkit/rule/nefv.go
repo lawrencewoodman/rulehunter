@@ -8,7 +8,6 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/description"
-	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // NEFV represents a rule determining if fieldA != value
@@ -67,7 +66,7 @@ func generateNEFV(
 	fd := inputDescription.Fields[field]
 	rules := make([]Rule, 0)
 	values := fd.Values
-	if len(values) <= 2 || fd.Kind == fieldtype.Ignore {
+	if len(values) <= 2 || fd.Kind == description.Ignore {
 		return []Rule{}
 	}
 	for _, vd := range values {

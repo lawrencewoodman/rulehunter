@@ -86,11 +86,6 @@ func TestRun_cmd_all(t *testing.T) {
 			filepath.Join("fixtures", "reports", f),
 			filepath.Join(cfgDir, "build", "reports"),
 		)
-		testhelpers.CopyFile(
-			t,
-			filepath.Join("fixtures", "descriptions", f),
-			filepath.Join(cfgDir, "build", "descriptions"),
-		)
 	}
 
 	pm, err := progress.NewMonitor(
@@ -171,7 +166,7 @@ func TestRun_cmd_all(t *testing.T) {
 			}
 		case <-timeoutC:
 			if err := checkFilesExist(wantFiles); err != nil {
-				t.Fatalf("Run: %s", err)
+				t.Fatalf("Run: %s, log: %v", err, l)
 			}
 			return
 		}
@@ -201,11 +196,6 @@ func TestRun_cmd_reports(t *testing.T) {
 			t,
 			filepath.Join("fixtures", "reports", f),
 			filepath.Join(cfgDir, "build", "reports"),
-		)
-		testhelpers.CopyFile(
-			t,
-			filepath.Join("fixtures", "descriptions", f),
-			filepath.Join(cfgDir, "build", "descriptions"),
 		)
 	}
 
@@ -315,16 +305,6 @@ func TestRun_cmd_progress(t *testing.T) {
 		t,
 		filepath.Join("fixtures", "reports", "bank-profit.json"),
 		filepath.Join(cfgDir, "build", "reports"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "descriptions", "bank-loss.json"),
-		filepath.Join(cfgDir, "build", "descriptions"),
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "descriptions", "bank-profit.json"),
-		filepath.Join(cfgDir, "build", "descriptions"),
 	)
 
 	pm, err := progress.NewMonitor(

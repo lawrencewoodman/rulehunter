@@ -9,7 +9,6 @@ import (
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rhkit/internal"
-	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // LEFV represents a rule determining if field <= value
@@ -98,7 +97,7 @@ func generateLEFV(
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]
-	if fd.Kind != fieldtype.Number {
+	if fd.Kind != description.Number {
 		return []Rule{}
 	}
 	points := internal.GeneratePoints(fd.Min, fd.Max, fd.MaxDP)

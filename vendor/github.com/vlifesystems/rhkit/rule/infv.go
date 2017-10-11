@@ -8,7 +8,6 @@ import (
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/description"
-	"github.com/vlifesystems/rhkit/internal/fieldtype"
 	"sort"
 	"strings"
 )
@@ -93,8 +92,7 @@ func generateInFV(
 	}
 	fd := inputDescription.Fields[field]
 	numValues := len(fd.Values)
-	if fd.Kind != fieldtype.String &&
-		fd.Kind != fieldtype.Number ||
+	if fd.Kind != description.String && fd.Kind != description.Number ||
 		numValues <= 3 || numValues > (12+extra) {
 		return []Rule{}
 	}

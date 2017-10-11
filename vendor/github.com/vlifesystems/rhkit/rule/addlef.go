@@ -10,7 +10,6 @@ import (
 	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rhkit/internal"
 	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
-	"github.com/vlifesystems/rhkit/internal/fieldtype"
 )
 
 // AddLEF represents a rule determining if fieldA + fieldB <= floatValue
@@ -122,7 +121,7 @@ func generateAddLEF(
 	field string,
 ) []Rule {
 	fd := inputDescription.Fields[field]
-	if !generationDesc.Arithmetic() || fd.Kind != fieldtype.Number {
+	if !generationDesc.Arithmetic() || fd.Kind != description.Number {
 		return []Rule{}
 	}
 	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
@@ -131,7 +130,7 @@ func generateAddLEF(
 	for oField, oFd := range inputDescription.Fields {
 		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
 		if fieldNum < oFieldNum &&
-			oFd.Kind == fieldtype.Number &&
+			oFd.Kind == description.Number &&
 			internal.IsStringInSlice(oField, generationDesc.Fields()) {
 			vars := map[string]*dlit.Literal{
 				"min":  fd.Min,

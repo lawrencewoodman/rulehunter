@@ -1,7 +1,7 @@
 // Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
-package fieldtype
+package description
 
 import "fmt"
 
@@ -14,8 +14,8 @@ const (
 	String
 )
 
-// New creates a new FieldType and will panic if an unsupported type is given
-func New(s string) FieldType {
+// NewFieldType creates a new FieldType and will panic if an unsupported type is given
+func NewFieldType(s string) FieldType {
 	switch s {
 	case "Unknown":
 		return Unknown
