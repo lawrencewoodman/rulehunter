@@ -1,4 +1,4 @@
-## Master
+## 0.3 (11th October 2017)
 
   * Switch to MIT Licence
   * s/`DescribingError`/`DescribeError`/
