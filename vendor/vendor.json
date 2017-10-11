@@ -7,10 +7,10 @@
 			"revision": ""
 		},
 		{
-			"checksumSHA1": "pA/IgZAUBy3vrKT2z+7v7xHw/N8=",
+			"checksumSHA1": "w0tKAADAfc6jNZR/sSqjSXsw3Hg=",
 			"path": "github.com/denisenkom/go-mssqldb",
-			"revision": "fbf0a491e5ec011522c8870da9b0553135e2f9da",
-			"revisionTime": "2016-08-14T16:33:24Z"
+			"revision": "88555645b640cc621e32f8693d7586a1aa1575f4",
+			"revisionTime": "2017-10-06T17:24:03Z"
 		},
 		{
 			"checksumSHA1": "fSlTr0rwLji0DfsUOKYLkGUkiWo=",
@@ -149,6 +149,12 @@
 			"path": "golang.org/x/crypto/md4",
 			"revision": "88d0005bf4c3ec17306ecaca4281a8d8efd73e91",
 			"revisionTime": "2016-08-11T18:32:03Z"
+		},
+		{
+			"checksumSHA1": "dr5+PfIRzXeN+l1VG+s0lea9qz8=",
+			"path": "golang.org/x/net/context",
+			"revision": "a04bdaca5b32abe1c069418fb7088ae607de5bd0",
+			"revisionTime": "2017-10-03T05:09:24Z"
 		},
 		{
 			"checksumSHA1": "vqc3a+oTUGX8PmD0TS+qQ7gmN8I=",
