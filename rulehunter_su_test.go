@@ -117,7 +117,7 @@ func TestRulehunter_service_install(t *testing.T) {
 		}
 		isFinished := false
 		files := []string{}
-		timeoutC := time.NewTimer(10 * time.Second).C
+		timeoutC := time.NewTimer(20 * time.Second).C
 		tickerC := time.NewTicker(400 * time.Millisecond).C
 		for !isFinished {
 			select {

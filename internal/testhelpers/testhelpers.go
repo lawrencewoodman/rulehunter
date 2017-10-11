@@ -22,10 +22,11 @@ type errorReporter interface {
 func MustWriteConfig(e errorReporter, baseDir string, maxNumRecords int) {
 	const mode = 0600
 	cfg := &config.Config{
-		ExperimentsDir: filepath.Join(baseDir, "experiments"),
-		WWWDir:         filepath.Join(baseDir, "www"),
-		BuildDir:       filepath.Join(baseDir, "build"),
-		MaxNumRecords:  maxNumRecords,
+		ExperimentsDir:  filepath.Join(baseDir, "experiments"),
+		WWWDir:          filepath.Join(baseDir, "www"),
+		BuildDir:        filepath.Join(baseDir, "build"),
+		MaxNumProcesses: 2,
+		MaxNumRecords:   maxNumRecords,
 	}
 	cfgFilename := filepath.Join(baseDir, "config.yaml")
 	y, err := yaml.Marshal(cfg)
