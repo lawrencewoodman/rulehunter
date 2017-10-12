@@ -116,6 +116,19 @@ func escapeString(s string) string {
 	return strings.ToLower(newS)
 }
 
+// CreatePageError indicates that an html page can't be created
+type CreatePageError struct {
+	Filename string
+	Op       string
+	Err      error
+}
+
+func (wpe CreatePageError) Error() string {
+	return fmt.Sprintf(
+		"can't create html page for filename: %s, error: %s, Op: %s",
+		wpe.Filename, wpe.Err, wpe.Op)
+}
+
 func writeTemplate(
 	config *config.Config,
 	filename string,
@@ -127,23 +140,23 @@ func writeTemplate(
 	}
 	t, err := template.New("webpage").Funcs(funcMap).Parse(tpl)
 	if err != nil {
-		return err
+		return CreatePageError{Filename: filename, Op: "Parse", Err: err}
 	}
 
 	fullFilename := filepath.Join(config.WWWDir, filename)
 	dir := filepath.Dir(fullFilename)
 	if err := os.MkdirAll(dir, modePerm); err != nil {
-		return err
+		return CreatePageError{Filename: filename, Op: "MkdirAll", Err: err}
 	}
 
 	f, err := os.Create(fullFilename)
 	if err != nil {
-		return err
+		return CreatePageError{Filename: filename, Op: "Create", Err: err}
 	}
 	defer f.Close()
 
 	if err := t.Execute(f, tplData); err != nil {
-		return err
+		return CreatePageError{Filename: filename, Op: "Execute", Err: err}
 	}
 	return nil
 }

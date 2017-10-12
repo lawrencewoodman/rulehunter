@@ -1,16 +1,18 @@
 package html
 
 import (
+	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/quitter"
-	"os"
-	"path/filepath"
-	"testing"
-	"time"
 )
 
 // This checks if Run will quit properly when told to
@@ -403,6 +405,19 @@ func TestEscapeString(t *testing.T) {
 		if got != c.want {
 			t.Errorf("escapeString(%s) got: %s, want: %s", c.in, got, c.want)
 		}
+	}
+}
+
+func TestCreatePageErrorError(t *testing.T) {
+	err := CreatePageError{
+		Filename: "/tmp/somefilename.html",
+		Op:       "Execute",
+		Err:      errors.New("can't write to file"),
+	}
+	want := "can't create html page for filename: /tmp/somefilename.html, error: can't write to file, Op: Execute"
+	got := err.Error()
+	if got != want {
+		t.Errorf("Error - got: %s, want: %s", got, want)
 	}
 }
 
