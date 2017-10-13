@@ -3,10 +3,12 @@ package report
 import (
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
 	"reflect"
+	"syscall"
 	"testing"
 	"time"
 
@@ -215,8 +217,53 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestLoadJSON_errors(t *testing.T) {
+	// File mode permission used as standard:
+	// No special permission bits
+	// User: Read, Write Execute
+	// Group: Read
+	// Other: None
+	const modePerm = 0740
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	cfg := &config.Config{BuildDir: tmpDir}
+	reportsDir := filepath.Join(tmpDir, "reports")
+	if err := os.MkdirAll(reportsDir, modePerm); err != nil {
+		t.Fatalf("MkdirAll: %s", err)
+	}
+	testhelpers.CopyFile(t, filepath.Join("fixtures", "empty.json"), reportsDir)
+
+	cases := []struct {
+		filename string
+		wantErr  error
+	}{
+		{filename: "nonexistent.json",
+			wantErr: &os.PathError{
+				Op:   "open",
+				Path: filepath.Join(reportsDir, "nonexistent.json"),
+				Err:  syscall.ENOENT,
+			},
+		},
+		{filename: "empty.json",
+			wantErr: fmt.Errorf(
+				"can't decode JSON file: %s, error: %s",
+				filepath.Join(reportsDir, "empty.json"),
+				io.EOF),
+		},
+	}
+	for _, c := range cases {
+		got, err := LoadJSON(cfg, c.filename)
+		if got != nil {
+			t.Errorf("LoadJSON: got: %s, want: nil", got)
+		}
+		if err == nil || err.Error() != c.wantErr.Error() {
+			t.Errorf("LoadJSON: gotErr: %s, wantErr: %s", err, c.wantErr)
+		}
+	}
+}
+
 func TestWriteLoadJSON(t *testing.T) {
-	// File mode permission used as standard for the html content:
+	// File mode permission used as standard:
 	// No special permission bits
 	// User: Read, Write Execute
 	// Group: Read

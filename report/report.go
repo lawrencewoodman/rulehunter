@@ -6,6 +6,7 @@ package report
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -130,19 +131,22 @@ func (r *Report) WriteJSON(config *config.Config) error {
 	return ioutil.WriteFile(reportFilename, json, modePerm)
 }
 
-func LoadJSON(config *config.Config, reportFilename string) (*Report, error) {
+// LoadJSON loads a report from the specified reportFilename in
+// reports directory of cfg.BuildDir
+func LoadJSON(cfg *config.Config, reportFilename string) (*Report, error) {
 	var report Report
-	filename := filepath.Join(config.BuildDir, "reports", reportFilename)
+	filename := filepath.Join(cfg.BuildDir, "reports", reportFilename)
 
 	f, err := os.Open(filename)
 	if err != nil {
-		return &Report{}, err
+		return nil, err
 	}
 	defer f.Close()
 
 	dec := json.NewDecoder(f)
 	if err = dec.Decode(&report); err != nil {
-		return &Report{}, err
+		return nil, fmt.Errorf("can't decode JSON file: %s, error: %s",
+			filename, err)
 	}
 	return &report, nil
 }
