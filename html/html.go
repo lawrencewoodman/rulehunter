@@ -140,23 +140,23 @@ func writeTemplate(
 	}
 	t, err := template.New("webpage").Funcs(funcMap).Parse(tpl)
 	if err != nil {
-		return CreatePageError{Filename: filename, Op: "Parse", Err: err}
+		return CreatePageError{Filename: filename, Op: "parse", Err: err}
 	}
 
 	fullFilename := filepath.Join(config.WWWDir, filename)
 	dir := filepath.Dir(fullFilename)
 	if err := os.MkdirAll(dir, modePerm); err != nil {
-		return CreatePageError{Filename: filename, Op: "MkdirAll", Err: err}
+		return CreatePageError{Filename: filename, Op: "mkdir", Err: err}
 	}
 
 	f, err := os.Create(fullFilename)
 	if err != nil {
-		return CreatePageError{Filename: filename, Op: "Create", Err: err}
+		return CreatePageError{Filename: filename, Op: "create", Err: err}
 	}
 	defer f.Close()
 
 	if err := t.Execute(f, tplData); err != nil {
-		return CreatePageError{Filename: filename, Op: "Execute", Err: err}
+		return CreatePageError{Filename: filename, Op: "execute", Err: err}
 	}
 	return nil
 }
