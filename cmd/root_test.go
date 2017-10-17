@@ -186,7 +186,7 @@ func TestRunRoot_file_errors(t *testing.T) {
 		{Level: testhelpers.Error,
 			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 3: did not find expected key"},
 		{Level: testhelpers.Error,
-			Msg: "Can't load experiment: nonexistant.json, no such file or directory"},
+			Msg: "Can't load experiment: nonexistant.json, " + syscall.ENOENT.Error()},
 	}
 	wantReportFiles := []string{}
 
