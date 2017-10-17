@@ -6,7 +6,7 @@ package program
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/kardianos/service"
@@ -137,7 +137,7 @@ func (p *Program) ProcessFilename(filename string) error {
 		if pErr, ok := err.(*os.PathError); ok {
 			err = pErr.Err
 		}
-		filename = path.Base(filename)
+		filename = filepath.Base(filename)
 		logErr := fmt.Errorf("Can't load experiment: %s, %s", filename, err)
 		p.logger.Error(logErr)
 		pmErr := p.progressMonitor.ReportLoadError(filename, err)
