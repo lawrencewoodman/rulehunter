@@ -5,6 +5,10 @@ package program
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"time"
+
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/experiment"
@@ -13,7 +17,6 @@ import (
 	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/quitter"
 	"github.com/vlifesystems/rulehunter/watcher"
-	"time"
 )
 
 type Program struct {
@@ -124,6 +127,27 @@ func (p *Program) ProcessDir(dir string) error {
 		if err := p.ProcessFile(file); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (p *Program) ProcessFilename(filename string) error {
+	file, err := os.Stat(filename)
+	if err != nil {
+		if pErr, ok := err.(*os.PathError); ok {
+			err = pErr.Err
+		}
+		filename = path.Base(filename)
+		logErr := fmt.Errorf("Can't load experiment: %s, %s", filename, err)
+		p.logger.Error(logErr)
+		pmErr := p.progressMonitor.ReportLoadError(filename, err)
+		if pmErr != nil {
+			return p.logger.Error(pmErr)
+		}
+		return nil
+	}
+	if err := p.ProcessFile(file); err != nil {
+		return err
 	}
 	return nil
 }

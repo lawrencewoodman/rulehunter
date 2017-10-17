@@ -17,12 +17,13 @@ var RootCmd = &cobra.Command{
                 Complete documentation is available at http://rulehunter.com`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.NewSvcLogger()
-		return runRoot(l, flagConfigFilename)
+		return runRoot(l, flagConfigFilename, flagFile)
 	},
 }
 
 // The contents of the flags specified on the command line
 var (
+	flagFile           string
 	flagUser           string
 	flagConfigFilename string
 )
@@ -34,20 +35,36 @@ func init() {
 		"config.yaml",
 		"config file",
 	)
+	RootCmd.Flags().StringVar(
+		&flagFile,
+		"file",
+		"",
+		"an experiment file to process",
+	)
 	RootCmd.AddCommand(ServeCmd)
 	RootCmd.AddCommand(ServiceCmd)
 	RootCmd.AddCommand(VersionCmd)
 }
 
-func runRoot(l logger.Logger, configFilename string) error {
+func runRoot(
+	l logger.Logger,
+	configFilename string,
+	experimentFilename string,
+) error {
 	q := quitter.New()
 	defer q.Quit()
 	s, err := InitSetup(l, q, configFilename)
 	if err != nil {
 		return err
 	}
-	if err := s.prg.ProcessDir(s.cfg.ExperimentsDir); err != nil {
-		return fmt.Errorf("Errors while processing dir")
+	if experimentFilename != "" {
+		if err := s.prg.ProcessFilename(experimentFilename); err != nil {
+			return fmt.Errorf("Errors while processing file: %s", experimentFilename)
+		}
+	} else {
+		if err := s.prg.ProcessDir(s.cfg.ExperimentsDir); err != nil {
+			return fmt.Errorf("Errors while processing dir")
+		}
 	}
 	return nil
 }
