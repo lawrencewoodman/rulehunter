@@ -259,6 +259,83 @@ func TestProcessFile(t *testing.T) {
 	}
 }
 
+func TestProcessFilename(t *testing.T) {
+	cfgDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(cfgDir)
+	cfg := &config.Config{
+		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+		WWWDir:            filepath.Join(cfgDir, "www"),
+		BuildDir:          filepath.Join(cfgDir, "build"),
+		MaxNumRecords:     100,
+		MaxNumProcesses:   4,
+		MaxNumReportRules: 100,
+	}
+	for _, f := range experimentFiles {
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", f),
+			cfg.ExperimentsDir,
+		)
+	}
+	filenames := []string{
+		"0debt_broken.yaml",
+		"debt.json",
+		"debt.yaml",
+		"debt.jso",
+		"debt2.json",
+		"debt_when_hasrun.yaml",
+		"debt_when_nothasrun.yaml",
+		"debt_invalid_when.yaml",
+		"debt_invalid_goal.yaml",
+	}
+
+	l := testhelpers.NewLogger()
+	quit := quitter.New()
+	defer quit.Quit()
+	htmlCmds := make(chan cmd.Cmd, 100)
+	defer close(htmlCmds)
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
+	pm, err := progress.NewMonitor(
+		filepath.Join(cfg.BuildDir, "progress"),
+		htmlCmds,
+	)
+	if err != nil {
+		t.Fatalf("progress.NewMonitor: %s", err)
+	}
+
+	p := New(cfg, pm, l, quit)
+
+	for _, f := range filenames {
+		fullFilename := filepath.Join(cfg.ExperimentsDir, f)
+		if err := p.ProcessFilename(fullFilename); err != nil {
+			t.Fatalf("ProcessFilename(%s): %s", f, err)
+		}
+		time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
+	}
+
+	gotReportFiles := testhelpers.GetFilesInDir(
+		t,
+		filepath.Join(cfgDir, "build", "reports"),
+	)
+	sort.Strings(gotReportFiles)
+	sort.Strings(wantReportFiles)
+	if !reflect.DeepEqual(gotReportFiles, wantReportFiles) {
+		t.Errorf("GetFilesInDir - got: %v\n want: %v",
+			gotReportFiles, wantReportFiles)
+	}
+
+	if !reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
+		t.Errorf("GetEntries() got: %v\n want: %v", l.GetEntries(), wantLogEntries)
+	}
+
+	got := pm.GetExperiments()
+	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments)
+	if err != nil {
+		t.Errorf("checkExperimentsMatch() err: %s", err)
+	}
+}
+
 func TestProcessDir(t *testing.T) {
 	wantLogEntries := []testhelpers.Entry{
 		{Level: testhelpers.Error,
