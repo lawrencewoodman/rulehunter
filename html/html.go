@@ -125,7 +125,7 @@ type CreatePageError struct {
 
 func (wpe CreatePageError) Error() string {
 	return fmt.Sprintf(
-		"can't create html page for filename: %s, error: %s, Op: %s",
+		"can't create html page for filename: %s, %s (%s)",
 		wpe.Filename, wpe.Err, wpe.Op)
 }
 

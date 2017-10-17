@@ -246,7 +246,7 @@ func TestLoadJSON_errors(t *testing.T) {
 		},
 		{filename: "empty.json",
 			wantErr: fmt.Errorf(
-				"can't decode JSON file: %s, error: %s",
+				"can't decode JSON file: %s, %s",
 				filepath.Join(reportsDir, "empty.json"),
 				io.EOF),
 		},

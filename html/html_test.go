@@ -411,10 +411,10 @@ func TestEscapeString(t *testing.T) {
 func TestCreatePageErrorError(t *testing.T) {
 	err := CreatePageError{
 		Filename: "/tmp/somefilename.html",
-		Op:       "Execute",
+		Op:       "execute",
 		Err:      errors.New("can't write to file"),
 	}
-	want := "can't create html page for filename: /tmp/somefilename.html, error: can't write to file, Op: Execute"
+	want := "can't create html page for filename: /tmp/somefilename.html, can't write to file (execute)"
 	got := err.Error()
 	if got != want {
 		t.Errorf("Error - got: %s, want: %s", got, want)

@@ -145,8 +145,7 @@ func LoadJSON(cfg *config.Config, reportFilename string) (*Report, error) {
 
 	dec := json.NewDecoder(f)
 	if err = dec.Decode(&report); err != nil {
-		return nil, fmt.Errorf("can't decode JSON file: %s, error: %s",
-			filename, err)
+		return nil, fmt.Errorf("can't decode JSON file: %s, %s", filename, err)
 	}
 	return &report, nil
 }
