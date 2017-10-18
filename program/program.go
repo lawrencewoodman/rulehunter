@@ -60,8 +60,9 @@ func (p *Program) Start(s service.Service) error {
 // ProcessFile tries to process an Experiment file.  It only returns an
 // error if it is out of the ordinary for example if an error occurs when
 // reporting to the progress monitor, not if it can't load an experiment
-// nor if there is a problem processing the experiment.
-func (p *Program) ProcessFile(file fileinfo.FileInfo) error {
+// nor if there is a problem processing the experiment. Pass ignoreWhen
+// as true if you want to ignore experiment's 'when' statement.
+func (p *Program) ProcessFile(file fileinfo.FileInfo, ignoreWhen bool) error {
 	var err error
 	pm := p.progressMonitor
 	stamp := time.Now()
@@ -85,18 +86,20 @@ func (p *Program) ProcessFile(file fileinfo.FileInfo) error {
 		}
 	}
 
-	ok, err := e.ShouldProcess(isFinished, stamp)
-	if err != nil {
-		logErr :=
-			fmt.Errorf("Error processing experiment: %s, %s", file.Name(), err)
-		p.logger.Error(logErr)
-		if pmErr := pm.ReportError(file.Name(), err); pmErr != nil {
-			return p.logger.Error(pmErr)
+	if !ignoreWhen {
+		ok, err := e.ShouldProcess(isFinished, stamp)
+		if err != nil {
+			logErr :=
+				fmt.Errorf("Error processing experiment: %s, %s", file.Name(), err)
+			p.logger.Error(logErr)
+			if pmErr := pm.ReportError(file.Name(), err); pmErr != nil {
+				return p.logger.Error(pmErr)
+			}
+			return nil
 		}
-		return nil
-	}
-	if !ok {
-		return nil
+		if !ok {
+			return nil
+		}
 	}
 
 	p.logger.Info("Processing experiment: " + file.Name())
@@ -118,20 +121,20 @@ func (p *Program) ProcessFile(file fileinfo.FileInfo) error {
 	return nil
 }
 
-func (p *Program) ProcessDir(dir string) error {
+func (p *Program) ProcessDir(dir string, ignoreWhen bool) error {
 	files, err := watcher.GetExperimentFiles(dir)
 	if err != nil {
 		return err
 	}
 	for _, file := range files {
-		if err := p.ProcessFile(file); err != nil {
+		if err := p.ProcessFile(file, ignoreWhen); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p *Program) ProcessFilename(filename string) error {
+func (p *Program) ProcessFilename(filename string, ignoreWhen bool) error {
 	file, err := os.Stat(filename)
 	if err != nil {
 		if pErr, ok := err.(*os.PathError); ok {
@@ -146,7 +149,7 @@ func (p *Program) ProcessFilename(filename string) error {
 		}
 		return nil
 	}
-	if err := p.ProcessFile(file); err != nil {
+	if err := p.ProcessFile(file, ignoreWhen); err != nil {
 		return err
 	}
 	return nil
@@ -163,7 +166,7 @@ func (p *Program) run() {
 			if file == nil {
 				break
 			}
-			p.ProcessFile(file)
+			p.ProcessFile(file, false)
 		}
 	}
 }

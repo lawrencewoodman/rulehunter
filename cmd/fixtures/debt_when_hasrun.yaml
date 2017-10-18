@@ -1,0 +1,31 @@
+fileFormatVersion: "0.1"
+title: "What is most likely to indicate success"
+fields:
+  - "name"
+  - "balance"
+  - "num_cards"
+  - "marital_status"
+  - "tertiary_educated"
+  - "success"
+ruleGeneration:
+  fields:
+    - "name"
+    - "balance"
+    - "num_cards"
+    - "marital_status"
+    - "tertiary_educated"
+dataset: "csv"
+csv:
+  filename: "fixtures/debt.csv"
+  hasHeader: true
+  separator:  ","
+aggregators:
+  - name: "successMcc"
+    kind: "mcc"
+    arg: "success"
+goals:
+  - "successMcc > 0"
+sortOrder:
+  - aggregator: "successMcc"
+    direction: "descending"
+when: "hasRun"

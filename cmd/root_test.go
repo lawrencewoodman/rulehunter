@@ -55,6 +55,7 @@ func TestRunRoot(t *testing.T) {
 
 	experimentFiles := []string{
 		"0debt_broken.yaml",
+		"debt_when_hasrun.yaml",
 		"debt.json",
 		"debt.yaml",
 		"debt2.json",
@@ -69,7 +70,7 @@ func TestRunRoot(t *testing.T) {
 	}
 
 	l := testhelpers.NewLogger()
-	if err := runRoot(l, cfgFilename, ""); err != nil {
+	if err := runRoot(l, cfgFilename, "", false); err != nil {
 		t.Errorf("runRoot: %s", err)
 	}
 	gotReportFiles := testhelpers.GetFilesInDir(
@@ -117,7 +118,7 @@ func TestRunRoot_errors(t *testing.T) {
 
 	for i, c := range cases {
 		l := testhelpers.NewLogger()
-		err := runRoot(l, c.configFilename, "")
+		err := runRoot(l, c.configFilename, "", false)
 		if err := checkErrorMatch(err, c.wantErr); err != nil {
 			t.Errorf("(%d) runRoot: %s", i, err)
 		}
@@ -152,6 +153,7 @@ func TestRunRoot_file(t *testing.T) {
 		"0debt_broken.yaml",
 		"debt.json",
 		"debt.yaml",
+		"debt_when_hasrun.yaml",
 	}
 	for _, f := range experimentFiles {
 		testhelpers.CopyFile(
@@ -163,7 +165,7 @@ func TestRunRoot_file(t *testing.T) {
 	experimentFilename := filepath.Join(cfgDir, "experiments", "debt.json")
 
 	l := testhelpers.NewLogger()
-	if err := runRoot(l, cfgFilename, experimentFilename); err != nil {
+	if err := runRoot(l, cfgFilename, experimentFilename, false); err != nil {
 		t.Errorf("runRoot: %s", err)
 	}
 	gotReportFiles := testhelpers.GetFilesInDir(
@@ -218,9 +220,72 @@ func TestRunRoot_file_errors(t *testing.T) {
 
 	l := testhelpers.NewLogger()
 	for _, f := range testExperimentFilenames {
-		err := runRoot(l, cfgFilename, f)
-		if err != nil {
+		if err := runRoot(l, cfgFilename, f, false); err != nil {
 			t.Fatalf("runRoot: %s", err)
+		}
+	}
+	gotReportFiles := testhelpers.GetFilesInDir(
+		t,
+		filepath.Join(cfgDir, "build", "reports"),
+	)
+	if !reflect.DeepEqual(gotReportFiles, wantReportFiles) {
+		t.Errorf("GetFilesInDir - got: %v\n want: %v",
+			gotReportFiles, wantReportFiles)
+	}
+
+	if !reflect.DeepEqual(l.GetEntries(), wantEntries) {
+		t.Errorf("GetEntries() got: %v\n want: %v", l.GetEntries(), wantEntries)
+	}
+	// TODO: Test all files generated
+}
+
+func TestRunRoot_ignoreWhen(t *testing.T) {
+	wantEntries := []testhelpers.Entry{
+		{Level: testhelpers.Info,
+			Msg: "Processing experiment: debt.json"},
+		{Level: testhelpers.Info,
+			Msg: "Successfully processed experiment: debt.json"},
+		{Level: testhelpers.Info,
+			Msg: "Processing experiment: debt_when_hasrun.yaml"},
+		{Level: testhelpers.Info,
+			Msg: "Successfully processed experiment: debt_when_hasrun.yaml"},
+	}
+	wantReportFiles := []string{
+		// "debt.json"
+		internal.MakeBuildFilename("", "What is most likely to indicate success"),
+	}
+
+	cfgDir := testhelpers.BuildConfigDirs(t, false)
+	cfgFilename := filepath.Join(cfgDir, "config.yaml")
+	defer os.RemoveAll(cfgDir)
+	if testing.Short() {
+		testhelpers.MustWriteConfig(t, cfgDir, 100)
+	} else {
+		testhelpers.MustWriteConfig(t, cfgDir, 2000)
+	}
+
+	experimentFiles := []string{
+		"0debt_broken.yaml",
+		"debt.json",
+		"debt.yaml",
+		"debt_when_hasrun.yaml",
+	}
+	for _, f := range experimentFiles {
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", f),
+			filepath.Join(cfgDir, "experiments"),
+		)
+	}
+	tryFilenames := []string{
+		filepath.Join(cfgDir, "experiments", "debt.json"),
+		filepath.Join(cfgDir, "experiments", "debt_when_hasrun.yaml"),
+	}
+
+	l := testhelpers.NewLogger()
+	for _, f := range tryFilenames {
+		if err := runRoot(l, cfgFilename, f, true); err != nil {
+			t.Errorf("runRoot: %s", err)
 		}
 	}
 	gotReportFiles := testhelpers.GetFilesInDir(

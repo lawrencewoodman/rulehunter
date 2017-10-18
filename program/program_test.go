@@ -231,7 +231,7 @@ func TestProcessFile(t *testing.T) {
 	p := New(cfg, pm, l, quit)
 
 	for _, f := range files {
-		if err := p.ProcessFile(f); err != nil {
+		if err := p.ProcessFile(f, false); err != nil {
 			t.Fatalf("ProcessFile(%s): %s", f.Name(), err)
 		}
 		time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
@@ -256,6 +256,76 @@ func TestProcessFile(t *testing.T) {
 	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
+	}
+}
+
+func TestProcessFile_ignoreWhen(t *testing.T) {
+	cfgDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(cfgDir)
+	cfg := &config.Config{
+		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+		WWWDir:            filepath.Join(cfgDir, "www"),
+		BuildDir:          filepath.Join(cfgDir, "build"),
+		MaxNumRecords:     100,
+		MaxNumProcesses:   4,
+		MaxNumReportRules: 100,
+	}
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "debt_when_hasrun.yaml"),
+		cfg.ExperimentsDir,
+	)
+	var wantReportFiles = []string{
+		// "debt_when_hasrun.yaml"
+		internal.MakeBuildFilename(
+			"",
+			"What is most likely to indicate success",
+		),
+	}
+	var wantLogEntries = []testhelpers.Entry{
+		{Level: testhelpers.Info,
+			Msg: "Processing experiment: debt_when_hasrun.yaml"},
+		{Level: testhelpers.Info,
+			Msg: "Successfully processed experiment: debt_when_hasrun.yaml"},
+	}
+
+	l := testhelpers.NewLogger()
+	quit := quitter.New()
+	defer quit.Quit()
+	htmlCmds := make(chan cmd.Cmd, 100)
+	defer close(htmlCmds)
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
+	pm, err := progress.NewMonitor(
+		filepath.Join(cfg.BuildDir, "progress"),
+		htmlCmds,
+	)
+	if err != nil {
+		t.Fatalf("progress.NewMonitor: %s", err)
+	}
+
+	p := New(cfg, pm, l, quit)
+
+	experimentFile :=
+		testhelpers.NewFileInfo("debt_when_hasrun.yaml", time.Now())
+	if err := p.ProcessFile(experimentFile, true); err != nil {
+		t.Fatalf("ProcessFile(%s): %s", experimentFile.Name(), err)
+	}
+	time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
+
+	gotReportFiles := testhelpers.GetFilesInDir(
+		t,
+		filepath.Join(cfgDir, "build", "reports"),
+	)
+	sort.Strings(gotReportFiles)
+	sort.Strings(wantReportFiles)
+	if !reflect.DeepEqual(gotReportFiles, wantReportFiles) {
+		t.Errorf("GetFilesInDir - got: %v\n want: %v",
+			gotReportFiles, wantReportFiles)
+	}
+
+	if !reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
+		t.Errorf("GetEntries() got: %v\n want: %v", l.GetEntries(), wantLogEntries)
 	}
 }
 
@@ -308,7 +378,7 @@ func TestProcessFilename(t *testing.T) {
 
 	for _, f := range filenames {
 		fullFilename := filepath.Join(cfg.ExperimentsDir, f)
-		if err := p.ProcessFilename(fullFilename); err != nil {
+		if err := p.ProcessFilename(fullFilename, false); err != nil {
 			t.Fatalf("ProcessFilename(%s): %s", f, err)
 		}
 		time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
@@ -490,7 +560,7 @@ func TestProcessDir(t *testing.T) {
 
 	p := New(cfg, pm, l, quit)
 
-	if err := p.ProcessDir(cfg.ExperimentsDir); err != nil {
+	if err := p.ProcessDir(cfg.ExperimentsDir, false); err != nil {
 		t.Fatalf("ProcessDir: %s", err)
 	}
 
