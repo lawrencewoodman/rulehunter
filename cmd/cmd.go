@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehunter/config"
@@ -60,6 +61,16 @@ func InitSetup(
 	l.SetSvcLogger(svcLogger)
 	go l.Run(q)
 	go html.Run(config, pm, l, q, htmlCmds)
+
+	for i := 0; i < 10; i++ {
+		// This helps to ensure that quitter is properly established
+		// in goroutine before returning and being able to call Quit on quitter
+		if l.Ready() {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	time.Sleep(10 * time.Millisecond)
 	return &Setup{
 		prg: prg,
 		svc: s,

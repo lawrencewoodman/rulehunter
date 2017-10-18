@@ -10,6 +10,7 @@ import (
 
 type Logger struct {
 	entries []Entry
+	ready   bool
 }
 
 type Entry struct {
@@ -27,18 +28,25 @@ const (
 func NewLogger() *Logger {
 	return &Logger{
 		entries: make([]Entry, 0),
+		ready:   false,
 	}
 }
 
 func (l *Logger) Run(quit *quitter.Quitter) {
 	quit.Add()
 	defer quit.Done()
+	l.ready = true
 	for {
 		select {
 		case <-quit.C:
 			return
 		}
 	}
+}
+
+// Ready returns whether Logger is ready to start logging
+func (l *Logger) Ready() bool {
+	return l.ready
 }
 
 func (l *Logger) SetSvcLogger(logger service.Logger) {
