@@ -122,6 +122,13 @@ var wantPMExperiments = []*progress.Experiment{
 	},
 }
 
+// Sets the time for the experiments to Now()
+func initExperimentsTime(experiments []*progress.Experiment) {
+	for _, e := range experiments {
+		e.Status.Stamp = time.Now()
+	}
+}
+
 var wantLogEntries = []testhelpers.Entry{
 	{Level: testhelpers.Error,
 		Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 3: did not find expected key"},
@@ -400,6 +407,7 @@ func TestProcessFilename(t *testing.T) {
 	}
 
 	got := pm.GetExperiments()
+	initExperimentsTime(wantPMExperiments)
 	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
