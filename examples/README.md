@@ -1,9 +1,10 @@
 Examples
 ========
 
-This directory (`examples/`) contains 4 example experiments:
+This directory (`examples/`) contains example experiments:
 
     experiments/acmeprinters_repair016_who_should_call_which_segment.yaml
+    experiments/breast_cancer_wisconsin.yaml
     experiments/iris-setosa.yaml
     experiments/iris-versicolor.yaml
     experiments/iris-virginica.yaml
