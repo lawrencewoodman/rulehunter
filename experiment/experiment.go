@@ -216,11 +216,9 @@ func (e *Experiment) Process(
 
 	ass := rhkassessment.New()
 
-	if len(e.Rules) > 0 {
-		err = e.assessRules(1, ass, e.Rules, pr, cfg)
-		if err != nil {
-			return fmt.Errorf("Couldn't assess rules: %s", err)
-		}
+	err = e.assessRules(1, ass, e.Rules, pr, cfg)
+	if err != nil {
+		return fmt.Errorf("Couldn't assess rules: %s", err)
 	}
 
 	if err := reportProgress("Generating rules", 0); err != nil {
@@ -491,6 +489,10 @@ func (e *Experiment) assessRules(
 	numRules := len(rules)
 	jobs := make(chan assessJob, 100)
 	results := make(chan assessJobResult, 100)
+
+	if len(rules) == 0 {
+		return nil
+	}
 
 	if stage > assessRulesNumStages {
 		panic("assessRules: stage > assessRulesNumStages")
