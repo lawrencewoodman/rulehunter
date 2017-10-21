@@ -20,6 +20,7 @@ install:
   - go version
   - go env
   - go get -v -t ./...
+  - go install
 
 before_build:
   - sqlcmd -S (local)\SQL2014 -P Password12! -U sa -i ci\createflow.sql
