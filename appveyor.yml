@@ -34,4 +34,4 @@ test_script:
   - go test -v -tags="appveyor su" ./...
   - cd examples
   - bin\init_www_windows.bat
-  - rulehunter
+  - rulehunter --config=config_quick.yaml

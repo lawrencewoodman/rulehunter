@@ -1,0 +1,5 @@
+experimentsDir: "experiments"
+wwwDir: "www"
+buildDir: "build"
+maxNumRecords: 100
+maxNumCacheRecords: 5000

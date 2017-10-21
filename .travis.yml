@@ -23,4 +23,4 @@ script:
   - cd examples
   - chmod +x bin/init_www_unix.sh
   - bin/init_www_unix.sh
-  - rulehunter
+  - rulehunter --config=config_quick.yaml
