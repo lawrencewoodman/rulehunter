@@ -639,7 +639,15 @@ func TestStart(t *testing.T) {
 		filepath.Join(cfgDir, "datasets"),
 	)
 	p.Start(svc)
-	defer p.Stop(svc)
+	defer func() {
+		p.Stop(svc)
+		for i := 0; i < 1000; i++ {
+			if !p.Running() {
+				return
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+	}()
 
 	if !testing.Short() {
 		time.Sleep(4 * time.Second)
@@ -654,8 +662,9 @@ func TestStart(t *testing.T) {
 	}
 
 	files := []string{}
-	timeoutC := time.NewTimer(10 * time.Second).C
+	timeoutC := time.NewTimer(20 * time.Second).C
 	tickerC := time.NewTicker(400 * time.Millisecond).C
+	sort.Strings(wantReportFiles)
 	for {
 		select {
 		case <-tickerC:
@@ -663,6 +672,7 @@ func TestStart(t *testing.T) {
 				t,
 				filepath.Join(cfgDir, "build", "reports"),
 			)
+			sort.Strings(files)
 			if reflect.DeepEqual(files, wantReportFiles) {
 				return
 			}

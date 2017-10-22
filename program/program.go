@@ -26,6 +26,7 @@ type Program struct {
 	quit            *quitter.Quitter
 	files           chan fileinfo.FileInfo
 	shouldStop      chan struct{}
+	isRunning       bool
 }
 
 func New(
@@ -41,6 +42,7 @@ func New(
 		quit:            q,
 		files:           make(chan fileinfo.FileInfo, 100),
 		shouldStop:      make(chan struct{}),
+		isRunning:       false,
 	}
 }
 
@@ -156,6 +158,8 @@ func (p *Program) ProcessFilename(filename string, ignoreWhen bool) error {
 }
 
 func (p *Program) run() {
+	p.isRunning = true
+	defer func() { p.isRunning = false }()
 	for {
 		select {
 		case <-p.quit.C:
@@ -169,6 +173,11 @@ func (p *Program) run() {
 			p.ProcessFile(file, false)
 		}
 	}
+}
+
+// Running returns whether Program is running
+func (p *Program) Running() bool {
+	return p.isRunning
 }
 
 func (p *Program) Stop(s service.Service) error {
