@@ -34,4 +34,6 @@ test_script:
   - go test -v -tags="appveyor su" ./...
   - cd examples
   - bin\init_www_windows.bat
+  - echo %PATH%
+  - dir C:\msys64\mingw64\bin
   - rulehunter --config=config_quick.yaml
