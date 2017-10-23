@@ -10,7 +10,7 @@ import (
 
 type Logger interface {
 	Run(*quitter.Quitter)
-	Ready() bool
+	Running() bool
 	Info(string)
 	Error(error) error
 	SetSvcLogger(service.Logger)
@@ -18,13 +18,13 @@ type Logger interface {
 
 type SvcLogger struct {
 	svcLogger service.Logger
-	ready     bool
+	isRunning bool
 }
 
 func NewSvcLogger() *SvcLogger {
 	return &SvcLogger{
 		svcLogger: nil,
-		ready:     false,
+		isRunning: false,
 	}
 }
 
@@ -34,7 +34,8 @@ func (l *SvcLogger) Run(quit *quitter.Quitter) {
 	}
 	quit.Add()
 	defer quit.Done()
-	l.ready = true
+	l.isRunning = true
+	defer func() { l.isRunning = false }()
 	for {
 		select {
 		case <-quit.C:
@@ -43,9 +44,9 @@ func (l *SvcLogger) Run(quit *quitter.Quitter) {
 	}
 }
 
-// Ready returns whether Logger is ready to start logging
-func (l *SvcLogger) Ready() bool {
-	return l.ready
+// Running returns whether Logger is running
+func (l *SvcLogger) Running() bool {
+	return l.isRunning
 }
 
 func (l *SvcLogger) SetSvcLogger(logger service.Logger) {

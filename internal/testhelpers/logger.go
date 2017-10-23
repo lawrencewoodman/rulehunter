@@ -9,8 +9,8 @@ import (
 )
 
 type Logger struct {
-	entries []Entry
-	ready   bool
+	entries   []Entry
+	isRunning bool
 }
 
 type Entry struct {
@@ -27,15 +27,16 @@ const (
 
 func NewLogger() *Logger {
 	return &Logger{
-		entries: make([]Entry, 0),
-		ready:   false,
+		entries:   make([]Entry, 0),
+		isRunning: false,
 	}
 }
 
 func (l *Logger) Run(quit *quitter.Quitter) {
 	quit.Add()
 	defer quit.Done()
-	l.ready = true
+	l.isRunning = true
+	defer func() { l.isRunning = false }()
 	for {
 		select {
 		case <-quit.C:
@@ -44,9 +45,9 @@ func (l *Logger) Run(quit *quitter.Quitter) {
 	}
 }
 
-// Ready returns whether Logger is ready to start logging
-func (l *Logger) Ready() bool {
-	return l.ready
+// Running returns whether Logger is running
+func (l *Logger) Running() bool {
+	return l.isRunning
 }
 
 func (l *Logger) SetSvcLogger(logger service.Logger) {

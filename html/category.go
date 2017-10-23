@@ -5,15 +5,20 @@ package html
 
 import (
 	"fmt"
-	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/report"
 	"html/template"
 	"io/ioutil"
 	"path/filepath"
+
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/report"
 )
 
-func generateCategoryPages(config *config.Config) error {
-	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
+func generateCategoryPages(
+	cfg *config.Config,
+	pm *progress.Monitor,
+) error {
+	reportFiles, err := ioutil.ReadDir(filepath.Join(cfg.BuildDir, "reports"))
 	if err != nil {
 		return err
 	}
@@ -21,14 +26,14 @@ func generateCategoryPages(config *config.Config) error {
 	categorysLen := make(map[string]int)
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			report, err := report.LoadJSON(config, file.Name())
+			report, err := report.LoadJSON(cfg, file.Name())
 			if err != nil {
 				return err
 			}
 			escapedCategory := escapeString(report.Category)
 			if _, ok := categorysLen[escapedCategory]; !ok ||
 				len(report.Category) < categorysLen[escapedCategory] {
-				if err := generateCategoryPage(config, report.Category); err != nil {
+				if err := generateCategoryPage(cfg, report.Category); err != nil {
 					return err
 				}
 				// Use the shortest category out of those that resolve to the
@@ -38,21 +43,21 @@ func generateCategoryPages(config *config.Config) error {
 		}
 	}
 
-	if err := generateCategoryPage(config, ""); err != nil {
+	if err := generateCategoryPage(cfg, ""); err != nil {
 		return err
 	}
 	categorysLen[""] = 0
 	return nil
 }
 
-func generateCategoryPage(config *config.Config, categoryName string) error {
+func generateCategoryPage(cfg *config.Config, categoryName string) error {
 	type TplData struct {
 		Category string
 		Reports  []*TplReport
 		Html     map[string]template.HTML
 	}
 
-	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
+	reportFiles, err := ioutil.ReadDir(filepath.Join(cfg.BuildDir, "reports"))
 	if err != nil {
 		return err
 	}
@@ -63,7 +68,7 @@ func generateCategoryPage(config *config.Config, categoryName string) error {
 	i := 0
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			report, err := report.LoadJSON(config, file.Name())
+			report, err := report.LoadJSON(cfg, file.Name())
 			if err != nil {
 				return err
 			}
@@ -85,7 +90,7 @@ func generateCategoryPage(config *config.Config, categoryName string) error {
 	tplData := TplData{
 		Category: categoryName,
 		Reports:  tplReports,
-		Html:     makeHtml(config, "category"),
+		Html:     makeHtml(cfg, "category"),
 	}
 	outputFilename := filepath.Join(
 		"reports",
@@ -96,7 +101,7 @@ func generateCategoryPage(config *config.Config, categoryName string) error {
 	if len(escapeString(categoryName)) == 0 {
 		outputFilename = filepath.Join("reports", "nocategory", "index.html")
 	}
-	return writeTemplate(config, outputFilename, categoryTpl, tplData)
+	return writeTemplate(cfg, outputFilename, categoryTpl, tplData)
 }
 
 func makeCategoryLink(category string) string {

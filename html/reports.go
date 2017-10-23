@@ -4,20 +4,25 @@
 package html
 
 import (
-	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/report"
 	"html/template"
 	"io/ioutil"
 	"path/filepath"
+
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/report"
 )
 
-func generateReports(config *config.Config) error {
+func generateReports(
+	cfg *config.Config,
+	pm *progress.Monitor,
+) error {
 	type TplData struct {
 		Reports []*TplReport
 		Html    map[string]template.HTML
 	}
 
-	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
+	reportFiles, err := ioutil.ReadDir(filepath.Join(cfg.BuildDir, "reports"))
 	if err != nil {
 		return err
 	}
@@ -27,11 +32,11 @@ func generateReports(config *config.Config) error {
 
 	for i, file := range reportFiles {
 		if !file.IsDir() {
-			report, err := report.LoadJSON(config, file.Name())
+			report, err := report.LoadJSON(cfg, file.Name())
 			if err != nil {
 				return err
 			}
-			reportURLDir, err := generateReport(report, config)
+			reportURLDir, err := generateReport(report, cfg)
 			if err != nil {
 				return err
 			}
@@ -48,9 +53,9 @@ func generateReports(config *config.Config) error {
 	sortTplReportsByDate(tplReports)
 	tplData := TplData{
 		Reports: tplReports,
-		Html:    makeHtml(config, "reports"),
+		Html:    makeHtml(cfg, "reports"),
 	}
 
 	outputFilename := filepath.Join("reports", "index.html")
-	return writeTemplate(config, outputFilename, reportsTpl, tplData)
+	return writeTemplate(cfg, outputFilename, reportsTpl, tplData)
 }

@@ -2,13 +2,16 @@ package html
 
 import (
 	"fmt"
-	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/html/cmd"
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
+	"github.com/vlifesystems/rulehunter/progress"
 )
 
 // This tests:
@@ -20,16 +23,21 @@ import (
 func TestGenerateCategoryPages(t *testing.T) {
 	tmpDir := testhelpers.TempDir(t)
 	defer os.RemoveAll(tmpDir)
-	config := &config.Config{
+	cfg := &config.Config{
 		WWWDir:   filepath.Join(tmpDir),
 		BuildDir: "fixtures",
 	}
-	if err := generateCategoryPages(config); err != nil {
-		t.Fatalf("generateCategoryPages(config) err: %s", err)
+	htmlCmds := make(chan cmd.Cmd)
+	pm, err := progress.NewMonitor(tmpDir, htmlCmds)
+	if err != nil {
+		t.Fatalf("NewMonitor: %s", err)
+	}
+	if err := generateCategoryPages(cfg, pm); err != nil {
+		t.Fatalf("generateCategoryPages: %s", err)
 	}
 
 	categoryFiles, err :=
-		ioutil.ReadDir(filepath.Join(config.WWWDir, "reports", "category"))
+		ioutil.ReadDir(filepath.Join(cfg.WWWDir, "reports", "category"))
 	if err != nil {
 		t.Fatalf("ioutil.ReadDir(...) err: %s", err)
 	}
@@ -37,7 +45,7 @@ func TestGenerateCategoryPages(t *testing.T) {
 	for _, file := range categoryFiles {
 		if file.IsDir() {
 			categoryIndexFilename := filepath.Join(
-				config.WWWDir,
+				cfg.WWWDir,
 				"reports",
 				"category",
 				file.Name(),

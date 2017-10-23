@@ -59,18 +59,18 @@ func InitSetup(
 	}
 
 	l.SetSvcLogger(svcLogger)
+	h := html.New(config, pm, l, htmlCmds)
 	go l.Run(q)
-	go html.Run(config, pm, l, q, htmlCmds)
+	go h.Run(q)
 
 	for i := 0; i < 10; i++ {
 		// This helps to ensure that quitter is properly established
 		// in goroutine before returning and being able to call Quit on quitter
-		if l.Ready() {
+		if l.Running() && h.Running() {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	time.Sleep(10 * time.Millisecond)
 	return &Setup{
 		prg: prg,
 		svc: s,

@@ -4,16 +4,17 @@
 package html
 
 import (
-	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/progress"
 	"html/template"
 	"path/filepath"
 	"time"
+
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/progress"
 )
 
 func generateActivityPage(
-	config *config.Config,
-	progressMonitor *progress.Monitor,
+	cfg *config.Config,
+	pm *progress.Monitor,
 ) error {
 	type TplExperiment struct {
 		Title       string
@@ -32,7 +33,7 @@ func generateActivityPage(
 		Html        map[string]template.HTML
 	}
 
-	experiments := progressMonitor.GetExperiments()
+	experiments := pm.GetExperiments()
 	tplExperiments := make([]*TplExperiment, len(experiments))
 
 	for i, experiment := range experiments {
@@ -48,8 +49,8 @@ func generateActivityPage(
 			experiment.Status.Percent,
 		}
 	}
-	tplData := TplData{tplExperiments, makeHtml(config, "activity")}
+	tplData := TplData{tplExperiments, makeHtml(cfg, "activity")}
 
 	outputFilename := filepath.Join("activity", "index.html")
-	return writeTemplate(config, outputFilename, activityTpl, tplData)
+	return writeTemplate(cfg, outputFilename, activityTpl, tplData)
 }

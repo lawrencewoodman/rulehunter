@@ -15,8 +15,8 @@ import (
 )
 
 func generateFront(
-	config *config.Config,
-	progressMonitor *progress.Monitor,
+	cfg *config.Config,
+	pm *progress.Monitor,
 ) error {
 	const maxNumReports = 10
 	type TplExperiment struct {
@@ -36,7 +36,7 @@ func generateFront(
 	categories := map[string]string{}
 	tags := map[string]string{}
 
-	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
+	reportFiles, err := ioutil.ReadDir(filepath.Join(cfg.BuildDir, "reports"))
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func generateFront(
 	})
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			r, err := report.LoadJSON(config, file.Name())
+			r, err := report.LoadJSON(cfg, file.Name())
 			if err != nil {
 				return err
 			}
@@ -77,7 +77,7 @@ func generateFront(
 	}
 
 	tplExperiments := []*TplExperiment{}
-	experiments := progressMonitor.GetExperiments()
+	experiments := pm.GetExperiments()
 	for _, experiment := range experiments {
 		if experiment.Status.State == progress.Processing {
 			tplExperiments = append(
@@ -99,11 +99,11 @@ func generateFront(
 		Tags:        tags,
 		Reports:     tplReports,
 		Experiments: tplExperiments,
-		Html:        makeHtml(config, "front"),
+		Html:        makeHtml(cfg, "front"),
 	}
 
 	outputFilename := "index.html"
-	return writeTemplate(config, outputFilename, frontTpl, tplData)
+	return writeTemplate(cfg, outputFilename, frontTpl, tplData)
 }
 
 func joinURLMaps(a, b map[string]string) map[string]string {

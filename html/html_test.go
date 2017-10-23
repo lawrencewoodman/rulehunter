@@ -17,7 +17,7 @@ import (
 
 // This checks if Run will quit properly when told to
 func TestRun_quit(t *testing.T) {
-	quit := quitter.New()
+	q := quitter.New()
 	l := testhelpers.NewLogger()
 	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
@@ -33,7 +33,7 @@ func TestRun_quit(t *testing.T) {
 		htmlCmds,
 	)
 	if err != nil {
-		t.Fatalf("NewMonitor() err: %v", err)
+		t.Fatalf("NewMonitor: %s", err)
 	}
 	config := &config.Config{
 		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
@@ -41,32 +41,35 @@ func TestRun_quit(t *testing.T) {
 		BuildDir:          filepath.Join(cfgDir, "build"),
 		MaxNumReportRules: 100,
 	}
-	hasQuitC := make(chan bool)
-	go func() {
-		Run(config, pm, l, quit, htmlCmds)
-		hasQuitC <- true
-	}()
+	h := New(config, pm, l, htmlCmds)
+	go h.Run(q)
+	for !h.Running() {
+	}
 
 	flushC := time.NewTimer(time.Second).C
 	quitC := time.NewTimer(2 * time.Second).C
+	isRunningC := time.NewTicker(100 * time.Millisecond).C
 	timeoutC := time.NewTimer(5 * time.Second).C
 	for {
 		select {
 		case <-flushC:
 			htmlCmds <- cmd.Flush
+		case <-isRunningC:
+			if !h.Running() {
+				return
+			}
 		case <-quitC:
-			quit.Quit()
+			q.Quit()
 		case <-timeoutC:
 			t.Fatalf("Run() didn't quit")
-		case <-hasQuitC:
-			return
 		}
 	}
 }
 
 // Tests Run for cmd.All
 func TestRun_cmd_all(t *testing.T) {
-	quit := quitter.New()
+	q := quitter.New()
+	defer q.Quit()
 	l := testhelpers.NewLogger()
 	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
@@ -142,8 +145,8 @@ func TestRun_cmd_all(t *testing.T) {
 			"index.html"),
 	}
 
-	go Run(config, pm, l, quit, htmlCmds)
-	defer quit.Quit()
+	h := New(config, pm, l, htmlCmds)
+	go h.Run(q)
 
 	var allC <-chan time.Time
 	timeoutC := time.NewTimer(5 * time.Second).C
@@ -177,7 +180,8 @@ func TestRun_cmd_all(t *testing.T) {
 
 // Tests Run for cmd.Reports
 func TestRun_cmd_reports(t *testing.T) {
-	quit := quitter.New()
+	q := quitter.New()
+	defer q.Quit()
 	l := testhelpers.NewLogger()
 	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
@@ -253,8 +257,8 @@ func TestRun_cmd_reports(t *testing.T) {
 			"index.html"),
 	}
 
-	go Run(config, pm, l, quit, htmlCmds)
-	defer quit.Quit()
+	h := New(config, pm, l, htmlCmds)
+	go h.Run(q)
 
 	var reportsC <-chan time.Time
 	timeoutC := time.NewTimer(5 * time.Second).C
@@ -288,7 +292,8 @@ func TestRun_cmd_reports(t *testing.T) {
 
 // Tests Run for cmd.Progress
 func TestRun_cmd_progress(t *testing.T) {
-	quit := quitter.New()
+	q := quitter.New()
+	defer q.Quit()
 	l := testhelpers.NewLogger()
 	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
@@ -326,8 +331,8 @@ func TestRun_cmd_progress(t *testing.T) {
 		filepath.Join(cfgDir, "www", "activity", "index.html"),
 	}
 
-	go Run(config, pm, l, quit, htmlCmds)
-	defer quit.Quit()
+	h := New(config, pm, l, htmlCmds)
+	go h.Run(q)
 
 	var progressC <-chan time.Time
 	timeoutC := time.NewTimer(5 * time.Second).C

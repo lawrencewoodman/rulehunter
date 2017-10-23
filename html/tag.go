@@ -5,15 +5,20 @@ package html
 
 import (
 	"fmt"
-	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/report"
 	"html/template"
 	"io/ioutil"
 	"path/filepath"
+
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/report"
 )
 
-func generateTagPages(config *config.Config) error {
-	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
+func generateTagPages(
+	cfg *config.Config,
+	pm *progress.Monitor,
+) error {
+	reportFiles, err := ioutil.ReadDir(filepath.Join(cfg.BuildDir, "reports"))
 	if err != nil {
 		return err
 	}
@@ -21,7 +26,7 @@ func generateTagPages(config *config.Config) error {
 	tagsLen := make(map[string]int)
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			report, err := report.LoadJSON(config, file.Name())
+			report, err := report.LoadJSON(cfg, file.Name())
 			if err != nil {
 				return err
 			}
@@ -29,7 +34,7 @@ func generateTagPages(config *config.Config) error {
 				escapedTag := escapeString(tag)
 				if _, ok := tagsLen[escapedTag]; !ok ||
 					len(tag) < tagsLen[escapedTag] {
-					if err := generateTagPage(config, tag); err != nil {
+					if err := generateTagPage(cfg, tag); err != nil {
 						return err
 					}
 					// Use the shortest tag out of those that resolve to the
@@ -40,21 +45,21 @@ func generateTagPages(config *config.Config) error {
 		}
 	}
 
-	if err := generateTagPage(config, ""); err != nil {
+	if err := generateTagPage(cfg, ""); err != nil {
 		return err
 	}
 	tagsLen[""] = 0
 	return nil
 }
 
-func generateTagPage(config *config.Config, tagName string) error {
+func generateTagPage(cfg *config.Config, tagName string) error {
 	type TplData struct {
 		Tag     string
 		Reports []*TplReport
 		Html    map[string]template.HTML
 	}
 
-	reportFiles, err := ioutil.ReadDir(filepath.Join(config.BuildDir, "reports"))
+	reportFiles, err := ioutil.ReadDir(filepath.Join(cfg.BuildDir, "reports"))
 	if err != nil {
 		return err
 	}
@@ -65,7 +70,7 @@ func generateTagPage(config *config.Config, tagName string) error {
 	i := 0
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			report, err := report.LoadJSON(config, file.Name())
+			report, err := report.LoadJSON(cfg, file.Name())
 			if err != nil {
 				return err
 			}
@@ -104,7 +109,7 @@ func generateTagPage(config *config.Config, tagName string) error {
 	tplData := TplData{
 		Tag:     tagName,
 		Reports: tplReports,
-		Html:    makeHtml(config, "tag"),
+		Html:    makeHtml(cfg, "tag"),
 	}
 	outputFilename := filepath.Join(
 		"reports",
@@ -115,7 +120,7 @@ func generateTagPage(config *config.Config, tagName string) error {
 	if len(escapeString(tagName)) == 0 {
 		outputFilename = filepath.Join("reports", "notag", "index.html")
 	}
-	return writeTemplate(config, outputFilename, tagTpl, tplData)
+	return writeTemplate(cfg, outputFilename, tagTpl, tplData)
 }
 
 func makeTagLinks(tags []string) map[string]string {

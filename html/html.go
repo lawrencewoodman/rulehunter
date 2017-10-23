@@ -25,79 +25,83 @@ import (
 // Other: None
 const modePerm = 0740
 
-// This should be run as a goroutine and each time a command is passed to
-// cmds the html will be generated
-func Run(
-	config *config.Config,
+// Builder represents an html website builder
+type Builder struct {
+	cfg       *config.Config
+	pm        *progress.Monitor
+	log       logger.Logger
+	cmds      <-chan cmd.Cmd
+	isRunning bool
+}
+
+func New(
+	cfg *config.Config,
 	pm *progress.Monitor,
 	l logger.Logger,
-	quit *quitter.Quitter,
 	cmds <-chan cmd.Cmd,
-) {
-	quit.Add()
-	defer quit.Done()
-	if err := generate(cmd.All, config, pm); err != nil {
-		l.Error(fmt.Errorf("Couldn't generate report: %s", err))
+) *Builder {
+	return &Builder{
+		cfg:       cfg,
+		pm:        pm,
+		log:       l,
+		cmds:      cmds,
+		isRunning: false,
+	}
+}
+
+// This should be run as a goroutine and each time a command is passed to
+// cmds the html will be generated
+func (b *Builder) Run(q *quitter.Quitter) {
+	q.Add()
+	defer q.Done()
+	b.isRunning = true
+	defer func() { b.isRunning = false }()
+	if err := b.generate(cmd.All); err != nil {
+		b.log.Error(fmt.Errorf("Couldn't generate report: %s", err))
 	}
 
 	for {
 		select {
-		case c := <-cmds:
-			if err := generate(c, config, pm); err != nil {
-				l.Error(fmt.Errorf("Couldn't generate report: %s", err))
+		case c := <-b.cmds:
+			if err := b.generate(c); err != nil {
+				b.log.Error(fmt.Errorf("Couldn't generate report: %s", err))
 			}
-		case <-quit.C:
-			if err := generate(cmd.All, config, pm); err != nil {
-				l.Error(fmt.Errorf("Couldn't generate report: %s", err))
+		case <-q.C:
+			if err := b.generate(cmd.All); err != nil {
+				b.log.Error(fmt.Errorf("Couldn't generate report: %s", err))
 			}
 			return
 		}
 	}
 }
 
-func generate(
-	c cmd.Cmd,
-	config *config.Config,
-	pm *progress.Monitor,
-) error {
+// Running returns whether the html builder is running
+func (b *Builder) Running() bool {
+	return b.isRunning
+}
+
+func (b *Builder) generate(c cmd.Cmd) error {
+	type generator func(*config.Config, *progress.Monitor) error
+	generators := []generator{}
 	switch c {
 	case cmd.Progress:
-		if err := generateActivityPage(config, pm); err != nil {
-			return err
-		}
-		if err := generateFront(config, pm); err != nil {
-			return err
+		generators = []generator{
+			generateActivityPage,
+			generateFront,
 		}
 	case cmd.Reports:
-		if err := generateFront(config, pm); err != nil {
-			return err
-		}
-		if err := generateReports(config); err != nil {
-			return err
-		}
-		if err := generateTagPages(config); err != nil {
-			return err
-		}
-		if err := generateCategoryPages(config); err != nil {
-			return err
-		}
-		if err := generateActivityPage(config, pm); err != nil {
-			return err
-		}
+		fallthrough
 	case cmd.All:
-		if err := generateFront(config, pm); err != nil {
-			return err
+		generators = []generator{
+			generateActivityPage,
+			generateFront,
+			generateReports,
+			generateTagPages,
+			generateCategoryPages,
 		}
-		if err := generateReports(config); err != nil {
-			return err
-		}
-		if err := generateTagPages(config); err != nil {
-			return err
-		}
-		if err := generateCategoryPages(config); err != nil {
-			return err
-		}
-		if err := generateActivityPage(config, pm); err != nil {
+	}
+	for _, g := range generators {
+		if err := g(b.cfg, b.pm); err != nil {
 			return err
 		}
 	}
@@ -130,7 +134,7 @@ func (wpe CreatePageError) Error() string {
 }
 
 func writeTemplate(
-	config *config.Config,
+	cfg *config.Config,
 	filename string,
 	tpl string,
 	tplData interface{},
@@ -143,7 +147,7 @@ func writeTemplate(
 		return CreatePageError{Filename: filename, Op: "parse", Err: err}
 	}
 
-	fullFilename := filepath.Join(config.WWWDir, filename)
+	fullFilename := filepath.Join(cfg.WWWDir, filename)
 	dir := filepath.Dir(fullFilename)
 	if err := os.MkdirAll(dir, modePerm); err != nil {
 		return CreatePageError{Filename: filename, Op: "mkdir", Err: err}
@@ -213,7 +217,7 @@ func makeHtmlNav(menuItem string) template.HTML {
 	return template.HTML(doc.String())
 }
 
-func makeHtmlHead(c *config.Config) template.HTML {
+func makeHtmlHead(cfg *config.Config) template.HTML {
 	var doc bytes.Buffer
 	t, err := template.New("webpage").Parse(headTpl)
 	if err != nil {
@@ -223,7 +227,7 @@ func makeHtmlHead(c *config.Config) template.HTML {
 	tplData := struct {
 		BaseURL   string
 		JSComment template.HTML
-	}{BaseURL: c.BaseURL, JSComment: template.HTML(headJSComment)}
+	}{BaseURL: cfg.BaseURL, JSComment: template.HTML(headJSComment)}
 
 	if err := t.Execute(&doc, tplData); err != nil {
 		panic(fmt.Sprintf("Couldn't create head html: %s", err))
@@ -231,9 +235,9 @@ func makeHtmlHead(c *config.Config) template.HTML {
 	return template.HTML(doc.String())
 }
 
-func makeHtml(c *config.Config, menuItem string) map[string]template.HTML {
+func makeHtml(cfg *config.Config, menuItem string) map[string]template.HTML {
 	r := make(map[string]template.HTML)
-	r["head"] = makeHtmlHead(c)
+	r["head"] = makeHtmlHead(cfg)
 	r["nav"] = makeHtmlNav(menuItem)
 	r["footer"] = template.HTML(footerHtml)
 	r["bootstrapJS"] = template.HTML(bootstrapJSHtml)
