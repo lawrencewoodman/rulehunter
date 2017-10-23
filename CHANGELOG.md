@@ -3,6 +3,7 @@
 ### Config
 
  * Remove sourceURL
+ * Change default for maxNumReportRules to 20
 
 ### Experiment Files
 
@@ -27,6 +28,8 @@
  * Change CLI to use a command structure. E.G. `rulehunter serve --config=.`
  * Move `user` from config file to CLI flag for `service`
  * Add `version` command to CLI
+ * Add `--file` flag
+ * Add `--ignore-when` flag
 
 ### Build
 
