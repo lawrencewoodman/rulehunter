@@ -94,6 +94,8 @@ aggregators:
 goals:
   - "precisionIsMalignant >= 0.98"
 sortOrder:
+  - aggregator: "goalsScore"
+    direction: "descending"
   - aggregator: "mccIsMalignant"
     direction: "descending"
 when: "!hasRun"
