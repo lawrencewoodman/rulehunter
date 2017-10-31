@@ -4,7 +4,10 @@ Examples
 This directory (`examples/`) contains example experiments:
 
     experiments/acmeprinters_repair016_who_should_call_which_segment.yaml
-    experiments/breast_cancer_wisconsin.yaml
+    experiments/breast_cancer_wisconsin_benign_high.yaml
+    experiments/breast_cancer_wisconsin_malignant.yaml
+    experiments/breast_cancer_wisconsin_malignant_filtered.yaml
+    experiments/breast_cancer_wisconsin_malignant_high.yaml
     experiments/iris-setosa.yaml
     experiments/iris-versicolor.yaml
     experiments/iris-virginica.yaml

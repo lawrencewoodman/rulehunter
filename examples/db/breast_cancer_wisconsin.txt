@@ -1,0 +1,9 @@
+breast_cancer_wisconsin.db
+
+This file is an sqlite3 database file made by running sqlite3 from the
+examples/ folder and executing the following commands within it:
+
+    .mode csv
+    .import csv/breast_cancer_wisconsin.csv
+    .sav db/breast_cancer_wisconsin.db
+    .quit

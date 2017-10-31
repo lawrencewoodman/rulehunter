@@ -1,4 +1,4 @@
-title: "Who should automatically be given breast cancer follow-up appointment?"
+title: "Which breast tumours are malignant (very high confidence)?"
 category: "medical"
 tags:
   - breast cancer
@@ -79,7 +79,7 @@ aggregators:
   - name: "mccIsMalignant"
     kind: "mcc"
     arg: "diagnosis == \"M\""
-  - name: "numFalseMatches"
+  - name: "numAreBenign"
     kind: "count"
     arg: "diagnosis == \"B\""
   - name: "numAreMalignant"
@@ -92,10 +92,10 @@ aggregators:
     kind: "precision"
     arg: "diagnosis == \"M\""
 goals:
-  - "precisionIsMalignant >= 0.98"
+  - "numAreBenign == 0"
 sortOrder:
   - aggregator: "goalsScore"
     direction: "descending"
-  - aggregator: "mccIsMalignant"
+  - aggregator: "numMatches"
     direction: "descending"
 when: "!hasRun"
