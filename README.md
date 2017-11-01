@@ -11,7 +11,7 @@ Rulehunter allows you to describe your goals and will then find simple rules to 
 Getting Started
 ---------------
 * Follow the Rulehunter [installation](http://rulehunter.com/docs/installation/) instructions.  There are prebuilt binaries for a number of platforms.
-* Give the included [examples](https://github.com/vlifesystems/rulehunter/blob/master/examples/README.md) a go to get a feel for rulehunter.
+* Look at the [examples](http://rulehunter.com/docs/examples/) to get a feel for how Rulehunter can be used.
 * Read about its [configuration](http://rulehunter.com/docs/configuration/) and [usage](http://rulehunter.com/docs/usage/)
 * Start creating [experiments](http://rulehunter.com/docs/experiments/)
 * See the [Rulehunter](http://rulehunter.com) website for more information
