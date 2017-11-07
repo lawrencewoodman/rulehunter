@@ -3,11 +3,11 @@ category: "botany"
 tags:
   - iris
   - life
-dataset: "csv"
-csv:
-  filename: "csv/iris.csv"
-  hasHeader: false
-  separator: ","
+trainDataset:
+  csv:
+    filename: "csv/iris.csv"
+    hasHeader: false
+    separator: ","
 fields:
    - sepalLength
    - sepalWidth

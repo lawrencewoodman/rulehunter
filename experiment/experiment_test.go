@@ -46,7 +46,7 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
-				Dataset: dcsv.New(
+				TrainDataset: dcsv.New(
 					filepath.Join("fixtures", "flow.csv"),
 					true,
 					rune(','),
@@ -90,7 +90,7 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
-				Dataset: dtruncate.New(
+				TrainDataset: dtruncate.New(
 					dcsv.New(
 						filepath.Join("fixtures", "flow.csv"),
 						true,
@@ -137,7 +137,7 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would predict people being helped to be debt free?",
-				Dataset: dcsv.New(
+				TrainDataset: dcsv.New(
 					filepath.Join("fixtures", "debt.csv"),
 					true,
 					rune(','),
@@ -189,7 +189,7 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
-				Dataset: dcsv.New(
+				TrainDataset: dcsv.New(
 					filepath.Join("fixtures", "flow.csv"),
 					true,
 					rune(','),
@@ -244,55 +244,45 @@ func TestLoad_error(t *testing.T) {
 		),
 			errors.New("Experiment field missing: title")},
 		{testhelpers.NewFileInfo(
-			filepath.Join("fixtures", "flow_no_dataset.json"),
+			filepath.Join("fixtures", "flow_no_traindataset.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: dataset")},
+			errors.New("Experiment field missing: trainDataset")},
 		{testhelpers.NewFileInfo(
-			filepath.Join("fixtures", "flow_invalid_dataset.json"),
+			filepath.Join("fixtures", "flow_no_csv_sql.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field: dataset, has invalid type: llwyd")},
-		{testhelpers.NewFileInfo(
-			filepath.Join("fixtures", "flow_no_csv.json"),
-			time.Now(),
-		),
-			errors.New("Experiment field missing: csv")},
+			errors.New("Experiment field: trainDataset, has no csv or sql field")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_csv_filename.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: csv > filename")},
+			errors.New("Experiment field missing: trainDataset > csv > filename")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_csv_separator.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: csv > separator")},
-		{testhelpers.NewFileInfo(
-			filepath.Join("fixtures", "flow_no_sql.json"),
-			time.Now(),
-		),
-			errors.New("Experiment field missing: sql")},
+			errors.New("Experiment field missing: trainDataset > csv > separator")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_sql_drivername.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: sql > driverName")},
+			errors.New("Experiment field missing: trainDataset > sql > driverName")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_invalid_sql_drivername.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field: sql, has invalid driverName: bob")},
+			errors.New("Experiment field: trainDataset > sql, has invalid driverName: bob")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_sql_datasourcename.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: sql > dataSourceName")},
+			errors.New("Experiment field missing: trainDataset > sql > dataSourceName")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_sql_query.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: sql > query")},
+			errors.New("Experiment field missing: trainDataset > sql > query")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_invalid_when.json"),
 			time.Now(),
@@ -774,13 +764,19 @@ func TestProcess_errors(t *testing.T) {
 
 func TestMakeDataset(t *testing.T) {
 	cases := []struct {
+		desc           *datasetDesc
 		dataSourceName string
 		query          string
 		fields         []string
 		want           ddataset.Dataset
 	}{
-		{dataSourceName: filepath.Join("fixtures", "flow.db"),
-			query:  "select * from flow",
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "sqlite3",
+				DataSourceName: filepath.Join("fixtures", "flow.db"),
+				Query:          "select * from flow",
+			},
+		},
 			fields: []string{"grp", "district", "height", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow.csv"),
@@ -789,8 +785,13 @@ func TestMakeDataset(t *testing.T) {
 				[]string{"grp", "district", "height", "flow"},
 			),
 		},
-		{dataSourceName: filepath.Join("fixtures", "flow.db"),
-			query:  "select grp,district,flow from flow",
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "sqlite3",
+				DataSourceName: filepath.Join("fixtures", "flow.db"),
+				Query:          "select grp,district,flow from flow",
+			},
+		},
 			fields: []string{"grp", "district", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow_three_columns.csv"),
@@ -800,48 +801,44 @@ func TestMakeDataset(t *testing.T) {
 			),
 		},
 	}
-	for _, c := range cases {
-		e := &descFile{
-			Dataset: "sql",
-			Fields:  c.fields,
-			Sql: &sqlDesc{
-				DriverName:     "sqlite3",
-				DataSourceName: c.dataSourceName,
-				Query:          c.query,
-			},
-		}
-		got, err := makeDataset(e)
+	for i, c := range cases {
+		got, err := makeDataset("trainDataset", c.fields, c.desc)
 		if err != nil {
-			t.Errorf("makeDataset(%v) query: %s, err: %v",
-				c.query, e, err)
-			continue
-		}
-		if err := checkDatasetsEqual(got, c.want); err != nil {
-			t.Errorf("checkDatasetsEqual: query: %s, err: %v",
-				c.query, err)
+			t.Errorf("(%d) makeDataset: %s", i, err)
+		} else if err := checkDatasetsEqual(got, c.want); err != nil {
+			t.Errorf("(%d) checkDatasetsEqual: %s", i, err)
 		}
 	}
 }
 
 func TestMakeDataset_err(t *testing.T) {
-	e := &descFile{
-		Dataset: "sql",
-		Fields:  []string{},
-		Sql: &sqlDesc{
-			DriverName:     "mysql",
-			DataSourceName: "invalid:invalid@tcp(127.0.0.1:9999)/master",
-			Query:          "select * from invalid",
+	cases := []struct {
+		experimentField   string
+		fields            []string
+		desc              *datasetDesc
+		wantOpenErrRegexp *regexp.Regexp
+	}{
+		{experimentField: "trainDataset",
+			fields: []string{},
+			desc: &datasetDesc{
+				SQL: &sqlDesc{
+					DriverName:     "mysql",
+					DataSourceName: "invalid:invalid@tcp(127.0.0.1:9999)/master",
+					Query:          "select * from invalid",
+				},
+			},
+			wantOpenErrRegexp: regexp.MustCompile("^dial tcp 127.0.0.1:9999.*?connection.*?refused.*$"),
 		},
 	}
-	ds, err := makeDataset(e)
-	if err != nil {
-		t.Fatalf("makeDataset(%v) err: %v", e, err)
-	}
-	wantErrRegexp :=
-		regexp.MustCompile("^dial tcp 127.0.0.1:9999.*?connection.*?refused.*$")
-	_, err = ds.Open()
-	if !wantErrRegexp.MatchString(err.Error()) {
-		t.Fatalf("ds.Open() gotErr: %v, wantErr: %v", err, wantErrRegexp)
+	for i, c := range cases {
+		ds, err := makeDataset(c.experimentField, c.fields, c.desc)
+		if err != nil {
+			t.Fatalf("(%d) makeDataset: %s", i, err)
+		}
+		_, err = ds.Open()
+		if !c.wantOpenErrRegexp.MatchString(err.Error()) {
+			t.Fatalf("ds.Open() gotErr: %v, wantErr: %v", err, c.wantOpenErrRegexp)
+		}
 	}
 }
 
@@ -1002,10 +999,20 @@ func checkExperimentMatch(
 	if !areRulesEqual(e1.Rules, e2.Rules) {
 		return errors.New("Rules don't match")
 	}
-	return checkDatasetsEqual(e1.Dataset, e2.Dataset)
+	if err := checkDatasetsEqual(e1.TrainDataset, e2.TrainDataset); err != nil {
+		return fmt.Errorf("trainDataset: %s", err)
+	}
+	return nil
 }
 
 func checkDatasetsEqual(ds1, ds2 ddataset.Dataset) error {
+	if ds1 == nil && ds2 == nil {
+		return nil
+	}
+	if (ds1 == nil && ds2 != nil) || (ds1 != nil && ds2 == nil) {
+		return errors.New("one dataset is nil")
+	}
+
 	conn1, err := ds1.Open()
 	if err != nil {
 		return err
@@ -1018,7 +1025,7 @@ func checkDatasetsEqual(ds1, ds2 ddataset.Dataset) error {
 		conn1Next := conn1.Next()
 		conn2Next := conn2.Next()
 		if conn1Next != conn2Next {
-			return errors.New("Datasets don't finish at same point")
+			return errors.New("datasets don't finish at same point")
 		}
 		if !conn1Next {
 			break
@@ -1027,11 +1034,11 @@ func checkDatasetsEqual(ds1, ds2 ddataset.Dataset) error {
 		conn1Record := conn1.Read()
 		conn2Record := conn2.Read()
 		if !reflect.DeepEqual(conn1Record, conn2Record) {
-			return fmt.Errorf("Rows don't match %s != %s", conn1Record, conn2Record)
+			return fmt.Errorf("rows don't match %s != %s", conn1Record, conn2Record)
 		}
 	}
 	if conn1.Err() != conn2.Err() {
-		return errors.New("Datasets final error doesn't match")
+		return errors.New("datasets final error doesn't match")
 	}
 	return nil
 }

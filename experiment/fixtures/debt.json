@@ -1,11 +1,12 @@
 {
   "title": "What would predict people being helped to be debt free?",
   "tags": ["debt"],
-  "dataset": "sql",
-  "sql": {
-    "driverName": "sqlite3",
-    "dataSourceName": "fixtures/debt.db",
-    "query": "select * from \"people\""
+  "trainDataset": {
+    "sql": {
+      "driverName": "sqlite3",
+      "dataSourceName": "fixtures/debt.db",
+      "query": "select * from \"people\""
+    }
   },
   "fields": [
 		"name",

@@ -34,7 +34,7 @@ import (
 type Experiment struct {
 	Title          string
 	File           fileinfo.FileInfo
-	Dataset        ddataset.Dataset
+	TrainDataset   ddataset.Dataset
 	RuleGeneration rule.GenerationDescriber
 	Aggregators    []aggregator.Spec
 	Goals          []*goal.Goal
@@ -49,7 +49,7 @@ type descFile struct {
 	Title          string             `yaml:"title"`
 	Category       string             `yaml:"category"`
 	Tags           []string           `yaml:"tags"`
-	Dataset        string             `yaml:"dataset"`
+	TrainDataset   *datasetDesc       `yaml:"trainDataset"`
 	Csv            *csvDesc           `yaml:"csv"`
 	Sql            *sqlDesc           `yaml:"sql"`
 	Fields         []string           `yaml:"fields"`
@@ -60,6 +60,11 @@ type descFile struct {
 	// An expression that works out whether to run the experiment
 	When  string   `yaml:"when"`
 	Rules []string `yaml:"rules"`
+}
+
+type datasetDesc struct {
+	CSV *csvDesc `yaml:"csv"`
+	SQL *sqlDesc `yaml:"sql"`
 }
 
 type csvDesc struct {
@@ -119,28 +124,29 @@ func New(
 	file fileinfo.FileInfo,
 	d *descFile,
 ) (*Experiment, error) {
+
 	if err := d.checkValid(); err != nil {
 		return nil, err
 	}
 
-	dataset, err := makeDataset(d)
+	trainDataset, err := makeDataset("trainDataset", d.Fields, d.TrainDataset)
 	if err != nil {
 		return nil, err
 	}
 
 	if cfg.MaxNumRecords >= 1 {
-		dataset = dtruncate.New(dataset, cfg.MaxNumRecords)
+		trainDataset = dtruncate.New(trainDataset, cfg.MaxNumRecords)
 	}
 
 	if cfg.MaxNumCacheRecords >= 1 {
-		dataset = dcache.New(dataset, cfg.MaxNumCacheRecords)
+		trainDataset = dcache.New(trainDataset, cfg.MaxNumCacheRecords)
 	}
 
 	goals, err := goal.MakeGoals(d.Goals)
 	if err != nil {
 		return nil, fmt.Errorf("goals: %s", err)
 	}
-	aggregators, err := aggregator.MakeSpecs(dataset.Fields(), d.Aggregators)
+	aggregators, err := aggregator.MakeSpecs(trainDataset.Fields(), d.Aggregators)
 	if err != nil {
 		return nil, fmt.Errorf("aggregators: %s", err)
 	}
@@ -158,9 +164,9 @@ func New(
 	}
 
 	return &Experiment{
-		Title:   d.Title,
-		File:    file,
-		Dataset: dataset,
+		Title:        d.Title,
+		File:         file,
+		TrainDataset: trainDataset,
 		RuleGeneration: ruleGeneration{
 			fields:     d.RuleGeneration.Fields,
 			arithmetic: d.RuleGeneration.Arithmetic,
@@ -205,13 +211,13 @@ func (e *Experiment) Process(
 	reportProgress := func(msg string, percent float64) error {
 		return pr.ReportProgress(e.File.Name(), msg, percent)
 	}
-	if err := reportProgress("Describing dataset", 0); err != nil {
+	if err := reportProgress("Describing train dataset", 0); err != nil {
 		return err
 	}
 
-	desc, err := description.DescribeDataset(e.Dataset)
+	desc, err := description.DescribeDataset(e.TrainDataset)
 	if err != nil {
-		return fmt.Errorf("Couldn't describe dataset: %s", err)
+		return fmt.Errorf("Couldn't describe train dataset: %s", err)
 	}
 
 	ass := rhkassessment.New()
@@ -351,63 +357,70 @@ func makeSortOrder(
 	return r, nil
 }
 
-func makeDataset(e *descFile) (d ddataset.Dataset, err error) {
-	switch e.Dataset {
-	case "csv":
-		d = dcsv.New(
-			e.Csv.Filename,
-			e.Csv.HasHeader,
-			rune(e.Csv.Separator[0]),
-			e.Fields,
+func makeDataset(
+	experimentField string,
+	fields []string,
+	dd *datasetDesc,
+) (ddataset.Dataset, error) {
+	if dd.CSV != nil && dd.SQL != nil {
+		return nil, fmt.Errorf(
+			"Experiment field: %s, can't specify csv and sql source",
+			experimentField,
 		)
-	case "sql":
+	}
+	if dd.CSV != nil {
+		if dd.CSV.Filename == "" {
+			return nil, fmt.Errorf("Experiment field missing: %s > csv > filename",
+				experimentField)
+		}
+		if dd.CSV.Separator == "" {
+			return nil, fmt.Errorf("Experiment field missing: %s > csv > separator",
+				experimentField)
+		}
+		return dcsv.New(
+			dd.CSV.Filename,
+			dd.CSV.HasHeader,
+			rune(dd.CSV.Separator[0]),
+			fields,
+		), nil
+	} else if dd.SQL != nil {
+		if dd.SQL.DriverName == "" {
+			return nil, fmt.Errorf(
+				"Experiment field missing: %s > sql > driverName",
+				experimentField,
+			)
+		}
+		if dd.SQL.DataSourceName == "" {
+			return nil, fmt.Errorf(
+				"Experiment field missing: %s > sql > dataSourceName",
+				experimentField,
+			)
+		}
+		if dd.SQL.Query == "" {
+			return nil, fmt.Errorf("Experiment field missing: %s > sql > query",
+				experimentField)
+		}
 		sqlHandler, err := newSQLHandler(
-			e.Sql.DriverName,
-			e.Sql.DataSourceName,
-			e.Sql.Query,
+			dd.SQL.DriverName,
+			dd.SQL.DataSourceName,
+			dd.SQL.Query,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("Experiment field: sql, has %s", err)
+			return nil, fmt.Errorf("Experiment field: %s > sql, has %s",
+				experimentField, err)
 		}
-		d = dsql.New(sqlHandler, e.Fields)
-	default:
-		return nil,
-			fmt.Errorf("Experiment field: dataset, has invalid type: %s", e.Dataset)
+		return dsql.New(sqlHandler, fields), nil
 	}
-	return
+	return nil,
+		fmt.Errorf("Experiment field: %s, has no csv or sql field", experimentField)
 }
 
 func (e *descFile) checkValid() error {
 	if len(e.Title) == 0 {
 		return errors.New("Experiment field missing: title")
 	}
-	if len(e.Dataset) == 0 {
-		return errors.New("Experiment field missing: dataset")
-	}
-	if e.Dataset == "csv" {
-		if e.Csv == nil {
-			return errors.New("Experiment field missing: csv")
-		}
-		if len(e.Csv.Filename) == 0 {
-			return errors.New("Experiment field missing: csv > filename")
-		}
-		if len(e.Csv.Separator) == 0 {
-			return errors.New("Experiment field missing: csv > separator")
-		}
-	}
-	if e.Dataset == "sql" {
-		if e.Sql == nil {
-			return errors.New("Experiment field missing: sql")
-		}
-		if len(e.Sql.DriverName) == 0 {
-			return errors.New("Experiment field missing: sql > driverName")
-		}
-		if len(e.Sql.DataSourceName) == 0 {
-			return errors.New("Experiment field missing: sql > dataSourceName")
-		}
-		if len(e.Sql.Query) == 0 {
-			return errors.New("Experiment field missing: sql > query")
-		}
+	if e.TrainDataset == nil {
+		return errors.New("Experiment field missing: trainDataset")
 	}
 	return nil
 }
@@ -424,7 +437,7 @@ func assessRulesWorker(
 	for j := range jobs {
 		rulesPartial := rules[j.startRuleNum:j.endRuleNum]
 		err := ass.AssessRules(
-			experiment.Dataset,
+			experiment.TrainDataset,
 			rulesPartial,
 			experiment.Aggregators,
 			experiment.Goals,

@@ -3,11 +3,11 @@ tags:
   - test
   - "fred / ned"
 category: "testing"
-dataset: "sql"
-sql:
-  driverName: "sqlite3"
-  dataSourceName: "fixtures/flow_big.db"
-  query: "select * from \"flow\""
+trainDataset:
+  sql:
+    driverName: "sqlite3"
+    dataSourceName: "fixtures/flow_big.db"
+    query: "select * from \"flow\""
 fields:
   - group
   - district

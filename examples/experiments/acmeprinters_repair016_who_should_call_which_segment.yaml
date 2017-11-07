@@ -4,11 +4,11 @@ tags:
   - repair
   - sales
   - printers
-dataset: "csv"
-csv:
-  filename: "csv/printer_repairs_callerstats.csv"
-  hasHeader: true
-  separator: ","
+trainDataset:
+  csv:
+    filename: "csv/printer_repairs_callerstats.csv"
+    hasHeader: true
+    separator: ","
 fields:
   - name
   - segment

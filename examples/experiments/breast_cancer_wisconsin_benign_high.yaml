@@ -4,11 +4,11 @@ tags:
   - breast cancer
   - cancer
   - wisconsin
-dataset: "csv"
-csv:
-  filename: "csv/breast_cancer_wisconsin.csv"
-  hasHeader: true
-  separator: ","
+trainDataset:
+  csv:
+    filename: "csv/breast_cancer_wisconsin.csv"
+    hasHeader: true
+    separator: ","
 fields:
   - id
   - diagnosis

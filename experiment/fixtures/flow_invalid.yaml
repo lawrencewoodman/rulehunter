@@ -2,11 +2,11 @@ title: "What would indicate good flow?
 tags:
   - test
   - "fred / ned"
-dataset: "csv"
-csv:
-  filename: "fixtures/flow.csv"
-  hasHeader: true
-  separator:  ","
+trainDataset:
+  csv:
+    filename: "fixtures/flow.csv"
+    hasHeader: true
+    separator:  ","
 fields:
   - group
   - district

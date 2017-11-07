@@ -1,17 +1,18 @@
 {
   "fileFormatVersion": "0.1",
   "title": "What is most likely to indicate success",
-  "dataset": "csv",
+  "trainDataset": {
+    "csv": {
+      "filename": "fixtures/debt.csv",
+      "hasHeader": true,
+      "separator":  ","
+    }
+  },
   "fields": ["name", "balance", "num_cards", "marital_status",
                  "tertiary_educated", "success"],
   "ruleGeneration": {
     "fields": ["name", "balance", "num_cards", "marital_status",
                    "tertiary_educated"]
-  },
-  "csv": {
-    "filename": "fixtures/debt.csv",
-    "hasHeader": true,
-    "separator":  ","
   },
   "aggregators": [
     {

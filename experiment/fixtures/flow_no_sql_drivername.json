@@ -1,10 +1,11 @@
 {
   "title": "What would indicate good flow?",
   "tags": ["test", "fred / ned"],
-  "dataset": "sql",
-  "sql": {
-    "dataSourceName": "users.db",
-    "query": "select * from \"people\""
+  "trainDataset": {
+    "sql": {
+      "dataSourceName": "users.db",
+      "query": "select * from \"people\""
+    }
   },
   "fields": ["group","district","height","flow"],
   "ruleFields": ["group","district","height"],
