@@ -196,7 +196,7 @@ func TestNew(t *testing.T) {
 			report.ExperimentFilename, experimentFilename)
 	}
 	if report.NumRecords != assessment.NumRecords {
-		t.Errorf("New report.NumRecords got: %s, want: %s",
+		t.Errorf("New report.NumRecords got: %d, want: %d",
 			report.NumRecords, assessment.NumRecords)
 	}
 	if !reflect.DeepEqual(report.SortOrder, sortOrder) {
@@ -254,7 +254,7 @@ func TestLoadJSON_errors(t *testing.T) {
 	for _, c := range cases {
 		got, err := LoadJSON(cfg, c.filename)
 		if got != nil {
-			t.Errorf("LoadJSON: got: %s, want: nil", got)
+			t.Errorf("LoadJSON: got: %v, want: nil", got)
 		}
 		if err == nil || err.Error() != c.wantErr.Error() {
 			t.Errorf("LoadJSON: gotErr: %s, wantErr: %s", err, c.wantErr)
@@ -573,15 +573,15 @@ func checkAssessmentsMatch(as1, as2 []*Assessment) error {
 	}
 	for i, assessment1 := range as1 {
 		if assessment1.Rule != as2[i].Rule {
-			return fmt.Errorf("assessment[%d] Rules don't match: %s != %s",
+			return fmt.Errorf("assessment[%d] Rules don't match: %v != %v",
 				i, assessment1.Rule, as2[i].Rule)
 		}
 		if !reflect.DeepEqual(assessment1.Aggregators, as2[i].Aggregators) {
-			return fmt.Errorf("assessment[%d] Aggregators don't match: %s != %s",
+			return fmt.Errorf("assessment[%d] Aggregators don't match: %v != %v",
 				i, assessment1.Aggregators, as2[i].Aggregators)
 		}
 		if !reflect.DeepEqual(assessment1.Goals, as2[i].Goals) {
-			return fmt.Errorf("assessment[%d] Goals don't match: %s != %s",
+			return fmt.Errorf("assessment[%d] Goals don't match: %v != %v",
 				i, assessment1.Goals, as2[i].Goals)
 		}
 	}

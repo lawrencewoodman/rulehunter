@@ -123,7 +123,7 @@ func TestRunRoot_errors(t *testing.T) {
 			t.Errorf("(%d) runRoot: %s", i, err)
 		}
 		if len(l.GetEntries()) != 0 {
-			t.Errorf("GetEntries() got: %s, want: {}", l.GetEntries())
+			t.Errorf("GetEntries() got: %v, want: {}", l.GetEntries())
 		}
 	}
 }
