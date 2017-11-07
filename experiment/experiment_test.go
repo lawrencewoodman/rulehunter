@@ -829,6 +829,26 @@ func TestMakeDataset_err(t *testing.T) {
 			},
 			wantOpenErrRegexp: regexp.MustCompile("^dial tcp 127.0.0.1:9999.*?connection.*?refused.*$"),
 		},
+		{experimentField: "trainDataset",
+			fields: []string{},
+			desc: &datasetDesc{
+				CSV: &csvDesc{
+					Filename:  filepath.Join("fixtures", "nonexistant.csv"),
+					HasHeader: false,
+					Separator: ",",
+				},
+			},
+			wantOpenErrRegexp: regexp.MustCompile(
+				fmt.Sprintf(
+					"^%s$",
+					&os.PathError{
+						Op:   "open",
+						Path: filepath.Join("fixtures", "nonexistant.csv"),
+						Err:  syscall.ENOENT,
+					},
+				),
+			),
+		},
 	}
 	for i, c := range cases {
 		ds, err := makeDataset(c.experimentField, c.fields, c.desc)
