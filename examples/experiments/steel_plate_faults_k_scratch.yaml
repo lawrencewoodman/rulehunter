@@ -1,0 +1,88 @@
+title: "What indicates a steel plate k scratch fault?"
+category: "engineering"
+tags:
+  - steel
+dataset: "csv"
+csv:
+  filename: "csv/steel_plate_faults.tsv"
+  hasHeader: false
+  separator: "\t"
+fields:
+  - X_Minimum
+  - X_Maximum
+  - Y_Minimum
+  - Y_Maximum
+  - Pixels_Areas
+  - X_Perimeter
+  - Y_Perimeter
+  - Sum_of_Luminosity
+  - Minimum_of_Luminosity
+  - Maximum_of_Luminosity
+  - Length_of_Conveyer
+  - TypeOfSteel_A300
+  - TypeOfSteel_A400
+  - Steel_Plate_Thickness
+  - Edges_Index
+  - Empty_Index
+  - Square_Index
+  - Outside_X_Index
+  - Edges_X_Index
+  - Edges_Y_Index
+  - Outside_Global_Index
+  - LogOfAreas
+  - Log_X_Index
+  - Log_Y_Index
+  - Orientation_Index
+  - Luminosity_Index
+  - SigmoidOfAreas
+  - Pastry
+  - Z_Scratch
+  - K_Scratch
+  - Stains
+  - Dirtiness
+  - Bumps
+  - Other_Faults
+ruleGeneration:
+  fields:
+  - X_Minimum
+  - X_Maximum
+  - Y_Minimum
+  - Y_Maximum
+  - Pixels_Areas
+  - X_Perimeter
+  - Y_Perimeter
+  - Sum_of_Luminosity
+  - Minimum_of_Luminosity
+  - Maximum_of_Luminosity
+  - Length_of_Conveyer
+  - TypeOfSteel_A300
+  - TypeOfSteel_A400
+  - Steel_Plate_Thickness
+  - Edges_Index
+  - Empty_Index
+  - Square_Index
+  - Outside_X_Index
+  - Edges_X_Index
+  - Edges_Y_Index
+  - Outside_Global_Index
+  - LogOfAreas
+  - Log_X_Index
+  - Log_Y_Index
+  - Orientation_Index
+  - Luminosity_Index
+  - SigmoidOfAreas
+  arithmetic: true
+aggregators:
+  - name: "mccHasKScratch"
+    kind: "mcc"
+    arg: "K_Scratch == 1"
+  - name: "recallHasKScratch"
+    kind: "recall"
+    arg: "K_Scratch == 1"
+  - name: "precisionHasKScratch"
+    kind: "precision"
+    arg: "K_Scratch == 1"
+sortOrder:
+  - aggregator: "mccHasKScratch"
+    direction: "descending"
+when: "!hasRun"

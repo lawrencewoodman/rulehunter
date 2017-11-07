@@ -1,0 +1,62 @@
+Steel Plate Faults
+==================
+
+Data Source:
+  UCI Machine Learning Repository [http://archive.ics.uci.edu/ml].
+  Irvine, CA: University of California, School of Information and
+  Computer Science.
+  https://archive.ics.uci.edu/ml/datasets/Steel+Plates+Faults
+
+Dataset provided by:
+  Semeion
+  Research Center of Sciences of Communication
+  Via Sersale 117
+  00128
+  Rome
+  Italy
+
+  www.semeion.it
+
+
+Fields:
+  Attributes (27 independent variables):
+    X_Minimum
+    X_Maximum
+    Y_Minimum
+    Y_Maximum
+    Pixels_Areas
+    X_Perimeter
+    Y_Perimeter
+    Sum_of_Luminosity
+    Minimum_of_Luminosity
+    Maximum_of_Luminosity
+    Length_of_Conveyer
+    TypeOfSteel_A300
+    TypeOfSteel_A400
+    Steel_Plate_Thickness
+    Edges_Index
+    Empty_Index
+    Square_Index
+    Outside_X_Index
+    Edges_X_Index
+    Edges_Y_Index
+    Outside_Global_Index
+    LogOfAreas
+    Log_X_Index
+    Log_Y_Index
+    Orientation_Index
+    Luminosity_Index
+    SigmoidOfAreas
+  Type of dependent variables (7 Types of Steel Plates Faults):
+    Pastry
+    Z_Scratch
+    K_Scatch
+    Stains
+    Dirtiness
+    Bumps
+    Other_Faults
+
+Relevant Papers:
+
+  1.M Buscema, S Terzi, W Tastle, A New Meta-Classifier,in NAFIPS 2010, Toronto (CANADA),26-28 July 2010, 978-1-4244-7858-6/10 Â©2010 IEEE
+  2.M Buscema, MetaNet: The Theory of Independent Judges, in Substance Use & Misuse, 33(2), 439-461,1998
