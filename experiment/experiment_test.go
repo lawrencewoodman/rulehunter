@@ -847,13 +847,20 @@ func TestMakeDataset_err(t *testing.T) {
 				},
 			},
 			wantOpenErrRegexp: regexp.MustCompile(
-				fmt.Sprintf(
-					"^%s$",
-					&os.PathError{
-						Op:   "open",
-						Path: filepath.Join("fixtures", "nonexistant.csv"),
-						Err:  syscall.ENOENT,
-					},
+				// Replace used because in Windows the backslash in the path is
+				// altering the meaning of the regexp
+				strings.Replace(
+					fmt.Sprintf(
+						"^%s$",
+						&os.PathError{
+							Op:   "open",
+							Path: filepath.Join("fixtures", "nonexistant.csv"),
+							Err:  syscall.ENOENT,
+						},
+					),
+					"\n",
+					"\\\\n",
+					-1,
 				),
 			),
 		},
