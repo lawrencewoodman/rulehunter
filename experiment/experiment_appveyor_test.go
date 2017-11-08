@@ -4,7 +4,6 @@
 package experiment
 
 import (
-	"fmt"
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"path/filepath"
