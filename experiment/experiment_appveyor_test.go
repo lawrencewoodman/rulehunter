@@ -21,15 +21,18 @@ func TestMakeDataset_appveyor(t *testing.T) {
 	}{
 		{desc: &datasetDesc{
 			SQL: &sqlDesc{
-				DriverName: "mssql",
-				DataSourceName: fmt.Sprintf(
-					"Server=127.0.0.1;Port=1433;Database=master;UID=sa,PWD=Password12!",
-					c.port,
-				),
-				Query: "select * from flow",
+				DriverName:     "mssql",
+				DataSourceName: "Server=127.0.0.1;Port=1433;Database=master;UID=sa,PWD=Password12!",
+				Query:          "select * from flow",
 			},
 		},
 			fields: []string{"grp", "district", "height", "flow"},
+			want: dcsv.New(
+				filepath.Join("fixtures", "flow.csv"),
+				true,
+				rune(','),
+				[]string{"grp", "district", "height", "flow"},
+			),
 		},
 	}
 	for i, c := range cases {
