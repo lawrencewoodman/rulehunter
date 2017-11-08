@@ -132,20 +132,42 @@ func (r *Report) WriteJSON(config *config.Config) error {
 }
 
 // LoadJSON loads a report from the specified reportFilename in
-// reports directory of cfg.BuildDir
-func LoadJSON(cfg *config.Config, reportFilename string) (*Report, error) {
+// reports directory of cfg.BuildDir. Following the reportFilename you
+// can specify an optional number of times to try to decode the JSON file.
+// This can be useful in situations where you might try to read the
+// JSON file before it has been completely written.
+func LoadJSON(
+	cfg *config.Config,
+	reportFilename string,
+	args ...int,
+) (*Report, error) {
+	const sleep = 200 * time.Millisecond
 	var report Report
 	filename := filepath.Join(cfg.BuildDir, "reports", reportFilename)
 
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
+	maxTries := 1
+	if len(args) == 1 {
+		maxTries = args[0]
+	} else if len(args) > 1 {
+		panic("too many arguments for function")
 	}
-	defer f.Close()
+	for tries := 1; ; tries++ {
+		f, err := os.Open(filename)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
 
-	dec := json.NewDecoder(f)
-	if err = dec.Decode(&report); err != nil {
-		return nil, fmt.Errorf("can't decode JSON file: %s, %s", filename, err)
+		dec := json.NewDecoder(f)
+		if err = dec.Decode(&report); err != nil {
+			if tries > maxTries {
+				return nil, fmt.Errorf("can't decode JSON file: %s, %s", filename, err)
+			} else {
+				time.Sleep(sleep)
+			}
+		} else {
+			break
+		}
 	}
 	return &report, nil
 }

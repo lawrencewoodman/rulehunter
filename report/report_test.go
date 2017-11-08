@@ -402,6 +402,122 @@ func TestCalcTrueAggregatorDiff(t *testing.T) {
 	}
 }
 
+func TestLoadJSON_multiple_attempts(t *testing.T) {
+	// File mode permission used as standard:
+	// No special permission bits
+	// User: Read, Write Execute
+	// Group: Read
+	// Other: None
+	const modePerm = 0740
+
+	tmpDir := testhelpers.TempDir(t)
+	defer os.RemoveAll(tmpDir)
+	reportsDir := filepath.Join(tmpDir, "reports")
+	if err := os.MkdirAll(reportsDir, modePerm); err != nil {
+		t.Fatalf("MkdirAll: %s", err)
+	}
+	assessment := rhkassessment.New()
+	assessment.RuleAssessments = []*rhkassessment.RuleAssessment{
+		&rhkassessment.RuleAssessment{
+			Rule: rule.NewEQFV("month", dlit.NewString("may")),
+			Aggregators: map[string]*dlit.Literal{
+				"numMatches":     dlit.MustNew("2142"),
+				"percentMatches": dlit.MustNew("242"),
+				"numIncomeGt2":   dlit.MustNew("22"),
+				"goalsScore":     dlit.MustNew(20.1),
+			},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
+			},
+		},
+		&rhkassessment.RuleAssessment{
+			Rule: rule.NewGEFV("rate", dlit.MustNew(789.2)),
+			Aggregators: map[string]*dlit.Literal{
+				"numMatches":     dlit.MustNew("3142"),
+				"percentMatches": dlit.MustNew("342"),
+				"numIncomeGt2":   dlit.MustNew("32"),
+				"goalsScore":     dlit.MustNew(30.1),
+			},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
+			},
+		},
+		&rhkassessment.RuleAssessment{
+			Rule: rule.NewTrue(),
+			Aggregators: map[string]*dlit.Literal{
+				"numMatches":     dlit.MustNew("142"),
+				"percentMatches": dlit.MustNew("42"),
+				"numIncomeGt2":   dlit.MustNew("2"),
+				"goalsScore":     dlit.MustNew(0.1),
+			},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
+			},
+		},
+	}
+
+	title := "some title"
+	sortOrder := []rhkassessment.SortOrder{
+		rhkassessment.SortOrder{
+			Aggregator: "goalsScore",
+			Direction:  rhkassessment.DESCENDING,
+		},
+		rhkassessment.SortOrder{
+			Aggregator: "percentMatches",
+			Direction:  rhkassessment.ASCENDING,
+		},
+	}
+	aggregators := []aggregator.Spec{
+		aggregator.MustNew("numMatches", "count", "true()"),
+		aggregator.MustNew(
+			"percentMatches",
+			"calc",
+			"roundto(100.0 * numMatches / numRecords, 2)",
+		),
+		aggregator.MustNew("numIncomeGt2", "count", "income > 2"),
+		aggregator.MustNew("goalsScore", "goalsscore"),
+	}
+	experimentFilename := "somename.yaml"
+	tags := []string{"bank", "test / fred"}
+	category := "testing"
+	config := &config.Config{BuildDir: tmpDir}
+	report := New(
+		title,
+		testDescription,
+		assessment,
+		aggregators,
+		sortOrder,
+		experimentFilename,
+		tags,
+		category,
+	)
+
+	buildFilename := internal.MakeBuildFilename(category, title)
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "empty.json"),
+		reportsDir,
+		buildFilename,
+	)
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		if err := report.WriteJSON(config); err != nil {
+			t.Fatalf("WriteJSON: %s", err)
+		}
+	}()
+	maxLoadAttempts := 5
+	loadedReport, err := LoadJSON(config, buildFilename, maxLoadAttempts)
+	if err != nil {
+		t.Fatalf("LoadJSON: %s", err)
+	}
+	if err := checkReportsMatch(report, loadedReport); err != nil {
+		t.Errorf("Reports don't match: %s", err)
+	}
+}
+
 func TestGetSortedAggregatorNames(t *testing.T) {
 	aggregators := map[string]*dlit.Literal{
 		"numMatches": dlit.MustNew(176),

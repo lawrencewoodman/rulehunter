@@ -48,7 +48,7 @@ func generateFront(
 	})
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			r, err := report.LoadJSON(cfg, file.Name())
+			r, err := report.LoadJSON(cfg, file.Name(), maxReportLoadAttempts)
 			if err != nil {
 				return err
 			}

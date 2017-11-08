@@ -25,6 +25,11 @@ import (
 // Other: None
 const modePerm = 0740
 
+// The number of times to try to load a report.  This is useful because
+// sometimes a report will be being written while trying to load it
+// and therefore the load will fail.
+const maxReportLoadAttempts = 5
+
 // Builder represents an html website builder
 type Builder struct {
 	cfg       *config.Config

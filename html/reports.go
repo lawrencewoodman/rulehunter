@@ -32,7 +32,7 @@ func generateReports(
 
 	for i, file := range reportFiles {
 		if !file.IsDir() {
-			report, err := report.LoadJSON(cfg, file.Name())
+			report, err := report.LoadJSON(cfg, file.Name(), maxReportLoadAttempts)
 			if err != nil {
 				return err
 			}

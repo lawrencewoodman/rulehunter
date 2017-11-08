@@ -26,7 +26,7 @@ func generateCategoryPages(
 	categorysLen := make(map[string]int)
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			report, err := report.LoadJSON(cfg, file.Name())
+			report, err := report.LoadJSON(cfg, file.Name(), maxReportLoadAttempts)
 			if err != nil {
 				return err
 			}
@@ -68,7 +68,7 @@ func generateCategoryPage(cfg *config.Config, categoryName string) error {
 	i := 0
 	for _, file := range reportFiles {
 		if !file.IsDir() {
-			report, err := report.LoadJSON(cfg, file.Name())
+			report, err := report.LoadJSON(cfg, file.Name(), maxReportLoadAttempts)
 			if err != nil {
 				return err
 			}
