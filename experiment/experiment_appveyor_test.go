@@ -13,46 +13,31 @@ import (
 
 func TestMakeDataset_appveyor(t *testing.T) {
 	cases := []struct {
-		instanceName string
-		port         int
-		query        string
-		fields       []string
-		want         ddataset.Dataset
+		desc           *datasetDesc
+		dataSourceName string
+		query          string
+		fields         []string
+		want           ddataset.Dataset
 	}{
-		{instanceName: "SQL2014",
-			port:   1433,
-			query:  "select * from flow",
-			fields: []string{"grp", "district", "height", "flow"},
-			want: dcsv.New(
-				filepath.Join("fixtures", "flow.csv"),
-				true,
-				rune(','),
-				[]string{"grp", "district", "height", "flow"},
-			),
-		},
-	}
-	for _, c := range cases {
-		e := &descFile{
-			Dataset: "sql",
-			Fields:  c.fields,
-			Sql: &sqlDesc{
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
 				DriverName: "mssql",
 				DataSourceName: fmt.Sprintf(
-					"Server=127.0.0.1;Port=%d;Database=master;UID=sa,PWD=Password12!",
+					"Server=127.0.0.1;Port=1433;Database=master;UID=sa,PWD=Password12!",
 					c.port,
 				),
-				Query: c.query,
+				Query: "select * from flow",
 			},
-		}
-		got, err := makeDataset(e)
+		},
+			fields: []string{"grp", "district", "height", "flow"},
+		},
+	}
+	for i, c := range cases {
+		got, err := makeDataset("trainDataset", c.fields, c.desc)
 		if err != nil {
-			t.Errorf("makeDataset(%v) instanceName: %s, err: %v",
-				c.instanceName, e, err)
-			continue
-		}
-		if err := checkDatasetsEqual(got, c.want); err != nil {
-			t.Errorf("checkDatasetsEqual: instanceName: %s, err: %v",
-				c.instanceName, err)
+			t.Errorf("(%d) makeDataset: %s", i, err)
+		} else if err := checkDatasetsEqual(got, c.want); err != nil {
+			t.Errorf("(%d) checkDatasetsEqual: %s", i, err)
 		}
 	}
 }
