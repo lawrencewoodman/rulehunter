@@ -309,7 +309,7 @@ func TestReportSuccess(t *testing.T) {
 		if c.run == 0 {
 			err := pm.AddExperiment(filename, "", []string{}, "")
 			if err != nil {
-				t.Fatal("AddExperiment: %s", err)
+				t.Fatalf("AddExperiment: %s", err)
 			}
 			pm.ReportSuccess(filename)
 		}
