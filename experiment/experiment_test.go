@@ -264,6 +264,14 @@ func TestLoad_error(t *testing.T) {
 		),
 			errors.New("Experiment field missing: trainDataset > csv > separator")},
 		{testhelpers.NewFileInfo(
+			filepath.Join("fixtures", "flow_csv_and_sql.yaml"),
+			time.Now(),
+		),
+			errors.New(
+				"Experiment field: trainDataset, can't specify csv and sql source",
+			),
+		},
+		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_sql_drivername.json"),
 			time.Now(),
 		),
