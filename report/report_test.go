@@ -656,6 +656,10 @@ func checkReportsMatch(r1, r2 *Report) error {
 	if !reflect.DeepEqual(r1.Tags, r2.Tags) {
 		return fmt.Errorf("Tags don't match - %v != %v", r1.Tags, r2.Tags)
 	}
+	if r1.Category != r2.Category {
+		return fmt.Errorf("Categories don't match - %s != %s",
+			r1.Category, r2.Category)
+	}
 	if math.Abs(r1.Stamp.Sub(r2.Stamp).Seconds()) > 1 {
 		return fmt.Errorf("Stamps don't match - %s != %s", r1.Stamp, r2.Stamp)
 	}
@@ -675,9 +679,9 @@ func checkReportsMatch(r1, r2 *Report) error {
 		return fmt.Errorf("Aggregators don't match - %v != %v",
 			r1.Aggregators, r2.Aggregators)
 	}
-	if !reflect.DeepEqual(r1.Assessments, r2.Assessments) {
-		return fmt.Errorf("Assessments don't match - %v != %v",
-			r1.Assessments, r2.Assessments)
+	if err := checkAssessmentsMatch(r1.Assessments, r2.Assessments); err != nil {
+		return fmt.Errorf("Assessments don't match: %s - %v != %v",
+			err, r1.Assessments, r2.Assessments)
 	}
 	return nil
 }
