@@ -13,6 +13,7 @@
  * Add `category` to experiment files
  * Replace `complexity` and `ruleFields` in experiment files
    with `ruleGeneration`
+ * Allow two datasets to be used: `trainDataset` and `testDataset`
 
 ### HTML
 

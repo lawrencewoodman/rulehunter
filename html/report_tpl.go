@@ -18,6 +18,7 @@ const reportTpl = `
 			<div class="container">
 				<h1>{{.Title}}</h1>
 				Date: {{ .DateTime }} &nbsp;
+        Mode: {{ .Mode }} &nbsp;
 				{{if .Category}}
 					Category: <a href="{{ .CategoryURL }}">{{ .Category }}</a> &nbsp;
 				{{end}}

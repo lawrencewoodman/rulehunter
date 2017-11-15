@@ -9,8 +9,8 @@ import (
 	"fmt"
 )
 
-func MakeBuildFilename(category, title string) string {
+func MakeBuildFilename(prefix, category, title string) string {
 	srcStr := fmt.Sprintf("%s!!%s", category, title)
 	hash := sha512.Sum512([]byte(srcStr))
-	return string(hex.EncodeToString(hash[:])) + ".json"
+	return prefix + "_" + string(hex.EncodeToString(hash[:])) + ".json"
 }

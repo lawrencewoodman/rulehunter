@@ -4,11 +4,14 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/vlifesystems/rulehunter/report"
 )
 
 func TestSortTplReportsByDate(t *testing.T) {
 	reports := []*TplReport{
 		newTplReport(
+			report.Train,
 			"title A",
 			map[string]string{
 				"bank": "/tag/bank/",
@@ -20,6 +23,7 @@ func TestSortTplReportsByDate(t *testing.T) {
 			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
 		),
 		newTplReport(
+			report.Train,
 			"title B",
 			map[string]string{
 				"bank": "/tag/bank/",
@@ -31,6 +35,7 @@ func TestSortTplReportsByDate(t *testing.T) {
 			time.Date(2009, time.November, 10, 24, 0, 0, 0, time.UTC),
 		),
 		newTplReport(
+			report.Test,
 			"title C",
 			map[string]string{
 				"bank": "/tag/bank/",
@@ -42,6 +47,7 @@ func TestSortTplReportsByDate(t *testing.T) {
 			time.Date(2009, time.November, 10, 22, 0, 0, 0, time.UTC),
 		),
 		newTplReport(
+			report.Test,
 			"title D",
 			map[string]string{
 				"bank": "/tag/bank/",
@@ -55,6 +61,7 @@ func TestSortTplReportsByDate(t *testing.T) {
 	}
 	wantReports := []*TplReport{
 		newTplReport(
+			report.Test,
 			"title D",
 			map[string]string{
 				"bank": "/tag/bank/",
@@ -66,6 +73,7 @@ func TestSortTplReportsByDate(t *testing.T) {
 			time.Date(2009, time.November, 10, 26, 0, 0, 0, time.UTC),
 		),
 		newTplReport(
+			report.Train,
 			"title B",
 			map[string]string{
 				"bank": "/tag/bank/",
@@ -77,6 +85,7 @@ func TestSortTplReportsByDate(t *testing.T) {
 			time.Date(2009, time.November, 10, 24, 0, 0, 0, time.UTC),
 		),
 		newTplReport(
+			report.Train,
 			"title A",
 			map[string]string{
 				"bank": "/tag/bank/",
@@ -88,6 +97,7 @@ func TestSortTplReportsByDate(t *testing.T) {
 			time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
 		),
 		newTplReport(
+			report.Test,
 			"title C",
 			map[string]string{
 				"bank": "/tag/bank/",

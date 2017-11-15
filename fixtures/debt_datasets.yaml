@@ -20,6 +20,11 @@ trainDataset:
     filename: "datasets/debt.csv"
     hasHeader: true
     separator:  ","
+testDataset:
+  csv:
+    filename: "datasets/debt.csv"
+    hasHeader: true
+    separator:  ","
 aggregators:
   - name: "successMcc"
     kind: "mcc"

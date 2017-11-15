@@ -41,6 +41,7 @@ func generateReports(
 				return err
 			}
 			tplReports[i] = newTplReport(
+				report.Mode,
 				report.Title,
 				makeTagLinks(report.Tags),
 				report.Category,

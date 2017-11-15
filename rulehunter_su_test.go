@@ -102,18 +102,30 @@ func TestRulehunter_service_install(t *testing.T) {
 		)
 
 		wantReportFiles := []string{
+			// "debt_datasets.yaml": test
+			internal.MakeBuildFilename(
+				"test",
+				"testing",
+				"What is most likely to indicate success",
+			),
 			// "debt2_datasets.json"
 			internal.MakeBuildFilename(
+				"train",
 				"",
 				"What is most likely to indicate success (2)",
 			),
-			// "debt_datasets.yaml"
+			// "debt_datasets.yaml": train
 			internal.MakeBuildFilename(
+				"train",
 				"testing",
 				"What is most likely to indicate success",
 			),
 			// "debt_datasets.json"
-			internal.MakeBuildFilename("", "What is most likely to indicate success"),
+			internal.MakeBuildFilename(
+				"train",
+				"",
+				"What is most likely to indicate success",
+			),
 		}
 		isFinished := false
 		files := []string{}

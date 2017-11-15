@@ -6,13 +6,15 @@ package progress
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/vlifesystems/rulehunter/html/cmd"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/vlifesystems/rulehunter/html/cmd"
+	"github.com/vlifesystems/rulehunter/report"
 )
 
 // Monitor represents an experiment progress monitor.
@@ -82,6 +84,7 @@ func (m *Monitor) AddExperiment(
 // an experiment
 func (m *Monitor) ReportProgress(
 	file string,
+	mode report.ModeKind,
 	msg string,
 	percent float64,
 ) error {
@@ -89,7 +92,7 @@ func (m *Monitor) ReportProgress(
 	if e == nil {
 		return ExperimentNotFoundError{file}
 	}
-	e.Status.SetProgress(msg, percent)
+	e.Status.SetProgress(mode, msg, percent)
 	if err := m.writeJSON(); err != nil {
 		return err
 	}

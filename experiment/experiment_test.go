@@ -132,6 +132,50 @@ func TestLoad(t *testing.T) {
 		},
 		{cfg: &config.Config{MaxNumRecords: -1},
 			file: testhelpers.NewFileInfo(
+				filepath.Join("fixtures", "flow_no_traindataset.json"),
+				time.Now(),
+			),
+			want: &Experiment{
+				Title: "What would indicate good flow?",
+				TestDataset: dcsv.New(
+					filepath.Join("fixtures", "flow.csv"),
+					true,
+					rune(','),
+					[]string{"group", "district", "height", "flow"},
+				),
+				RuleGeneration: ruleGeneration{
+					fields:     []string{"group", "district", "height"},
+					arithmetic: true,
+				},
+				Aggregators: []aggregator.Spec{
+					aggregator.MustNew("numMatches", "count", "true()"),
+					aggregator.MustNew(
+						"percentMatches",
+						"calc",
+						"roundto(100.0 * numMatches / numRecords, 2)",
+					),
+					aggregator.MustNew("goodFlowMcc", "mcc", "flow > 60"),
+					aggregator.MustNew("goalsScore", "goalsscore"),
+				},
+				Goals: []*goal.Goal{goal.MustNew("goodFlowMcc > 0")},
+				SortOrder: []assessment.SortOrder{
+					assessment.SortOrder{"goodFlowMcc", assessment.DESCENDING},
+					assessment.SortOrder{"numMatches", assessment.DESCENDING},
+				},
+				Tags:     []string{"test", "fred / ned"},
+				Category: "testing",
+				When:     dexpr.MustNew("!hasRun", funcs),
+				Rules: []rule.Rule{
+					mustNewDynamicRule("height > 67"),
+					mustNewDynamicRule("height >= 129"),
+					mustNewDynamicRule("group == \"a\""),
+					mustNewDynamicRule("flow <= 9.42"),
+					mustNewDynamicRule("district != \"northcal\" && group == \"b\""),
+				},
+			},
+		},
+		{cfg: &config.Config{MaxNumRecords: -1},
+			file: testhelpers.NewFileInfo(
 				filepath.Join("fixtures", "debt.json"),
 				time.Now(),
 			),
@@ -244,10 +288,10 @@ func TestLoad_error(t *testing.T) {
 		),
 			errors.New("Experiment field missing: title")},
 		{testhelpers.NewFileInfo(
-			filepath.Join("fixtures", "flow_no_traindataset.json"),
+			filepath.Join("fixtures", "flow_no_traindataset_or_testdataset.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: trainDataset")},
+			errors.New("Experiment field missing either: trainDataset or testDataset")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_csv_sql.json"),
 			time.Now(),
@@ -479,7 +523,7 @@ func TestProcess(t *testing.T) {
 			Category: "testing",
 			Status: &progress.Status{
 				Stamp:   time.Now(),
-				Msg:     "Assessing rules 5/5",
+				Msg:     "Train > Assessing rules 5/5",
 				Percent: 100,
 				State:   progress.Processing,
 			},
@@ -588,7 +632,7 @@ func TestProcess_supplied_rules(t *testing.T) {
 		cfgDir,
 		"build",
 		"reports",
-		internal.MakeBuildFilename(e.Category, e.Title),
+		internal.MakeBuildFilename("train", e.Category, e.Title),
 	)
 	b, err := ioutil.ReadFile(flowBuildFullFilename)
 	if err != nil {
@@ -695,19 +739,46 @@ func TestProcess_errors(t *testing.T) {
 	}
 	testhelpers.CopyFile(
 		t,
-		filepath.Join("fixtures", "flow_div_zero.yaml"),
+		filepath.Join("fixtures", "flow_div_zero_train.yaml"),
 		cfg.ExperimentsDir,
 	)
-	file := testhelpers.NewFileInfo("flow_div_zero.yaml", time.Now())
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "flow_div_zero_test.yaml"),
+		cfg.ExperimentsDir,
+	)
+
+	cases := []struct {
+		file    testhelpers.FileInfo
+		wantErr string
+	}{
+		{file: testhelpers.NewFileInfo("flow_div_zero_train.yaml", time.Now()),
+			wantErr: "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)",
+		},
+		{file: testhelpers.NewFileInfo("flow_div_zero_test.yaml", time.Now()),
+			wantErr: "Couldn't assess rules: invalid rule: height / 0",
+		},
+	}
 	wantPMExperiments := []*progress.Experiment{
 		&progress.Experiment{
 			Title:    "What would indicate good flow?",
-			Filename: "flow_div_zero.yaml",
+			Filename: "flow_div_zero_train.yaml",
 			Tags:     []string{"test", "fred / ned"},
 			Category: "testing",
 			Status: &progress.Status{
 				Stamp: time.Now(),
-				Msg:   "Assessing rules 2/5",
+				Msg:   "Train > Assessing rules 2/5",
+				State: progress.Processing,
+			},
+		},
+		&progress.Experiment{
+			Title:    "What would indicate good flow?",
+			Filename: "flow_div_zero_test.yaml",
+			Tags:     []string{"test", "fred / ned"},
+			Category: "testing",
+			Status: &progress.Status{
+				Stamp: time.Now(),
+				Msg:   "Test > Assessing rules",
 				State: progress.Processing,
 			},
 		},
@@ -728,19 +799,21 @@ func TestProcess_errors(t *testing.T) {
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: %s", err)
 	}
-	wantErr := "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)"
 
-	e, err := Load(cfg, file)
-	if err != nil {
-		t.Fatalf("Load: %s", err)
-	}
-	err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
-	if err != nil {
-		t.Fatalf("AddExperiment: %s", err)
-	}
+	for _, c := range cases {
+		e, err := Load(cfg, c.file)
+		if err != nil {
+			t.Fatalf("Load: %s", err)
+		}
+		err = pm.AddExperiment(c.file.Name(), e.Title, e.Tags, e.Category)
+		if err != nil {
+			t.Fatalf("AddExperiment: %s", err)
+		}
 
-	if err := e.Process(cfg, pm); err == nil || err.Error() != wantErr {
-		t.Fatalf("Process: gotErr: %s, wantErr: %s", err, wantErr)
+		if err := e.Process(cfg, pm); err == nil || err.Error() != c.wantErr {
+			t.Fatalf("Process: file: %s, gotErr: %s, wantErr: %s",
+				c.file.Name(), err, c.wantErr)
+		}
 	}
 
 	err = progresstest.CheckExperimentsMatch(
@@ -1036,6 +1109,9 @@ func checkExperimentMatch(
 	}
 	if err := checkDatasetsEqual(e1.TrainDataset, e2.TrainDataset); err != nil {
 		return fmt.Errorf("trainDataset: %s", err)
+	}
+	if err := checkDatasetsEqual(e1.TestDataset, e2.TestDataset); err != nil {
+		return fmt.Errorf("testDataset: %s", err)
 	}
 	return nil
 }

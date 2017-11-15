@@ -93,18 +93,7 @@ func TestNew(t *testing.T) {
 		},
 	}
 
-	title := "some title"
-	sortOrder := []rhkassessment.SortOrder{
-		rhkassessment.SortOrder{
-			Aggregator: "goalsScore",
-			Direction:  rhkassessment.DESCENDING,
-		},
-		rhkassessment.SortOrder{
-			Aggregator: "percentMatches",
-			Direction:  rhkassessment.ASCENDING,
-		},
-	}
-	aggregators := []aggregator.Spec{
+	aggregatorSpecs := []aggregator.Spec{
 		aggregator.MustNew("numMatches", "count", "true()"),
 		aggregator.MustNew(
 			"percentMatches",
@@ -114,106 +103,91 @@ func TestNew(t *testing.T) {
 		aggregator.MustNew("numIncomeGt2", "count", "income > 2"),
 		aggregator.MustNew("goalsScore", "goalsscore"),
 	}
-	experimentFilename := "somename.yaml"
-	tags := []string{"bank", "test / fred"}
-	category := "testing"
 
-	wantAggregatorDescs := []AggregatorDesc{
-		AggregatorDesc{Name: "numMatches", Kind: "count", Arg: "true()"},
-		AggregatorDesc{
-			Name: "percentMatches",
-			Kind: "calc",
-			Arg:  "roundto(100.0 * numMatches / numRecords, 2)",
+	wantReport := &Report{
+		Mode:               Train,
+		Title:              "some title",
+		Tags:               []string{"bank", "test / fred"},
+		Category:           "testing",
+		Stamp:              time.Now(),
+		ExperimentFilename: "somename.yaml",
+		NumRecords:         assessment.NumRecords,
+		SortOrder: []rhkassessment.SortOrder{
+			rhkassessment.SortOrder{
+				Aggregator: "goalsScore",
+				Direction:  rhkassessment.DESCENDING,
+			},
+			rhkassessment.SortOrder{
+				Aggregator: "percentMatches",
+				Direction:  rhkassessment.ASCENDING,
+			},
 		},
-		AggregatorDesc{Name: "numIncomeGt2", Kind: "count", Arg: "income > 2"},
-		AggregatorDesc{Name: "goalsScore", Kind: "goalsscore", Arg: ""},
+		Aggregators: []AggregatorDesc{
+			AggregatorDesc{Name: "numMatches", Kind: "count", Arg: "true()"},
+			AggregatorDesc{
+				Name: "percentMatches",
+				Kind: "calc",
+				Arg:  "roundto(100.0 * numMatches / numRecords, 2)",
+			},
+			AggregatorDesc{Name: "numIncomeGt2", Kind: "count", Arg: "income > 2"},
+			AggregatorDesc{Name: "goalsScore", Kind: "goalsscore", Arg: ""},
+		},
+		Description: testDescription,
+		Assessments: []*Assessment{
+			&Assessment{
+				Rule: "rate >= 789.2",
+				Aggregators: []*Aggregator{
+					&Aggregator{Name: "goalsScore", Value: "30.1", Difference: "30"},
+					&Aggregator{Name: "numIncomeGt2", Value: "32", Difference: "30"},
+					&Aggregator{Name: "numMatches", Value: "3142", Difference: "3000"},
+					&Aggregator{Name: "percentMatches", Value: "342", Difference: "300"},
+				},
+				Goals: []*rhkassessment.GoalAssessment{
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", false},
+				},
+			},
+			&Assessment{
+				Rule: "month == \"may\"",
+				Aggregators: []*Aggregator{
+					&Aggregator{Name: "goalsScore", Value: "20.1", Difference: "20"},
+					&Aggregator{Name: "numIncomeGt2", Value: "22", Difference: "20"},
+					&Aggregator{Name: "numMatches", Value: "2142", Difference: "2000"},
+					&Aggregator{Name: "percentMatches", Value: "242", Difference: "200"},
+				},
+				Goals: []*rhkassessment.GoalAssessment{
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", false},
+				},
+			},
+			&Assessment{
+				Rule: "true()",
+				Aggregators: []*Aggregator{
+					&Aggregator{Name: "goalsScore", Value: "0.1", Difference: "0"},
+					&Aggregator{Name: "numIncomeGt2", Value: "2", Difference: "0"},
+					&Aggregator{Name: "numMatches", Value: "142", Difference: "0"},
+					&Aggregator{Name: "percentMatches", Value: "42", Difference: "0"},
+				},
+				Goals: []*rhkassessment.GoalAssessment{
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
+				},
+			},
+		},
 	}
-	wantAssessments := []*Assessment{
-		&Assessment{
-			Rule: "rate >= 789.2",
-			Aggregators: []*Aggregator{
-				&Aggregator{Name: "goalsScore", Value: "30.1", Difference: "30"},
-				&Aggregator{Name: "numIncomeGt2", Value: "32", Difference: "30"},
-				&Aggregator{Name: "numMatches", Value: "3142", Difference: "3000"},
-				&Aggregator{Name: "percentMatches", Value: "342", Difference: "300"},
-			},
-			Goals: []*rhkassessment.GoalAssessment{
-				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", false},
-			},
-		},
-		&Assessment{
-			Rule: "month == \"may\"",
-			Aggregators: []*Aggregator{
-				&Aggregator{Name: "goalsScore", Value: "20.1", Difference: "20"},
-				&Aggregator{Name: "numIncomeGt2", Value: "22", Difference: "20"},
-				&Aggregator{Name: "numMatches", Value: "2142", Difference: "2000"},
-				&Aggregator{Name: "percentMatches", Value: "242", Difference: "200"},
-			},
-			Goals: []*rhkassessment.GoalAssessment{
-				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", false},
-			},
-		},
-		&Assessment{
-			Rule: "true()",
-			Aggregators: []*Aggregator{
-				&Aggregator{Name: "goalsScore", Value: "0.1", Difference: "0"},
-				&Aggregator{Name: "numIncomeGt2", Value: "2", Difference: "0"},
-				&Aggregator{Name: "numMatches", Value: "142", Difference: "0"},
-				&Aggregator{Name: "percentMatches", Value: "42", Difference: "0"},
-			},
-			Goals: []*rhkassessment.GoalAssessment{
-				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
-				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
-			},
-		},
-	}
-	report := New(
-		title,
-		testDescription,
+	got := New(
+		wantReport.Mode,
+		wantReport.Title,
+		wantReport.Description,
 		assessment,
-		aggregators,
-		sortOrder,
-		experimentFilename,
-		tags,
-		category,
+		aggregatorSpecs,
+		wantReport.SortOrder,
+		wantReport.ExperimentFilename,
+		wantReport.Tags,
+		wantReport.Category,
 	)
-	if report.Title != title {
-		t.Errorf("New report.Title got: %s, want: %s", report.Title, title)
-	}
-	if !reflect.DeepEqual(report.Tags, tags) {
-		t.Errorf("New report.Tags got: %s, want: %s", report.Tags, tags)
-	}
-	if report.Category != category {
-		t.Errorf("New report.Category got: %s, want: %s", report.Category, category)
-	}
-	if time.Now().Sub(report.Stamp).Seconds() > 1 {
-		t.Errorf("New report.Stamp got: %s, want: %s", report.Stamp, time.Now())
-	}
-	if report.ExperimentFilename != experimentFilename {
-		t.Errorf("New report.ExperimentFilename got: %s, want: %s",
-			report.ExperimentFilename, experimentFilename)
-	}
-	if report.NumRecords != assessment.NumRecords {
-		t.Errorf("New report.NumRecords got: %d, want: %d",
-			report.NumRecords, assessment.NumRecords)
-	}
-	if !reflect.DeepEqual(report.SortOrder, sortOrder) {
-		t.Errorf("New report.SortOrder got: %s, want: %s",
-			report.SortOrder, sortOrder)
-	}
-	if !reflect.DeepEqual(report.Aggregators, wantAggregatorDescs) {
-		t.Errorf("New report.Aggregators got: %s, want: %s",
-			report.Aggregators, wantAggregatorDescs)
-	}
-	err := checkAssessmentsMatch(report.Assessments, wantAssessments)
-	if err != nil {
-		t.Errorf("New report.Assessments don't match: %s", err)
-	}
-
-	if err := testDescription.CheckEqual(report.Description); err != nil {
-		t.Errorf("New report.Descriptions don't match: %s", err)
+	if err := checkReportsMatch(got, wantReport); err != nil {
+		t.Errorf("New: %s", err)
 	}
 }
 
@@ -345,6 +319,7 @@ func TestWriteLoadJSON(t *testing.T) {
 	category := "testing"
 	config := &config.Config{BuildDir: tmpDir}
 	report := New(
+		Train,
 		title,
 		testDescription,
 		assessment,
@@ -358,7 +333,7 @@ func TestWriteLoadJSON(t *testing.T) {
 	if err := report.WriteJSON(config); err != nil {
 		t.Fatalf("WriteJSON: %s", err)
 	}
-	buildFilename := internal.MakeBuildFilename(category, title)
+	buildFilename := internal.MakeBuildFilename(Train.String(), category, title)
 	loadedReport, err := LoadJSON(config, buildFilename)
 	if err != nil {
 		t.Fatalf("LoadJSON: %s", err)
@@ -485,6 +460,7 @@ func TestLoadJSON_multiple_attempts(t *testing.T) {
 	category := "testing"
 	config := &config.Config{BuildDir: tmpDir}
 	report := New(
+		Train,
 		title,
 		testDescription,
 		assessment,
@@ -495,7 +471,7 @@ func TestLoadJSON_multiple_attempts(t *testing.T) {
 		category,
 	)
 
-	buildFilename := internal.MakeBuildFilename(category, title)
+	buildFilename := internal.MakeBuildFilename(Train.String(), category, title)
 	testhelpers.CopyFile(
 		t,
 		filepath.Join("fixtures", "empty.json"),
@@ -650,6 +626,9 @@ func TestGetTrueAggregators_error(t *testing.T) {
  ******************************/
 
 func checkReportsMatch(r1, r2 *Report) error {
+	if r1.Mode != r2.Mode {
+		return fmt.Errorf("Modes don't match - %s != %s", r1.Mode, r2.Mode)
+	}
 	if r1.Title != r2.Title {
 		return fmt.Errorf("Titles don't match - %s != %s", r1.Title, r2.Title)
 	}

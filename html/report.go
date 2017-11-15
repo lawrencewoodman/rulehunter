@@ -4,17 +4,19 @@
 package html
 
 import (
+	"html/template"
+	"path/filepath"
+	"time"
+
 	"github.com/vlifesystems/rhkit/assessment"
 	"github.com/vlifesystems/rhkit/description"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/report"
-	"html/template"
-	"path/filepath"
-	"time"
 )
 
 func generateReport(r *report.Report, config *config.Config) (string, error) {
 	type TplData struct {
+		Mode               string
 		Title              string
 		Tags               map[string]string
 		Category           string
@@ -30,6 +32,7 @@ func generateReport(r *report.Report, config *config.Config) (string, error) {
 	}
 
 	tplData := TplData{
+		Mode:               r.Mode.String(),
 		Title:              r.Title,
 		Tags:               makeTagLinks(r.Tags),
 		Category:           r.Category,
@@ -44,13 +47,17 @@ func generateReport(r *report.Report, config *config.Config) (string, error) {
 		Html:               makeHtml(config, "reports"),
 	}
 
-	reportURLDir := genReportURLDir(r.Category, r.Title)
-	reportFilename := genReportFilename(r.Category, r.Title)
+	reportURLDir := genReportURLDir(r.Mode, r.Category, r.Title)
+	reportFilename := genReportFilename(r.Mode, r.Category, r.Title)
 	err := writeTemplate(config, reportFilename, reportTpl, tplData)
 	return reportURLDir, err
 }
 
-func genReportFilename(category string, title string) string {
+func genReportFilename(
+	mode report.ModeKind,
+	category string,
+	title string,
+) string {
 	escapedTitle := escapeString(title)
 	escapedCategory := escapeString(category)
 	if category != "" {
@@ -59,8 +66,15 @@ func genReportFilename(category string, title string) string {
 			"category",
 			escapedCategory,
 			escapedTitle,
+			mode.String(),
 			"index.html",
 		)
 	}
-	return filepath.Join("reports", "nocategory", escapedTitle, "index.html")
+	return filepath.Join(
+		"reports",
+		"nocategory",
+		escapedTitle,
+		mode.String(),
+		"index.html",
+	)
 }

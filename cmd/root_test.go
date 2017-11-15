@@ -32,16 +32,22 @@ func TestRunRoot(t *testing.T) {
 	wantReportFiles := []string{
 		// "debt2.json"
 		internal.MakeBuildFilename(
+			"train",
 			"",
 			"What is most likely to indicate success (2)",
 		),
 		// "debt.yaml"
 		internal.MakeBuildFilename(
+			"train",
 			"testing",
 			"What is most likely to indicate success",
 		),
 		// "debt.json"
-		internal.MakeBuildFilename("", "What is most likely to indicate success"),
+		internal.MakeBuildFilename(
+			"train",
+			"",
+			"What is most likely to indicate success",
+		),
 	}
 
 	cfgDir := testhelpers.BuildConfigDirs(t, false)
@@ -137,7 +143,11 @@ func TestRunRoot_file(t *testing.T) {
 	}
 	wantReportFiles := []string{
 		// "debt.json"
-		internal.MakeBuildFilename("", "What is most likely to indicate success"),
+		internal.MakeBuildFilename(
+			"train",
+			"",
+			"What is most likely to indicate success",
+		),
 	}
 
 	cfgDir := testhelpers.BuildConfigDirs(t, false)
@@ -252,7 +262,11 @@ func TestRunRoot_ignoreWhen(t *testing.T) {
 	}
 	wantReportFiles := []string{
 		// "debt.json"
-		internal.MakeBuildFilename("", "What is most likely to indicate success"),
+		internal.MakeBuildFilename(
+			"train",
+			"",
+			"What is most likely to indicate success",
+		),
 	}
 
 	cfgDir := testhelpers.BuildConfigDirs(t, false)

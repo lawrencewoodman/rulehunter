@@ -13,6 +13,7 @@ import (
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/quitter"
+	"github.com/vlifesystems/rulehunter/report"
 )
 
 // This checks if Run will quit properly when told to
@@ -116,6 +117,7 @@ func TestRun_cmd_all(t *testing.T) {
 			"category",
 			"groupa",
 			"how-to-make-a-loss",
+			"train",
 			"index.html",
 		),
 		filepath.Join(
@@ -125,6 +127,7 @@ func TestRun_cmd_all(t *testing.T) {
 			"category",
 			"groupb",
 			"how-to-make-a-profit",
+			"train",
 			"index.html",
 		),
 		filepath.Join(cfgDir, "www", "reports", "notag", "index.html"),
@@ -228,6 +231,7 @@ func TestRun_cmd_reports(t *testing.T) {
 			"category",
 			"groupa",
 			"how-to-make-a-loss",
+			"train",
 			"index.html",
 		),
 		filepath.Join(
@@ -237,6 +241,7 @@ func TestRun_cmd_reports(t *testing.T) {
 			"category",
 			"groupb",
 			"how-to-make-a-profit",
+			"train",
 			"index.html",
 		),
 		filepath.Join(cfgDir, "www", "reports", "notag", "index.html"),
@@ -366,21 +371,34 @@ func TestRun_cmd_progress(t *testing.T) {
 
 func TestGenReportURLDir(t *testing.T) {
 	cases := []struct {
+		mode     report.ModeKind
 		category string
 		title    string
 		want     string
 	}{
-		{category: "",
-			title: "This could be very interesting",
-			want:  "reports/nocategory/this-could-be-very-interesting/",
+		{mode: report.Train,
+			category: "",
+			title:    "This could be very interesting",
+			want:     "reports/nocategory/this-could-be-very-interesting/train/",
 		},
-		{category: "acme or emca",
-			title: "This could be very interesting",
-			want:  "reports/category/acme-or-emca/this-could-be-very-interesting/",
+		{mode: report.Train,
+			category: "acme or emca",
+			title:    "This could be very interesting",
+			want:     "reports/category/acme-or-emca/this-could-be-very-interesting/train/",
+		},
+		{mode: report.Test,
+			category: "",
+			title:    "This could be very interesting",
+			want:     "reports/nocategory/this-could-be-very-interesting/test/",
+		},
+		{mode: report.Test,
+			category: "acme or emca",
+			title:    "This could be very interesting",
+			want:     "reports/category/acme-or-emca/this-could-be-very-interesting/test/",
 		},
 	}
 	for _, c := range cases {
-		got := genReportURLDir(c.category, c.title)
+		got := genReportURLDir(c.mode, c.category, c.title)
 		if got != c.want {
 			t.Errorf("genReportFilename(%s, %s) got: %s, want: %s",
 				c.category, c.title, got, c.want)

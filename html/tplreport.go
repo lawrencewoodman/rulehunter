@@ -6,9 +6,12 @@ package html
 import (
 	"sort"
 	"time"
+
+	"github.com/vlifesystems/rulehunter/report"
 )
 
 type TplReport struct {
+	Mode        string
 	Title       string
 	Tags        map[string]string
 	Category    string
@@ -19,6 +22,7 @@ type TplReport struct {
 }
 
 func newTplReport(
+	mode report.ModeKind,
 	title string,
 	tags map[string]string,
 	category string,
@@ -27,6 +31,7 @@ func newTplReport(
 	stamp time.Time,
 ) *TplReport {
 	return &TplReport{
+		Mode:        mode.String(),
 		Title:       title,
 		Tags:        tags,
 		Category:    category,

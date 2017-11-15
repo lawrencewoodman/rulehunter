@@ -161,21 +161,28 @@ var wantLogEntries = []testhelpers.Entry{
 var wantReportFiles = []string{
 	// "debt_when_nothasrun.yaml"
 	internal.MakeBuildFilename(
+		"train",
 		"",
 		"What is most likely to indicate success (norun)",
 	),
 	// "debt2.json"
 	internal.MakeBuildFilename(
+		"train",
 		"",
 		"What is most likely to indicate success (2)",
 	),
 	// "debt.yaml"
 	internal.MakeBuildFilename(
+		"train",
 		"testing",
 		"What is most likely to indicate success",
 	),
 	// "debt.json"
-	internal.MakeBuildFilename("", "What is most likely to indicate success"),
+	internal.MakeBuildFilename(
+		"train",
+		"",
+		"What is most likely to indicate success",
+	),
 }
 
 var experimentFiles = []string{
@@ -285,6 +292,7 @@ func TestProcessFile_ignoreWhen(t *testing.T) {
 	var wantReportFiles = []string{
 		// "debt_when_hasrun.yaml"
 		internal.MakeBuildFilename(
+			"train",
 			"",
 			"What is most likely to indicate success",
 		),

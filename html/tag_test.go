@@ -76,51 +76,51 @@ func TestGenerateTagPages(t *testing.T) {
 		"": &tagInfo{
 			"Reports for tag: ",
 			[]string{
-				"reports/nocategory/how-to-not-contain-tags-or-cats/",
+				"reports/nocategory/how-to-not-contain-tags-or-cats/train/",
 			},
 		},
 		"bank": &tagInfo{
 			"Reports for tag: bank",
 			[]string{
-				"reports/category/groupb/how-to-keep-costs-low/",
-				"reports/category/groupb/how-to-make-a-profit/",
-				"reports/category/groupa/how-to-make-a-loss/",
+				"reports/category/groupb/how-to-keep-costs-low/train/",
+				"reports/category/groupb/how-to-make-a-profit/train/",
+				"reports/category/groupa/how-to-make-a-loss/train/",
 			},
 		},
 		"expensive": &tagInfo{
 			"Reports for tag: expensive",
 			[]string{
-				"reports/category/groupb/how-to-keep-costs-low/",
+				"reports/category/groupb/how-to-keep-costs-low/train/",
 			},
 		},
 		"fahrenheit-451": &tagInfo{
 			"Reports for tag: Fahrenheit 451",
 			[]string{
-				"reports/category/groupb/how-to-keep-costs-low/",
-				"reports/category/groupb/how-to-make-a-profit/",
-				"reports/category/groupa/how-to-make-a-loss/",
+				"reports/category/groupb/how-to-keep-costs-low/train/",
+				"reports/category/groupb/how-to-make-a-profit/train/",
+				"reports/category/groupa/how-to-make-a-loss/train/",
 			},
 		},
 		"fred-ned": &tagInfo{
 			"Reports for tag: fred / ned",
 			[]string{
-				"reports/category/groupb/how-to-keep-costs-low/",
-				"reports/category/groupb/how-to-make-a-profit/",
-				"reports/category/groupa/how-to-make-a-loss/",
+				"reports/category/groupb/how-to-keep-costs-low/train/",
+				"reports/category/groupb/how-to-make-a-profit/train/",
+				"reports/category/groupa/how-to-make-a-loss/train/",
 			},
 		},
 		"hot-in-the-city": &tagInfo{
 			"Reports for tag: hot in the city",
 			[]string{
-				"reports/category/groupb/how-to-keep-costs-low/",
-				"reports/category/groupb/how-to-make-a-profit/",
-				"reports/category/groupa/how-to-make-a-loss/",
+				"reports/category/groupb/how-to-keep-costs-low/train/",
+				"reports/category/groupb/how-to-make-a-profit/train/",
+				"reports/category/groupa/how-to-make-a-loss/train/",
 			},
 		},
 		"test": &tagInfo{
 			"Reports for tag: test",
 			[]string{
-				"reports/category/groupb/how-to-make-a-profit/",
+				"reports/category/groupb/how-to-make-a-profit/train/",
 			},
 		},
 	}

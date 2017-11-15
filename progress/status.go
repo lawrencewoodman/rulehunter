@@ -5,7 +5,10 @@ package progress
 
 import (
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/vlifesystems/rulehunter/report"
 )
 
 // StatusKind represents the status of an experiment
@@ -62,9 +65,9 @@ func (s *Status) IsFinished() bool {
 
 // SetProgress sets the progress with a message
 // and percentage progress (0.0-1.0).
-func (s *Status) SetProgress(msg string, percent float64) {
+func (s *Status) SetProgress(mode report.ModeKind, msg string, percent float64) {
 	s.Stamp = time.Now()
-	s.Msg = msg
+	s.Msg = strings.Title(mode.String()) + " > " + msg
 	s.Percent = percent
 	s.State = Processing
 }

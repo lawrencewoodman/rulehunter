@@ -3,8 +3,6 @@ package progress
 import (
 	"errors"
 	"fmt"
-	"github.com/vlifesystems/rulehunter/html/cmd"
-	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"math"
 	"math/rand"
 	"os"
@@ -13,6 +11,10 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/vlifesystems/rulehunter/html/cmd"
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
+	"github.com/vlifesystems/rulehunter/report"
 )
 
 func TestNewMonitor_errors(t *testing.T) {
@@ -226,7 +228,12 @@ func TestAddExperiment_experiment_exists(t *testing.T) {
 		t.Fatalf("AddExperiment: %s", err)
 	}
 	time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
-	pm.ReportProgress("bank-married.json", "something is happening", 0)
+	pm.ReportProgress(
+		"bank-married.json",
+		report.Train,
+		"something is happening",
+		0,
+	)
 	time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
 	err = pm.AddExperiment(
 		"bank-married.json",
@@ -337,7 +344,7 @@ func TestReportProgress(t *testing.T) {
 			Category: "contracts",
 			Status: &Status{
 				Stamp:   time.Now(),
-				Msg:     "Assessing rules",
+				Msg:     "Train > Assessing rules",
 				Percent: 0.24,
 				State:   Processing,
 			},
@@ -349,7 +356,7 @@ func TestReportProgress(t *testing.T) {
 			Category: "contracts",
 			Status: &Status{
 				Stamp:   time.Now(),
-				Msg:     "Describing dataset",
+				Msg:     "Train > Describing dataset",
 				Percent: 0.0,
 				State:   Processing,
 			},
@@ -415,10 +422,25 @@ func TestReportProgress(t *testing.T) {
 				t.Fatalf("AddExperiment: %s", err)
 			}
 
-			pm.ReportProgress("bank-divorced.json", "Describing dataset", 0)
+			pm.ReportProgress(
+				"bank-divorced.json",
+				report.Train,
+				"Describing dataset",
+				0,
+			)
 			time.Sleep(time.Second)
-			pm.ReportProgress("bank-full-divorced.json", "Tweaking rules", 0)
-			pm.ReportProgress("bank-full-divorced.json", "Assessing rules", 0.24)
+			pm.ReportProgress(
+				"bank-full-divorced.json",
+				report.Train,
+				"Tweaking rules",
+				0,
+			)
+			pm.ReportProgress(
+				"bank-full-divorced.json",
+				report.Train,
+				"Assessing rules",
+				0.24,
+			)
 		}
 		got := pm.GetExperiments()
 		if err := checkExperimentsMatch(got, c.wantExperiments); err != nil {

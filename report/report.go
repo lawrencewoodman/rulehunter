@@ -36,6 +36,7 @@ type Assessment struct {
 }
 
 type Report struct {
+	Mode               ModeKind                  `json:"mode"`
 	Title              string                    `json:"title"`
 	Tags               []string                  `json:"tags"`
 	Category           string                    `json:"category"`
@@ -54,7 +55,23 @@ type AggregatorDesc struct {
 	Arg  string `json:"arg"`
 }
 
+// Which mode was the report run in
+type ModeKind int
+
+const (
+	Train ModeKind = iota
+	Test
+)
+
+func (m ModeKind) String() string {
+	if m == Train {
+		return "train"
+	}
+	return "test"
+}
+
 func New(
+	mode ModeKind,
 	title string,
 	desc *description.Description,
 	assessment *rhkassessment.Assessment,
@@ -102,6 +119,7 @@ func New(
 		}
 	}
 	return &Report{
+		Mode:               mode,
 		Title:              title,
 		Tags:               tags,
 		Category:           category,
@@ -126,7 +144,8 @@ func (r *Report) WriteJSON(config *config.Config) error {
 	if err != nil {
 		return err
 	}
-	buildFilename := internal.MakeBuildFilename(r.Category, r.Title)
+	buildFilename :=
+		internal.MakeBuildFilename(r.Mode.String(), r.Category, r.Title)
 	reportFilename := filepath.Join(config.BuildDir, "reports", buildFilename)
 	return ioutil.WriteFile(reportFilename, json, modePerm)
 }

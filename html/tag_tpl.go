@@ -23,6 +23,7 @@ const tagTpl = `
 						<li>
 							<a class="title" href="{{ .Filename }}">{{ .Title }}</a><br />
 							Date: {{ .DateTime }} &nbsp;
+							Mode: {{ .Mode }} &nbsp;
 							{{if .Category}}
 								Category: <a href="{{ .CategoryURL }}">{{ .Category }}</a> &nbsp;
 							{{end}}

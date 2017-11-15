@@ -61,11 +61,12 @@ func generateFront(
 				tplReports = append(
 					tplReports,
 					newTplReport(
+						r.Mode,
 						r.Title,
 						makeTagLinks(r.Tags),
 						r.Category,
 						makeCategoryLink(r.Category),
-						genReportURLDir(r.Category, r.Title),
+						genReportURLDir(r.Mode, r.Category, r.Title),
 						r.Stamp,
 					),
 				)

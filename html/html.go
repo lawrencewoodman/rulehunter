@@ -6,16 +6,18 @@ package html
 import (
 	"bytes"
 	"fmt"
-	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/html/cmd"
-	"github.com/vlifesystems/rulehunter/logger"
-	"github.com/vlifesystems/rulehunter/progress"
-	"github.com/vlifesystems/rulehunter/quitter"
 	"html/template"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/vlifesystems/rulehunter/config"
+	"github.com/vlifesystems/rulehunter/html/cmd"
+	"github.com/vlifesystems/rulehunter/logger"
+	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/quitter"
+	"github.com/vlifesystems/rulehunter/report"
 )
 
 // File mode permission used as standard for the html content:
@@ -170,13 +172,18 @@ func writeTemplate(
 	return nil
 }
 
-func genReportURLDir(category string, title string) string {
+func genReportURLDir(
+	mode report.ModeKind,
+	category string,
+	title string,
+) string {
 	escapedTitle := escapeString(title)
 	escapedCategory := escapeString(category)
 	if category != "" {
-		return fmt.Sprintf("reports/category/%s/%s/", escapedCategory, escapedTitle)
+		return fmt.Sprintf("reports/category/%s/%s/%s/",
+			escapedCategory, escapedTitle, mode.String())
 	}
-	return fmt.Sprintf("reports/nocategory/%s/", escapedTitle)
+	return fmt.Sprintf("reports/nocategory/%s/%s/", escapedTitle, mode.String())
 }
 
 func countFiles(files []os.FileInfo) int {

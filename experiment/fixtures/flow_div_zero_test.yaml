@@ -1,0 +1,25 @@
+title: "What would indicate good flow?"
+tags:
+  - test
+  - "fred / ned"
+category: "testing"
+testDataset:
+  csv:
+    filename: "fixtures/flow.csv"
+    hasHeader: true
+    separator:  ","
+fields:
+  - group
+  - district
+  - height
+  - flow
+ruleGeneration:
+  fields:
+    - group
+    - district
+    - height
+sortOrder:
+  - aggregator: "numMatches"
+    direction: "descending"
+rules:
+  - "height / 0"
