@@ -122,6 +122,98 @@ var wantPMExperiments = []*progress.Experiment{
 	},
 }
 
+var wantValidNamePMExperiments = []*progress.Experiment{
+	&progress.Experiment{
+		Title:    "What is most likely to indicate success (norun)",
+		Filename: "debt_when_nothasrun.yaml",
+		Tags:     []string{},
+		Status: &progress.Status{
+			Stamp:   time.Now(),
+			Msg:     "Finished processing successfully",
+			Percent: 0.0,
+			State:   progress.Success,
+		},
+	},
+	&progress.Experiment{
+		Title:    "What is most likely to indicate success",
+		Filename: "debt_when_hasrun.yaml",
+		Tags:     []string{},
+		Status: &progress.Status{
+			Stamp:   time.Now(),
+			Msg:     "Waiting to be processed",
+			Percent: 0.0,
+			State:   progress.Waiting,
+		},
+	},
+	&progress.Experiment{
+		Title:    "What is most likely to indicate success",
+		Filename: "debt_invalid_when.yaml",
+		Tags:     []string{},
+		Status: &progress.Status{
+			Stamp:   time.Now(),
+			Msg:     "invalid expression: never (variable doesn't exist: never)",
+			Percent: 0.0,
+			State:   progress.Error,
+		},
+	},
+	&progress.Experiment{
+		Title:    "What is most likely to indicate success",
+		Filename: "debt_invalid_goal.yaml",
+		Tags:     []string{},
+		Status: &progress.Status{
+			Stamp:   time.Now(),
+			Msg:     "Couldn't assess rules: invalid expression: dummy > 0 (variable doesn't exist: dummy)",
+			Percent: 0.0,
+			State:   progress.Error,
+		},
+	},
+	&progress.Experiment{
+		Title:    "What is most likely to indicate success (2)",
+		Filename: "debt2.json",
+		Tags:     []string{},
+		Status: &progress.Status{
+			Stamp:   time.Now(),
+			Msg:     "Finished processing successfully",
+			Percent: 0.0,
+			State:   progress.Success,
+		},
+	},
+	&progress.Experiment{
+		Title:    "What is most likely to indicate success",
+		Filename: "debt.yaml",
+		Tags:     []string{"bank", "loan"},
+		Category: "testing",
+		Status: &progress.Status{
+			Stamp:   time.Now(),
+			Msg:     "Finished processing successfully",
+			Percent: 0.0,
+			State:   progress.Success,
+		},
+	},
+	&progress.Experiment{
+		Title:    "What is most likely to indicate success",
+		Filename: "debt.json",
+		Tags:     []string{},
+		Status: &progress.Status{
+			Stamp:   time.Now(),
+			Msg:     "Finished processing successfully",
+			Percent: 0.0,
+			State:   progress.Success,
+		},
+	},
+	&progress.Experiment{
+		Title:    "",
+		Filename: "0debt_broken.yaml",
+		Tags:     []string{},
+		Status: &progress.Status{
+			Stamp:   time.Now(),
+			Msg:     "Error loading experiment: yaml: line 3: did not find expected key",
+			Percent: 0.0,
+			State:   progress.Error,
+		},
+	},
+}
+
 // Sets the time for the experiments to Now()
 func initExperimentsTime(experiments []*progress.Experiment) {
 	for _, e := range experiments {
@@ -156,6 +248,33 @@ var wantLogEntries = []testhelpers.Entry{
 		Msg: "Processing experiment: debt_invalid_goal.yaml"},
 	{Level: testhelpers.Error,
 		Msg: "Error processing experiment: debt_invalid_goal.yaml, Couldn't assess rules: invalid expression: dummy > 0 (variable doesn't exist: dummy)"},
+}
+
+var wantValidNameLogEntries = []testhelpers.Entry{
+	{Level: testhelpers.Error,
+		Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 3: did not find expected key"},
+	{Level: testhelpers.Info,
+		Msg: "Processing experiment: debt.json"},
+	{Level: testhelpers.Info,
+		Msg: "Successfully processed experiment: debt.json"},
+	{Level: testhelpers.Info,
+		Msg: "Processing experiment: debt.yaml"},
+	{Level: testhelpers.Info,
+		Msg: "Successfully processed experiment: debt.yaml"},
+	{Level: testhelpers.Info,
+		Msg: "Processing experiment: debt2.json"},
+	{Level: testhelpers.Info,
+		Msg: "Successfully processed experiment: debt2.json"},
+	{Level: testhelpers.Info,
+		Msg: "Processing experiment: debt_invalid_goal.yaml"},
+	{Level: testhelpers.Error,
+		Msg: "Error processing experiment: debt_invalid_goal.yaml, Couldn't assess rules: invalid expression: dummy > 0 (variable doesn't exist: dummy)"},
+	{Level: testhelpers.Error,
+		Msg: "Error processing experiment: debt_invalid_when.yaml, invalid expression: never (variable doesn't exist: never)"},
+	{Level: testhelpers.Info,
+		Msg: "Processing experiment: debt_when_nothasrun.yaml"},
+	{Level: testhelpers.Info,
+		Msg: "Successfully processed experiment: debt_when_nothasrun.yaml"},
 }
 
 var wantReportFiles = []string{
@@ -263,7 +382,8 @@ func TestProcessFile(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
-		t.Errorf("GetEntries() got: %v\n want: %v", l.GetEntries(), wantLogEntries)
+		t.Errorf("GetEntries() got: %v\n want: %v",
+			l.GetEntries(true), wantLogEntries)
 	}
 
 	got := pm.GetExperiments()
@@ -340,7 +460,8 @@ func TestProcessFile_ignoreWhen(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
-		t.Errorf("GetEntries() got: %v\n want: %v", l.GetEntries(), wantLogEntries)
+		t.Errorf("GetEntries() got: %v\n want: %v",
+			l.GetEntries(true), wantLogEntries)
 	}
 }
 
@@ -411,7 +532,8 @@ func TestProcessFilename(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
-		t.Errorf("GetEntries() got: %v\n want: %v", l.GetEntries(), wantLogEntries)
+		t.Errorf("GetEntries() got: %v\n want: %v",
+			l.GetEntries(true), wantLogEntries)
 	}
 
 	got := pm.GetExperiments()
@@ -423,124 +545,6 @@ func TestProcessFilename(t *testing.T) {
 }
 
 func TestProcessDir(t *testing.T) {
-	wantLogEntries := []testhelpers.Entry{
-		{Level: testhelpers.Error,
-			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 3: did not find expected key"},
-		{Level: testhelpers.Info,
-			Msg: "Processing experiment: debt.json"},
-		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: debt.json"},
-		{Level: testhelpers.Info,
-			Msg: "Processing experiment: debt.yaml"},
-		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: debt.yaml"},
-		{Level: testhelpers.Info,
-			Msg: "Processing experiment: debt2.json"},
-		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: debt2.json"},
-		{Level: testhelpers.Info,
-			Msg: "Processing experiment: debt_invalid_goal.yaml"},
-		{Level: testhelpers.Error,
-			Msg: "Error processing experiment: debt_invalid_goal.yaml, Couldn't assess rules: invalid expression: dummy > 0 (variable doesn't exist: dummy)"},
-		{Level: testhelpers.Error,
-			Msg: "Error processing experiment: debt_invalid_when.yaml, invalid expression: never (variable doesn't exist: never)"},
-		{Level: testhelpers.Info,
-			Msg: "Processing experiment: debt_when_nothasrun.yaml"},
-		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: debt_when_nothasrun.yaml"},
-	}
-	wantPMExperiments := []*progress.Experiment{
-		&progress.Experiment{
-			Title:    "What is most likely to indicate success (norun)",
-			Filename: "debt_when_nothasrun.yaml",
-			Tags:     []string{},
-			Status: &progress.Status{
-				Stamp:   time.Now(),
-				Msg:     "Finished processing successfully",
-				Percent: 0.0,
-				State:   progress.Success,
-			},
-		},
-		&progress.Experiment{
-			Title:    "What is most likely to indicate success",
-			Filename: "debt_when_hasrun.yaml",
-			Tags:     []string{},
-			Status: &progress.Status{
-				Stamp:   time.Now(),
-				Msg:     "Waiting to be processed",
-				Percent: 0.0,
-				State:   progress.Waiting,
-			},
-		},
-		&progress.Experiment{
-			Title:    "What is most likely to indicate success",
-			Filename: "debt_invalid_when.yaml",
-			Tags:     []string{},
-			Status: &progress.Status{
-				Stamp:   time.Now(),
-				Msg:     "invalid expression: never (variable doesn't exist: never)",
-				Percent: 0.0,
-				State:   progress.Error,
-			},
-		},
-		&progress.Experiment{
-			Title:    "What is most likely to indicate success",
-			Filename: "debt_invalid_goal.yaml",
-			Tags:     []string{},
-			Status: &progress.Status{
-				Stamp:   time.Now(),
-				Msg:     "Couldn't assess rules: invalid expression: dummy > 0 (variable doesn't exist: dummy)",
-				Percent: 0.0,
-				State:   progress.Error,
-			},
-		},
-		&progress.Experiment{
-			Title:    "What is most likely to indicate success (2)",
-			Filename: "debt2.json",
-			Tags:     []string{},
-			Status: &progress.Status{
-				Stamp:   time.Now(),
-				Msg:     "Finished processing successfully",
-				Percent: 0.0,
-				State:   progress.Success,
-			},
-		},
-		&progress.Experiment{
-			Title:    "What is most likely to indicate success",
-			Filename: "debt.yaml",
-			Tags:     []string{"bank", "loan"},
-			Category: "testing",
-			Status: &progress.Status{
-				Stamp:   time.Now(),
-				Msg:     "Finished processing successfully",
-				Percent: 0.0,
-				State:   progress.Success,
-			},
-		},
-		&progress.Experiment{
-			Title:    "What is most likely to indicate success",
-			Filename: "debt.json",
-			Tags:     []string{},
-			Status: &progress.Status{
-				Stamp:   time.Now(),
-				Msg:     "Finished processing successfully",
-				Percent: 0.0,
-				State:   progress.Success,
-			},
-		},
-		&progress.Experiment{
-			Title:    "",
-			Filename: "0debt_broken.yaml",
-			Tags:     []string{},
-			Status: &progress.Status{
-				Stamp:   time.Now(),
-				Msg:     "Error loading experiment: yaml: line 3: did not find expected key",
-				Percent: 0.0,
-				State:   progress.Error,
-			},
-		},
-	}
-
 	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
 	cfg := &config.Config{
@@ -591,12 +595,14 @@ func TestProcessDir(t *testing.T) {
 			gotReportFiles, wantReportFiles)
 	}
 
-	if !reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
-		t.Errorf("GetEntries() got: %v\n want: %v", l.GetEntries(), wantLogEntries)
+	if !reflect.DeepEqual(l.GetEntries(), wantValidNameLogEntries) {
+		t.Errorf("GetEntries() got: %v\n want: %v",
+			l.GetEntries(true), wantLogEntries)
 	}
 
 	got := pm.GetExperiments()
-	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments)
+	initExperimentsTime(wantValidNamePMExperiments)
+	err = progresstest.CheckExperimentsMatch(got, wantValidNamePMExperiments)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}
@@ -673,7 +679,8 @@ func TestStart(t *testing.T) {
 	timeoutC := time.NewTimer(20 * time.Second).C
 	tickerC := time.NewTicker(400 * time.Millisecond).C
 	sort.Strings(wantReportFiles)
-	for {
+	finishedWaiting := false
+	for !finishedWaiting {
 		select {
 		case <-tickerC:
 			files = testhelpers.GetFilesInDir(
@@ -682,21 +689,29 @@ func TestStart(t *testing.T) {
 			)
 			sort.Strings(files)
 			if reflect.DeepEqual(files, wantReportFiles) {
-				return
+				finishedWaiting = true
+				break
 			}
 		case <-timeoutC:
-			t.Errorf("didn't generate correct files within time period, got: %v, want: %v",
-				files, wantReportFiles)
-			return
+			t.Errorf(
+				"didn't generate correct files within time period, got: %v, want: %v",
+				files,
+				wantReportFiles,
+			)
+			finishedWaiting = true
+			break
 		}
 	}
 
-	if !reflect.DeepEqual(l.GetEntries(), wantLogEntries) {
-		t.Errorf("GetEntries() got: %v\n want: %v", l.GetEntries(), wantLogEntries)
+	gotLogEntries := testhelpers.SortLogEntries(l.GetEntries(true))
+	wantLogEntries := testhelpers.SortLogEntries(wantValidNameLogEntries)
+	if !reflect.DeepEqual(gotLogEntries, wantLogEntries) {
+		t.Errorf("GetEntries() got: %v\n want: %v", gotLogEntries, wantLogEntries)
 	}
 
 	got := pm.GetExperiments()
-	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments)
+	initExperimentsTime(wantValidNamePMExperiments)
+	err = progresstest.CheckExperimentsMatch(got, wantValidNamePMExperiments)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}

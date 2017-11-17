@@ -4,6 +4,8 @@
 package testhelpers
 
 import (
+	"sort"
+
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehunter/quitter"
 )
@@ -70,6 +72,47 @@ func (l *Logger) Info(msg string) {
 	l.entries = append(l.entries, entry)
 }
 
-func (l *Logger) GetEntries() []Entry {
-	return l.entries
+// GetEntries returns the entries from the log.  If an argument is passed,
+// it represents whether to make the errors unique.
+func (l *Logger) GetEntries(args ...bool) []Entry {
+	uniqueErrors := false
+	if len(args) == 1 {
+		uniqueErrors = args[0]
+	}
+	if !uniqueErrors {
+		return l.entries
+	}
+	r := []Entry{}
+	for _, e := range l.entries {
+		found := false
+		if e.Level == Error {
+			for _, re := range r {
+				if e.Level == re.Level && e.Msg == re.Msg {
+					found = true
+					break
+				}
+			}
+		}
+		if !found {
+			r = append(r, e)
+		}
+	}
+	return r
+}
+
+func SortLogEntries(entries []Entry) []Entry {
+	r := make([]Entry, len(entries))
+	copy(r, entries)
+	sort.SliceStable(
+		r,
+		func(i, j int) bool {
+			if r[i].Level < r[j].Level {
+				return true
+			} else if r[i].Level == r[j].Level && r[i].Msg < r[j].Msg {
+				return true
+			}
+			return false
+		},
+	)
+	return r
 }
