@@ -18,6 +18,10 @@ before_install:
 script:
   - chmod +x linux-test-su.sh
   - sudo ./linux-test-su.sh $GOPATH `which go` upstart
+  - pwd
+  - go test -covermode=count -coverprofile=profile.coverprofile
+  - ls -la profile.coverprofile
+  - cat profile.coverprofile
   - $HOME/gopath/bin/roveralls -v
   - $HOME/gopath/bin/goveralls -coverprofile=roveralls.coverprofile -service=travis-ci
   - cd examples
