@@ -14,6 +14,7 @@ before_install:
   - go get golang.org/x/tools/cmd/cover
   #- go get github.com/lawrencewoodman/roveralls
   - pwd=`pwd`
+  # delete v7 branch of roveralls when done with this
   - go get gopkg.in/lawrencewoodman/roveralls.v7
   - ls $HOME/gopath/bin
   - cd $HOME/gopath/src/gopkg.in/lawrencewoodman/roveralls.v7
@@ -29,7 +30,7 @@ script:
   - go test -covermode=count -coverprofile=profile.coverprofile
   - ls -la profile.coverprofile
   - cat profile.coverprofile
-  - $HOME/gopath/bin/roveralls -v
+  - $HOME/gopath/bin/roveralls.v7 -v
   - $HOME/gopath/bin/goveralls -coverprofile=roveralls.coverprofile -service=travis-ci
   - cd examples
   - chmod +x bin/init_www_unix.sh
