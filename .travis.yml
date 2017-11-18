@@ -17,7 +17,7 @@ before_install:
   - cd $HOME/gopath/src
   - mkdir -p lawrencewoodman
   - cd lawrencewoodman
-  - git clone github.com/lawrencewoodman/roveralls
+  - git clone git@github.com:lawrencewoodman/roveralls.git
   - cd roveralls
   - git checkout v7
   - go build
