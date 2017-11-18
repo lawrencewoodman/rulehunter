@@ -13,7 +13,16 @@ before_install:
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
   #- go get github.com/lawrencewoodman/roveralls
-  - go get gopkg.in/lawrencewoodman/roveralls.v7
+  - pwd=`pwd`
+  - cd $HOME/gopath/src
+  - mkdir -p lawrencewoodman
+  - cd lawrencewoodman
+  - git clone github.com/lawrencewoodman/roveralls
+  - cd roveralls
+  - git checkout v7
+  - go build
+  - go install
+  - cd $pwd
   - mysql < ci/createflow_travis.sql
 
 script:
