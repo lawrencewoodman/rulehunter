@@ -23,7 +23,7 @@ script:
   - go test -covermode=count -coverprofile=profile.coverprofile
   - ls -la profile.coverprofile
   - cat profile.coverprofile
-  - $HOME/gopath/bin/roveralls.v7 -v
+  - $HOME/gopath/bin/roveralls -v
   - $HOME/gopath/bin/goveralls -coverprofile=roveralls.coverprofile -service=travis-ci
   - cd examples
   - chmod +x bin/init_www_unix.sh
