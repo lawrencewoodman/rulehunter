@@ -609,6 +609,8 @@ func TestProcessDir(t *testing.T) {
 }
 
 func TestStart(t *testing.T) {
+	wantLogEntries := testhelpers.SortLogEntries(wantValidNameLogEntries)
+
 	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
 	cfg := &config.Config{
@@ -676,6 +678,9 @@ func TestStart(t *testing.T) {
 	}
 
 	files := []string{}
+	gotLogEntries := []testhelpers.Entry{}
+	gotPMExperiments := []*progress.Experiment{}
+
 	timeoutC := time.NewTimer(20 * time.Second).C
 	tickerC := time.NewTicker(400 * time.Millisecond).C
 	sort.Strings(wantReportFiles)
@@ -689,30 +694,41 @@ func TestStart(t *testing.T) {
 			)
 			sort.Strings(files)
 			if reflect.DeepEqual(files, wantReportFiles) {
-				finishedWaiting = true
-				break
+				gotLogEntries = testhelpers.SortLogEntries(l.GetEntries(true))
+				if reflect.DeepEqual(gotLogEntries, wantLogEntries) {
+					gotPMExperiments = pm.GetExperiments()
+					initExperimentsTime(wantValidNamePMExperiments)
+					err = progresstest.CheckExperimentsMatch(
+						gotPMExperiments,
+						wantValidNamePMExperiments,
+					)
+					if err == nil {
+						finishedWaiting = true
+						break
+					}
+				}
 			}
 		case <-timeoutC:
-			t.Errorf(
-				"didn't generate correct files within time period, got: %v, want: %v",
-				files,
-				wantReportFiles,
-			)
+			if !reflect.DeepEqual(files, wantReportFiles) {
+				t.Errorf(
+					"didn't generate correct files within time period, got: %v\n want: %v",
+					files,
+					wantReportFiles,
+				)
+				if !reflect.DeepEqual(gotLogEntries, wantLogEntries) {
+					t.Errorf("GetEntries() got: %v\n want: %v",
+						gotLogEntries, wantLogEntries)
+				}
+				err := progresstest.CheckExperimentsMatch(
+					gotPMExperiments,
+					wantValidNamePMExperiments,
+				)
+				if err != nil {
+					t.Errorf("checkExperimentsMatch: %s", err)
+				}
+			}
 			finishedWaiting = true
 			break
 		}
-	}
-
-	gotLogEntries := testhelpers.SortLogEntries(l.GetEntries(true))
-	wantLogEntries := testhelpers.SortLogEntries(wantValidNameLogEntries)
-	if !reflect.DeepEqual(gotLogEntries, wantLogEntries) {
-		t.Errorf("GetEntries() got: %v\n want: %v", gotLogEntries, wantLogEntries)
-	}
-
-	got := pm.GetExperiments()
-	initExperimentsTime(wantValidNamePMExperiments)
-	err = progresstest.CheckExperimentsMatch(got, wantValidNamePMExperiments)
-	if err != nil {
-		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}
 }
