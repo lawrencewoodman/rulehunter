@@ -115,7 +115,6 @@ func buildConfigDirs(cfg *config.Config) error {
 		filepath.Join(cfg.WWWDir, "progress"),
 		filepath.Join(cfg.BuildDir, "progress"),
 		filepath.Join(cfg.BuildDir, "reports"),
-		filepath.Join(cfg.BuildDir, "descriptions"),
 	}
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, modePerm); err != nil {

@@ -56,7 +56,6 @@ func BuildConfigDirs(e errorReporter, buildAllDirs bool) string {
 			filepath.Join("www", "reports"),
 			filepath.Join("build", "progress"),
 			filepath.Join("build", "reports"),
-			filepath.Join("build", "descriptions"),
 		}
 	} else {
 		subDirs = []string{
