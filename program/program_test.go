@@ -393,6 +393,77 @@ func TestProcessFile(t *testing.T) {
 	}
 }
 
+// This test ensures that if the title changes for an experiment that
+// has finished but is going to run again, changes in the progress log.
+func TestProcessFile_title_change(t *testing.T) {
+	var wantPMExperiments = []*progress.Experiment{
+		&progress.Experiment{
+			Title:    "What is most likely to indicate success",
+			Filename: "debt.yaml",
+			Tags:     []string{},
+			Status: &progress.Status{
+				Stamp:   time.Now(),
+				Msg:     "Finished processing successfully",
+				Percent: 0.0,
+				State:   progress.Success,
+			},
+		},
+	}
+	cfgDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(cfgDir)
+	cfg := &config.Config{
+		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+		WWWDir:            filepath.Join(cfgDir, "www"),
+		BuildDir:          filepath.Join(cfgDir, "build"),
+		MaxNumRecords:     100,
+		MaxNumProcesses:   4,
+		MaxNumReportRules: 100,
+	}
+
+	l := testhelpers.NewLogger()
+	quit := quitter.New()
+	defer quit.Quit()
+	htmlCmds := make(chan cmd.Cmd, 100)
+	defer close(htmlCmds)
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
+	pm, err := progress.NewMonitor(
+		filepath.Join(cfg.BuildDir, "progress"),
+		htmlCmds,
+	)
+	if err != nil {
+		t.Fatalf("progress.NewMonitor: %s", err)
+	}
+
+	p := New(cfg, pm, l, quit)
+
+	file := testhelpers.NewFileInfo("debt.yaml", time.Now())
+	experimentFiles := []string{
+		filepath.Join("fixtures", "debt_when_nothasrun.yaml"),
+		filepath.Join("fixtures", "debt_when_hasrun.yaml"),
+	}
+
+	for _, experimentFile := range experimentFiles {
+		testhelpers.CopyFile(
+			t,
+			experimentFile,
+			filepath.Join(cfgDir, "experiments"),
+			"debt.yaml",
+		)
+
+		if err := p.ProcessFile(file, false); err != nil {
+			t.Fatalf("ProcessFile: %s", err)
+		}
+		time.Sleep(100 * time.Millisecond) /* Windows time resolution is low */
+	}
+
+	got := pm.GetExperiments()
+	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments)
+	if err != nil {
+		t.Errorf("checkExperimentsMatch() err: %s", err)
+	}
+}
+
 func TestProcessFile_ignoreWhen(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)

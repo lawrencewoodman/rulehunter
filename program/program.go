@@ -105,6 +105,10 @@ func (p *Program) ProcessFile(file fileinfo.FileInfo, ignoreWhen bool) error {
 	}
 
 	p.logger.Info("Processing experiment: " + file.Name())
+	err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
+	if err != nil {
+		return p.logger.Error(err)
+	}
 	if err := e.Process(p.config, p.progressMonitor); err != nil {
 		logErr :=
 			fmt.Errorf("Error processing experiment: %s, %s", file.Name(), err)
