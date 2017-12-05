@@ -21,12 +21,18 @@ var ErrConnClosed = errors.New("connection has been closed")
 // been given for the Dataset
 var ErrWrongNumFields = errors.New("wrong number of field names for dataset")
 
+// ErrReleased indicates that the dataset has been released
+var ErrReleased = errors.New("dataset has been released")
+
 // Dataset provides access to a data source
 type Dataset interface {
 	// Open creates a connection to the Dataset
 	Open() (Conn, error)
 	// Fields returns the field names used by the Dataset
 	Fields() []string
+	// Release releases any resources associated with the Dataset,
+	// rendering it unusable in the future.
+	Release() error
 }
 
 // Conn represents a connection to a Dataset

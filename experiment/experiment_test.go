@@ -33,13 +33,18 @@ import (
 )
 
 func TestLoad(t *testing.T) {
+	tmpDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(tmpDir)
 	funcs := map[string]dexpr.CallFun{}
 	cases := []struct {
 		cfg  *config.Config
 		file fileinfo.FileInfo
 		want *Experiment
 	}{
-		{cfg: &config.Config{MaxNumRecords: -1},
+		{cfg: &config.Config{
+			MaxNumRecords: -1,
+			BuildDir:      filepath.Join(tmpDir, "build"),
+		},
 			file: testhelpers.NewFileInfo(
 				filepath.Join("fixtures", "flow.json"),
 				time.Now(),
@@ -83,7 +88,10 @@ func TestLoad(t *testing.T) {
 				},
 			},
 		},
-		{cfg: &config.Config{MaxNumRecords: 4},
+		{cfg: &config.Config{
+			MaxNumRecords: 4,
+			BuildDir:      filepath.Join(tmpDir, "build"),
+		},
 			file: testhelpers.NewFileInfo(
 				filepath.Join("fixtures", "flow.json"),
 				time.Now(),
@@ -130,7 +138,10 @@ func TestLoad(t *testing.T) {
 				},
 			},
 		},
-		{cfg: &config.Config{MaxNumRecords: -1},
+		{cfg: &config.Config{
+			MaxNumRecords: -1,
+			BuildDir:      filepath.Join(tmpDir, "build"),
+		},
 			file: testhelpers.NewFileInfo(
 				filepath.Join("fixtures", "flow_no_traindataset.json"),
 				time.Now(),
@@ -174,7 +185,10 @@ func TestLoad(t *testing.T) {
 				},
 			},
 		},
-		{cfg: &config.Config{MaxNumRecords: -1},
+		{cfg: &config.Config{
+			MaxNumRecords: -1,
+			BuildDir:      filepath.Join(tmpDir, "build"),
+		},
 			file: testhelpers.NewFileInfo(
 				filepath.Join("fixtures", "debt.json"),
 				time.Now(),
@@ -226,7 +240,10 @@ func TestLoad(t *testing.T) {
 				),
 			},
 		},
-		{cfg: &config.Config{MaxNumRecords: -1},
+		{cfg: &config.Config{
+			MaxNumRecords: -1,
+			BuildDir:      filepath.Join(tmpDir, "build"),
+		},
 			file: testhelpers.NewFileInfo(
 				filepath.Join("fixtures", "flow.yaml"),
 				time.Now(),
@@ -383,7 +400,12 @@ func TestLoad_error(t *testing.T) {
 			fmt.Errorf("rules: %s", rule.InvalidExprError{Expr: "flow < <= 9.42"}),
 		},
 	}
-	cfg := &config.Config{MaxNumRecords: -1}
+	tmpDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(tmpDir)
+	cfg := &config.Config{
+		MaxNumRecords: -1,
+		BuildDir:      filepath.Join(tmpDir, "build"),
+	}
 	for _, c := range cases {
 		_, err := Load(cfg, c.file)
 		if err == nil {
@@ -844,11 +866,14 @@ func TestProcess_errors(t *testing.T) {
 }
 
 func TestMakeDataset(t *testing.T) {
+	tmpDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(tmpDir)
 	cases := []struct {
 		desc           *datasetDesc
 		dataSourceName string
 		query          string
 		fields         []string
+		config         *config.Config
 		want           ddataset.Dataset
 	}{
 		{desc: &datasetDesc{
@@ -859,6 +884,10 @@ func TestMakeDataset(t *testing.T) {
 			},
 		},
 			fields: []string{"grp", "district", "height", "flow"},
+			config: &config.Config{
+				MaxNumRecords: -1,
+				BuildDir:      filepath.Join(tmpDir, "build"),
+			},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow.csv"),
 				true,
@@ -870,10 +899,55 @@ func TestMakeDataset(t *testing.T) {
 			SQL: &sqlDesc{
 				DriverName:     "sqlite3",
 				DataSourceName: filepath.Join("fixtures", "flow.db"),
+				Query:          "select * from flow",
+			},
+		},
+			fields: []string{"grp", "district", "height", "flow"},
+			config: &config.Config{
+				MaxNumRecords: 1000,
+				BuildDir:      filepath.Join(tmpDir, "build"),
+			},
+			want: dcsv.New(
+				filepath.Join("fixtures", "flow.csv"),
+				true,
+				rune(','),
+				[]string{"grp", "district", "height", "flow"},
+			),
+		},
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "sqlite3",
+				DataSourceName: filepath.Join("fixtures", "flow.db"),
+				Query:          "select * from flow",
+			},
+		},
+			fields: []string{"grp", "district", "height", "flow"},
+			config: &config.Config{
+				MaxNumRecords: 4,
+				BuildDir:      filepath.Join(tmpDir, "build"),
+			},
+			want: dtruncate.New(
+				dcsv.New(
+					filepath.Join("fixtures", "flow.csv"),
+					true,
+					rune(','),
+					[]string{"grp", "district", "height", "flow"},
+				),
+				4,
+			),
+		},
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "sqlite3",
+				DataSourceName: filepath.Join("fixtures", "flow.db"),
 				Query:          "select grp,district,flow from flow",
 			},
 		},
 			fields: []string{"grp", "district", "flow"},
+			config: &config.Config{
+				MaxNumRecords: -1,
+				BuildDir:      filepath.Join(tmpDir, "build"),
+			},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow_three_columns.csv"),
 				true,
@@ -883,7 +957,7 @@ func TestMakeDataset(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		got, err := makeDataset("trainDataset", c.fields, c.desc)
+		got, err := makeDataset("trainDataset", c.config, c.fields, c.desc)
 		if err != nil {
 			t.Errorf("(%d) makeDataset: %s", i, err)
 		} else if err := checkDatasetsEqual(got, c.want); err != nil {
@@ -893,6 +967,8 @@ func TestMakeDataset(t *testing.T) {
 }
 
 func TestMakeDataset_err(t *testing.T) {
+	tmpDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(tmpDir)
 	cases := []struct {
 		experimentField   string
 		fields            []string
@@ -938,14 +1014,14 @@ func TestMakeDataset_err(t *testing.T) {
 			),
 		},
 	}
+	cfg := &config.Config{
+		MaxNumRecords: -1,
+		BuildDir:      filepath.Join(tmpDir, "build"),
+	}
 	for i, c := range cases {
-		ds, err := makeDataset(c.experimentField, c.fields, c.desc)
-		if err != nil {
-			t.Fatalf("(%d) makeDataset: %s", i, err)
-		}
-		_, err = ds.Open()
+		_, err := makeDataset(c.experimentField, cfg, c.fields, c.desc)
 		if !c.wantOpenErrRegexp.MatchString(err.Error()) {
-			t.Fatalf("ds.Open() gotErr: %v, wantErr: %v", err, c.wantOpenErrRegexp)
+			t.Fatalf("(%d) makeDataset: %s", i, err)
 		}
 	}
 }
@@ -955,120 +1031,100 @@ func TestMakeDataset_err(t *testing.T) {
 *************************/
 
 func BenchmarkProcess_csv(b *testing.B) {
-	benchmarks := []struct {
-		cacheRecords int
-	}{
-		{0}, {4000}, {5000}, {10000}, {100000},
-	}
-	for _, bm := range benchmarks {
-		b.Run(fmt.Sprintf("cacherecords-%d", bm.cacheRecords), func(b *testing.B) {
-			for n := 0; n < b.N; n++ {
-				b.StopTimer()
-				cfgDir := testhelpers.BuildConfigDirs(b, true)
-				defer os.RemoveAll(cfgDir)
-				cfg := &config.Config{
-					ExperimentsDir:     filepath.Join(cfgDir, "experiments"),
-					WWWDir:             filepath.Join(cfgDir, "www"),
-					BuildDir:           filepath.Join(cfgDir, "build"),
-					MaxNumProcesses:    4,
-					MaxNumRecords:      10000,
-					MaxNumReportRules:  100,
-					MaxNumCacheRecords: bm.cacheRecords,
-				}
-				testhelpers.CopyFile(
-					b,
-					filepath.Join("fixtures", "flow_big.yaml"),
-					cfg.ExperimentsDir,
-				)
-				file := testhelpers.NewFileInfo("flow_big.yaml", time.Now())
-				quit := quitter.New()
-				defer quit.Quit()
-				l := testhelpers.NewLogger()
-				go l.Run(quit)
-				htmlCmds := make(chan cmd.Cmd)
-				defer close(htmlCmds)
-				cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-				go cmdMonitor.Run()
-				pm, err := progress.NewMonitor(
-					filepath.Join(cfg.BuildDir, "progress"),
-					htmlCmds,
-				)
-				if err != nil {
-					b.Fatalf("progress.NewMonitor: err: %v", err)
-				}
-				e, err := Load(cfg, file)
-				if err != nil {
-					b.Fatalf("Load: %s", err)
-				}
-				err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
-				if err != nil {
-					b.Fatalf("AddExperiment: %s", err)
-				}
-				b.StartTimer()
-				if err := e.Process(cfg, pm); err != nil {
-					b.Fatalf("Process: %s", err)
-				}
-			}
-		})
+	for n := 0; n < b.N; n++ {
+		b.StopTimer()
+		cfgDir := testhelpers.BuildConfigDirs(b, true)
+		defer os.RemoveAll(cfgDir)
+		cfg := &config.Config{
+			ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+			WWWDir:            filepath.Join(cfgDir, "www"),
+			BuildDir:          filepath.Join(cfgDir, "build"),
+			MaxNumProcesses:   4,
+			MaxNumRecords:     10000,
+			MaxNumReportRules: 100,
+		}
+		testhelpers.CopyFile(
+			b,
+			filepath.Join("fixtures", "flow_big.yaml"),
+			cfg.ExperimentsDir,
+		)
+		file := testhelpers.NewFileInfo("flow_big.yaml", time.Now())
+		quit := quitter.New()
+		defer quit.Quit()
+		l := testhelpers.NewLogger()
+		go l.Run(quit)
+		htmlCmds := make(chan cmd.Cmd)
+		defer close(htmlCmds)
+		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+		go cmdMonitor.Run()
+		pm, err := progress.NewMonitor(
+			filepath.Join(cfg.BuildDir, "progress"),
+			htmlCmds,
+		)
+		if err != nil {
+			b.Fatalf("progress.NewMonitor: err: %v", err)
+		}
+		e, err := Load(cfg, file)
+		if err != nil {
+			b.Fatalf("Load: %s", err)
+		}
+		err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
+		if err != nil {
+			b.Fatalf("AddExperiment: %s", err)
+		}
+		b.StartTimer()
+		if err := e.Process(cfg, pm); err != nil {
+			b.Fatalf("Process: %s", err)
+		}
 	}
 }
 
 func BenchmarkProcess_sql(b *testing.B) {
-	benchmarks := []struct {
-		cacheRecords int
-	}{
-		{0}, {4000}, {5000}, {10000}, {100000},
-	}
-	for _, bm := range benchmarks {
-		b.Run(fmt.Sprintf("cacherecords-%d", bm.cacheRecords), func(b *testing.B) {
-			for n := 0; n < b.N; n++ {
-				b.StopTimer()
-				cfgDir := testhelpers.BuildConfigDirs(b, true)
-				defer os.RemoveAll(cfgDir)
-				cfg := &config.Config{
-					ExperimentsDir:     filepath.Join(cfgDir, "experiments"),
-					WWWDir:             filepath.Join(cfgDir, "www"),
-					BuildDir:           filepath.Join(cfgDir, "build"),
-					MaxNumProcesses:    4,
-					MaxNumRecords:      10000,
-					MaxNumReportRules:  100,
-					MaxNumCacheRecords: bm.cacheRecords,
-				}
-				testhelpers.CopyFile(
-					b,
-					filepath.Join("fixtures", "flow_big_sql.yaml"),
-					cfg.ExperimentsDir,
-				)
-				file := testhelpers.NewFileInfo("flow_big_sql.yaml", time.Now())
-				quit := quitter.New()
-				defer quit.Quit()
-				l := testhelpers.NewLogger()
-				go l.Run(quit)
-				htmlCmds := make(chan cmd.Cmd)
-				defer close(htmlCmds)
-				cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-				go cmdMonitor.Run()
-				pm, err := progress.NewMonitor(
-					filepath.Join(cfg.BuildDir, "progress"),
-					htmlCmds,
-				)
-				if err != nil {
-					b.Fatalf("progress.NewMonitor: err: %v", err)
-				}
-				e, err := Load(cfg, file)
-				if err != nil {
-					b.Fatalf("Load: %s", err)
-				}
-				err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
-				if err != nil {
-					b.Fatalf("AddExperiment: %s", err)
-				}
-				b.StartTimer()
-				if err := e.Process(cfg, pm); err != nil {
-					b.Fatalf("Process: %s", err)
-				}
-			}
-		})
+	for n := 0; n < b.N; n++ {
+		b.StopTimer()
+		cfgDir := testhelpers.BuildConfigDirs(b, true)
+		defer os.RemoveAll(cfgDir)
+		cfg := &config.Config{
+			ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
+			WWWDir:            filepath.Join(cfgDir, "www"),
+			BuildDir:          filepath.Join(cfgDir, "build"),
+			MaxNumProcesses:   4,
+			MaxNumRecords:     10000,
+			MaxNumReportRules: 100,
+		}
+		testhelpers.CopyFile(
+			b,
+			filepath.Join("fixtures", "flow_big_sql.yaml"),
+			cfg.ExperimentsDir,
+		)
+		file := testhelpers.NewFileInfo("flow_big_sql.yaml", time.Now())
+		quit := quitter.New()
+		defer quit.Quit()
+		l := testhelpers.NewLogger()
+		go l.Run(quit)
+		htmlCmds := make(chan cmd.Cmd)
+		defer close(htmlCmds)
+		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+		go cmdMonitor.Run()
+		pm, err := progress.NewMonitor(
+			filepath.Join(cfg.BuildDir, "progress"),
+			htmlCmds,
+		)
+		if err != nil {
+			b.Fatalf("progress.NewMonitor: err: %v", err)
+		}
+		e, err := Load(cfg, file)
+		if err != nil {
+			b.Fatalf("Load: %s", err)
+		}
+		err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
+		if err != nil {
+			b.Fatalf("AddExperiment: %s", err)
+		}
+		b.StartTimer()
+		if err := e.Process(cfg, pm); err != nil {
+			b.Fatalf("Process: %s", err)
+		}
 	}
 }
 

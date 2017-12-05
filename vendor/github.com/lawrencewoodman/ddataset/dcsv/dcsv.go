@@ -24,6 +24,7 @@ type DCSV struct {
 	hasHeader  bool
 	separator  rune
 	numFields  int
+	isReleased bool
 }
 
 // DCSVConn represents a connection to a DCSV Dataset
@@ -48,87 +49,101 @@ func New(
 		hasHeader:  hasHeader,
 		separator:  separator,
 		numFields:  len(fieldNames),
+		isReleased: false,
 	}
 }
 
 // Open creates a connection to the Dataset
-func (c *DCSV) Open() (ddataset.Conn, error) {
-	f, r, err := makeCsvReader(c.filename, c.separator, c.hasHeader)
+func (d *DCSV) Open() (ddataset.Conn, error) {
+	if d.isReleased {
+		return nil, ddataset.ErrReleased
+	}
+	f, r, err := makeCsvReader(d.filename, d.separator, d.hasHeader)
 	if err != nil {
 		return nil, err
 	}
-	r.Comma = c.separator
+	r.Comma = d.separator
 
 	return &DCSVConn{
-		dataset:       c,
+		dataset:       d,
 		file:          f,
 		reader:        r,
-		currentRecord: make(ddataset.Record, c.numFields),
+		currentRecord: make(ddataset.Record, d.numFields),
 		err:           nil,
 	}, nil
 }
 
 // Fields returns the field names used by the Dataset
-func (c *DCSV) Fields() []string {
-	return c.fieldNames
+func (d *DCSV) Fields() []string {
+	return d.fieldNames
+}
+
+// Release releases any resources associated with the Dataset d,
+// rendering it unusable in the future.
+func (d *DCSV) Release() error {
+	if !d.isReleased {
+		d.isReleased = true
+		return nil
+	}
+	return ddataset.ErrReleased
 }
 
 // Next returns whether there is a Record to be Read
-func (cc *DCSVConn) Next() bool {
-	if cc.err != nil {
+func (c *DCSVConn) Next() bool {
+	if c.err != nil {
 		return false
 	}
-	if cc.reader == nil {
-		cc.err = ddataset.ErrConnClosed
+	if c.reader == nil {
+		c.err = ddataset.ErrConnClosed
 		return false
 	}
-	row, err := cc.reader.Read()
+	row, err := c.reader.Read()
 	if err == io.EOF {
 		return false
 	} else if err != nil {
-		cc.Close()
-		cc.err = err
+		c.Close()
+		c.err = err
 		return false
 	}
-	if err := cc.makeRowCurrentRecord(row); err != nil {
-		cc.Close()
-		cc.err = err
+	if err := c.makeRowCurrentRecord(row); err != nil {
+		c.Close()
+		c.err = err
 		return false
 	}
 	return true
 }
 
 // Err returns any errors from the connection
-func (cc *DCSVConn) Err() error {
-	return cc.err
+func (c *DCSVConn) Err() error {
+	return c.err
 }
 
 // Read returns the current Record
-func (cc *DCSVConn) Read() ddataset.Record {
-	return cc.currentRecord
+func (c *DCSVConn) Read() ddataset.Record {
+	return c.currentRecord
 }
 
 // Close closes the connection
-func (cc *DCSVConn) Close() error {
-	err := cc.file.Close()
-	cc.file = nil
-	cc.reader = nil
+func (c *DCSVConn) Close() error {
+	err := c.file.Close()
+	c.file = nil
+	c.reader = nil
 	return err
 }
 
-func (cc *DCSVConn) numFields() int {
-	return cc.dataset.numFields
+func (c *DCSVConn) numFields() int {
+	return c.dataset.numFields
 }
 
-func (cc *DCSVConn) makeRowCurrentRecord(row []string) error {
-	fieldNames := cc.dataset.Fields()
-	if len(row) != cc.dataset.numFields {
-		cc.err = ddataset.ErrWrongNumFields
-		cc.Close()
-		return cc.err
+func (c *DCSVConn) makeRowCurrentRecord(row []string) error {
+	fieldNames := c.dataset.Fields()
+	if len(row) != c.dataset.numFields {
+		c.err = ddataset.ErrWrongNumFields
+		c.Close()
+		return c.err
 	}
 	for i, field := range row {
-		cc.currentRecord[fieldNames[i]] = dlit.NewString(field)
+		c.currentRecord[fieldNames[i]] = dlit.NewString(field)
 	}
 	return nil
 }

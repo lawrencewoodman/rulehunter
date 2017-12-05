@@ -13,14 +13,13 @@ import (
 )
 
 type Config struct {
-	ExperimentsDir     string `yaml:"experimentsDir"`
-	WWWDir             string `yaml:"wwwDir"`
-	BuildDir           string `yaml:"buildDir"`
-	BaseURL            string `yaml:"baseUrl"`
-	MaxNumReportRules  int    `yaml:"maxNumReportRules"`
-	MaxNumProcesses    int    `yaml:"maxNumProcesses"`
-	MaxNumRecords      int    `yaml:"maxNumRecords"`
-	MaxNumCacheRecords int    `yaml:"maxNumCacheRecords"`
+	ExperimentsDir    string `yaml:"experimentsDir"`
+	WWWDir            string `yaml:"wwwDir"`
+	BuildDir          string `yaml:"buildDir"`
+	BaseURL           string `yaml:"baseUrl"`
+	MaxNumReportRules int    `yaml:"maxNumReportRules"`
+	MaxNumProcesses   int    `yaml:"maxNumProcesses"`
+	MaxNumRecords     int    `yaml:"maxNumRecords"`
 }
 
 // InvalidExtError indicates that a config file has an invalid extension
@@ -50,10 +49,6 @@ func Load(filename string) (*Config, error) {
 
 	if c.MaxNumRecords < 1 {
 		c.MaxNumRecords = -1
-	}
-
-	if c.MaxNumCacheRecords < 1 {
-		c.MaxNumCacheRecords = 0
 	}
 
 	if c.BaseURL == "" {

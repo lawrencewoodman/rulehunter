@@ -12,6 +12,7 @@ package dsql
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
 )
@@ -21,6 +22,7 @@ type DSQL struct {
 	dbHandler  DBHandler
 	openConn   int
 	fieldNames []string
+	isReleased bool
 }
 
 // DSQLConn represents a connection to a DSQL Dataset
@@ -51,37 +53,41 @@ func New(dbHandler DBHandler, fieldNames []string) ddataset.Dataset {
 		dbHandler:  dbHandler,
 		openConn:   0,
 		fieldNames: fieldNames,
+		isReleased: false,
 	}
 }
 
 // Open creates a connection to the Dataset
-func (s *DSQL) Open() (ddataset.Conn, error) {
-	if err := s.dbHandler.Open(); err != nil {
+func (d *DSQL) Open() (ddataset.Conn, error) {
+	if d.isReleased {
+		return nil, ddataset.ErrReleased
+	}
+	if err := d.dbHandler.Open(); err != nil {
 		return nil, err
 	}
-	rows, err := s.dbHandler.Rows()
+	rows, err := d.dbHandler.Rows()
 	if err != nil {
-		s.dbHandler.Close()
+		d.dbHandler.Close()
 		return nil, err
 	}
 	columns, err := rows.Columns()
 	if err != nil {
-		s.dbHandler.Close()
+		d.dbHandler.Close()
 		return nil, err
 	}
 	numColumns := len(columns)
-	if err := checkTableValid(s.fieldNames, numColumns); err != nil {
-		s.dbHandler.Close()
+	if err := checkTableValid(d.fieldNames, numColumns); err != nil {
+		d.dbHandler.Close()
 		return nil, err
 	}
 	row := make([]sql.NullString, numColumns)
 	rowPtrs := make([]interface{}, numColumns)
-	for i := range s.fieldNames {
+	for i := range d.fieldNames {
 		rowPtrs[i] = &row[i]
 	}
 
 	return &DSQLConn{
-		dataset:       s,
+		dataset:       d,
 		rows:          rows,
 		row:           row,
 		rowPtrs:       rowPtrs,
@@ -91,50 +97,60 @@ func (s *DSQL) Open() (ddataset.Conn, error) {
 }
 
 // Fields returns the field names used by the Dataset
-func (s *DSQL) Fields() []string {
-	return s.fieldNames
+func (d *DSQL) Fields() []string {
+	return d.fieldNames
+}
+
+// Release releases any resources associated with the Dataset d,
+// rendering it unusable in the future.
+func (d *DSQL) Release() error {
+	if !d.isReleased {
+		d.isReleased = true
+		return nil
+	}
+	return ddataset.ErrReleased
 }
 
 // Next returns whether there is a Record to be Read
-func (sc *DSQLConn) Next() bool {
-	if sc.err != nil {
+func (c *DSQLConn) Next() bool {
+	if c.err != nil {
 		return false
 	}
-	if sc.rows.Next() {
-		if err := sc.rows.Scan(sc.rowPtrs...); err != nil {
-			sc.Close()
-			sc.err = err
+	if c.rows.Next() {
+		if err := c.rows.Scan(c.rowPtrs...); err != nil {
+			c.Close()
+			c.err = err
 			return false
 		}
-		sc.makeRowCurrentRecord()
+		c.makeRowCurrentRecord()
 		return true
 	}
-	if err := sc.rows.Err(); err != nil {
-		sc.Close()
-		sc.err = err
+	if err := c.rows.Err(); err != nil {
+		c.Close()
+		c.err = err
 		return false
 	}
 	return false
 }
 
 // Err returns any errors from the connection
-func (sc *DSQLConn) Err() error {
-	return sc.err
+func (c *DSQLConn) Err() error {
+	return c.err
 }
 
 // Read returns the current Record
-func (sc *DSQLConn) Read() ddataset.Record {
-	return sc.currentRecord
+func (c *DSQLConn) Read() ddataset.Record {
+	return c.currentRecord
 }
 
 // Close closes the connection
-func (sc *DSQLConn) Close() error {
-	return sc.dataset.dbHandler.Close()
+func (c *DSQLConn) Close() error {
+	return c.dataset.dbHandler.Close()
 }
 
-func (sc *DSQLConn) makeRowCurrentRecord() {
-	for i, v := range sc.row {
-		sc.currentRecord[sc.dataset.fieldNames[i]] = dlit.NewString(v.String)
+func (c *DSQLConn) makeRowCurrentRecord() {
+	for i, v := range c.row {
+		c.currentRecord[c.dataset.fieldNames[i]] = dlit.NewString(v.String)
 	}
 }
 

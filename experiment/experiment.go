@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/lawrencewoodman/ddataset"
-	"github.com/lawrencewoodman/ddataset/dcache"
+	"github.com/lawrencewoodman/ddataset/dcopy"
 	"github.com/lawrencewoodman/ddataset/dcsv"
 	"github.com/lawrencewoodman/ddataset/dsql"
 	"github.com/lawrencewoodman/ddataset/dtruncate"
@@ -129,7 +129,7 @@ const (
 	test
 )
 
-func New(
+func newExperiment(
 	cfg *config.Config,
 	file fileinfo.FileInfo,
 	d *descFile,
@@ -143,33 +143,15 @@ func New(
 	}
 
 	if d.TrainDataset != nil {
-		trainDataset, err = makeDataset("trainDataset", d.Fields, d.TrainDataset)
+		trainDataset, err = makeDataset("trainDataset", cfg, d.Fields, d.TrainDataset)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if d.TestDataset != nil {
-		testDataset, err = makeDataset("testDataset", d.Fields, d.TestDataset)
+		testDataset, err = makeDataset("testDataset", cfg, d.Fields, d.TestDataset)
 		if err != nil {
 			return nil, err
-		}
-	}
-
-	if cfg.MaxNumRecords >= 1 {
-		if d.TrainDataset != nil {
-			trainDataset = dtruncate.New(trainDataset, cfg.MaxNumRecords)
-		}
-		if d.TestDataset != nil {
-			testDataset = dtruncate.New(testDataset, cfg.MaxNumRecords)
-		}
-	}
-
-	if cfg.MaxNumCacheRecords >= 1 {
-		if d.TrainDataset != nil {
-			trainDataset = dcache.New(trainDataset, cfg.MaxNumCacheRecords)
-		}
-		if d.TestDataset != nil {
-			testDataset = dcache.New(testDataset, cfg.MaxNumCacheRecords)
 		}
 	}
 
@@ -233,9 +215,20 @@ func Load(cfg *config.Config, file fileinfo.FileInfo) (*Experiment, error) {
 		return nil, err
 	}
 
-	return New(cfg, file, d)
+	return newExperiment(cfg, file, d)
 }
 
+func (e *Experiment) Release() error {
+	datasets := []ddataset.Dataset{e.TrainDataset, e.TestDataset}
+	for _, d := range datasets {
+		if d != nil {
+			if err := d.Release(); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
 func (e *Experiment) processTrainDataset(
 	cfg *config.Config,
 	pr progressReporter,
@@ -442,14 +435,26 @@ func makeSortOrder(
 
 func makeDataset(
 	experimentField string,
+	cfg *config.Config,
 	fields []string,
 	dd *datasetDesc,
 ) (ddataset.Dataset, error) {
+	// File mode permission:
+	// No special permission bits
+	// User: Read, Write Execute
+	// Group: None
+	// Other: None
+	const modePerm = 0700
+	var dataset ddataset.Dataset
 	if dd.CSV != nil && dd.SQL != nil {
 		return nil, fmt.Errorf(
 			"Experiment field: %s, can't specify csv and sql source",
 			experimentField,
 		)
+	}
+	if dd.CSV == nil && dd.SQL == nil {
+		return nil,
+			fmt.Errorf("Experiment field: %s, has no csv or sql field", experimentField)
 	}
 	if dd.CSV != nil {
 		if dd.CSV.Filename == "" {
@@ -460,12 +465,12 @@ func makeDataset(
 			return nil, fmt.Errorf("Experiment field missing: %s > csv > separator",
 				experimentField)
 		}
-		return dcsv.New(
+		dataset = dcsv.New(
 			dd.CSV.Filename,
 			dd.CSV.HasHeader,
 			rune(dd.CSV.Separator[0]),
 			fields,
-		), nil
+		)
 	} else if dd.SQL != nil {
 		if dd.SQL.DriverName == "" {
 			return nil, fmt.Errorf(
@@ -492,10 +497,22 @@ func makeDataset(
 			return nil, fmt.Errorf("Experiment field: %s > sql, has %s",
 				experimentField, err)
 		}
-		return dsql.New(sqlHandler, fields), nil
+		dataset = dsql.New(sqlHandler, fields)
 	}
-	return nil,
-		fmt.Errorf("Experiment field: %s, has no csv or sql field", experimentField)
+
+	if cfg.MaxNumRecords >= 1 {
+		dataset = dtruncate.New(dataset, cfg.MaxNumRecords)
+	}
+	// Copy dataset to get stable version
+	buildTmpDir := filepath.Join(cfg.BuildDir, "tmp")
+	if err := os.MkdirAll(buildTmpDir, modePerm); err != nil {
+		return nil, err
+	}
+	copyDataset, err := dcopy.New(dataset, buildTmpDir)
+	if err != nil {
+		return nil, err
+	}
+	return copyDataset, nil
 }
 
 func (e *descFile) checkValid() error {

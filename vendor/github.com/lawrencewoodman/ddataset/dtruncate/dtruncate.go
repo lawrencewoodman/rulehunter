@@ -17,6 +17,7 @@ import (
 type DTruncate struct {
 	dataset    ddataset.Dataset
 	numRecords int
+	isReleased bool
 }
 
 // DTruncateConn represents a connection to a DTruncate Dataset
@@ -32,17 +33,21 @@ func New(dataset ddataset.Dataset, numRecords int) ddataset.Dataset {
 	return &DTruncate{
 		dataset:    dataset,
 		numRecords: numRecords,
+		isReleased: false,
 	}
 }
 
 // Open creates a connection to the Dataset
-func (r *DTruncate) Open() (ddataset.Conn, error) {
-	conn, err := r.dataset.Open()
+func (d *DTruncate) Open() (ddataset.Conn, error) {
+	if d.isReleased {
+		return nil, ddataset.ErrReleased
+	}
+	conn, err := d.dataset.Open()
 	if err != nil {
 		return nil, err
 	}
 	return &DTruncateConn{
-		dataset:   r,
+		dataset:   d,
 		conn:      conn,
 		recordNum: 0,
 		err:       nil,
@@ -50,33 +55,43 @@ func (r *DTruncate) Open() (ddataset.Conn, error) {
 }
 
 // Fields returns the field names used by the Dataset
-func (r *DTruncate) Fields() []string {
-	return r.dataset.Fields()
+func (d *DTruncate) Fields() []string {
+	return d.dataset.Fields()
+}
+
+// Release releases any resources associated with the Dataset d,
+// rendering it unusable in the future.
+func (d *DTruncate) Release() error {
+	if !d.isReleased {
+		d.isReleased = true
+		return nil
+	}
+	return ddataset.ErrReleased
 }
 
 // Next returns whether there is a Record to be Read
-func (rc *DTruncateConn) Next() bool {
-	if rc.conn.Err() != nil {
+func (c *DTruncateConn) Next() bool {
+	if c.conn.Err() != nil {
 		return false
 	}
-	if rc.recordNum < rc.dataset.numRecords {
-		rc.recordNum++
-		return rc.conn.Next()
+	if c.recordNum < c.dataset.numRecords {
+		c.recordNum++
+		return c.conn.Next()
 	}
 	return false
 }
 
 // Err returns any errors from the connection
-func (rc *DTruncateConn) Err() error {
-	return rc.conn.Err()
+func (c *DTruncateConn) Err() error {
+	return c.conn.Err()
 }
 
 // Read returns the current Record
-func (rc *DTruncateConn) Read() ddataset.Record {
-	return rc.conn.Read()
+func (c *DTruncateConn) Read() ddataset.Record {
+	return c.conn.Read()
 }
 
 // Close closes the connection
-func (rc *DTruncateConn) Close() error {
-	return rc.conn.Close()
+func (c *DTruncateConn) Close() error {
+	return c.conn.Close()
 }

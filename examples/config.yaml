@@ -1,4 +1,3 @@
 experimentsDir: "experiments"
 wwwDir: "www"
 buildDir: "build"
-maxNumCacheRecords: 5000

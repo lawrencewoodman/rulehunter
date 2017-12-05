@@ -2,8 +2,9 @@
 
 ### Config
 
- * Remove sourceURL
- * Change default for maxNumReportRules to 20
+ * Remove `sourceURL`
+ * Remove `maxNumCacheRecords`
+ * Change default for `maxNumReportRules` to 20
 
 ### Experiment Files
 
@@ -38,6 +39,7 @@
  * Put dataset `Description` into `Report`
  * Use sha-512 hash to create 'report' filenames
  * Make all fields in JSON 'report' lowercase
+ * Create a temporary copy of Dataset in `tmp` before processing.
 
 ### Development
 

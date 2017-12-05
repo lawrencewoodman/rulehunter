@@ -37,34 +37,34 @@
 			"revisionTime": "2017-07-13T17:28:44Z"
 		},
 		{
-			"checksumSHA1": "Z5MpnYht8wcUzXj08vf0MhRVe+0=",
+			"checksumSHA1": "Li0Z1tLy7zXviICWJnqzo17FH+Q=",
 			"path": "github.com/lawrencewoodman/ddataset",
-			"revision": "34de5fa401a8185d0217c7bad83e4145edae0d4e",
-			"revisionTime": "2017-05-27T06:52:11Z"
+			"revision": "c9efa06d28bb705bc4b69b07f2693fb82d27ed10",
+			"revisionTime": "2017-12-02T07:46:11Z"
 		},
 		{
-			"checksumSHA1": "NzGrzQQvnfVCRyv6ZcPeitSv/Ks=",
-			"path": "github.com/lawrencewoodman/ddataset/dcache",
-			"revision": "34de5fa401a8185d0217c7bad83e4145edae0d4e",
-			"revisionTime": "2017-05-27T06:52:11Z"
+			"checksumSHA1": "b2vw/DmFg+aqATYUgM3In1zD1ZM=",
+			"path": "github.com/lawrencewoodman/ddataset/dcopy",
+			"revision": "c9efa06d28bb705bc4b69b07f2693fb82d27ed10",
+			"revisionTime": "2017-12-02T07:46:11Z"
 		},
 		{
-			"checksumSHA1": "sMHd2agLZhcEHykP1K8SU1JhpCo=",
+			"checksumSHA1": "Aj+3L8Powp+Jm+tX/tZsMoYhDzM=",
 			"path": "github.com/lawrencewoodman/ddataset/dcsv",
-			"revision": "34de5fa401a8185d0217c7bad83e4145edae0d4e",
-			"revisionTime": "2017-05-27T06:52:11Z"
+			"revision": "c9efa06d28bb705bc4b69b07f2693fb82d27ed10",
+			"revisionTime": "2017-12-02T07:46:11Z"
 		},
 		{
-			"checksumSHA1": "4iCDY0607HS+p0hyqWyvgdPjKUI=",
+			"checksumSHA1": "r9R8ZBzTkOp4bTro0EsqYaj0RV8=",
 			"path": "github.com/lawrencewoodman/ddataset/dsql",
-			"revision": "34de5fa401a8185d0217c7bad83e4145edae0d4e",
-			"revisionTime": "2017-05-27T06:52:11Z"
+			"revision": "c9efa06d28bb705bc4b69b07f2693fb82d27ed10",
+			"revisionTime": "2017-12-02T07:46:11Z"
 		},
 		{
-			"checksumSHA1": "KhQ51wM4o9mYFKRgT9U7BFIFv4M=",
+			"checksumSHA1": "n3V4FXu2NXsARjEoyRdD2CaCgpk=",
 			"path": "github.com/lawrencewoodman/ddataset/dtruncate",
-			"revision": "34de5fa401a8185d0217c7bad83e4145edae0d4e",
-			"revisionTime": "2017-05-27T06:52:11Z"
+			"revision": "c9efa06d28bb705bc4b69b07f2693fb82d27ed10",
+			"revisionTime": "2017-12-02T07:46:11Z"
 		},
 		{
 			"checksumSHA1": "6uSWY5B6QStbkFquijMxiOMKpvs=",
@@ -73,10 +73,10 @@
 			"revisionTime": "2017-04-28T06:09:03Z"
 		},
 		{
-			"checksumSHA1": "awekeO7/pkRZKIGxDhOxkorZ+vg=",
+			"checksumSHA1": "i/kXtW/31b6lJqyE4CzacWoyTus=",
 			"path": "github.com/lawrencewoodman/dlit",
-			"revision": "7638999867c6b330c14b3a37b2f2ed546e37c31c",
-			"revisionTime": "2017-05-04T08:18:48Z"
+			"revision": "8701dd6b3fe3f0273477809fa6d5243f5c0c9295",
+			"revisionTime": "2017-12-05T10:50:24Z"
 		},
 		{
 			"checksumSHA1": "+q6a7iju2XMMu5DB/we6odv3/Iw=",

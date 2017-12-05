@@ -4,4 +4,3 @@ buildDir: "build"
 baseUrl: "/rulehunter/"
 maxNumReportRules: 2000
 maxNumProcesses: 4
-maxNumCacheRecords: 500000

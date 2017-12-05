@@ -78,6 +78,13 @@ func (p *Program) ProcessFile(file fileinfo.FileInfo, ignoreWhen bool) error {
 		}
 		return nil
 	}
+	defer func() {
+		if err := e.Release(); err != nil {
+			logErr := fmt.Errorf("Couldn't release experiment: %s, %s",
+				file.Name(), err)
+			p.logger.Error(logErr)
+		}
+	}()
 
 	isFinished, stamp := pm.GetFinishStamp(file.Name())
 

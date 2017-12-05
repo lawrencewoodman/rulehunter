@@ -13,22 +13,23 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"sync/atomic"
 )
 
 // Literal represents a dynamically typed value
 type Literal struct {
 	i          int64
-	f          float64
-	s          string
-	b          bool
-	e          error
-	canBeInt   canBeKind
-	canBeFloat canBeKind
-	canBeBool  canBeKind
-	canBeError canBeKind
+	f          atomic.Value
+	s          atomic.Value
+	b          atomic.Value
+	e          atomic.Value
+	canBeInt   int32
+	canBeFloat int32
+	canBeBool  int32
+	canBeError int32
 }
 
-type canBeKind int
+type canBeKind int32
 
 const (
 	unknown canBeKind = iota
@@ -39,29 +40,55 @@ const (
 // New creates a Literal from any of the following types:
 // int, int64, float32, float64, string, bool, error
 func New(v interface{}) (*Literal, error) {
+	var err error
+	l := &Literal{canBeInt: int32(unknown), canBeFloat: int32(unknown),
+		canBeBool: int32(unknown), canBeError: int32(no)}
+	s := ""
 	switch e := v.(type) {
 	case int:
-		return &Literal{i: int64(e), canBeInt: yes}, nil
+		atomic.StoreInt64(&l.i, int64(e))
+		l.canBeInt = int32(yes)
 	case int64:
-		return &Literal{i: e, canBeInt: yes}, nil
+		atomic.StoreInt64(&l.i, e)
+		l.canBeInt = int32(yes)
 	case float32:
-		return &Literal{f: float64(e), canBeFloat: yes}, nil
+		l.f.Store(float64(e))
+		l.canBeFloat = int32(yes)
 	case float64:
-		return &Literal{f: e, canBeFloat: yes}, nil
+		l.f.Store(e)
+		l.canBeFloat = int32(yes)
 	case string:
-		return &Literal{s: e}, nil
+		s = e
 	case bool:
-		return &Literal{b: e, canBeBool: yes}, nil
+		l.b.Store(e)
+		l.canBeBool = int32(yes)
 	case error:
-		return newErrorLiteral(e), nil
+		l.e.Store(e)
+		l.canBeInt = int32(no)
+		l.canBeFloat = int32(no)
+		l.canBeBool = int32(no)
+		l.canBeError = int32(yes)
+	default:
+		err = InvalidKindError(reflect.TypeOf(v).String())
+		l.e.Store(err)
+		l.canBeInt = int32(no)
+		l.canBeFloat = int32(no)
+		l.canBeBool = int32(no)
+		l.canBeError = int32(yes)
 	}
-	err := InvalidKindError(reflect.TypeOf(v).String())
-	return newErrorLiteral(err), err
+	l.s.Store(s)
+	return l, err
 }
 
 // NewString creates a Literal from a string
 func NewString(s string) *Literal {
-	return &Literal{s: s}
+	l := &Literal{}
+	l.canBeInt = int32(unknown)
+	l.canBeFloat = int32(unknown)
+	l.canBeBool = int32(unknown)
+	l.canBeError = int32(no)
+	l.s.Store(s)
+	return l
 }
 
 // MustNew creates a New Literal and panic if it fails
@@ -75,17 +102,20 @@ func MustNew(v interface{}) *Literal {
 
 // Int returns Literal as an int64 and whether it can be an int64
 func (l *Literal) Int() (value int64, canBeInt bool) {
-	switch l.canBeInt {
+	switch canBeKind(atomic.LoadInt32(&l.canBeInt)) {
 	case yes:
-		return l.i, true
+		return atomic.LoadInt64(&l.i), true
+	case no:
+		return 0, false
 	case unknown:
-		if v, ok := parseInt(l.String()); ok {
-			l.canBeInt = yes
-			l.i = v
+		v, ok := parseInt(l.String())
+		if ok {
+			atomic.StoreInt64(&l.i, v)
+			atomic.StoreInt32(&l.canBeInt, int32(yes))
 			return v, true
 		}
 	}
-	l.canBeInt = no
+	atomic.StoreInt32(&l.canBeInt, int32(no))
 	return 0, false
 }
 
@@ -113,88 +143,112 @@ func parseInt(s string) (value int64, ok bool) {
 
 // Float returns Literal as a float64 and whether it can be a float64
 func (l *Literal) Float() (value float64, canBeFloat bool) {
-	switch l.canBeFloat {
+	switch canBeKind(atomic.LoadInt32(&l.canBeFloat)) {
 	case yes:
-		return l.f, true
+		return l.f.Load().(float64), true
+	case no:
+		return 0, false
 	case unknown:
 		f, err := strconv.ParseFloat(l.String(), 64)
 		if err == nil {
-			l.canBeFloat = yes
-			l.f = f
+			l.f.Store(f)
+			atomic.StoreInt32(&l.canBeFloat, int32(yes))
 			return f, true
 		}
 	}
-	l.canBeFloat = no
+	atomic.StoreInt32(&l.canBeFloat, int32(no))
 	return 0, false
 }
 
 // Bool returns Literal as a bool and whether it can be a bool
 func (l *Literal) Bool() (value bool, canBeBool bool) {
-	switch l.canBeBool {
+	switch canBeKind(atomic.LoadInt32(&l.canBeBool)) {
 	case yes:
-		return l.b, true
+		return l.b.Load().(bool), true
+	case no:
+		return false, false
 	case unknown:
-		if l.canBeInt == yes {
-			if l.i == 0 {
-				l.canBeBool = yes
-				l.b = false
+		if l.isInt() {
+			v := atomic.LoadInt64(&l.i)
+			if v == 0 {
+				l.b.Store(false)
+				atomic.StoreInt32(&l.canBeBool, int32(yes))
 				return false, true
-			} else if l.i == 1 {
-				l.canBeBool = yes
-				l.b = true
+			} else if v == 1 {
+				l.b.Store(true)
+				atomic.StoreInt32(&l.canBeBool, int32(yes))
 				return true, true
 			}
-		} else if l.canBeFloat == yes {
-			if l.f == 0.0 {
-				l.canBeBool = yes
-				l.b = false
+		} else if l.isFloat() {
+			v := l.f.Load().(float64)
+			if v == 0.0 {
+				l.b.Store(false)
+				atomic.StoreInt32(&l.canBeBool, int32(yes))
 				return false, true
-			} else if l.f == 1.0 {
-				l.canBeBool = yes
-				l.b = true
+			} else if v == 1.0 {
+				l.b.Store(true)
+				atomic.StoreInt32(&l.canBeBool, int32(yes))
 				return true, true
 			}
 		} else {
-			b, err := strconv.ParseBool(l.s)
+			b, err := strconv.ParseBool(l.String())
 			if err == nil {
-				l.canBeBool = yes
-				l.b = b
+				l.b.Store(b)
+				atomic.StoreInt32(&l.canBeBool, int32(yes))
 				return b, true
 			}
 		}
 	}
-	l.canBeBool = no
+	atomic.StoreInt32(&l.canBeBool, int32(no))
 	return false, false
 }
 
 // String returns Literal as a string
 func (l *Literal) String() string {
-	if len(l.s) > 0 {
-		return l.s
+	s := l.s.Load().(string)
+	if len(s) > 0 {
+		return s
 	}
 	switch true {
-	case l.canBeInt == yes:
-		l.s = strconv.FormatInt(l.i, 10)
-	case l.canBeFloat == yes:
-		l.s = strconv.FormatFloat(l.f, 'f', -1, 64)
-	case l.canBeBool == yes:
-		if l.b {
-			l.s = "true"
+	case l.isInt():
+		s = strconv.FormatInt(atomic.LoadInt64(&l.i), 10)
+	case l.isFloat():
+		s = strconv.FormatFloat(l.f.Load().(float64), 'f', -1, 64)
+	case l.isBool():
+		if l.b.Load().(bool) {
+			s = "true"
 		} else {
-			l.s = "false"
+			s = "false"
 		}
-	case l.canBeError == yes:
-		l.s = l.e.Error()
+	case l.isError():
+		s = l.Err().Error()
 	}
-	return l.s
+	l.s.Store(s)
+	return s
 }
 
 // Err returns an error if can be an error or nil
 func (l *Literal) Err() error {
-	if l.canBeError == yes {
-		return l.e
+	if canBeKind(atomic.LoadInt32(&l.canBeError)) == yes {
+		return l.e.Load().(error)
 	}
 	return nil
+}
+
+func (l *Literal) isInt() bool {
+	return canBeKind(atomic.LoadInt32(&l.canBeInt)) == yes
+}
+
+func (l *Literal) isFloat() bool {
+	return canBeKind(atomic.LoadInt32(&l.canBeFloat)) == yes
+}
+
+func (l *Literal) isBool() bool {
+	return canBeKind(atomic.LoadInt32(&l.canBeBool)) == yes
+}
+
+func (l *Literal) isError() bool {
+	return canBeKind(atomic.LoadInt32(&l.canBeError)) == yes
 }
 
 // InvalidKindError indicates that a Literal can't be created from this type
@@ -203,9 +257,4 @@ type InvalidKindError string
 // Error returns the error as a string
 func (e InvalidKindError) Error() string {
 	return fmt.Sprintf("can't create Literal from type: %s", string(e))
-}
-
-func newErrorLiteral(e error) *Literal {
-	return &Literal{e: e, canBeInt: no, canBeFloat: no, canBeBool: no,
-		canBeError: yes}
 }
