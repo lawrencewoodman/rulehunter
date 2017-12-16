@@ -83,6 +83,10 @@ func Generate(
 			}
 		}
 	}
+
+	countEQVFRules := generateCountEQVF(inputDescription, generationDesc)
+	rules = append(rules, countEQVFRules...)
+
 	if len(generationDesc.Fields()) == 2 {
 		cRules := Combine(rules)
 		rules = append(rules, cRules...)
@@ -272,4 +276,12 @@ func checkRuleFieldsValid(
 		}
 	}
 	return nil
+}
+
+func countNumOnBits(mask string) int {
+	return strings.Count(mask, "1")
+}
+
+func makeMask(numPlaces, i int) string {
+	return fmt.Sprintf("%0*b", numPlaces, i)
 }

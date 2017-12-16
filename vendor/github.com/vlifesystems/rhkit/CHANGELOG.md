@@ -33,6 +33,7 @@
   * Move `FieldType` into `description` package
   * Replace `Description` `LoadJSON` / `WriteJSON` with
     `UnmarshalJSON` / `MarshalJSON`
+  * Add generation of rules of type: `count("yes", housing, loan, default) == 1`
 
 ## 0.2 (15th July 2017)
 
