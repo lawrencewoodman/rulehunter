@@ -61,18 +61,18 @@ func (r *EQFV) Fields() []string {
 func generateEQFV(
 	inputDescription *description.Description,
 	generationDesc GenerationDescriber,
-	field string,
 ) []Rule {
-	fd := inputDescription.Fields[field]
 	rules := make([]Rule, 0)
-	values := fd.Values
-	if len(values) < 2 || fd.Kind == description.Ignore {
-		return []Rule{}
-	}
-	for _, vd := range values {
-		if vd.Num >= 2 {
-			r := NewEQFV(field, vd.Value)
-			rules = append(rules, r)
+	for _, field := range generationDesc.Fields() {
+		fd := inputDescription.Fields[field]
+		values := fd.Values
+		if len(values) >= 2 && fd.Kind != description.Ignore {
+			for _, vd := range values {
+				if vd.Num >= 2 {
+					r := NewEQFV(field, vd.Value)
+					rules = append(rules, r)
+				}
+			}
 		}
 	}
 	return rules

@@ -33,7 +33,6 @@ type GenerationDescriber interface {
 type generatorFunc func(
 	desc *description.Description,
 	generationDesc GenerationDescriber,
-	field string,
 ) []Rule
 
 type Rule interface {
@@ -58,13 +57,7 @@ type Valuer interface {
 	Value() *dlit.Literal
 }
 
-type Complexity struct {
-	Arithmetic bool
-}
-
 // Generate generates rules for rules that have registered a generator.
-// complexity is used to indicate how complex rules should be and therefore
-// has an impact on how many rules are generated.
 func Generate(
 	inputDescription *description.Description,
 	generationDesc GenerationDescriber,
@@ -75,17 +68,10 @@ func Generate(
 	}
 	rules := make([]Rule, 1)
 	rules[0] = NewTrue()
-	for field := range inputDescription.Fields {
-		if internal.IsStringInSlice(field, generationDesc.Fields()) {
-			for _, generator := range generators {
-				newRules := generator(inputDescription, generationDesc, field)
-				rules = append(rules, newRules...)
-			}
-		}
+	for _, generator := range generators {
+		newRules := generator(inputDescription, generationDesc)
+		rules = append(rules, newRules...)
 	}
-
-	countEQVFRules := generateCountEQVF(inputDescription, generationDesc)
-	rules = append(rules, countEQVFRules...)
 
 	if len(generationDesc.Fields()) == 2 {
 		cRules := Combine(rules)
@@ -284,4 +270,33 @@ func countNumOnBits(mask string) int {
 
 func makeMask(numPlaces, i int) string {
 	return fmt.Sprintf("%0*b", numPlaces, i)
+}
+
+func getMaskStrings(mask string, values []string) []string {
+	r := []string{}
+	for j, b := range mask {
+		if j >= len(values) {
+			break
+		}
+		if b == '1' {
+			v := values[j]
+			r = append(r, v)
+		}
+	}
+	return r
+}
+
+func stringCombinations(values []string, min, max int) [][]string {
+	r := [][]string{}
+	for i := 3; ; i++ {
+		mask := makeMask(len(values), i)
+		numOnBits := countNumOnBits(mask)
+		if len(mask) > len(values) {
+			break
+		}
+		if numOnBits >= min && numOnBits <= max && numOnBits <= len(values) {
+			r = append(r, getMaskStrings(mask, values))
+		}
+	}
+	return r
 }

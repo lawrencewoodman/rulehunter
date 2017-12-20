@@ -6,7 +6,6 @@ package rule
 import (
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/vlifesystems/rhkit/description"
-	"github.com/vlifesystems/rhkit/internal"
 )
 
 // NEFF represents a rule determining if fieldA != fieldB
@@ -68,23 +67,23 @@ func (r *NEFF) Fields() []string {
 func generateNEFF(
 	inputDescription *description.Description,
 	generationDesc GenerationDescriber,
-	field string,
 ) []Rule {
-	fd := inputDescription.Fields[field]
-	if fd.Kind != description.String && fd.Kind != description.Number {
-		return []Rule{}
-	}
-	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
 	rules := make([]Rule, 0)
-	for oField, oFd := range inputDescription.Fields {
-		if oFd.Kind == fd.Kind {
-			oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
-			numSharedValues := calcNumSharedValues(fd, oFd)
-			if fieldNum < oFieldNum &&
-				numSharedValues >= 2 &&
-				internal.IsStringInSlice(oField, generationDesc.Fields()) {
-				r := NewNEFF(field, oField)
-				rules = append(rules, r)
+	for _, field := range generationDesc.Fields() {
+		fd := inputDescription.Fields[field]
+		if fd.Kind != description.String && fd.Kind != description.Number {
+			continue
+		}
+		fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
+		for _, oField := range generationDesc.Fields() {
+			oFd := inputDescription.Fields[oField]
+			if oFd.Kind == fd.Kind {
+				oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
+				numSharedValues := calcNumSharedValues(fd, oFd)
+				if fieldNum < oFieldNum && numSharedValues >= 2 {
+					r := NewNEFF(field, oField)
+					rules = append(rules, r)
+				}
 			}
 		}
 	}

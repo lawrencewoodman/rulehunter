@@ -12,36 +12,36 @@ import (
 	"github.com/vlifesystems/rhkit/description"
 )
 
-// CountEQVF represents a rule determining if a count of the number
+// CountNEVF represents a rule determining if a count of the number
 // of fields supplied containing a supplied string is equal to
 // a value.
-type CountEQVF struct {
+type CountNEVF struct {
 	value  *dlit.Literal
 	fields []string
 	num    int64
 }
 
 func init() {
-	registerGenerator("CountEQVF", generateCountEQVF)
+	registerGenerator("CountNEVF", generateCountNEVF)
 }
 
-func NewCountEQVF(value *dlit.Literal, fields []string, num int64) *CountEQVF {
+func NewCountNEVF(value *dlit.Literal, fields []string, num int64) *CountNEVF {
 	if len(fields) < 2 {
-		panic("NewCountEQVF: Must contain at least two fields")
+		panic("NewCountNEVF: Must contain at least two fields")
 	}
-	return &CountEQVF{value: value, fields: fields, num: num}
+	return &CountNEVF{value: value, fields: fields, num: num}
 }
 
-func (r *CountEQVF) String() string {
-	return fmt.Sprintf("count(\"%s\", %s) == %d",
+func (r *CountNEVF) String() string {
+	return fmt.Sprintf("count(\"%s\", %s) != %d",
 		r.value, strings.Join(r.fields, ", "), r.num)
 }
 
-func (r *CountEQVF) Fields() []string {
+func (r *CountNEVF) Fields() []string {
 	return r.fields
 }
 
-func (r *CountEQVF) IsTrue(record ddataset.Record) (bool, error) {
+func (r *CountNEVF) IsTrue(record ddataset.Record) (bool, error) {
 	n := int64(0)
 	for _, f := range r.fields {
 		fieldValue, ok := record[f]
@@ -55,10 +55,10 @@ func (r *CountEQVF) IsTrue(record ddataset.Record) (bool, error) {
 			n++
 		}
 	}
-	return n == r.num, nil
+	return n != r.num, nil
 }
 
-func generateCountEQVF(
+func generateCountNEVF(
 	inputDescription *description.Description,
 	generationDesc GenerationDescriber,
 ) []Rule {
@@ -136,7 +136,7 @@ func generateCountEQVF(
 		for _, fields := range stringCombinations(possibleFields, 2, maxNumFields) {
 			if isValueInAllFields(v, fields) {
 				for n := int64(0); n <= int64(len(fields)); n++ {
-					r := NewCountEQVF(v, fields, n)
+					r := NewCountNEVF(v, fields, n)
 					rules = append(rules, r)
 				}
 			}

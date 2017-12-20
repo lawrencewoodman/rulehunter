@@ -6,7 +6,6 @@ package rule
 import (
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/vlifesystems/rhkit/description"
-	"github.com/vlifesystems/rhkit/internal"
 )
 
 // LEFF represents a rule determining if fieldA <= fieldB
@@ -59,21 +58,21 @@ func (r *LEFF) Fields() []string {
 func generateLEFF(
 	inputDescription *description.Description,
 	generationDesc GenerationDescriber,
-	field string,
 ) []Rule {
-	fd := inputDescription.Fields[field]
-	if fd.Kind != description.Number {
-		return []Rule{}
-	}
-	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
 	rules := make([]Rule, 0)
-	for oField, oFd := range inputDescription.Fields {
-		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
-		isComparable := hasComparableNumberRange(fd, oFd)
-		if fieldNum < oFieldNum && isComparable &&
-			internal.IsStringInSlice(oField, generationDesc.Fields()) {
-			r := NewLEFF(field, oField)
-			rules = append(rules, r)
+	for _, field := range generationDesc.Fields() {
+		fd := inputDescription.Fields[field]
+		if fd.Kind != description.Number {
+			continue
+		}
+		fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
+		for oField, oFd := range inputDescription.Fields {
+			oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
+			isComparable := hasComparableNumberRange(fd, oFd)
+			if fieldNum < oFieldNum && isComparable {
+				r := NewLEFF(field, oField)
+				rules = append(rules, r)
+			}
 		}
 	}
 	return rules

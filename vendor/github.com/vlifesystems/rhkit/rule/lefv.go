@@ -94,16 +94,16 @@ func (r *LEFV) DPReduce() []Rule {
 func generateLEFV(
 	inputDescription *description.Description,
 	generationDesc GenerationDescriber,
-	field string,
 ) []Rule {
-	fd := inputDescription.Fields[field]
-	if fd.Kind != description.Number {
-		return []Rule{}
-	}
-	points := internal.GeneratePoints(fd.Min, fd.Max, fd.MaxDP)
-	rules := make([]Rule, len(points))
-	for i, p := range points {
-		rules[i] = NewLEFV(field, p)
+	rules := make([]Rule, 0)
+	for _, field := range generationDesc.Fields() {
+		fd := inputDescription.Fields[field]
+		if fd.Kind == description.Number {
+			points := internal.GeneratePoints(fd.Min, fd.Max, fd.MaxDP)
+			for _, p := range points {
+				rules = append(rules, NewLEFV(field, p))
+			}
+		}
 	}
 	return rules
 }

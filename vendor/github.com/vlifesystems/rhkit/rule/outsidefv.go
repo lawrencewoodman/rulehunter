@@ -145,28 +145,29 @@ func (r *OutsideFV) Overlaps(o Rule) bool {
 func generateOutsideFV(
 	inputDescription *description.Description,
 	generationDesc GenerationDescriber,
-	field string,
 ) []Rule {
-	fd := inputDescription.Fields[field]
-	if fd.Kind != description.Number {
-		return []Rule{}
-	}
-	rulesMap := make(map[string]Rule)
 	rules := make([]Rule, 0)
-	points := internal.GeneratePoints(fd.Min, fd.Max, fd.MaxDP)
-	isValidExpr := dexpr.MustNew("pH > pL", dexprfuncs.CallFuncs)
+	for _, field := range generationDesc.Fields() {
+		fd := inputDescription.Fields[field]
+		if fd.Kind != description.Number {
+			continue
+		}
+		rulesMap := make(map[string]Rule)
+		points := internal.GeneratePoints(fd.Min, fd.Max, fd.MaxDP)
+		isValidExpr := dexpr.MustNew("pH > pL", dexprfuncs.CallFuncs)
 
-	for _, pL := range points {
-		for _, pH := range points {
-			vars := map[string]*dlit.Literal{
-				"pL": pL,
-				"pH": pH,
-			}
-			if ok, err := isValidExpr.EvalBool(vars); ok && err == nil {
-				if r, err := NewOutsideFV(field, pL, pH); err == nil {
-					if _, dup := rulesMap[r.String()]; !dup {
-						rulesMap[r.String()] = r
-						rules = append(rules, r)
+		for _, pL := range points {
+			for _, pH := range points {
+				vars := map[string]*dlit.Literal{
+					"pL": pL,
+					"pH": pH,
+				}
+				if ok, err := isValidExpr.EvalBool(vars); ok && err == nil {
+					if r, err := NewOutsideFV(field, pL, pH); err == nil {
+						if _, dup := rulesMap[r.String()]; !dup {
+							rulesMap[r.String()] = r
+							rules = append(rules, r)
+						}
 					}
 				}
 			}

@@ -12,36 +12,36 @@ import (
 	"github.com/vlifesystems/rhkit/description"
 )
 
-// CountEQVF represents a rule determining if a count of the number
-// of fields supplied containing a supplied string is equal to
+// CountLTVF represents a rule determining if a count of the number
+// of fields supplied containing a supplied string is greater than
 // a value.
-type CountEQVF struct {
+type CountLTVF struct {
 	value  *dlit.Literal
 	fields []string
 	num    int64
 }
 
 func init() {
-	registerGenerator("CountEQVF", generateCountEQVF)
+	registerGenerator("CountLTVF", generateCountLTVF)
 }
 
-func NewCountEQVF(value *dlit.Literal, fields []string, num int64) *CountEQVF {
+func NewCountLTVF(value *dlit.Literal, fields []string, num int64) *CountLTVF {
 	if len(fields) < 2 {
-		panic("NewCountEQVF: Must contain at least two fields")
+		panic("NewCountLTVF: Must contain at least two fields")
 	}
-	return &CountEQVF{value: value, fields: fields, num: num}
+	return &CountLTVF{value: value, fields: fields, num: num}
 }
 
-func (r *CountEQVF) String() string {
-	return fmt.Sprintf("count(\"%s\", %s) == %d",
+func (r *CountLTVF) String() string {
+	return fmt.Sprintf("count(\"%s\", %s) < %d",
 		r.value, strings.Join(r.fields, ", "), r.num)
 }
 
-func (r *CountEQVF) Fields() []string {
+func (r *CountLTVF) Fields() []string {
 	return r.fields
 }
 
-func (r *CountEQVF) IsTrue(record ddataset.Record) (bool, error) {
+func (r *CountLTVF) IsTrue(record ddataset.Record) (bool, error) {
 	n := int64(0)
 	for _, f := range r.fields {
 		fieldValue, ok := record[f]
@@ -55,10 +55,10 @@ func (r *CountEQVF) IsTrue(record ddataset.Record) (bool, error) {
 			n++
 		}
 	}
-	return n == r.num, nil
+	return n < r.num, nil
 }
 
-func generateCountEQVF(
+func generateCountLTVF(
 	inputDescription *description.Description,
 	generationDesc GenerationDescriber,
 ) []Rule {
@@ -135,8 +135,10 @@ func generateCountEQVF(
 	for _, v := range possibleValues {
 		for _, fields := range stringCombinations(possibleFields, 2, maxNumFields) {
 			if isValueInAllFields(v, fields) {
-				for n := int64(0); n <= int64(len(fields)); n++ {
-					r := NewCountEQVF(v, fields, n)
+				// n starts at 2 because n == 1 is equivalent to
+				// CountEQVF(...) == 0
+				for n := int64(2); n <= int64(len(fields)); n++ {
+					r := NewCountLTVF(v, fields, n)
 					rules = append(rules, r)
 				}
 			}

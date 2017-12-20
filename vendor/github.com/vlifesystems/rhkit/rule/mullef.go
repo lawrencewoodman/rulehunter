@@ -120,36 +120,36 @@ func (r *MulLEF) DPReduce() []Rule {
 func generateMulLEF(
 	inputDescription *description.Description,
 	generationDesc GenerationDescriber,
-	field string,
 ) []Rule {
-	fd := inputDescription.Fields[field]
-	if !generationDesc.Arithmetic() || fd.Kind != description.Number {
-		return []Rule{}
-	}
-	fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
 	rules := make([]Rule, 0)
+	for _, field := range generationDesc.Fields() {
+		fd := inputDescription.Fields[field]
+		if !generationDesc.Arithmetic() || fd.Kind != description.Number {
+			continue
+		}
+		fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
 
-	for oField, oFd := range inputDescription.Fields {
-		oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
-		if fieldNum < oFieldNum &&
-			oFd.Kind == description.Number &&
-			internal.IsStringInSlice(oField, generationDesc.Fields()) {
-			vars := map[string]*dlit.Literal{
-				"min":  fd.Min,
-				"max":  fd.Max,
-				"oMin": oFd.Min,
-				"oMax": oFd.Max,
-			}
-			min := dexpr.Eval("min * oMin", dexprfuncs.CallFuncs, vars)
-			max := dexpr.Eval("max * oMax", dexprfuncs.CallFuncs, vars)
-			maxDP := fd.MaxDP
-			if oFd.MaxDP > maxDP {
-				maxDP = oFd.MaxDP
-			}
-			points := internal.GeneratePoints(min, max, maxDP)
-			for _, p := range points {
-				r := NewMulLEF(field, oField, p)
-				rules = append(rules, r)
+		for _, oField := range generationDesc.Fields() {
+			oFd := inputDescription.Fields[oField]
+			oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
+			if fieldNum < oFieldNum && oFd.Kind == description.Number {
+				vars := map[string]*dlit.Literal{
+					"min":  fd.Min,
+					"max":  fd.Max,
+					"oMin": oFd.Min,
+					"oMax": oFd.Max,
+				}
+				min := dexpr.Eval("min * oMin", dexprfuncs.CallFuncs, vars)
+				max := dexpr.Eval("max * oMax", dexprfuncs.CallFuncs, vars)
+				maxDP := fd.MaxDP
+				if oFd.MaxDP > maxDP {
+					maxDP = oFd.MaxDP
+				}
+				points := internal.GeneratePoints(min, max, maxDP)
+				for _, p := range points {
+					r := NewMulLEF(field, oField, p)
+					rules = append(rules, r)
+				}
 			}
 		}
 	}
