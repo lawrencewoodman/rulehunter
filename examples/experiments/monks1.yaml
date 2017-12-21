@@ -1,0 +1,44 @@
+title: "Monk's Problem 1"
+category: "ai"
+tags:
+  - classic
+trainDataset:
+  csv:
+    filename: "csv/monks-1.train.csv"
+    hasHeader: false
+    separator: " "
+testDataset:
+  csv:
+    filename: "csv/monks-1.test.csv"
+    hasHeader: false
+    separator: " "
+fields:
+  - class
+  - a1
+  - a2
+  - a3
+  - a4
+  - a5
+  - a6
+  - id
+ruleGeneration:
+  fields:
+  - a1
+  - a2
+  - a3
+  - a4
+  - a5
+  - a6
+  arithmetic: true
+aggregators:
+  - name: "mccClassIs1"
+    kind: "mcc"
+    arg: "class == 1"
+sortOrder:
+  - aggregator: "mccClassIs1"
+    direction: "descending"
+when: "!hasRun"
+
+
+
+
