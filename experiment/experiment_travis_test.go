@@ -12,16 +12,18 @@ import (
 
 func TestMakeDataset_travis(t *testing.T) {
 	cases := []struct {
-		driverName     string
-		dataSourceName string
-		query          string
-		fields         []string
-		want           ddataset.Dataset
+		desc   *datasetDesc
+		fields []string
+		want   ddataset.Dataset
 	}{
-		{driverName: "mysql",
-			dataSourceName: "travis@/master",
-			query:          "select * from flow",
-			fields:         []string{"grp", "district", "height", "flow"},
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "mysql",
+				DataSourceName: "travis@/master",
+				Query:          "select * from flow",
+			},
+		},
+			fields: []string{"grp", "district", "height", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow.csv"),
 				true,
@@ -29,10 +31,14 @@ func TestMakeDataset_travis(t *testing.T) {
 				[]string{"grp", "district", "height", "flow"},
 			),
 		},
-		{driverName: "mysql",
-			dataSourceName: "travis@/master",
-			query:          "select grp,district,flow from flow",
-			fields:         []string{"grp", "district", "flow"},
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "mysql",
+				DataSourceName: "travis@/master",
+				Query:          "select grp,district,flow from flow",
+			},
+		},
+			fields: []string{"grp", "district", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow_three_columns.csv"),
 				true,
@@ -40,10 +46,14 @@ func TestMakeDataset_travis(t *testing.T) {
 				[]string{"grp", "district", "flow"},
 			),
 		},
-		{driverName: "postgres",
-			dataSourceName: "user=postgres dbname=master",
-			query:          "select * from flow",
-			fields:         []string{"grp", "district", "height", "flow"},
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "postgres",
+				DataSourceName: "user=postgres dbname=master",
+				Query:          "select * from flow",
+			},
+		},
+			fields: []string{"grp", "district", "height", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow.csv"),
 				true,
@@ -51,10 +61,14 @@ func TestMakeDataset_travis(t *testing.T) {
 				[]string{"grp", "district", "height", "flow"},
 			),
 		},
-		{driverName: "postgres",
-			dataSourceName: "user=postgres dbname=master",
-			query:          "select grp,district,flow from flow",
-			fields:         []string{"grp", "district", "flow"},
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "postgres",
+				DataSourceName: "user=postgres dbname=master",
+				Query:          "select grp,district,flow from flow",
+			},
+		},
+			fields: []string{"grp", "district", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow_three_columns.csv"),
 				true,
@@ -64,16 +78,7 @@ func TestMakeDataset_travis(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		e := &experimentFile{
-			Dataset: "sql",
-			Fields:  c.fields,
-			Sql: &sqlDesc{
-				DriverName:     c.driverName,
-				DataSourceName: c.dataSourceName,
-				Query:          c.query,
-			},
-		}
-		got, err := makeDataset(e)
+		got, err := makeDataset("trainDataset", c.fields, c.desc)
 		if err != nil {
 			t.Errorf("makeDataset(%v) query: %s, err: %v",
 				c.query, e, err)
