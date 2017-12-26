@@ -9,12 +9,14 @@ go:
 
 services:
   - mysql
+  - postgresql
 
 before_install:
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/lawrencewoodman/roveralls
   - mysql < ci/createflow_travis.sql
+  - psql -U postgres < ci/createflow_travis.sql
 
 script:
   - chmod +x linux-test-su.sh

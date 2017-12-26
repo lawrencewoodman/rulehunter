@@ -79,6 +79,18 @@
 			"revisionTime": "2017-12-06T10:05:13Z"
 		},
 		{
+			"checksumSHA1": "IfZcD4U1dtllJKlPNeD2aU4Jn98=",
+			"path": "github.com/lib/pq",
+			"revision": "83612a56d3dd153a94a629cd64925371c9adad78",
+			"revisionTime": "2017-11-26T05:04:59Z"
+		},
+		{
+			"checksumSHA1": "ATnwV0POluBNQEMjPdylodz0oK0=",
+			"path": "github.com/lib/pq/oid",
+			"revision": "83612a56d3dd153a94a629cd64925371c9adad78",
+			"revisionTime": "2017-11-26T05:04:59Z"
+		},
+		{
 			"checksumSHA1": "+q6a7iju2XMMu5DB/we6odv3/Iw=",
 			"path": "github.com/mattn/go-sqlite3",
 			"revision": "38ee283dabf11c9cbdb968eebd79b1fa7acbabe6",

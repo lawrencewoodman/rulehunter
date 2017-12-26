@@ -7,11 +7,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	_ "github.com/denisenkom/go-mssqldb"
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"sync"
+
+	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var errDatabaseNotOpen = errors.New("connection to database not open")
@@ -30,7 +32,7 @@ func newSQLHandler(
 	dataSourceName string,
 	query string,
 ) (*sqlHandler, error) {
-	validSQLDriverNames := []string{"sqlite3", "mysql", "mssql"}
+	validSQLDriverNames := []string{"sqlite3", "mysql", "mssql", "postgres"}
 	for _, name := range validSQLDriverNames {
 		if name == driverName {
 			return &sqlHandler{
