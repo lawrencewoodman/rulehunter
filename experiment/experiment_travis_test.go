@@ -4,10 +4,12 @@
 package experiment
 
 import (
-	"github.com/lawrencewoodman/ddataset"
-	"github.com/lawrencewoodman/ddataset/dcsv"
 	"path/filepath"
 	"testing"
+
+	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/ddataset/dcsv"
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 )
 
 func TestMakeDataset_travis(t *testing.T) {
@@ -77,15 +79,18 @@ func TestMakeDataset_travis(t *testing.T) {
 			),
 		},
 	}
-	for _, c := range cases {
-		got, err := makeDataset("trainDataset", c.fields, c.desc)
+	tmpDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(tmpDir)
+	cfg := &config.Config{
+		MaxNumRecords: -1,
+		BuildDir:      filepath.Join(tmpDir, "build"),
+	}
+	for i, c := range cases {
+		got, err := makeDataset("trainDataset", cfg, c.fields, c.desc)
 		if err != nil {
-			t.Errorf("makeDataset(%v) query: %s, err: %v",
-				c.query, e, err)
-			continue
-		}
-		if err := checkDatasetsEqual(got, c.want); err != nil {
-			t.Errorf("checkDatasetsEqual: err: %v", err)
+			t.Errorf("(%d) makeDataset: %s", i, err)
+		} else if err := checkDatasetsEqual(got, c.want); err != nil {
+			t.Errorf("checkDatasetsEqual: err: %s", err)
 		}
 	}
 }

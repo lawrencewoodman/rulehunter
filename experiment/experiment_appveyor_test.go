@@ -4,10 +4,12 @@
 package experiment
 
 import (
-	"github.com/lawrencewoodman/ddataset"
-	"github.com/lawrencewoodman/ddataset/dcsv"
 	"path/filepath"
 	"testing"
+
+	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/ddataset/dcsv"
+	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 )
 
 func TestMakeDataset_appveyor(t *testing.T) {
@@ -34,8 +36,14 @@ func TestMakeDataset_appveyor(t *testing.T) {
 			),
 		},
 	}
+	tmpDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(tmpDir)
+	cfg := &config.Config{
+		MaxNumRecords: -1,
+		BuildDir:      filepath.Join(tmpDir, "build"),
+	}
 	for i, c := range cases {
-		got, err := makeDataset("trainDataset", c.fields, c.desc)
+		got, err := makeDataset("trainDataset", cfg, c.fields, c.desc)
 		if err != nil {
 			t.Errorf("(%d) makeDataset: %s", i, err)
 		} else if err := checkDatasetsEqual(got, c.want); err != nil {
