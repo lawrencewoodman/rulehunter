@@ -15,8 +15,8 @@ before_install:
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/lawrencewoodman/roveralls
-  - mysql < ci/createflow_travis.sql
-  - psql -U postgres < ci/createflow_travis.sql
+  - mysql < ci/createflow_travis_mysql.sql
+  - psql -U postgres -d master < ci/createflow_travis_postgres.sql
 
 script:
   - chmod +x linux-test-su.sh
