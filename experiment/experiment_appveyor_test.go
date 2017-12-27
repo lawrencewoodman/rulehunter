@@ -4,11 +4,13 @@
 package experiment
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
+	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 )
 
