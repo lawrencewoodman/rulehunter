@@ -53,7 +53,7 @@ func TestMakeDataset_travis(t *testing.T) {
 		{desc: &datasetDesc{
 			SQL: &sqlDesc{
 				DriverName:     "postgres",
-				DataSourceName: "user=postgres dbname=master",
+				DataSourceName: "user=postgres",
 				Query:          "select * from \"flow\"",
 			},
 		},
@@ -68,7 +68,7 @@ func TestMakeDataset_travis(t *testing.T) {
 		{desc: &datasetDesc{
 			SQL: &sqlDesc{
 				DriverName:     "postgres",
-				DataSourceName: "user=postgres dbname=master",
+				DataSourceName: "user=postgres",
 				Query:          "select grp,district,flow from \"flow\"",
 			},
 		},

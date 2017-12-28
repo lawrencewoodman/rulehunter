@@ -1,4 +1,3 @@
-CREATE DATABASE master;
 CREATE TABLE flow(
   grp char(1),
   district varchar(30),
