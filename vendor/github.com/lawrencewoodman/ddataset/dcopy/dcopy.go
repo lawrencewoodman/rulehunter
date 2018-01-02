@@ -21,6 +21,7 @@ import (
 
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/ddataset/dcsv"
+	"github.com/lawrencewoodman/ddataset/internal"
 )
 
 // DCopy represents a copy of a Dataset
@@ -28,6 +29,7 @@ type DCopy struct {
 	dataset    ddataset.Dataset
 	tmpDir     string
 	isReleased bool
+	numRecords int64
 }
 
 // DCopyConn represents a connection to a DCopy Dataset
@@ -88,6 +90,7 @@ func New(dataset ddataset.Dataset, tmpDir string) (ddataset.Dataset, error) {
 		dataset:    dcsv.New(copyFilename, false, ',', dataset.Fields()),
 		tmpDir:     tmpDir,
 		isReleased: false,
+		numRecords: -1,
 	}, nil
 }
 
@@ -114,13 +117,26 @@ func (d *DCopy) Fields() []string {
 	return d.dataset.Fields()
 }
 
+// NumRecords returns the number of records in the Dataset.  If there is
+// a problem getting the number of records it returns -1.
+func (d *DCopy) NumRecords() int64 {
+	if d.numRecords != -1 {
+		return d.numRecords
+	}
+	d.numRecords = internal.CountNumRecords(d)
+	return d.numRecords
+}
+
 // Release releases any resources associated with the Dataset d,
 // rendering it unusable in the future.  In this case it deletes
 // the temporary copy of the Dataset.
 func (d *DCopy) Release() error {
 	if !d.isReleased {
-		d.isReleased = true
-		return os.RemoveAll(d.tmpDir)
+		err := os.RemoveAll(d.tmpDir)
+		if err == nil {
+			d.isReleased = true
+		}
+		return err
 	}
 	return ddataset.ErrReleased
 }
@@ -143,15 +159,4 @@ func (c *DCopyConn) Read() ddataset.Record {
 // Close closes the connection and deletes the copy
 func (c *DCopyConn) Close() error {
 	return c.conn.Close()
-}
-
-func getRecords(conn ddataset.Conn, num int) ([]ddataset.Record, error) {
-	n := 0
-	records := []ddataset.Record{}
-	for n < num && conn.Next() {
-		record := conn.Read().Clone()
-		n++
-		records = append(records, record)
-	}
-	return records, conn.Err()
 }

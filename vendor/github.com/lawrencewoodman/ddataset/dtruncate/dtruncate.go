@@ -11,12 +11,13 @@ package dtruncate
 
 import (
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/ddataset/internal"
 )
 
 // DTruncate represents a truncated Dataset
 type DTruncate struct {
 	dataset    ddataset.Dataset
-	numRecords int
+	numRecords int64
 	isReleased bool
 }
 
@@ -24,12 +25,12 @@ type DTruncate struct {
 type DTruncateConn struct {
 	dataset   *DTruncate
 	conn      ddataset.Conn
-	recordNum int
+	recordNum int64
 	err       error
 }
 
 // New creates a new DTruncate Dataset
-func New(dataset ddataset.Dataset, numRecords int) ddataset.Dataset {
+func New(dataset ddataset.Dataset, numRecords int64) ddataset.Dataset {
 	return &DTruncate{
 		dataset:    dataset,
 		numRecords: numRecords,
@@ -57,6 +58,13 @@ func (d *DTruncate) Open() (ddataset.Conn, error) {
 // Fields returns the field names used by the Dataset
 func (d *DTruncate) Fields() []string {
 	return d.dataset.Fields()
+}
+
+// NumRecords returns the number of records in the Dataset.  If there is
+// a problem getting the number of records it returns -1.  NOTE: The returned
+// value can change if the underlying Dataset changes.
+func (d *DTruncate) NumRecords() int64 {
+	return internal.CountNumRecords(d)
 }
 
 // Release releases any resources associated with the Dataset d,

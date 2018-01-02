@@ -19,7 +19,7 @@ type Config struct {
 	BaseURL           string `yaml:"baseUrl"`
 	MaxNumReportRules int    `yaml:"maxNumReportRules"`
 	MaxNumProcesses   int    `yaml:"maxNumProcesses"`
-	MaxNumRecords     int    `yaml:"maxNumRecords"`
+	MaxNumRecords     int64  `yaml:"maxNumRecords"`
 }
 
 // InvalidExtError indicates that a config file has an invalid extension

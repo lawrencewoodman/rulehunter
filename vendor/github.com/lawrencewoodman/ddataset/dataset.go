@@ -30,6 +30,8 @@ type Dataset interface {
 	Open() (Conn, error)
 	// Fields returns the field names used by the Dataset
 	Fields() []string
+	// NumRecords returns the number of records in the Dataset
+	NumRecords() int64
 	// Release releases any resources associated with the Dataset,
 	// rendering it unusable in the future.
 	Release() error

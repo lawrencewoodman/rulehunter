@@ -19,7 +19,7 @@ type errorReporter interface {
 	Fatalf(format string, args ...interface{})
 }
 
-func MustWriteConfig(e errorReporter, baseDir string, maxNumRecords int) {
+func MustWriteConfig(e errorReporter, baseDir string, maxNumRecords int64) {
 	const mode = 0600
 	cfg := &config.Config{
 		ExperimentsDir:  filepath.Join(baseDir, "experiments"),

@@ -14,6 +14,7 @@ import (
 	"fmt"
 
 	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/ddataset/internal"
 	"github.com/lawrencewoodman/dlit"
 )
 
@@ -99,6 +100,13 @@ func (d *DSQL) Open() (ddataset.Conn, error) {
 // Fields returns the field names used by the Dataset
 func (d *DSQL) Fields() []string {
 	return d.fieldNames
+}
+
+// NumRecords returns the number of records in the Dataset.  If there is
+// a problem getting the number of records it returns -1. NOTE: The returned
+// value can change if the underlying Dataset changes.
+func (d *DSQL) NumRecords() int64 {
+	return internal.CountNumRecords(d)
 }
 
 // Release releases any resources associated with the Dataset d,

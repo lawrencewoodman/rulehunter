@@ -37,34 +37,40 @@
 			"revisionTime": "2017-07-13T17:28:44Z"
 		},
 		{
-			"checksumSHA1": "Li0Z1tLy7zXviICWJnqzo17FH+Q=",
+			"checksumSHA1": "9LXQ9IQpurWO1iDkw5uqHQO/jKM=",
 			"path": "github.com/lawrencewoodman/ddataset",
-			"revision": "353ad749ad39a3a299f189ac6fb06dbbac6dbff6",
-			"revisionTime": "2017-12-05T13:37:57Z"
+			"revision": "44bf7cb69125a79284816ccd119b7b41fcc45818",
+			"revisionTime": "2018-01-01T06:43:30Z"
 		},
 		{
-			"checksumSHA1": "b2vw/DmFg+aqATYUgM3In1zD1ZM=",
+			"checksumSHA1": "gyWC6cgCsoGN0ir/7hFO8qet5Qg=",
 			"path": "github.com/lawrencewoodman/ddataset/dcopy",
-			"revision": "c9efa06d28bb705bc4b69b07f2693fb82d27ed10",
-			"revisionTime": "2017-12-02T07:46:11Z"
+			"revision": "44bf7cb69125a79284816ccd119b7b41fcc45818",
+			"revisionTime": "2018-01-01T06:43:30Z"
 		},
 		{
-			"checksumSHA1": "Aj+3L8Powp+Jm+tX/tZsMoYhDzM=",
+			"checksumSHA1": "GsdfqpEhbuzAxFvC/m9H4W6wKhE=",
 			"path": "github.com/lawrencewoodman/ddataset/dcsv",
-			"revision": "c9efa06d28bb705bc4b69b07f2693fb82d27ed10",
-			"revisionTime": "2017-12-02T07:46:11Z"
+			"revision": "44bf7cb69125a79284816ccd119b7b41fcc45818",
+			"revisionTime": "2018-01-01T06:43:30Z"
 		},
 		{
-			"checksumSHA1": "r9R8ZBzTkOp4bTro0EsqYaj0RV8=",
+			"checksumSHA1": "QoYzJqtss1afwdUEFfKXrKzmRZ4=",
 			"path": "github.com/lawrencewoodman/ddataset/dsql",
-			"revision": "c9efa06d28bb705bc4b69b07f2693fb82d27ed10",
-			"revisionTime": "2017-12-02T07:46:11Z"
+			"revision": "44bf7cb69125a79284816ccd119b7b41fcc45818",
+			"revisionTime": "2018-01-01T06:43:30Z"
 		},
 		{
-			"checksumSHA1": "n3V4FXu2NXsARjEoyRdD2CaCgpk=",
+			"checksumSHA1": "MpHFczzT9H96K6gvVimbkS8rBZs=",
 			"path": "github.com/lawrencewoodman/ddataset/dtruncate",
-			"revision": "c9efa06d28bb705bc4b69b07f2693fb82d27ed10",
-			"revisionTime": "2017-12-02T07:46:11Z"
+			"revision": "44bf7cb69125a79284816ccd119b7b41fcc45818",
+			"revisionTime": "2018-01-01T06:43:30Z"
+		},
+		{
+			"checksumSHA1": "weXYJgrNEAI81jCP4qZrZJ3Hf80=",
+			"path": "github.com/lawrencewoodman/ddataset/internal",
+			"revision": "44bf7cb69125a79284816ccd119b7b41fcc45818",
+			"revisionTime": "2018-01-01T06:43:30Z"
 		},
 		{
 			"checksumSHA1": "6uSWY5B6QStbkFquijMxiOMKpvs=",
@@ -91,10 +97,10 @@
 			"revisionTime": "2017-11-26T05:04:59Z"
 		},
 		{
-			"checksumSHA1": "+q6a7iju2XMMu5DB/we6odv3/Iw=",
+			"checksumSHA1": "zKDmGyNRpAeeTGXwzKEvy+UY/QQ=",
 			"path": "github.com/mattn/go-sqlite3",
-			"revision": "38ee283dabf11c9cbdb968eebd79b1fa7acbabe6",
-			"revisionTime": "2016-05-14T12:23:48Z"
+			"revision": "d5ffb5c0cca8778699a929b236766f4a7af674e8",
+			"revisionTime": "2017-11-22T00:24:37Z"
 		},
 		{
 			"checksumSHA1": "CJxJs5h5+CPUPI497KC/mvWSG84=",
