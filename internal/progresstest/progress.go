@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 package progresstest
@@ -14,6 +14,7 @@ import (
 func CheckExperimentsMatch(
 	experiments1 []*progress.Experiment,
 	experiments2 []*progress.Experiment,
+	ignorePercent bool,
 ) error {
 	if len(experiments1) != len(experiments2) {
 		return fmt.Errorf("Lengths of experiments don't match: %d != %d",
@@ -24,7 +25,7 @@ func CheckExperimentsMatch(
 		for _, e2 := range experiments2 {
 			if e1.Filename == e2.Filename {
 				filenameFound = true
-				if err := checkExperimentMatch(e1, e2); err != nil {
+				if err := checkExperimentMatch(e1, e2, ignorePercent); err != nil {
 					return err
 				}
 			}
@@ -36,7 +37,10 @@ func CheckExperimentsMatch(
 	return nil
 }
 
-func checkExperimentMatch(e1, e2 *progress.Experiment) error {
+func checkExperimentMatch(
+	e1, e2 *progress.Experiment,
+	ignorePercent bool,
+) error {
 	if e1.Title != e2.Title {
 		return fmt.Errorf("Title doesn't match: %s != %s", e1.Title, e2.Title)
 	}
@@ -48,8 +52,9 @@ func checkExperimentMatch(e1, e2 *progress.Experiment) error {
 		return fmt.Errorf("Status.Msg doesn't match: %s != %s",
 			e1.Status.Msg, e2.Status.Msg)
 	}
-	if e1.Status.Percent != e2.Status.Percent {
-		return errors.New("Status.Percent doesn't match")
+	if !ignorePercent && e1.Status.Percent != e2.Status.Percent {
+		return fmt.Errorf("Status.Percent doesn't match: %f != %f",
+			e1.Status.Percent, e2.Status.Percent)
 	}
 	if e1.Status.State != e2.Status.State {
 		return errors.New("Status.State doesn't match")

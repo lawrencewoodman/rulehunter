@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 // package rhkit is used to find rules in a Dataset to satisfy user defined
@@ -75,8 +75,8 @@ func Process(
 	if len(opts.RuleFields) == 0 {
 		rules = append(rules, rule.NewTrue())
 	}
-	ass := assessment.New()
-	if err := ass.AssessRules(dataset, rules, aggregators, goals); err != nil {
+	ass := assessment.New(aggregators, goals)
+	if err := ass.AssessRules(dataset, rules); err != nil {
 		return nil, AssessError{Err: err}
 	}
 
@@ -85,8 +85,6 @@ func Process(
 			ass,
 			dataset,
 			fieldDescriptions,
-			aggregators,
-			goals,
 			sortOrder,
 			len(rules),
 			opts,
@@ -108,8 +106,6 @@ func processGenerate(
 	ass *assessment.Assessment,
 	dataset ddataset.Dataset,
 	fieldDescriptions *description.Description,
-	aggregators []aggregator.Spec,
-	goals []*goal.Goal,
 	sortOrder []assessment.SortOrder,
 	numUserRules int,
 	opts Options,
@@ -122,7 +118,7 @@ func processGenerate(
 		return ErrNoRulesGenerated
 	}
 
-	err = ass.AssessRules(dataset, generatedRules, aggregators, goals)
+	err = ass.AssessRules(dataset, generatedRules)
 	if err != nil {
 		return AssessError{Err: err}
 	}
@@ -132,7 +128,7 @@ func processGenerate(
 	bestRules := ass.Rules()
 
 	tweakableRules := rule.Tweak(1, bestRules, fieldDescriptions)
-	err = ass.AssessRules(dataset, tweakableRules, aggregators, goals)
+	err = ass.AssessRules(dataset, tweakableRules)
 	if err != nil {
 		return AssessError{Err: err}
 	}
@@ -142,7 +138,7 @@ func processGenerate(
 	bestRules = ass.Rules()
 	reducedDPRules := rule.ReduceDP(bestRules)
 
-	err = ass.AssessRules(dataset, reducedDPRules, aggregators, goals)
+	err = ass.AssessRules(dataset, reducedDPRules)
 	if err != nil {
 		return AssessError{Err: err}
 	}
@@ -153,7 +149,7 @@ func processGenerate(
 	bestNonCombinedRules := ass.Rules(numRulesToCombine)
 	combinedRules := rule.Combine(bestNonCombinedRules)
 
-	err = ass.AssessRules(dataset, combinedRules, aggregators, goals)
+	err = ass.AssessRules(dataset, combinedRules)
 	if err != nil {
 		return AssessError{Err: err}
 	}

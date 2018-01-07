@@ -4,6 +4,9 @@
   * Add generation of rules of type: `count("yes", housing, loan, default) != 1`
   * Add generation of rules of type: `count("yes", housing, loan, default) < 2`
   * Add generation of rules of type: `count("yes", housing, loan, default) > 1`
+  * Supply aggregator specs and goals to `assessment.New`, therefore they
+    do not need to be passed to `AssessRules`
+  * Create `assessment.ProcessRecord` and `assessment.Update` methods
 
 ## 0.3 (11th October 2017)
 

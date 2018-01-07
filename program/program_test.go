@@ -387,7 +387,7 @@ func TestProcessFile(t *testing.T) {
 	}
 
 	got := pm.GetExperiments()
-	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments)
+	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments, false)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}
@@ -458,7 +458,7 @@ func TestProcessFile_title_change(t *testing.T) {
 	}
 
 	got := pm.GetExperiments()
-	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments)
+	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments, false)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}
@@ -609,7 +609,7 @@ func TestProcessFilename(t *testing.T) {
 
 	got := pm.GetExperiments()
 	initExperimentsTime(wantPMExperiments)
-	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments)
+	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments, false)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}
@@ -673,7 +673,8 @@ func TestProcessDir(t *testing.T) {
 
 	got := pm.GetExperiments()
 	initExperimentsTime(wantValidNamePMExperiments)
-	err = progresstest.CheckExperimentsMatch(got, wantValidNamePMExperiments)
+	err =
+		progresstest.CheckExperimentsMatch(got, wantValidNamePMExperiments, false)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}
@@ -772,6 +773,7 @@ func TestStart(t *testing.T) {
 					err = progresstest.CheckExperimentsMatch(
 						gotPMExperiments,
 						wantValidNamePMExperiments,
+						false,
 					)
 					if err == nil {
 						finishedWaiting = true
@@ -793,6 +795,7 @@ func TestStart(t *testing.T) {
 				err := progresstest.CheckExperimentsMatch(
 					gotPMExperiments,
 					wantValidNamePMExperiments,
+					false,
 				)
 				if err != nil {
 					t.Errorf("checkExperimentsMatch: %s", err)

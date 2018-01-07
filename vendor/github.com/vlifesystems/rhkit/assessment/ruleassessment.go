@@ -4,6 +4,8 @@
 package assessment
 
 import (
+	"fmt"
+
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/aggregator"
@@ -35,11 +37,16 @@ func newRuleAssessment(
 	}
 }
 
-func (ra *RuleAssessment) NextRecord(record ddataset.Record) error {
+func (r *RuleAssessment) String() string {
+	return fmt.Sprintf("{Rule: %s, Aggregators: %v, Goals: %v}",
+		r.Rule, r.Aggregators, r.Goals)
+}
+
+func (r *RuleAssessment) NextRecord(record ddataset.Record) error {
 	var ruleIsTrue bool
 	var err error
-	for _, aggregator := range ra.aggregators {
-		ruleIsTrue, err = ra.Rule.IsTrue(record)
+	for _, aggregator := range r.aggregators {
+		ruleIsTrue, err = r.Rule.IsTrue(record)
 		if err != nil {
 			return err
 		}

@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 // Package assessment assesses rules to meet user defined goals
@@ -7,12 +7,13 @@ package assessment
 import (
 	"errors"
 	"fmt"
+	"sort"
+	"sync"
+
 	"github.com/lawrencewoodman/ddataset"
 	"github.com/vlifesystems/rhkit/aggregator"
 	"github.com/vlifesystems/rhkit/goal"
 	"github.com/vlifesystems/rhkit/rule"
-	"sort"
-	"sync"
 )
 
 var ErrNumRecordsChanged = errors.New("number of records changed in dataset")
@@ -20,6 +21,8 @@ var ErrNumRecordsChanged = errors.New("number of records changed in dataset")
 type Assessment struct {
 	NumRecords      int64             `json:"numRecords"`
 	RuleAssessments []*RuleAssessment `json:"ruleAssessments"`
+	aggregatorSpecs []aggregator.Spec
+	goals           []*goal.Goal
 	flags           map[string]bool
 	mux             sync.RWMutex
 }
@@ -29,13 +32,26 @@ type GoalAssessment struct {
 	Passed bool   `json:"passed"`
 }
 
-func New() *Assessment {
+func New(aggregatorSpecs []aggregator.Spec, goals []*goal.Goal) *Assessment {
 	a := &Assessment{
 		NumRecords:      0,
 		RuleAssessments: []*RuleAssessment{},
+		aggregatorSpecs: aggregatorSpecs,
+		goals:           goals,
 	}
 	a.resetFlags()
 	return a
+}
+
+func (a *Assessment) AddRules(rules []rule.Rule) {
+	a.mux.Lock()
+	defer a.mux.Unlock()
+	for _, rule := range rules {
+		a.RuleAssessments = append(
+			a.RuleAssessments,
+			newRuleAssessment(rule, a.aggregatorSpecs, a.goals),
+		)
+	}
 }
 
 func (a *Assessment) Sort(s []SortOrder) {
@@ -174,23 +190,50 @@ func (a *Assessment) Rules(args ...int) []rule.Rule {
 func (a *Assessment) AssessRules(
 	dataset ddataset.Dataset,
 	rules []rule.Rule,
-	aggregatorSpecs []aggregator.Spec,
-	goals []*goal.Goal,
 ) error {
 	ruleAssessments := make([]*RuleAssessment, len(rules))
 	for i, rule := range rules {
-		ruleAssessments[i] = newRuleAssessment(rule, aggregatorSpecs, goals)
+		ruleAssessments[i] = newRuleAssessment(rule, a.aggregatorSpecs, a.goals)
 	}
 	numRecords, err := processDataset(dataset, ruleAssessments)
 	if err != nil {
 		return err
 	}
 	if a.NumRecords == 0 {
+		a.mux.Lock()
 		a.NumRecords = numRecords
+		a.mux.Unlock()
 	} else if numRecords != a.NumRecords {
 		return ErrNumRecordsChanged
 	}
 	return a.addRuleAssessments(ruleAssessments)
+}
+
+// ProcessRecord assesses all the Assessment rules against
+// the supplied record
+func (a *Assessment) ProcessRecord(r ddataset.Record) error {
+	for _, ruleAssessment := range a.RuleAssessments {
+		err := ruleAssessment.NextRecord(r)
+		if err != nil {
+			return err
+		}
+	}
+	a.mux.Lock()
+	a.NumRecords++
+	a.mux.Unlock()
+	return nil
+}
+
+// Update the internal analysis for all the RuleAssessments
+func (a *Assessment) Update() error {
+	a.mux.Lock()
+	defer a.mux.Unlock()
+	for _, ruleAssessment := range a.RuleAssessments {
+		if err := ruleAssessment.update(a.NumRecords); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func processDataset(

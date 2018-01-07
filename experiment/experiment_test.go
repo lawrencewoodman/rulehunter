@@ -580,6 +580,7 @@ func TestProcess(t *testing.T) {
 	err = progresstest.CheckExperimentsMatch(
 		pm.GetExperiments(),
 		wantPMExperiments,
+		false,
 	)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
@@ -841,6 +842,7 @@ func TestProcess_errors(t *testing.T) {
 	err = progresstest.CheckExperimentsMatch(
 		pm.GetExperiments(),
 		wantPMExperiments,
+		true,
 	)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)

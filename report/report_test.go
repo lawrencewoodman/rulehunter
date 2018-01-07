@@ -16,6 +16,7 @@ import (
 	"github.com/vlifesystems/rhkit/aggregator"
 	rhkassessment "github.com/vlifesystems/rhkit/assessment"
 	"github.com/vlifesystems/rhkit/description"
+	"github.com/vlifesystems/rhkit/goal"
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/internal"
@@ -50,7 +51,22 @@ var testDescription = &description.Description{
 	}}
 
 func TestNew(t *testing.T) {
-	assessment := rhkassessment.New()
+	aggregatorSpecs := []aggregator.Spec{
+		aggregator.MustNew("numMatches", "count", "true()"),
+		aggregator.MustNew(
+			"percentMatches",
+			"calc",
+			"roundto(100.0 * numMatches / numRecords, 2)",
+		),
+		aggregator.MustNew("numIncomeGt2", "count", "income > 2"),
+		aggregator.MustNew("goalsScore", "goalsscore"),
+	}
+	goals := []*goal.Goal{
+		goal.MustNew("numIncomeGt2 == 1"),
+		goal.MustNew("numIncomeGt2 == 2"),
+	}
+
+	assessment := rhkassessment.New(aggregatorSpecs, goals)
 	assessment.RuleAssessments = []*rhkassessment.RuleAssessment{
 		&rhkassessment.RuleAssessment{
 			Rule: rule.NewEQFV("month", dlit.NewString("may")),
@@ -91,17 +107,6 @@ func TestNew(t *testing.T) {
 				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
 			},
 		},
-	}
-
-	aggregatorSpecs := []aggregator.Spec{
-		aggregator.MustNew("numMatches", "count", "true()"),
-		aggregator.MustNew(
-			"percentMatches",
-			"calc",
-			"roundto(100.0 * numMatches / numRecords, 2)",
-		),
-		aggregator.MustNew("numIncomeGt2", "count", "income > 2"),
-		aggregator.MustNew("goalsScore", "goalsscore"),
 	}
 
 	wantReport := &Report{
@@ -250,7 +255,21 @@ func TestWriteLoadJSON(t *testing.T) {
 	if err := os.MkdirAll(reportsDir, modePerm); err != nil {
 		t.Fatalf("MkdirAll: %s", err)
 	}
-	assessment := rhkassessment.New()
+	goals := []*goal.Goal{
+		goal.MustNew("numIncomeGt2 == 1"),
+		goal.MustNew("numIncomeGt2 == 2"),
+	}
+	aggregators := []aggregator.Spec{
+		aggregator.MustNew("numMatches", "count", "true()"),
+		aggregator.MustNew(
+			"percentMatches",
+			"calc",
+			"roundto(100.0 * numMatches / numRecords, 2)",
+		),
+		aggregator.MustNew("numIncomeGt2", "count", "income > 2"),
+		aggregator.MustNew("goalsScore", "goalsscore"),
+	}
+	assessment := rhkassessment.New(aggregators, goals)
 	assessment.RuleAssessments = []*rhkassessment.RuleAssessment{
 		&rhkassessment.RuleAssessment{
 			Rule: rule.NewEQFV("month", dlit.NewString("may")),
@@ -303,16 +322,6 @@ func TestWriteLoadJSON(t *testing.T) {
 			Aggregator: "percentMatches",
 			Direction:  rhkassessment.ASCENDING,
 		},
-	}
-	aggregators := []aggregator.Spec{
-		aggregator.MustNew("numMatches", "count", "true()"),
-		aggregator.MustNew(
-			"percentMatches",
-			"calc",
-			"roundto(100.0 * numMatches / numRecords, 2)",
-		),
-		aggregator.MustNew("numIncomeGt2", "count", "income > 2"),
-		aggregator.MustNew("goalsScore", "goalsscore"),
 	}
 	experimentFilename := "somename.yaml"
 	tags := []string{"bank", "test / fred"}
@@ -391,7 +400,21 @@ func TestLoadJSON_multiple_attempts(t *testing.T) {
 	if err := os.MkdirAll(reportsDir, modePerm); err != nil {
 		t.Fatalf("MkdirAll: %s", err)
 	}
-	assessment := rhkassessment.New()
+	aggregators := []aggregator.Spec{
+		aggregator.MustNew("numMatches", "count", "true()"),
+		aggregator.MustNew(
+			"percentMatches",
+			"calc",
+			"roundto(100.0 * numMatches / numRecords, 2)",
+		),
+		aggregator.MustNew("numIncomeGt2", "count", "income > 2"),
+		aggregator.MustNew("goalsScore", "goalsscore"),
+	}
+	goals := []*goal.Goal{
+		goal.MustNew("numIncomeGt2 == 1"),
+		goal.MustNew("numIncomeGt2 == 2"),
+	}
+	assessment := rhkassessment.New(aggregators, goals)
 	assessment.RuleAssessments = []*rhkassessment.RuleAssessment{
 		&rhkassessment.RuleAssessment{
 			Rule: rule.NewEQFV("month", dlit.NewString("may")),
@@ -444,16 +467,6 @@ func TestLoadJSON_multiple_attempts(t *testing.T) {
 			Aggregator: "percentMatches",
 			Direction:  rhkassessment.ASCENDING,
 		},
-	}
-	aggregators := []aggregator.Spec{
-		aggregator.MustNew("numMatches", "count", "true()"),
-		aggregator.MustNew(
-			"percentMatches",
-			"calc",
-			"roundto(100.0 * numMatches / numRecords, 2)",
-		),
-		aggregator.MustNew("numIncomeGt2", "count", "income > 2"),
-		aggregator.MustNew("goalsScore", "goalsscore"),
 	}
 	experimentFilename := "somename.yaml"
 	tags := []string{"bank", "test / fred"}
