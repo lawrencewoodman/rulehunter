@@ -102,7 +102,7 @@ const reportTpl = `
 							<tr>
 								<th>Aggregator</th>
 								<th>Value</th>
-								<th>Improvement</th>
+								<th>Change</th>
 							</tr>
 							{{ range .Aggregators }}
 							<tr>
