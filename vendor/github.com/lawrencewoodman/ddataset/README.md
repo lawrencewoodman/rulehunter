@@ -5,10 +5,18 @@ A Go package to describe a dynamic Dataset interface
 Subpackages
 -----------
 
-dcsv: Package to access a CSV file as Dataset
-dsql: Package to access an SQL database as a Dataset
-dcache: Package to cache a Dataset to improve access speed
-dtruncate: Package to truncate a Dataset
+<dl>
+  <dt>dcopy</dt>
+  <dd>Package to copy a Dataset to a database stored in a temporary directory</dd>
+  <dt>dcsv</dt>
+  <dd>Package to access a CSV file as a Dataset</dd>
+  <dt>dsql</dt>
+  <dd>Package to access an SQL database as a Dataset</dd>
+  <dt>dcache</dt>
+  <dd>Package to cache a Dataset to improve access speed</dd>
+  <dt>dtruncate</dt>
+  <dd>Package to truncate a Dataset</dd>
+</dl>
 
 Contributing
 ------------
