@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 a.navbar-brand.active {
@@ -78,7 +78,7 @@ ul.reports-activity th {
 }
 
 .table-bordered th {
-  background-color: #E4E4E4
+  background-color: #CDF
 }
 
 .status-processing {
@@ -109,6 +109,14 @@ progress[value] {
 
 div.aggregators {
   margin-right: 3em;
+}
+
+table td.goalPassed-true {
+  background-color: #CFC;
+}
+
+table td.goalPassed-false {
+  background-color: #FCC;
 }
 
 div#footer {

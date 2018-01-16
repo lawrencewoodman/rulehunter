@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 package html
@@ -18,7 +18,7 @@ const reportTpl = `
 			<div class="container">
 				<h1>{{.Title}}</h1>
 				Date: {{ .DateTime }} &nbsp;
-        Mode: {{ .Mode }} &nbsp;
+				Mode: {{ .Mode }} &nbsp;
 				{{if .Category}}
 					Category: <a href="{{ .CategoryURL }}">{{ .Category }}</a> &nbsp;
 				{{end}}
@@ -122,7 +122,8 @@ const reportTpl = `
 								</tr>
 								{{ range .Goals }}
 								<tr>
-									<td>{{ .Expr }}</td><td>{{ .Passed }}</td>
+									<td>{{ .Expr }}</td>
+									<td class="goalPassed-{{.Passed}}">{{ .Passed }}</td>
 								</tr>
 								{{ end }}
 							</table>
