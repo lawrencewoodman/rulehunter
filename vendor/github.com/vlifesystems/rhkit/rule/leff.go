@@ -66,7 +66,8 @@ func generateLEFF(
 			continue
 		}
 		fieldNum := description.CalcFieldNum(inputDescription.Fields, field)
-		for oField, oFd := range inputDescription.Fields {
+		for _, oField := range generationDesc.Fields() {
+			oFd := inputDescription.Fields[oField]
 			oFieldNum := description.CalcFieldNum(inputDescription.Fields, oField)
 			isComparable := hasComparableNumberRange(fd, oFd)
 			if fieldNum < oFieldNum && isComparable {
