@@ -1,0 +1,70 @@
+title: "When to call each segment?"
+category: "acme"
+tags:
+  - repair
+  - sales
+  - printers
+trainDataset:
+  csv:
+    filename: "csv/printer_repairs_callstats.csv"
+    hasHeader: true
+    separator: ","
+fields:
+  - quarter
+  - segment
+  - callTime
+  - callCost
+  - isComplete
+  - isContact
+  - value
+ruleGeneration:
+  fields:
+    - quarter
+    - segment
+aggregators:
+  - name: "numContacts"
+    kind: "count"
+    arg: "isContact"
+  - name: "totalClientCharge"
+    kind: "calc"
+    arg: "numContacts * 8"
+  - name: "totalClientValue"
+    kind: "sum"
+    arg: "value"
+  - name: "totalClientROI"
+    kind: "calc"
+    arg: "totalClientValue / (totalClientCharge + pow(0,totalClientCharge))"
+  - name: "totalCCCallCosts"
+    kind: "sum"
+    arg: "callCost"
+  - name: "numSignups"
+    kind: "count"
+    arg: "value > 0"
+  - name: "totalCCCallTimeCost"
+    kind: "sum"
+    # £12 per hour divided into seconds (caller pay plus overheads)
+    arg: "callTime * (12/60/60)"
+  - name: "totalCCCosts"
+    kind: "calc"
+    arg: "(totalCCCallTimeCost + (totalCCCallCosts + pow(0,totalCCCallCosts)))"
+  - name: "conversion"
+    kind: "calc"
+    arg: "numSignups / (numContacts + pow(0,numContacts))"
+  - name: "totalCCROI"
+    kind: "calc"
+    arg: "totalClientCharge / totalCCCosts"
+goals:
+  - "totalCCROI >= 1.10"
+  - "totalClientROI >= 15"
+  - "conversion > 0.25"
+  - "totalCCROI >= 1.25"
+sortOrder:
+  - aggregator: "goalsScore"
+    direction: "descending"
+  - aggregator: "totalClientValue"
+    direction: "descending"
+  - aggregator: "totalCCROI"
+    direction: "descending"
+  - aggregator: "conversion"
+    direction: "descending"
+when: "!hasRun || sinceLastRunMinutes > 40"
