@@ -40,7 +40,7 @@ func Load(filename string) (*Config, error) {
 	}
 
 	if c.MaxNumReportRules < 1 {
-		c.MaxNumReportRules = 20
+		c.MaxNumReportRules = 2
 	}
 
 	if c.MaxNumProcesses < 1 {

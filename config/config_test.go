@@ -65,7 +65,7 @@ func TestLoad(t *testing.T) {
 				WWWDir:            "www",
 				BuildDir:          "build",
 				BaseURL:           "/rulehunter/",
-				MaxNumReportRules: 20,
+				MaxNumReportRules: 2,
 				MaxNumProcesses:   4,
 				MaxNumRecords:     -1,
 			},
