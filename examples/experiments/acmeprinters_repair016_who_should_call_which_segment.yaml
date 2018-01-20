@@ -13,48 +13,55 @@ fields:
   - name
   - segment
   - conversion
-  - roi
+  - callTime
+  - callCost
+  - numContacts
   - value
-  - ccCost
-  - ccIncome
 ruleGeneration:
   fields:
     - name
     - segment
 aggregators:
-  - name: "totalCCCost"
+  - name: "totalContacts"
     kind: "sum"
-    arg: "ccCost"
-  - name: "totalCCIncome"
-    kind: "sum"
-    arg: "ccIncome"
-  - name: "totalCCROI"
+    arg: "numContacts"
+  - name: "totalClientCharge"
     kind: "calc"
-    arg: "totalCCIncome / totalCCCost"
-  - name: "totalCCProfit"
-    kind: "calc"
-    arg: "totalCCIncome - totalCCCost"
-  - name: "totalValue"
+    arg: "totalContacts * 8"
+  - name: "totalClientValue"
     kind: "sum"
     arg: "value"
+  - name: "totalClientROI"
+    kind: "calc"
+    arg: "totalClientValue / (totalClientCharge + pow(0,totalClientCharge))"
+  - name: "totalCCCallCosts"
+    kind: "sum"
+    arg: "callCost"
+  - name: "totalCCCallTimeCost"
+    kind: "sum"
+    # £12 per hour divided into seconds (caller pay plus overheads)
+    arg: "callTime * (12/60/60)"
+  - name: "totalCCCosts"
+    kind: "calc"
+    arg: "(totalCCCallTimeCost + (totalCCCallCosts + pow(0,totalCCCallCosts)))"
   - name: "meanConversion"
     kind: "mean"
     arg: "conversion"
-  - name: "clientMeanROI"
-    kind: "mean"
-    arg: "roi"
+  - name: "totalCCROI"
+    kind: "calc"
+    arg: "totalClientCharge / totalCCCosts"
 goals:
   - "totalCCROI >= 1.10"
-  - "clientMeanROI >= 2"
+  - "totalClientROI >= 15"
   - "meanConversion > 0.25"
-  - "totalCCROI >= 1.20"
-  - "clientMeanROI > 3"
-  - "totalCCROI >= 1.30"
+  - "totalCCROI >= 1.25"
 sortOrder:
   - aggregator: "goalsScore"
     direction: "descending"
-  - aggregator: "totalValue"
+  - aggregator: "totalClientValue"
     direction: "descending"
-  - aggregator: "totalCCProfit"
+  - aggregator: "totalCCROI"
+    direction: "descending"
+  - aggregator: "meanConversion"
     direction: "descending"
 when: "!hasRun || sinceLastRunMinutes > 40"
