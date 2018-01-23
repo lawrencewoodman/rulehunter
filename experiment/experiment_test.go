@@ -524,12 +524,11 @@ func TestProcess(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
 	cfg := &config.Config{
-		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-		WWWDir:            filepath.Join(cfgDir, "www"),
-		BuildDir:          filepath.Join(cfgDir, "build"),
-		MaxNumRecords:     100,
-		MaxNumProcesses:   4,
-		MaxNumReportRules: 100,
+		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
+		WWWDir:          filepath.Join(cfgDir, "www"),
+		BuildDir:        filepath.Join(cfgDir, "build"),
+		MaxNumRecords:   100,
+		MaxNumProcesses: 4,
 	}
 	testhelpers.CopyFile(
 		t,
@@ -609,12 +608,11 @@ func TestProcess_supplied_rules(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
 	cfg := &config.Config{
-		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-		WWWDir:            filepath.Join(cfgDir, "www"),
-		BuildDir:          filepath.Join(cfgDir, "build"),
-		MaxNumRecords:     100,
-		MaxNumProcesses:   4,
-		MaxNumReportRules: 100,
+		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
+		WWWDir:          filepath.Join(cfgDir, "www"),
+		BuildDir:        filepath.Join(cfgDir, "build"),
+		MaxNumRecords:   100,
+		MaxNumProcesses: 4,
 	}
 	testhelpers.CopyFile(
 		t,
@@ -682,12 +680,11 @@ func TestProcess_multiProcesses(t *testing.T) {
 		cfgDir := testhelpers.BuildConfigDirs(t, true)
 		defer os.RemoveAll(cfgDir)
 		cfg := &config.Config{
-			ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-			WWWDir:            filepath.Join(cfgDir, "www"),
-			BuildDir:          filepath.Join(cfgDir, "build"),
-			MaxNumProcesses:   numProcesses,
-			MaxNumRecords:     5000,
-			MaxNumReportRules: 100,
+			ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
+			WWWDir:          filepath.Join(cfgDir, "www"),
+			BuildDir:        filepath.Join(cfgDir, "build"),
+			MaxNumProcesses: numProcesses,
+			MaxNumRecords:   5000,
 		}
 		testhelpers.CopyFile(
 			t,
@@ -753,12 +750,11 @@ func TestProcess_errors(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
 	cfg := &config.Config{
-		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-		WWWDir:            filepath.Join(cfgDir, "www"),
-		BuildDir:          filepath.Join(cfgDir, "build"),
-		MaxNumRecords:     100,
-		MaxNumProcesses:   4,
-		MaxNumReportRules: 100,
+		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
+		WWWDir:          filepath.Join(cfgDir, "www"),
+		BuildDir:        filepath.Join(cfgDir, "build"),
+		MaxNumRecords:   100,
+		MaxNumProcesses: 4,
 	}
 	testhelpers.CopyFile(
 		t,
@@ -1038,12 +1034,11 @@ func BenchmarkProcess_csv(b *testing.B) {
 		cfgDir := testhelpers.BuildConfigDirs(b, true)
 		defer os.RemoveAll(cfgDir)
 		cfg := &config.Config{
-			ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-			WWWDir:            filepath.Join(cfgDir, "www"),
-			BuildDir:          filepath.Join(cfgDir, "build"),
-			MaxNumProcesses:   4,
-			MaxNumRecords:     10000,
-			MaxNumReportRules: 100,
+			ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
+			WWWDir:          filepath.Join(cfgDir, "www"),
+			BuildDir:        filepath.Join(cfgDir, "build"),
+			MaxNumProcesses: 4,
+			MaxNumRecords:   10000,
 		}
 		testhelpers.CopyFile(
 			b,
@@ -1087,12 +1082,11 @@ func BenchmarkProcess_sql(b *testing.B) {
 		cfgDir := testhelpers.BuildConfigDirs(b, true)
 		defer os.RemoveAll(cfgDir)
 		cfg := &config.Config{
-			ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-			WWWDir:            filepath.Join(cfgDir, "www"),
-			BuildDir:          filepath.Join(cfgDir, "build"),
-			MaxNumProcesses:   4,
-			MaxNumRecords:     10000,
-			MaxNumReportRules: 100,
+			ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
+			WWWDir:          filepath.Join(cfgDir, "www"),
+			BuildDir:        filepath.Join(cfgDir, "build"),
+			MaxNumProcesses: 4,
+			MaxNumRecords:   10000,
 		}
 		testhelpers.CopyFile(
 			b,

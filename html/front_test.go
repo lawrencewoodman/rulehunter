@@ -21,12 +21,11 @@ func BenchmarkGenerateFront(b *testing.B) {
 	defer os.RemoveAll(cfgDir)
 
 	cfg := &config.Config{
-		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-		WWWDir:            filepath.Join(cfgDir, "www"),
-		BuildDir:          filepath.Join(cfgDir, "build"),
-		MaxNumRecords:     100,
-		MaxNumProcesses:   4,
-		MaxNumReportRules: 100,
+		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
+		WWWDir:          filepath.Join(cfgDir, "www"),
+		BuildDir:        filepath.Join(cfgDir, "build"),
+		MaxNumRecords:   100,
+		MaxNumProcesses: 4,
 	}
 	htmlCmds := make(chan cmd.Cmd, 100)
 	defer close(htmlCmds)

@@ -142,40 +142,83 @@ func TestNew(t *testing.T) {
 			&Assessment{
 				Rule: "rate >= 789.2",
 				Aggregators: []*Aggregator{
-					&Aggregator{Name: "goalsScore", Value: "30.1", Difference: "30"},
-					&Aggregator{Name: "numIncomeGt2", Value: "32", Difference: "30"},
-					&Aggregator{Name: "numMatches", Value: "3142", Difference: "3000"},
-					&Aggregator{Name: "percentMatches", Value: "342", Difference: "300"},
+					&Aggregator{
+						Name:          "goalsScore",
+						OriginalValue: "0.1",
+						RuleValue:     "30.1",
+						Difference:    "30",
+					},
+					&Aggregator{
+						Name:          "numIncomeGt2",
+						OriginalValue: "2",
+						RuleValue:     "32",
+						Difference:    "30",
+					},
+					&Aggregator{
+						Name:          "numMatches",
+						OriginalValue: "142",
+						RuleValue:     "3142",
+						Difference:    "3000",
+					},
+					&Aggregator{
+						Name:          "percentMatches",
+						OriginalValue: "42",
+						RuleValue:     "342",
+						Difference:    "300",
+					},
 				},
-				Goals: []*rhkassessment.GoalAssessment{
-					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
-					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", false},
+				Goals: []*Goal{
+					&Goal{
+						Expr:           "numIncomeGt2 == 1",
+						OriginalPassed: false,
+						RulePassed:     false,
+					},
+					&Goal{
+						Expr:           "numIncomeGt2 == 2",
+						OriginalPassed: true,
+						RulePassed:     false,
+					},
 				},
 			},
 			&Assessment{
 				Rule: "month == \"may\"",
 				Aggregators: []*Aggregator{
-					&Aggregator{Name: "goalsScore", Value: "20.1", Difference: "20"},
-					&Aggregator{Name: "numIncomeGt2", Value: "22", Difference: "20"},
-					&Aggregator{Name: "numMatches", Value: "2142", Difference: "2000"},
-					&Aggregator{Name: "percentMatches", Value: "242", Difference: "200"},
+					&Aggregator{
+						Name:          "goalsScore",
+						OriginalValue: "0.1",
+						RuleValue:     "20.1",
+						Difference:    "20",
+					},
+					&Aggregator{
+						Name:          "numIncomeGt2",
+						OriginalValue: "2",
+						RuleValue:     "22",
+						Difference:    "20",
+					},
+					&Aggregator{
+						Name:          "numMatches",
+						OriginalValue: "142",
+						RuleValue:     "2142",
+						Difference:    "2000",
+					},
+					&Aggregator{
+						Name:          "percentMatches",
+						OriginalValue: "42",
+						RuleValue:     "242",
+						Difference:    "200",
+					},
 				},
-				Goals: []*rhkassessment.GoalAssessment{
-					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
-					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", false},
-				},
-			},
-			&Assessment{
-				Rule: "true()",
-				Aggregators: []*Aggregator{
-					&Aggregator{Name: "goalsScore", Value: "0.1", Difference: "0"},
-					&Aggregator{Name: "numIncomeGt2", Value: "2", Difference: "0"},
-					&Aggregator{Name: "numMatches", Value: "142", Difference: "0"},
-					&Aggregator{Name: "percentMatches", Value: "42", Difference: "0"},
-				},
-				Goals: []*rhkassessment.GoalAssessment{
-					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
-					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
+				Goals: []*Goal{
+					&Goal{
+						Expr:           "numIncomeGt2 == 1",
+						OriginalPassed: false,
+						RulePassed:     false,
+					},
+					&Goal{
+						Expr:           "numIncomeGt2 == 2",
+						OriginalPassed: true,
+						RulePassed:     false,
+					},
 				},
 			},
 		},
@@ -520,7 +563,7 @@ func TestGetSortedAggregatorNames(t *testing.T) {
 	}
 }
 
-func TestGetTrueAggregators(t *testing.T) {
+func TestGetTrueRuleAssessment(t *testing.T) {
 	assessment := &rhkassessment.Assessment{
 		NumRecords: 20,
 		RuleAssessments: []*rhkassessment.RuleAssessment{
@@ -565,23 +608,30 @@ func TestGetTrueAggregators(t *testing.T) {
 			},
 		},
 	}
-	want := map[string]*dlit.Literal{
-		"numMatches":     dlit.MustNew("142"),
-		"percentMatches": dlit.MustNew("42"),
-		"numIncomeGt2":   dlit.MustNew("2"),
-		"goalsScore":     dlit.MustNew(0.1),
+	want := &rhkassessment.RuleAssessment{
+		Rule: rule.NewTrue(),
+		Aggregators: map[string]*dlit.Literal{
+			"numMatches":     dlit.MustNew("142"),
+			"percentMatches": dlit.MustNew("42"),
+			"numIncomeGt2":   dlit.MustNew("2"),
+			"goalsScore":     dlit.MustNew(0.1),
+		},
+		Goals: []*rhkassessment.GoalAssessment{
+			&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+			&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
+		},
 	}
 
-	got, err := getTrueAggregators(assessment)
+	got, err := getTrueRuleAssessment(assessment)
 	if err != nil {
-		t.Fatalf("getTrueAggregators: %s", err)
+		t.Fatalf("getTrueRuleAssessment: %s", err)
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("getTrueAggregators - got: %v, want: %v", got, want)
 	}
 }
 
-func TestGetTrueAggregators_error(t *testing.T) {
+func TestGetTrueRuleAssessment_error(t *testing.T) {
 	assessment := &rhkassessment.Assessment{
 		NumRecords: 20,
 		RuleAssessments: []*rhkassessment.RuleAssessment{
@@ -628,7 +678,7 @@ func TestGetTrueAggregators_error(t *testing.T) {
 	}
 	wantErr := errors.New("can't find true() rule")
 
-	_, err := getTrueAggregators(assessment)
+	_, err := getTrueRuleAssessment(assessment)
 	if err == nil || err.Error() != wantErr.Error() {
 		t.Errorf("getTrueAggregators: err: %s, wantErr: %s", err, wantErr)
 	}

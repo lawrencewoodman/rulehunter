@@ -24,15 +24,39 @@ import (
 )
 
 type Aggregator struct {
-	Name       string `json:"name"`
-	Value      string `json:"value"`
-	Difference string `json:"difference"`
+	Name          string `json:"name"`
+	OriginalValue string `json:"originalValue"`
+	RuleValue     string `json:"ruleValue"`
+	Difference    string `json:"difference"`
+}
+
+type Goal struct {
+	Expr           string `json:"expr"`
+	OriginalPassed bool   `json:"originalPassed"`
+	RulePassed     bool   `json:"rulePassed"`
 }
 
 type Assessment struct {
-	Rule        string                          `json:"rule"`
-	Aggregators []*Aggregator                   `json:"aggregators"`
-	Goals       []*rhkassessment.GoalAssessment `json:"goals"`
+	Rule        string        `json:"rule"`
+	Aggregators []*Aggregator `json:"aggregators"`
+	Goals       []*Goal       `json:"goals"`
+}
+
+func (a *Assessment) String() string {
+	return fmt.Sprintf("{Rule: %s, Aggregators: %v, Goals: %v}",
+		a.Rule, a.Aggregators, a.Goals)
+}
+
+func (g *Goal) String() string {
+	return fmt.Sprintf("{Expr: %s, OriginalPassed: %t, RulePassed: %t}",
+		g.Expr, g.OriginalPassed, g.RulePassed)
+}
+
+func (a *Aggregator) String() string {
+	return fmt.Sprintf(
+		"{Name: %s, OriginalValue: %s, RuleValue: %s, Difference: %s}",
+		a.Name, a.OriginalValue, a.RuleValue, a.Difference,
+	)
 }
 
 type Report struct {
@@ -84,11 +108,6 @@ func New(
 	assessment.Sort(sortOrder)
 	assessment.Refine()
 
-	trueAggregators, err := getTrueAggregators(assessment)
-	if err != nil {
-		panic(err)
-	}
-
 	aggregatorDescs := make([]AggregatorDesc, len(aggregators))
 	for i, as := range aggregators {
 		aggregatorDescs[i] = AggregatorDesc{
@@ -98,26 +117,6 @@ func New(
 		}
 	}
 
-	assessments := make([]*Assessment, len(assessment.RuleAssessments))
-	for i, ruleAssessment := range assessment.RuleAssessments {
-		aggregatorNames := getSortedAggregatorNames(ruleAssessment.Aggregators)
-		aggregators := make([]*Aggregator, len(ruleAssessment.Aggregators))
-		for j, aggregatorName := range aggregatorNames {
-			aggregator := ruleAssessment.Aggregators[aggregatorName]
-			difference :=
-				calcTrueAggregatorDiff(trueAggregators, aggregatorName, aggregator)
-			aggregators[j] = &Aggregator{
-				Name:       aggregatorName,
-				Value:      aggregator.String(),
-				Difference: difference,
-			}
-		}
-		assessments[i] = &Assessment{
-			ruleAssessment.Rule.String(),
-			aggregators,
-			ruleAssessment.Goals,
-		}
-	}
 	return &Report{
 		Mode:               mode,
 		Title:              title,
@@ -128,7 +127,7 @@ func New(
 		NumRecords:         assessment.NumRecords,
 		SortOrder:          sortOrder,
 		Aggregators:        aggregatorDescs,
-		Assessments:        assessments,
+		Assessments:        makeAssessments(assessment),
 		Description:        desc,
 	}
 }
@@ -191,6 +190,65 @@ func LoadJSON(
 	return &report, nil
 }
 
+func makeAssessments(assessment *rhkassessment.Assessment) []*Assessment {
+	trueRuleAssessment, err := getTrueRuleAssessment(assessment)
+	if err != nil {
+		panic(err)
+	}
+	trueAggregators := trueRuleAssessment.Aggregators
+	trueGoals := trueRuleAssessment.Goals
+
+	assessments := make([]*Assessment, len(assessment.RuleAssessments)-1)
+	for i, ruleAssessment := range assessment.RuleAssessments {
+		if _, isTrueRule := ruleAssessment.Rule.(rule.True); !isTrueRule {
+			assessments[i] = &Assessment{
+				Rule: ruleAssessment.Rule.String(),
+				Aggregators: makeAggregators(
+					trueAggregators,
+					ruleAssessment.Aggregators,
+				),
+				Goals: makeGoals(trueGoals, ruleAssessment.Goals),
+			}
+		}
+	}
+	return assessments
+}
+
+func makeAggregators(
+	trueAggregators map[string]*dlit.Literal,
+	ruleAggregators map[string]*dlit.Literal,
+) []*Aggregator {
+	aggregatorNames := getSortedAggregatorNames(ruleAggregators)
+	aggregators := make([]*Aggregator, len(ruleAggregators))
+	for j, aggregatorName := range aggregatorNames {
+		aggregator := ruleAggregators[aggregatorName]
+		difference :=
+			calcTrueAggregatorDiff(trueAggregators, aggregatorName, aggregator)
+		aggregators[j] = &Aggregator{
+			Name:          aggregatorName,
+			OriginalValue: trueAggregators[aggregatorName].String(),
+			RuleValue:     aggregator.String(),
+			Difference:    difference,
+		}
+	}
+	return aggregators
+}
+
+func makeGoals(
+	trueGoals []*rhkassessment.GoalAssessment,
+	ruleGoals []*rhkassessment.GoalAssessment,
+) []*Goal {
+	goals := make([]*Goal, len(ruleGoals))
+	for i, g := range ruleGoals {
+		goals[i] = &Goal{
+			Expr:           g.Expr,
+			OriginalPassed: trueGoals[i].Passed,
+			RulePassed:     g.Passed,
+		}
+	}
+	return goals
+}
+
 func getSortedAggregatorNames(aggregators map[string]*dlit.Literal) []string {
 	aggregatorNames := make([]string, len(aggregators))
 	j := 0
@@ -202,16 +260,15 @@ func getSortedAggregatorNames(aggregators map[string]*dlit.Literal) []string {
 	return aggregatorNames
 }
 
-func getTrueAggregators(
+func getTrueRuleAssessment(
 	assessment *rhkassessment.Assessment,
-) (map[string]*dlit.Literal, error) {
+) (*rhkassessment.RuleAssessment, error) {
 	trueRuleAssessment :=
 		assessment.RuleAssessments[len(assessment.RuleAssessments)-1]
 	if _, isTrueRule := trueRuleAssessment.Rule.(rule.True); !isTrueRule {
-		return map[string]*dlit.Literal{}, errors.New("can't find true() rule")
+		return nil, errors.New("can't find true() rule")
 	}
-	trueAggregators := trueRuleAssessment.Aggregators
-	return trueAggregators, nil
+	return trueRuleAssessment, nil
 }
 
 func calcTrueAggregatorDiff(

@@ -37,10 +37,9 @@ func TestRun_quit(t *testing.T) {
 		t.Fatalf("NewMonitor: %s", err)
 	}
 	config := &config.Config{
-		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-		WWWDir:            filepath.Join(cfgDir, "www"),
-		BuildDir:          filepath.Join(cfgDir, "build"),
-		MaxNumReportRules: 100,
+		ExperimentsDir: filepath.Join(cfgDir, "experiments"),
+		WWWDir:         filepath.Join(cfgDir, "www"),
+		BuildDir:       filepath.Join(cfgDir, "build"),
 	}
 	h := New(config, pm, l, htmlCmds)
 	go h.Run(q)
@@ -102,10 +101,9 @@ func TestRun_cmd_all(t *testing.T) {
 		t.Fatalf("NewMonitor() err: %v", err)
 	}
 	config := &config.Config{
-		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-		WWWDir:            filepath.Join(cfgDir, "www"),
-		BuildDir:          filepath.Join(cfgDir, "build"),
-		MaxNumReportRules: 100,
+		ExperimentsDir: filepath.Join(cfgDir, "experiments"),
+		WWWDir:         filepath.Join(cfgDir, "www"),
+		BuildDir:       filepath.Join(cfgDir, "build"),
 	}
 	wantFiles := []string{
 		filepath.Join(cfgDir, "www", "index.html"),
@@ -216,10 +214,9 @@ func TestRun_cmd_reports(t *testing.T) {
 		t.Fatalf("NewMonitor() err: %v", err)
 	}
 	config := &config.Config{
-		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-		WWWDir:            filepath.Join(cfgDir, "www"),
-		BuildDir:          filepath.Join(cfgDir, "build"),
-		MaxNumReportRules: 100,
+		ExperimentsDir: filepath.Join(cfgDir, "experiments"),
+		WWWDir:         filepath.Join(cfgDir, "www"),
+		BuildDir:       filepath.Join(cfgDir, "build"),
 	}
 	wantFiles := []string{
 		filepath.Join(cfgDir, "www", "index.html"),
@@ -327,10 +324,9 @@ func TestRun_cmd_progress(t *testing.T) {
 		t.Fatalf("NewMonitor() err: %v", err)
 	}
 	config := &config.Config{
-		ExperimentsDir:    filepath.Join(cfgDir, "experiments"),
-		WWWDir:            filepath.Join(cfgDir, "www"),
-		BuildDir:          filepath.Join(cfgDir, "build"),
-		MaxNumReportRules: 100,
+		ExperimentsDir: filepath.Join(cfgDir, "experiments"),
+		WWWDir:         filepath.Join(cfgDir, "www"),
+		BuildDir:       filepath.Join(cfgDir, "build"),
 	}
 	wantFiles := []string{
 		filepath.Join(cfgDir, "www", "activity", "index.html"),

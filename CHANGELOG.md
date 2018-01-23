@@ -4,7 +4,7 @@
 
  * Remove `sourceURL`
  * Remove `maxNumCacheRecords`
- * Change default for `maxNumReportRules` to 20
+ * Remove `maxNumReportRules`
 
 ### Experiment Files
 
@@ -15,6 +15,7 @@
  * Replace `complexity` and `ruleFields` in experiment files
    with `ruleGeneration`
  * Allow two datasets to be used: `trainDataset` and `testDataset`
+ * Add support for PostgreSQL
 
 ### HTML
 
@@ -23,6 +24,8 @@
  * Create dashboard style front page for generated html
  * s/failure/error/ in activity
  * Remove 'licence' page in generated html
+ * Only display a single rule in reports and compare that rule to the 'true'
+   rule
 
 ### CLI
 
@@ -40,6 +43,7 @@
  * Use sha-512 hash to create 'report' filenames
  * Make all fields in JSON 'report' lowercase
  * Create a temporary copy of Dataset in `tmp` before processing.
+ * Only have a single rule in reports and compare that rule to the 'true' rule
 
 ### Development
 

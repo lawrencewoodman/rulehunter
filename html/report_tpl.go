@@ -101,13 +101,15 @@ const reportTpl = `
 						<table class="table table-bordered">
 							<tr>
 								<th>Aggregator</th>
-								<th>Value</th>
+								<th>Original Value</th>
+								<th>Rule Value</th>
 								<th>Change</th>
 							</tr>
 							{{ range .Aggregators }}
 							<tr>
 								<td>{{ .Name }}</td>
-								<td>{{ .Value }}</td>
+								<td>{{ .OriginalValue }}</td>
+								<td>{{ .RuleValue }}</td>
 								<td>{{ .Difference }}</td>
 							</tr>
 							{{ end }}
@@ -118,12 +120,17 @@ const reportTpl = `
 						<div class="pull-left">
 							<table class="table table-bordered">
 								<tr>
-									<th>Goal</th><th>Value</th>
+									<th>Goal</th><th>Original Value</th><th>Rule Value</th>
 								</tr>
 								{{ range .Goals }}
 								<tr>
 									<td>{{ .Expr }}</td>
-									<td class="goalPassed-{{.Passed}}">{{ .Passed }}</td>
+									<td class="goalPassed-{{.OriginalPassed}}">
+										{{ .OriginalPassed }}
+									</td>
+									<td class="goalPassed-{{.RulePassed}}">
+										{{ .RulePassed }}
+									</td>
 								</tr>
 								{{ end }}
 							</table>

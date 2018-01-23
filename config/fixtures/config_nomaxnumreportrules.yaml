@@ -1,5 +1,0 @@
-experimentsDir: "experiments"
-wwwDir: "www"
-buildDir: "build"
-baseUrl: "/rulehunter/"
-maxNumProcesses: 4

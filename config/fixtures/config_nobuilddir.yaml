@@ -1,5 +1,4 @@
 experimentsDir: "experiments"
 wwwDir: "www"
 baseUrl: "/rulehunter/"
-maxNumReportRules: 2000
 maxNumProcesses: 4

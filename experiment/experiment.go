@@ -321,7 +321,7 @@ func (e *Experiment) processTrainDataset(
 
 	ass.Sort(e.SortOrder)
 	ass.Refine()
-	ass = ass.TruncateRuleAssessments(cfg.MaxNumReportRules)
+	ass = ass.TruncateRuleAssessments(2)
 
 	r := report.New(
 		report.Train,
