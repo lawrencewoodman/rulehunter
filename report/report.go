@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 package report
@@ -8,9 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/lawrencewoodman/dexpr"
@@ -271,12 +273,62 @@ func getTrueRuleAssessment(
 	return trueRuleAssessment, nil
 }
 
+func numDecPlaces(s string) int {
+	i := strings.IndexByte(s, '.')
+	if i > -1 {
+		s = strings.TrimRight(s, "0")
+		return len(s) - i - 1
+	}
+	return 0
+}
+
+type CantConvertToTypeError struct {
+	Kind  string
+	Value *dlit.Literal
+}
+
+func (e CantConvertToTypeError) Error() string {
+	return fmt.Sprintf("can't convert to %s: %s", e.Kind, e.Value)
+}
+
+// roundTo returns a number n,  rounded to a number of decimal places dp.
+// This uses round half-up to tie-break
+func roundTo(n *dlit.Literal, dp int) (*dlit.Literal, error) {
+
+	if _, isInt := n.Int(); isInt {
+		return n, nil
+	}
+
+	x, isFloat := n.Float()
+	if !isFloat {
+		if err := n.Err(); err != nil {
+			return n, err
+		}
+		err := CantConvertToTypeError{Kind: "float", Value: n}
+		r := dlit.MustNew(err)
+		return r, err
+	}
+
+	// Prevent rounding errors where too high dp is used
+	xNumDP := numDecPlaces(n.String())
+	if dp > xNumDP {
+		dp = xNumDP
+	}
+	shift := math.Pow(10, float64(dp))
+	return dlit.New(math.Floor(.5+x*shift) / shift)
+}
+
 func calcTrueAggregatorDiff(
 	trueAggregators map[string]*dlit.Literal,
 	aggregatorName string,
 	aggregatorValue *dlit.Literal,
 ) string {
 	funcs := map[string]dexpr.CallFun{}
+	maxDP := numDecPlaces(aggregatorValue.String())
+	trueAggregatorValueDP := numDecPlaces(trueAggregators[aggregatorName].String())
+	if trueAggregatorValueDP > maxDP {
+		maxDP = trueAggregatorValueDP
+	}
 	diffExpr := dexpr.MustNew("r - t", funcs)
 	vars := map[string]*dlit.Literal{
 		"r": aggregatorValue,
@@ -286,5 +338,9 @@ func calcTrueAggregatorDiff(
 	if err := differenceL.Err(); err != nil {
 		return "N/A"
 	}
-	return differenceL.String()
+	roundedDifferenceL, err := roundTo(differenceL, maxDP)
+	if err != nil {
+		return "N/A"
+	}
+	return roundedDifferenceL.String()
 }
