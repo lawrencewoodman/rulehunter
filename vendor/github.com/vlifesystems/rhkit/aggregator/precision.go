@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 package aggregator
@@ -100,5 +100,5 @@ func (ai *precisionInstance) Result(
 		"numTP": dlit.MustNew(ai.numTP),
 		"numFP": dlit.MustNew(ai.numFP),
 	}
-	return precisionExpr.Eval(vars)
+	return roundTo(precisionExpr.Eval(vars), 4)
 }

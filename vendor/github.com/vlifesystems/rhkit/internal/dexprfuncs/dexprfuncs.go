@@ -96,7 +96,7 @@ func pow(args []*dlit.Literal) (*dlit.Literal, error) {
 	return dlit.New(math.Pow(x, y))
 }
 
-// roundto returns a number rounded to a number of decimal places.
+// roundTo returns a number rounded to a number of decimal places.
 // This uses round half-up to tie-break
 func roundTo(args []*dlit.Literal) (*dlit.Literal, error) {
 	if len(args) != 2 {

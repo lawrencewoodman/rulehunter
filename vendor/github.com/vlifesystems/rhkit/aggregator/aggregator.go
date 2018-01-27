@@ -1,14 +1,17 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 // Package aggregator describes and handles Aggregators
 package aggregator
 
 import (
+	"sync"
+
+	"github.com/lawrencewoodman/dexpr"
 	"github.com/lawrencewoodman/dlit"
 	"github.com/vlifesystems/rhkit/goal"
 	"github.com/vlifesystems/rhkit/internal"
-	"sync"
+	"github.com/vlifesystems/rhkit/internal/dexprfuncs"
 )
 
 var (
@@ -165,4 +168,13 @@ func checkDescValid(fields []string, desc *Desc) error {
 		return DescError{Name: desc.Name, Kind: desc.Kind, Err: ErrNameReserved}
 	}
 	return nil
+}
+
+func roundTo(l *dlit.Literal, dp int) *dlit.Literal {
+	var roundExpr = dexpr.MustNew("roundto(n, dp)", dexprfuncs.CallFuncs)
+	vars := map[string]*dlit.Literal{
+		"n":  l,
+		"dp": dlit.MustNew(dp),
+	}
+	return roundExpr.Eval(vars)
 }
