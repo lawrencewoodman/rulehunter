@@ -26,6 +26,8 @@
  * Remove 'licence' page in generated html
  * Only display a single rule in reports and compare that rule to the 'true'
    rule
+ * Add colour to report
+ * Round aggregator numbers in report
 
 ### CLI
 
