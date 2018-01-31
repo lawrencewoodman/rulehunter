@@ -44,7 +44,7 @@ We want your help to find bugs as quickly as possible and would welcome your hel
 
 Licence
 -------
-Copyright (C) 2016-2017 [vLife Systems Ltd](http://vlifesystems.com)
+Copyright (C) 2016-2018 [vLife Systems Ltd](http://vlifesystems.com)
 
 Rulehunter is licensed under an MIT licence.  Please see [LICENSE.md](https://github.com/vlifesystems/rulehunter/blob/master/LICENSE.md) for details.
 

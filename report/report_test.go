@@ -48,7 +48,8 @@ var testDescription = &description.Description{
 		},
 		"method": {description.Ignore, nil, nil, 0,
 			map[string]description.Value{}, -1},
-	}}
+	},
+}
 
 func TestNew(t *testing.T) {
 	aggregatorSpecs := []aggregator.Spec{
@@ -221,6 +222,47 @@ func TestNew(t *testing.T) {
 					},
 				},
 			},
+			&Assessment{
+				Rule: "true()",
+				Aggregators: []*Aggregator{
+					&Aggregator{
+						Name:          "goalsScore",
+						OriginalValue: "0.1",
+						RuleValue:     "0.1",
+						Difference:    "0",
+					},
+					&Aggregator{
+						Name:          "numIncomeGt2",
+						OriginalValue: "2",
+						RuleValue:     "2",
+						Difference:    "0",
+					},
+					&Aggregator{
+						Name:          "numMatches",
+						OriginalValue: "142",
+						RuleValue:     "142",
+						Difference:    "0",
+					},
+					&Aggregator{
+						Name:          "percentMatches",
+						OriginalValue: "42",
+						RuleValue:     "42",
+						Difference:    "0",
+					},
+				},
+				Goals: []*Goal{
+					&Goal{
+						Expr:           "numIncomeGt2 == 1",
+						OriginalPassed: false,
+						RulePassed:     false,
+					},
+					&Goal{
+						Expr:           "numIncomeGt2 == 2",
+						OriginalPassed: true,
+						RulePassed:     true,
+					},
+				},
+			},
 		},
 	}
 	got := New(
@@ -239,6 +281,127 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestNew_single_true_rule(t *testing.T) {
+	aggregatorSpecs := []aggregator.Spec{
+		aggregator.MustNew("numMatches", "count", "true()"),
+		aggregator.MustNew(
+			"percentMatches",
+			"calc",
+			"roundto(100.0 * numMatches / numRecords, 2)",
+		),
+		aggregator.MustNew("numIncomeGt2", "count", "income > 2"),
+		aggregator.MustNew("goalsScore", "goalsscore"),
+	}
+	goals := []*goal.Goal{
+		goal.MustNew("numIncomeGt2 == 1"),
+		goal.MustNew("numIncomeGt2 == 2"),
+	}
+
+	assessment := rhkassessment.New(aggregatorSpecs, goals)
+	assessment.RuleAssessments = []*rhkassessment.RuleAssessment{
+		&rhkassessment.RuleAssessment{
+			Rule: rule.NewTrue(),
+			Aggregators: map[string]*dlit.Literal{
+				"numMatches":     dlit.MustNew("142"),
+				"percentMatches": dlit.MustNew("42"),
+				"numIncomeGt2":   dlit.MustNew("2"),
+				"goalsScore":     dlit.MustNew(0.1),
+			},
+			Goals: []*rhkassessment.GoalAssessment{
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
+				&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
+			},
+		},
+	}
+
+	wantReport := &Report{
+		Mode:               Train,
+		Title:              "some title",
+		Tags:               []string{"bank", "test / fred"},
+		Category:           "testing",
+		Stamp:              time.Now(),
+		ExperimentFilename: "somename.yaml",
+		NumRecords:         assessment.NumRecords,
+		SortOrder: []rhkassessment.SortOrder{
+			rhkassessment.SortOrder{
+				Aggregator: "goalsScore",
+				Direction:  rhkassessment.DESCENDING,
+			},
+			rhkassessment.SortOrder{
+				Aggregator: "percentMatches",
+				Direction:  rhkassessment.ASCENDING,
+			},
+		},
+		Aggregators: []AggregatorDesc{
+			AggregatorDesc{Name: "numMatches", Kind: "count", Arg: "true()"},
+			AggregatorDesc{
+				Name: "percentMatches",
+				Kind: "calc",
+				Arg:  "roundto(100.0 * numMatches / numRecords, 2)",
+			},
+			AggregatorDesc{Name: "numIncomeGt2", Kind: "count", Arg: "income > 2"},
+			AggregatorDesc{Name: "goalsScore", Kind: "goalsscore", Arg: ""},
+		},
+		Description: testDescription,
+		Assessments: []*Assessment{
+			&Assessment{
+				Rule: "true()",
+				Aggregators: []*Aggregator{
+					&Aggregator{
+						Name:          "goalsScore",
+						OriginalValue: "0.1",
+						RuleValue:     "0.1",
+						Difference:    "0",
+					},
+					&Aggregator{
+						Name:          "numIncomeGt2",
+						OriginalValue: "2",
+						RuleValue:     "2",
+						Difference:    "0",
+					},
+					&Aggregator{
+						Name:          "numMatches",
+						OriginalValue: "142",
+						RuleValue:     "142",
+						Difference:    "0",
+					},
+					&Aggregator{
+						Name:          "percentMatches",
+						OriginalValue: "42",
+						RuleValue:     "42",
+						Difference:    "0",
+					},
+				},
+				Goals: []*Goal{
+					&Goal{
+						Expr:           "numIncomeGt2 == 1",
+						OriginalPassed: false,
+						RulePassed:     false,
+					},
+					&Goal{
+						Expr:           "numIncomeGt2 == 2",
+						OriginalPassed: true,
+						RulePassed:     true,
+					},
+				},
+			},
+		},
+	}
+	got := New(
+		wantReport.Mode,
+		wantReport.Title,
+		wantReport.Description,
+		assessment,
+		aggregatorSpecs,
+		wantReport.SortOrder,
+		wantReport.ExperimentFilename,
+		wantReport.Tags,
+		wantReport.Category,
+	)
+	if err := checkReportsMatch(got, wantReport); err != nil {
+		t.Errorf("New: %s", err)
+	}
+}
 func TestLoadJSON_errors(t *testing.T) {
 	// File mode permission used as standard:
 	// No special permission bits

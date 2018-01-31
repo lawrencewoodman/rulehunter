@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 package html
@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -148,6 +149,9 @@ func writeTemplate(
 ) error {
 	funcMap := template.FuncMap{
 		"ToTitle": strings.Title,
+		"IsLast": func(x int, a interface{}) bool {
+			return x == reflect.ValueOf(a).Len()-1
+		},
 	}
 	t, err := template.New("webpage").Funcs(funcMap).Parse(tpl)
 	if err != nil {

@@ -197,20 +197,18 @@ func makeAssessments(assessment *rhkassessment.Assessment) []*Assessment {
 	if err != nil {
 		panic(err)
 	}
+
 	trueAggregators := trueRuleAssessment.Aggregators
 	trueGoals := trueRuleAssessment.Goals
-
-	assessments := make([]*Assessment, len(assessment.RuleAssessments)-1)
+	assessments := make([]*Assessment, len(assessment.RuleAssessments))
 	for i, ruleAssessment := range assessment.RuleAssessments {
-		if _, isTrueRule := ruleAssessment.Rule.(rule.True); !isTrueRule {
-			assessments[i] = &Assessment{
-				Rule: ruleAssessment.Rule.String(),
-				Aggregators: makeAggregators(
-					trueAggregators,
-					ruleAssessment.Aggregators,
-				),
-				Goals: makeGoals(trueGoals, ruleAssessment.Goals),
-			}
+		assessments[i] = &Assessment{
+			Rule: ruleAssessment.Rule.String(),
+			Aggregators: makeAggregators(
+				trueAggregators,
+				ruleAssessment.Aggregators,
+			),
+			Goals: makeGoals(trueGoals, ruleAssessment.Goals),
 		}
 	}
 	return assessments
