@@ -632,6 +632,7 @@ func (e *Experiment) assessRules(
 	conn, err := dataset.Open()
 	if err != nil {
 		closeRecords()
+		wg.Wait()
 		return nil, err
 	}
 	defer conn.Close()
@@ -641,6 +642,7 @@ func (e *Experiment) assessRules(
 		select {
 		case err := <-errors:
 			closeRecords()
+			wg.Wait()
 			return nil, err
 		default:
 			break
@@ -661,6 +663,7 @@ func (e *Experiment) assessRules(
 				)
 				if err != nil {
 					closeRecords()
+					wg.Wait()
 					return nil, err
 				}
 			} else {
@@ -672,6 +675,7 @@ func (e *Experiment) assessRules(
 				)
 				if err != nil {
 					closeRecords()
+					wg.Wait()
 					return nil, err
 				}
 			}
@@ -679,6 +683,7 @@ func (e *Experiment) assessRules(
 	}
 	if err := conn.Err(); err != nil {
 		closeRecords()
+		wg.Wait()
 		return nil, err
 	}
 

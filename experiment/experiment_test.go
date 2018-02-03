@@ -756,16 +756,18 @@ func TestProcess_errors(t *testing.T) {
 		MaxNumRecords:   100,
 		MaxNumProcesses: 4,
 	}
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "flow_div_zero_train.yaml"),
-		cfg.ExperimentsDir,
-	)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("fixtures", "flow_div_zero_test.yaml"),
-		cfg.ExperimentsDir,
-	)
+	files := []string{"flow_div_zero_train.yaml",
+		"flow_div_zero_test.yaml",
+		"flow_invalid_aggregator.yaml",
+	}
+
+	for _, f := range files {
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", f),
+			cfg.ExperimentsDir,
+		)
+	}
 
 	cases := []struct {
 		file    testhelpers.FileInfo
@@ -776,6 +778,9 @@ func TestProcess_errors(t *testing.T) {
 		},
 		{file: testhelpers.NewFileInfo("flow_div_zero_test.yaml", time.Now()),
 			wantErr: "Couldn't assess rules: invalid rule: height / 0",
+		},
+		{file: testhelpers.NewFileInfo("flow_invalid_aggregator.yaml", time.Now()),
+			wantErr: "Couldn't assess rules: invalid expression: bob > 60 (variable doesn't exist: bob)",
 		},
 	}
 	wantPMExperiments := []*progress.Experiment{
@@ -801,6 +806,17 @@ func TestProcess_errors(t *testing.T) {
 				State: progress.Processing,
 			},
 		},
+		&progress.Experiment{
+			Title:    "What would indicate good flow?",
+			Filename: "flow_invalid_aggregator.yaml",
+			Tags:     []string{"test", "fred / ned"},
+			Category: "",
+			Status: &progress.Status{
+				Stamp: time.Now(),
+				Msg:   "Train > Assessing rules 2/5",
+				State: progress.Processing,
+			},
+		},
 	}
 
 	quit := quitter.New()
@@ -820,21 +836,25 @@ func TestProcess_errors(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		e, err := Load(cfg, c.file)
-		if err != nil {
-			t.Fatalf("Load: %s", err)
-		}
-		err = pm.AddExperiment(c.file.Name(), e.Title, e.Tags, e.Category)
-		if err != nil {
-			t.Fatalf("AddExperiment: %s", err)
+		// Multiple tests for each because of channel problem that appeared
+		// intermittently
+		for i := 0; i < 100; i++ {
+			e, err := Load(cfg, c.file)
+			if err != nil {
+				t.Fatalf("Load: %s", err)
+			}
+			err = pm.AddExperiment(c.file.Name(), e.Title, e.Tags, e.Category)
+			if err != nil {
+				t.Fatalf("AddExperiment: %s", err)
+			}
+
+			if err := e.Process(cfg, pm); err == nil || err.Error() != c.wantErr {
+				t.Fatalf("Process: file: %s, gotErr: %s, wantErr: %s",
+					c.file.Name(), err, c.wantErr)
+			}
 		}
 
-		if err := e.Process(cfg, pm); err == nil || err.Error() != c.wantErr {
-			t.Fatalf("Process: file: %s, gotErr: %s, wantErr: %s",
-				c.file.Name(), err, c.wantErr)
-		}
 	}
-
 	err = progresstest.CheckExperimentsMatch(
 		pm.GetExperiments(),
 		wantPMExperiments,
