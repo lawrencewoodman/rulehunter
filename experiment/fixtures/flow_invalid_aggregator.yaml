@@ -1,0 +1,31 @@
+title: "What would indicate good flow?"
+tags:
+  - test
+  - "fred / ned"
+trainDataset:
+  csv:
+    filename: "fixtures/flow.csv"
+    hasHeader: true
+    separator:  ","
+fields:
+  - group
+  - district
+  - height
+  - flow
+ruleGeneration:
+  fields:
+    - group
+    - district
+    - height
+aggregators:
+  - name: "goodFlowMcc"
+    kind: "mcc"
+    arg: "bob > 60"
+goals:
+  - "goodFlowMcc > 0"
+sortOrder:
+  - aggregator: "goodFlowMcc"
+    direction: "descending"
+  - aggregator: "numMatches"
+    direction: "descending"
+
