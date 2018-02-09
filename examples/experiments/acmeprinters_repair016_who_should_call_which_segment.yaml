@@ -14,7 +14,6 @@ fields:
   - segment
   - conversion
   - callTime
-  - callCost
   - numContacts
   - value
 ruleGeneration:
@@ -25,42 +24,48 @@ aggregators:
   - name: "totalContacts"
     kind: "sum"
     arg: "numContacts"
-  - name: "totalClientCharge"
-    kind: "calc"
-    arg: "totalContacts * 8"
   - name: "totalClientValue"
     kind: "sum"
     arg: "value"
+    # 5% commission on all repair contracts
+  - name: "totalClientCommission"
+    kind: "calc"
+    arg: "totalClientValue * 0.05"
+    # £2 charge per contact
+  - name: "totalClientContactCharge"
+    kind: "calc"
+    arg: "totalContacts * 2"
+  - name: "totalClientCharge"
+    kind: "calc"
+    arg: "totalClientCommission + totalClientContactCharge"
   - name: "totalClientROI"
     kind: "calc"
     arg: "roundto(totalClientValue / (totalClientCharge + pow(0,totalClientCharge)), 2)"
-  - name: "totalCCCallCosts"
+  - name: "totalCallCentreCost"
     kind: "sum"
-    arg: "callCost"
-  - name: "totalCCCallTimeCost"
-    kind: "sum"
-    # £12 per hour divided into seconds (12/60/60 - caller pay plus overheads)
-    arg: "callTime * 0.003"
-  - name: "totalCCCosts"
+    # £0.04/min call cost, plus £10/hr caller cost, plus £10/hr overheads
+    # Equal: (0.04/60) + (10/60/60) + (10/60/60) = 0.0062
+    arg: "callTime * 0.0062"
+  - name: "totalCallCentreProfit"
     kind: "calc"
-    arg: "roundto(totalCCCallTimeCost + totalCCCallCosts, 2)"
+    arg: "totalClientCharge - totalCallCentreCost"
   - name: "meanConversion"
     kind: "mean"
     arg: "conversion"
-  - name: "totalCCROI"
+  - name: "totalCallCentreROI"
     kind: "calc"
-    arg: "roundto(totalClientCharge / (totalCCCosts + pow(0,totalCCCosts)), 2)"
+    arg: "roundto(totalClientCharge / (totalCallCentreCost + pow(0,totalCallCentreCost)), 2)"
 goals:
-  - "totalCCROI >= 1.10"
+  - "totalCallCentreROI >= 1.10"
   - "totalClientROI >= 15"
   - "meanConversion > 0.25"
-  - "totalCCROI >= 1.25"
+  - "totalCallCentreROI >= 1.30"
 sortOrder:
   - aggregator: "goalsScore"
     direction: "descending"
   - aggregator: "totalClientValue"
     direction: "descending"
-  - aggregator: "totalCCROI"
+  - aggregator: "totalCallCentreROI"
     direction: "descending"
   - aggregator: "meanConversion"
     direction: "descending"
