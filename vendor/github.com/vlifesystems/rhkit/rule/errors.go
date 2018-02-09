@@ -3,10 +3,6 @@
 
 package rule
 
-import "errors"
-
-var ErrNoRuleFieldsSpecified = errors.New("no rule fields specified")
-
 type InvalidRuleError struct {
 	Rule Rule
 }

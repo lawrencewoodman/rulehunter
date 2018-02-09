@@ -252,9 +252,6 @@ func checkRuleFieldsValid(
 	inputDescription *description.Description,
 	ruleFields []string,
 ) error {
-	if len(ruleFields) == 0 {
-		return ErrNoRuleFieldsSpecified
-	}
 	fields := inputDescription.FieldNames()
 	for _, ruleField := range ruleFields {
 		if !internal.IsStringInSlice(ruleField, fields) {
