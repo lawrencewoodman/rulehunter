@@ -30,74 +30,15 @@ const reportTpl = `
 				{{end}}
 				<br />
 				<br />
-				<h2>Experiment Details</h2>
-				<p>Experiment file: {{ .ExperimentFilename }}</p>
-				<br />
-				<table class="table table-bordered table-nonfluid">
-					<tr>
-						<th>Sort Order</th><th>Direction</th>
-					</tr>
-					{{range .SortOrder}}
-						<tr>
-							<td>{{ .Aggregator }}</td><td>{{ .Direction }}</td>
-						</tr>
-					{{end}}
-				</table>
-
-				{{if .Aggregators}}
-					<table class="table table-bordered">
-						<tr>
-							<th>Aggregator Name</th><th>Kind</th><th>Arg</th>
-						</tr>
-						{{range .Aggregators}}
-							<tr>
-								<td>{{ .Name }}</td><td>{{ .Kind }}</td><td>{{ .Arg }}</td>
-							</tr>
-						{{end}}
-					</table>
-				{{end}}
-
-				<h2>Data Set</h2>
-				The data set contained {{ .NumRecords }} records.</br />
-				<br />
-				<table class="table table-bordered">
-					<tr>
-						<th>Field</th>
-						<th>Kind</th>
-						<th>Min</th>
-						<th>Max</th>
-						<th>MaxDP</th>
-						<th>Values - ('value', freq)</th>
-					</tr>
-					{{range $field, $fd := .Description.Fields}}
-						<tr>
-							<td>{{ $field }}</td>
-							<td>{{ $fd.Kind }}</td>
-							{{if eq $fd.Kind.String "Number"}}
-								<td>{{ $fd.Min }}</td>
-								<td>{{ $fd.Max }}</td>
-								<td>{{ $fd.MaxDP }}</td>
-							{{else}}
-								<td>N/A</td><td>N/A</td><td>N/A</td>
-							{{end}}
-							<td>
-								{{range $value, $valueDesc := $fd.Values}}
-							    ('{{ $value }}', {{ $valueDesc.Num }}) &nbsp;
-								{{end}}
-							</td>
-						</tr>
-					{{end}}
-				</table>
 			</div>
 
 			<div class="container">
 				<h2>Results</h2>
-			</div>
-			{{ $numAssessments := len .Assessments }}
-			{{ $assessments := .Assessments }}
-			{{range $i, $a := .Assessments}}
-				{{if eq $numAssessments 1}}
-					<div class="container">
+
+				{{ $numAssessments := len .Assessments }}
+				{{ $assessments := .Assessments }}
+				{{range $i, $a := .Assessments}}
+					{{if eq $numAssessments 1}}
 						<h3>No rule found that improves on the original dataset</h3>
 
 						<div class="pull-left aggregators">
@@ -133,12 +74,10 @@ const reportTpl = `
 							</div>
 						{{end}}
 
-					</div>
-				{{else}}
-					{{ if IsLast $i $assessments | not}}
-						<div class="container">
+					{{else}}
+						{{ if IsLast $i $assessments | not}}
 							<h3>{{ .Rule }}</h3>
-
+							<br />
 							<div class="pull-left aggregators">
 								<table class="table table-bordered">
 									<tr>
@@ -179,11 +118,77 @@ const reportTpl = `
 								</div>
 							{{end}}
 
-						</div>
+						{{ end }}
 					{{ end }}
 				{{ end }}
-			{{ end }}
+			</div>
+
+
+			<div class="container">
+				<h2>Experiment Details</h2>
+				<p>Experiment file: {{ .ExperimentFilename }}</p>
+				<br />
+				<table class="table table-bordered table-nonfluid">
+					<tr>
+						<th>Sort Order</th><th>Direction</th>
+					</tr>
+					{{range .SortOrder}}
+						<tr>
+							<td>{{ .Aggregator }}</td><td>{{ .Direction }}</td>
+						</tr>
+					{{end}}
+				</table>
+
+				{{if .Aggregators}}
+					<table class="table table-bordered">
+						<tr>
+							<th>Aggregator Name</th><th>Kind</th><th>Arg</th>
+						</tr>
+						{{range .Aggregators}}
+							<tr>
+								<td>{{ .Name }}</td><td>{{ .Kind }}</td><td>{{ .Arg }}</td>
+							</tr>
+						{{end}}
+					</table>
+				{{end}}
+      </div>
+
+			<div class="container">
+				<h2>Data Set</h2>
+				The data set contained {{ .NumRecords }} records.</br />
+				<br />
+				<table class="table table-bordered">
+					<tr>
+						<th>Field</th>
+						<th>Kind</th>
+						<th>Min</th>
+						<th>Max</th>
+						<th>MaxDP</th>
+						<th>Values - ('value', freq)</th>
+					</tr>
+					{{range $field, $fd := .Description.Fields}}
+						<tr>
+							<td>{{ $field }}</td>
+							<td>{{ $fd.Kind }}</td>
+							{{if eq $fd.Kind.String "Number"}}
+								<td>{{ $fd.Min }}</td>
+								<td>{{ $fd.Max }}</td>
+								<td>{{ $fd.MaxDP }}</td>
+							{{else}}
+								<td>N/A</td><td>N/A</td><td>N/A</td>
+							{{end}}
+							<td>
+								{{range $value, $valueDesc := $fd.Values}}
+							    ('{{ $value }}', {{ $valueDesc.Num }}) &nbsp;
+								{{end}}
+							</td>
+						</tr>
+					{{end}}
+				</table>
+			</div>
+
 		</div>
+
 
 		<div id="footer" class="container">
 			{{ index .Html "footer" }}
