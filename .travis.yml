@@ -19,15 +19,20 @@ before_install:
   - psql -U postgres < ci/createflow_travis_postgres.sql
 
 script:
+  # Run the tests
   - chmod +x linux-test-su.sh
   - sudo ./linux-test-su.sh $GOPATH `which go` "travis upstart"
   - pwd
+  # Check the test coverage
   - go test -covermode=count -coverprofile=profile.coverprofile
   - ls -la profile.coverprofile
   - cat profile.coverprofile
   - $HOME/gopath/bin/roveralls -v
   - $HOME/gopath/bin/goveralls -coverprofile=roveralls.coverprofile -service=travis-ci
+  # Process the examples
   - cd examples
   - chmod +x bin/init_www_unix.sh
   - bin/init_www_unix.sh
+  # Remove the following experiment because it takes too long
+  - rm experiments/acmeprinters_repair016_how_many_callbacks.yaml
   - rulehunter --config=config_quick.yaml

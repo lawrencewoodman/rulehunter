@@ -34,4 +34,6 @@ test_script:
   - go test -v -tags="appveyor su" ./...
   - cd examples
   - bin\init_www_windows.bat
+  # Delete following experiment because it takes too long
+  - del experiments\acmeprinters_repair016_how_many_callbacks.yaml
   - C:\gopath\bin\rulehunter --config=config_quick.yaml
