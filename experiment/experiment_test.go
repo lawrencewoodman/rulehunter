@@ -80,6 +80,8 @@ func TestLoad(t *testing.T) {
 				Category: "testing",
 				When:     dexpr.MustNew("!hasRun", funcs),
 				Rules: []rule.Rule{
+					mustNewDynamicRule("flow > 20"),
+					mustNewDynamicRule("flow < 60"),
 					mustNewDynamicRule("height > 67"),
 					mustNewDynamicRule("height >= 129"),
 					mustNewDynamicRule("group == \"a\""),
@@ -130,6 +132,8 @@ func TestLoad(t *testing.T) {
 				Category: "testing",
 				When:     dexpr.MustNew("!hasRun", funcs),
 				Rules: []rule.Rule{
+					mustNewDynamicRule("flow > 20"),
+					mustNewDynamicRule("flow < 60"),
 					mustNewDynamicRule("height > 67"),
 					mustNewDynamicRule("height >= 129"),
 					mustNewDynamicRule("group == \"a\""),
@@ -660,9 +664,15 @@ func TestProcess_supplied_rules(t *testing.T) {
 		t.Fatalf("ReadFile: %s", err)
 	}
 	s := string(b)
-	wantRule := "height \\u003e= 129"
-	if !strings.Contains(s, wantRule) {
-		t.Errorf("rule: %s, missing from: %s", wantRule, flowBuildFullFilename)
+	wantRules := []string{
+		"height \\u003e 67",
+		"flow \\u003e 20",
+	}
+	fmt.Printf("s: %s\n\n", s)
+	for _, wantRule := range wantRules {
+		if !strings.Contains(s, wantRule) {
+			t.Errorf("rule: %s, missing from: %s", wantRule, flowBuildFullFilename)
+		}
 	}
 
 	// TODO: Test files generated

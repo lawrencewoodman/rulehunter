@@ -246,7 +246,7 @@ func (e *Experiment) processTrainDataset(
 		return noRules, fmt.Errorf("Couldn't describe train dataset: %s", err)
 	}
 
-	ass, err := e.assessRules(1, train, e.Rules, pr, cfg)
+	userRulesAss, err := e.assessRules(1, train, e.Rules, pr, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
 	}
@@ -259,11 +259,11 @@ func (e *Experiment) processTrainDataset(
 		return noRules, fmt.Errorf("Couldn't generate rules: %s", err)
 	}
 
-	newAss, err := e.assessRules(2, train, generatedRules, pr, cfg)
+	ass, err := e.assessRules(2, train, generatedRules, pr, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
 	}
-	ass, err = ass.Merge(newAss)
+	ass, err = ass.Merge(userRulesAss)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't merge assessments: %s", err)
 	}
@@ -277,7 +277,7 @@ func (e *Experiment) processTrainDataset(
 	}
 	tweakableRules := rule.Tweak(1, sortedRules, desc)
 
-	newAss, err = e.assessRules(3, train, tweakableRules, pr, cfg)
+	newAss, err := e.assessRules(3, train, tweakableRules, pr, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
 	}
@@ -322,6 +322,15 @@ func (e *Experiment) processTrainDataset(
 	ass.Sort(e.SortOrder)
 	ass.Refine()
 	ass = ass.TruncateRuleAssessments(2)
+
+	ass, err = ass.Merge(userRulesAss)
+	if err != nil {
+		return noRules, fmt.Errorf("Couldn't merge assessments: %s", err)
+	}
+
+	ass.Sort(e.SortOrder)
+	ass.Refine()
+	ass = ass.TruncateRuleAssessments(10)
 
 	r := report.New(
 		report.Train,

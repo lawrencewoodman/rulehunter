@@ -33,6 +33,8 @@
     }
   ],
   "rules": [
+    "flow > 20",
+    "flow < 60",
     "height > 67",
     "height >= 129",
     "group == \"a\"",
