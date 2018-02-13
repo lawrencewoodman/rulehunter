@@ -38,60 +38,20 @@ const reportTpl = `
 				{{ $numAssessments := len .Assessments }}
 				{{ $assessments := .Assessments }}
 				{{range $i, $a := .Assessments}}
-					{{if eq $numAssessments 1}}
-						<h3>No rule found that improves on the original dataset</h3>
+					<div class="rule">
+						{{if eq $numAssessments 1}}
+							<h3>No rule found that improves on the original dataset</h3>
 
-						<div class="pull-left aggregators">
-							<table class="table table-bordered">
-								<tr>
-									<th>Aggregator</th>
-									<th>Value</th>
-								</tr>
-								{{ range $a.Aggregators }}
-								<tr>
-									<td>{{ .Name }}</td>
-									<td>{{ .OriginalValue }}</td>
-								</tr>
-								{{ end }}
-							</table>
-						</div>
-
-						{{if $a.Goals}}
-							<div class="pull-left">
-								<table class="table table-bordered">
-									<tr>
-										<th>Goal</th><th>Value</th>
-									</tr>
-									{{ range $a.Goals }}
-									<tr>
-										<td>{{ .Expr }}</td>
-										<td class="goalPassed-{{.OriginalPassed}}">
-											{{ .OriginalPassed }}
-										</td>
-									</tr>
-									{{ end }}
-								</table>
-							</div>
-						{{end}}
-
-					{{else}}
-						{{ if IsLast $i $assessments | not}}
-							<h3>{{ .Rule }}</h3>
-							<br />
 							<div class="pull-left aggregators">
 								<table class="table table-bordered">
 									<tr>
 										<th>Aggregator</th>
-										<th>Original Value</th>
-										<th>Rule Value</th>
-										<th>Change</th>
+										<th>Value</th>
 									</tr>
 									{{ range $a.Aggregators }}
 									<tr>
 										<td>{{ .Name }}</td>
 										<td>{{ .OriginalValue }}</td>
-										<td>{{ .RuleValue }}</td>
-										<td>{{ .Difference }}</td>
 									</tr>
 									{{ end }}
 								</table>
@@ -101,7 +61,7 @@ const reportTpl = `
 								<div class="pull-left">
 									<table class="table table-bordered">
 										<tr>
-											<th>Goal</th><th>Original Value</th><th>Rule Value</th>
+											<th>Goal</th><th>Value</th>
 										</tr>
 										{{ range $a.Goals }}
 										<tr>
@@ -109,17 +69,58 @@ const reportTpl = `
 											<td class="goalPassed-{{.OriginalPassed}}">
 												{{ .OriginalPassed }}
 											</td>
-											<td class="goalPassed-{{.RulePassed}}">
-												{{ .RulePassed }}
-											</td>
 										</tr>
 										{{ end }}
 									</table>
 								</div>
 							{{end}}
 
+						{{else}}
+							{{ if IsLast $i $assessments | not}}
+								<h3>{{ .Rule }}</h3>
+								<div class="pull-left aggregators">
+									<table class="table table-bordered">
+										<tr>
+											<th>Aggregator</th>
+											<th>Original Value</th>
+											<th>Rule Value</th>
+											<th>Change</th>
+										</tr>
+										{{ range $a.Aggregators }}
+										<tr>
+											<td>{{ .Name }}</td>
+											<td>{{ .OriginalValue }}</td>
+											<td>{{ .RuleValue }}</td>
+											<td>{{ .Difference }}</td>
+										</tr>
+										{{ end }}
+									</table>
+								</div>
+
+								{{if $a.Goals}}
+									<div class="pull-left">
+										<table class="table table-bordered">
+											<tr>
+												<th>Goal</th><th>Original Value</th><th>Rule Value</th>
+											</tr>
+											{{ range $a.Goals }}
+											<tr>
+												<td>{{ .Expr }}</td>
+												<td class="goalPassed-{{.OriginalPassed}}">
+													{{ .OriginalPassed }}
+												</td>
+												<td class="goalPassed-{{.RulePassed}}">
+													{{ .RulePassed }}
+												</td>
+											</tr>
+											{{ end }}
+										</table>
+									</div>
+								{{end}}
+
+							{{ end }}
 						{{ end }}
-					{{ end }}
+					</div>
 				{{ end }}
 			</div>
 

@@ -111,6 +111,10 @@ div.aggregators {
   margin-right: 3em;
 }
 
+div.rule {
+  clear: left;
+}
+
 table td.goalPassed-true {
   background-color: #CFC;
 }
