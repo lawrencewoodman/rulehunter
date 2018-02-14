@@ -1,0 +1,62 @@
+title: "Will customer subscribe to a bank term deposit?"
+category: "bank"
+tags:
+  - business
+trainDataset:
+  csv:
+    filename: "csv/bank.csv"
+    hasHeader: true
+    separator: ";"
+fields:
+  - age
+  - job
+  - marital
+  - education
+  - default
+  - balance
+  - housing
+  - loan
+  - contact
+  - day
+  - month
+  - duration
+  - campaign
+  - pdays
+  - previous
+  - poutcome
+  - y
+ruleGeneration:
+  fields:
+    - age
+    - job
+    - marital
+    - education
+    - default
+    - balance
+    - housing
+    - loan
+    - contact
+    - day
+    - month
+    - campaign
+    - pdays
+    - previous
+    - poutcome
+aggregators:
+  - name: "mccSubscribe"
+    kind: "mcc"
+    arg: "y == \"yes\""
+  - name: "numSubscribe"
+    kind: "count"
+    arg: "y == \"yes\""
+  - name: "recallSuccess"
+    kind: "recall"
+    arg: "y == \"yes\""
+  - name: "precisionSuccess"
+    kind: "precision"
+    arg: "y == \"yes\""
+sortOrder:
+  - aggregator: "mccSubscribe"
+    direction: "descending"
+when: "!hasRun || sinceLastRunMinutes > 40"
+
