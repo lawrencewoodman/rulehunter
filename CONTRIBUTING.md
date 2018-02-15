@@ -77,7 +77,7 @@ Rather than use a full-blown _Contributor License Agreement_, this project uses 
 
 
 ### Licence
-Copyright (C) 2016-2017 [vLife Systems Ltd](http://vlifesystems.com)
+Copyright (C) 2016-2018 [vLife Systems Ltd](http://vlifesystems.com)
 
 Rulehunter is licensed under an MIT licence.  Please see [LICENSE.md](https://github.com/vlifesystems/rulehunter/blob/master/LICENSE.md) for details.
 

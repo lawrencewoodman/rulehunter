@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 package version
@@ -23,12 +23,13 @@ type rulehunterVersion struct {
 	Suffix string
 }
 
-// CurrentHugoVersion represents the current build version.
+// CurrentRulehunterVersion represents the current build version.
 var currentRulehunterVersion = rulehunterVersion{
-	Major:  0,
-	Minor:  1,
-	Patch:  0,
-	Suffix: "-DEV",
+	Major: 0,
+	Minor: 2,
+	Patch: 0,
+	// Change Suffix to -DEV", for next commit following version
+	Suffix: "",
 }
 
 func Version() string {

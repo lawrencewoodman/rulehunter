@@ -1,4 +1,4 @@
-## Master
+## 0.2 (15th February 2018)
 
 ### Config
 
