@@ -9,7 +9,7 @@
 // Package dcopy copies a Dataset so that you can work consistently on
 // the same Dataset.  This is important where a database is likely to be
 // updated while you are working on it.  The copy of the database is stored
-// in an sqlite3 database located in a temporary directory.
+// in a CSV file located in a temporary directory.
 package dcopy
 
 import (

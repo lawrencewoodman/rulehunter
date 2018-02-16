@@ -1,5 +1,7 @@
-// Copyright (C) 2017 Lawrence Woodman <lwoodman@vlifesystems.com>
+// Copyright (C) 2018 Lawrence Woodman <lwoodman@vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
+
+// +build -nosqlite3
 
 package internal
 

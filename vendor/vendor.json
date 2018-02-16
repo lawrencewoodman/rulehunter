@@ -39,38 +39,38 @@
 		{
 			"checksumSHA1": "01kPoNshPZuLal9fsdaYV2AdLTE=",
 			"path": "github.com/lawrencewoodman/ddataset",
-			"revision": "779e2686836dcbbdac87ee4a9ebc454281bee93f",
-			"revisionTime": "2018-01-09T10:05:37Z"
+			"revision": "78d6366d27101e2738c2f924a6ebaed5d5fa006b",
+			"revisionTime": "2018-02-16T07:55:29Z"
 		},
 		{
-			"checksumSHA1": "gyWC6cgCsoGN0ir/7hFO8qet5Qg=",
+			"checksumSHA1": "hU8xLNQ+AslMWp5P+k9Cgpcb+dg=",
 			"path": "github.com/lawrencewoodman/ddataset/dcopy",
-			"revision": "44bf7cb69125a79284816ccd119b7b41fcc45818",
-			"revisionTime": "2018-01-01T06:43:30Z"
+			"revision": "78d6366d27101e2738c2f924a6ebaed5d5fa006b",
+			"revisionTime": "2018-02-16T07:55:29Z"
 		},
 		{
 			"checksumSHA1": "GsdfqpEhbuzAxFvC/m9H4W6wKhE=",
 			"path": "github.com/lawrencewoodman/ddataset/dcsv",
-			"revision": "44bf7cb69125a79284816ccd119b7b41fcc45818",
-			"revisionTime": "2018-01-01T06:43:30Z"
+			"revision": "78d6366d27101e2738c2f924a6ebaed5d5fa006b",
+			"revisionTime": "2018-02-16T07:55:29Z"
 		},
 		{
 			"checksumSHA1": "QoYzJqtss1afwdUEFfKXrKzmRZ4=",
 			"path": "github.com/lawrencewoodman/ddataset/dsql",
-			"revision": "44bf7cb69125a79284816ccd119b7b41fcc45818",
-			"revisionTime": "2018-01-01T06:43:30Z"
+			"revision": "78d6366d27101e2738c2f924a6ebaed5d5fa006b",
+			"revisionTime": "2018-02-16T07:55:29Z"
 		},
 		{
 			"checksumSHA1": "MpHFczzT9H96K6gvVimbkS8rBZs=",
 			"path": "github.com/lawrencewoodman/ddataset/dtruncate",
-			"revision": "44bf7cb69125a79284816ccd119b7b41fcc45818",
-			"revisionTime": "2018-01-01T06:43:30Z"
+			"revision": "78d6366d27101e2738c2f924a6ebaed5d5fa006b",
+			"revisionTime": "2018-02-16T07:55:29Z"
 		},
 		{
-			"checksumSHA1": "weXYJgrNEAI81jCP4qZrZJ3Hf80=",
+			"checksumSHA1": "VnEv2sr2jwV9CKY/LVDbzv0Q2a8=",
 			"path": "github.com/lawrencewoodman/ddataset/internal",
-			"revision": "44bf7cb69125a79284816ccd119b7b41fcc45818",
-			"revisionTime": "2018-01-01T06:43:30Z"
+			"revision": "78d6366d27101e2738c2f924a6ebaed5d5fa006b",
+			"revisionTime": "2018-02-16T07:55:29Z"
 		},
 		{
 			"checksumSHA1": "6uSWY5B6QStbkFquijMxiOMKpvs=",
@@ -97,10 +97,10 @@
 			"revisionTime": "2017-11-26T05:04:59Z"
 		},
 		{
-			"checksumSHA1": "zKDmGyNRpAeeTGXwzKEvy+UY/QQ=",
+			"checksumSHA1": "lWP9h/g42q0jGZltdSCe/gMJcow=",
 			"path": "github.com/mattn/go-sqlite3",
-			"revision": "d5ffb5c0cca8778699a929b236766f4a7af674e8",
-			"revisionTime": "2017-11-22T00:24:37Z"
+			"revision": "3c6eef45ff2de301fee18d11cd8727f65754eeb5",
+			"revisionTime": "2018-02-07T12:14:15Z"
 		},
 		{
 			"checksumSHA1": "CJxJs5h5+CPUPI497KC/mvWSG84=",
