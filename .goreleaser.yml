@@ -3,24 +3,27 @@ release:
   github:
     owner: vlifesystems
     name: rulehunter
+
 builds:
 - goos:
-  - linux
-  - darwin
-  - windows
+    - linux
+    - darwin
+    - windows
   goarch:
-  - amd64
-  - "386"
+    - amd64
+    - "386"
   goarm:
-  - "6"
+    - "6"
+  flags: -tags nosqlite3
   main: .
   binary: rulehunter
+
 archive:
   format: zip
   files:
-  - LICENSE*
-  - README*
-  - CHANGELOG*
-  - CONTRIBUTING*
-  - support/**/**/**/**
-  - examples/**/**/**/**
+    - LICENSE*
+    - README*
+    - CHANGELOG*
+    - CONTRIBUTING*
+    - support/**/**/**/**
+    - examples/**/**/**/**

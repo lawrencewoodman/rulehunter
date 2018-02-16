@@ -16,6 +16,7 @@
    with `ruleGeneration`
  * Allow two datasets to be used: `trainDataset` and `testDataset`
  * Add support for PostgreSQL
+ * Temporarily disable sqlite3 for goreleaser release
 
 ### HTML
 

@@ -1,7 +1,7 @@
 // Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
-// +build !nosqlite3
+// +build nosqlite3
 
 package experiment
 
@@ -15,7 +15,6 @@ import (
 	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var errDatabaseNotOpen = errors.New("connection to database not open")
@@ -34,6 +33,9 @@ func newSQLHandler(
 	dataSourceName string,
 	query string,
 ) (*sqlHandler, error) {
+	if driverName == "sqlite3" {
+		return nil, fmt.Errorf("invalid driverName: sqlite3, this is temporarily disabled in this release")
+	}
 	validSQLDriverNames := []string{"sqlite3", "mysql", "mssql", "postgres"}
 	for _, name := range validSQLDriverNames {
 		if name == driverName {
