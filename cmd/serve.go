@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 package cmd
@@ -16,17 +16,22 @@ var ServeCmd = &cobra.Command{
          directory and processing its contents.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := logger.NewSvcLogger()
-		return runServe(l, flagConfigFilename)
+		q := quitter.New()
+		defer q.Quit()
+		return runServe(l, q, flagConfigFilename)
 	},
 }
 
-func runServe(l logger.Logger, configFilename string) error {
-	q := quitter.New()
-	defer q.Quit()
+func runServe(
+	l logger.Logger,
+	q *quitter.Quitter,
+	configFilename string,
+) error {
 	s, err := InitSetup(l, q, configFilename)
 	if err != nil {
 		return err
 	}
+	go httpServer(s.cfg.HTTPPort, s.cfg.WWWDir, q, l)
 	if err := s.svc.Run(); err != nil {
 		return err
 	}

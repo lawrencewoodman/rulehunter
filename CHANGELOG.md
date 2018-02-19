@@ -1,3 +1,9 @@
+## Master
+
+### Config
+ * Add `httpPort` to allow internal web server
+
+
 ## 0.2 (15th February 2018)
 
 ### Config
@@ -52,6 +58,7 @@
 
  * Switch to MIT licence
  * Up Go requirement to v1.8+
+
 
 ## 0.1 (7th July 2017)
 

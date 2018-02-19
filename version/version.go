@@ -29,7 +29,7 @@ var currentRulehunterVersion = rulehunterVersion{
 	Minor: 2,
 	Patch: 0,
 	// Change Suffix to -DEV", for next commit following version
-	Suffix: "",
+	Suffix: "-DEV",
 }
 
 func Version() string {

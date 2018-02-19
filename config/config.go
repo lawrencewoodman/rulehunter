@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 // Package config handles the loading of a config file
@@ -19,6 +19,7 @@ type Config struct {
 	BaseURL         string `yaml:"baseUrl"`
 	MaxNumProcesses int    `yaml:"maxNumProcesses"`
 	MaxNumRecords   int64  `yaml:"maxNumRecords"`
+	HTTPPort        int    `yaml:"httpPort"`
 }
 
 // InvalidExtError indicates that a config file has an invalid extension

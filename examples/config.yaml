@@ -1,3 +1,4 @@
 experimentsDir: "experiments"
 wwwDir: "www"
 buildDir: "build"
+httpPort: 8780

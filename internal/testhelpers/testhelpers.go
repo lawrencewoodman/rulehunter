@@ -19,7 +19,12 @@ type errorReporter interface {
 	Fatalf(format string, args ...interface{})
 }
 
-func MustWriteConfig(e errorReporter, baseDir string, maxNumRecords int64) {
+func MustWriteConfig(
+	e errorReporter,
+	baseDir string,
+	maxNumRecords int64,
+	args ...int,
+) {
 	const mode = 0600
 	cfg := &config.Config{
 		ExperimentsDir:  filepath.Join(baseDir, "experiments"),
@@ -27,6 +32,11 @@ func MustWriteConfig(e errorReporter, baseDir string, maxNumRecords int64) {
 		BuildDir:        filepath.Join(baseDir, "build"),
 		MaxNumProcesses: 2,
 		MaxNumRecords:   maxNumRecords,
+	}
+	if len(args) == 1 {
+		cfg.HTTPPort = args[0]
+	} else if len(args) > 1 {
+		e.Fatalf("too many arguments: %d", len(args))
 	}
 	cfgFilename := filepath.Join(baseDir, "config.yaml")
 	y, err := yaml.Marshal(cfg)

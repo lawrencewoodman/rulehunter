@@ -1,12 +1,12 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/kardianos/service"
@@ -49,7 +49,7 @@ func InitSetup(
 	}
 	prg := program.New(config, pm, l, q)
 
-	s, err := newService(prg, flagUser)
+	s, err := newService(prg, flagUser, configFilename)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,11 @@ func InitSetup(
 	}, nil
 }
 
-func newService(prg *program.Program, user string) (service.Service, error) {
+func newService(
+	prg *program.Program,
+	user string,
+	configFilename string,
+) (service.Service, error) {
 	svcConfig := &service.Config{
 		Name:        "rulehunter",
 		DisplayName: "Rulehunter server",
@@ -90,11 +94,9 @@ func newService(prg *program.Program, user string) (service.Service, error) {
 	}
 
 	if len(os.Args) >= 2 && os.Args[1] == "service" {
-		svcConfig.Arguments = []string{"serve"}
-		for _, arg := range os.Args[2:] {
-			if !strings.HasPrefix(arg, "--user") {
-				svcConfig.Arguments = append(svcConfig.Arguments, arg)
-			}
+		svcConfig.Arguments = []string{
+			"serve",
+			fmt.Sprintf("--config=%s", configFilename),
 		}
 	} else {
 		svcConfig.Arguments = os.Args[1:]

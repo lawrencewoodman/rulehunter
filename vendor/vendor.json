@@ -103,6 +103,12 @@
 			"revisionTime": "2018-02-07T12:14:15Z"
 		},
 		{
+			"checksumSHA1": "kZRhErakejBG0U2e8D+Ap/Djje8=",
+			"path": "github.com/phayes/freeport",
+			"revision": "e27662a4a9d6b2083dfd7e7b5d0e30985daca925",
+			"revisionTime": "2017-10-02T18:52:19Z"
+		},
+		{
 			"checksumSHA1": "CJxJs5h5+CPUPI497KC/mvWSG84=",
 			"path": "github.com/spf13/cobra",
 			"revision": "3c0b56b677e04926dfa835a1b3f11cd4f62f076e",
@@ -221,6 +227,10 @@
 			"path": "gopkg.in/yaml.v2",
 			"revision": "31c299268d302dd0aa9a0dcf765a3d58971ac83f",
 			"revisionTime": "2016-09-12T16:56:03Z"
+		},
+		{
+			"path": "https://github.com/phayes/freeport",
+			"revision": ""
 		}
 	],
 	"rootPath": "github.com/vlifesystems/rulehunter"

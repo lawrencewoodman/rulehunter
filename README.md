@@ -24,14 +24,6 @@ To make testing simpler under Linux, where root is needed, you can use the follo
 sudo ./linux-test-su.sh $GOPATH `which go` systemd
 ```
 
-To test the output of the server you can create a simple static webserver using something like the following from the `wwwDir` directory specified in the `config.yaml`:
-
-```Shell
-ruby -run -ehttpd . -p8000
-```
-
-If you don't like ruby there is this [list of one-liner static webservers](https://gist.github.com/willurd/5720255).
-
 Contributing
 ------------
 We would love contributions to improve this project.  You can help by reporting bugs, improving the documentation, submitting feature requests, fixing bugs, etc.
