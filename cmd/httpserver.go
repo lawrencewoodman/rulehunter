@@ -25,7 +25,7 @@ func httpServer(
 	shutdownSent := false
 	srv := &http.Server{Addr: fmt.Sprintf(":%d", port)}
 	http.Handle("/", http.FileServer(http.Dir(wwwDir)))
-	l.Info(fmt.Sprintf("starting http server on port: %d", port))
+	l.Info(fmt.Sprintf("Starting http server on port: %d", port))
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
 			if !shutdownSent {
@@ -40,6 +40,6 @@ func httpServer(
 	if err := srv.Shutdown(nil); err != nil {
 		l.Error(fmt.Errorf("http server: %s", err))
 	} else {
-		l.Info(fmt.Sprintf("shutdown http server on port: %d", port))
+		l.Info(fmt.Sprintf("Shutdown http server on port: %d", port))
 	}
 }

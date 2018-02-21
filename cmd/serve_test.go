@@ -132,9 +132,9 @@ func TestRunServe_http(t *testing.T) {
 	}
 	wantEntries := []testhelpers.Entry{
 		{Level: testhelpers.Info,
-			Msg: fmt.Sprintf("starting http server on port: %d", httpPort)},
+			Msg: fmt.Sprintf("Starting http server on port: %d", httpPort)},
 		{Level: testhelpers.Info,
-			Msg: fmt.Sprintf("shutdown http server on port: %d", httpPort)},
+			Msg: fmt.Sprintf("Shutdown http server on port: %d", httpPort)},
 		{Level: testhelpers.Error,
 			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 3: did not find expected key"},
 		{Level: testhelpers.Info,
