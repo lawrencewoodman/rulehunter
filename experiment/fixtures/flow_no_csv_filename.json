@@ -1,10 +1,12 @@
 {
   "title": "What would indicate good flow?",
   "tags": ["test", "fred / ned"],
-  "trainDataset": {
-    "csv": {
-      "hasHeader": true,
-      "separator":  ","
+  "train": {
+    "dataset": {
+      "csv": {
+        "hasHeader": true,
+        "separator":  ","
+      }
     }
   },
   "fields": ["group","district","height","flow"],

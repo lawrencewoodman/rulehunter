@@ -51,12 +51,15 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
-				TrainDataset: dcsv.New(
-					filepath.Join("fixtures", "flow.csv"),
-					true,
-					rune(','),
-					[]string{"group", "district", "height", "flow"},
-				),
+				Train: &Mode{
+					Dataset: dcsv.New(
+						filepath.Join("fixtures", "flow.csv"),
+						true,
+						rune(','),
+						[]string{"group", "district", "height", "flow"},
+					),
+					When: dexpr.MustNew("!hasRun", funcs),
+				},
 				RuleGeneration: ruleGeneration{
 					fields:     []string{"group", "district", "height"},
 					arithmetic: true,
@@ -78,7 +81,6 @@ func TestLoad(t *testing.T) {
 				},
 				Tags:     []string{"test", "fred / ned"},
 				Category: "testing",
-				When:     dexpr.MustNew("!hasRun", funcs),
 				Rules: []rule.Rule{
 					mustNewDynamicRule("flow > 20"),
 					mustNewDynamicRule("flow < 60"),
@@ -100,15 +102,18 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
-				TrainDataset: dtruncate.New(
-					dcsv.New(
-						filepath.Join("fixtures", "flow.csv"),
-						true,
-						rune(','),
-						[]string{"group", "district", "height", "flow"},
+				Train: &Mode{
+					Dataset: dtruncate.New(
+						dcsv.New(
+							filepath.Join("fixtures", "flow.csv"),
+							true,
+							rune(','),
+							[]string{"group", "district", "height", "flow"},
+						),
+						4,
 					),
-					4,
-				),
+					When: dexpr.MustNew("!hasRun", funcs),
+				},
 				RuleGeneration: ruleGeneration{
 					fields:     []string{"group", "district", "height"},
 					arithmetic: true,
@@ -130,7 +135,6 @@ func TestLoad(t *testing.T) {
 				},
 				Tags:     []string{"test", "fred / ned"},
 				Category: "testing",
-				When:     dexpr.MustNew("!hasRun", funcs),
 				Rules: []rule.Rule{
 					mustNewDynamicRule("flow > 20"),
 					mustNewDynamicRule("flow < 60"),
@@ -147,17 +151,20 @@ func TestLoad(t *testing.T) {
 			BuildDir:      filepath.Join(tmpDir, "build"),
 		},
 			file: testhelpers.NewFileInfo(
-				filepath.Join("fixtures", "flow_no_traindataset.json"),
+				filepath.Join("fixtures", "flow_no_train_dataset.json"),
 				time.Now(),
 			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
-				TestDataset: dcsv.New(
-					filepath.Join("fixtures", "flow.csv"),
-					true,
-					rune(','),
-					[]string{"group", "district", "height", "flow"},
-				),
+				Test: &Mode{
+					Dataset: dcsv.New(
+						filepath.Join("fixtures", "flow.csv"),
+						true,
+						rune(','),
+						[]string{"group", "district", "height", "flow"},
+					),
+					When: dexpr.MustNew("!hasRun", funcs),
+				},
 				RuleGeneration: ruleGeneration{
 					fields:     []string{"group", "district", "height"},
 					arithmetic: true,
@@ -179,7 +186,6 @@ func TestLoad(t *testing.T) {
 				},
 				Tags:     []string{"test", "fred / ned"},
 				Category: "testing",
-				When:     dexpr.MustNew("!hasRun", funcs),
 				Rules: []rule.Rule{
 					mustNewDynamicRule("height > 67"),
 					mustNewDynamicRule("height >= 129"),
@@ -199,19 +205,25 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would predict people being helped to be debt free?",
-				TrainDataset: dcsv.New(
-					filepath.Join("fixtures", "debt.csv"),
-					true,
-					rune(','),
-					[]string{
-						"name",
-						"balance",
-						"numCards",
-						"martialStatus",
-						"tertiaryEducated",
-						"success",
-					},
-				),
+				Train: &Mode{
+					Dataset: dcsv.New(
+						filepath.Join("fixtures", "debt.csv"),
+						true,
+						rune(','),
+						[]string{
+							"name",
+							"balance",
+							"numCards",
+							"martialStatus",
+							"tertiaryEducated",
+							"success",
+						},
+					),
+					When: dexpr.MustNew(
+						"!hasRunToday || sinceLastRunHours > 2",
+						funcs,
+					),
+				},
 				RuleGeneration: ruleGeneration{
 					fields: []string{
 						"name",
@@ -238,10 +250,6 @@ func TestLoad(t *testing.T) {
 					assessment.SortOrder{"numMatches", assessment.DESCENDING},
 				},
 				Tags: []string{"debt"},
-				When: dexpr.MustNew(
-					"!hasRunToday || sinceLastRunHours > 2",
-					funcs,
-				),
 			},
 		},
 		{cfg: &config.Config{
@@ -254,12 +262,15 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
-				TrainDataset: dcsv.New(
-					filepath.Join("fixtures", "flow.csv"),
-					true,
-					rune(','),
-					[]string{"group", "district", "height", "flow"},
-				),
+				Train: &Mode{
+					Dataset: dcsv.New(
+						filepath.Join("fixtures", "flow.csv"),
+						true,
+						rune(','),
+						[]string{"group", "district", "height", "flow"},
+					),
+					When: dexpr.MustNew("!hasRun", funcs),
+				},
 				RuleGeneration: ruleGeneration{
 					fields:     []string{"group", "district", "height"},
 					arithmetic: false,
@@ -280,7 +291,6 @@ func TestLoad(t *testing.T) {
 					assessment.SortOrder{"numMatches", assessment.DESCENDING},
 				},
 				Tags: []string{"test", "fred / ned"},
-				When: dexpr.MustNew("!hasRun", funcs),
 			},
 		},
 	}
@@ -309,53 +319,53 @@ func TestLoad_error(t *testing.T) {
 		),
 			errors.New("Experiment field missing: title")},
 		{testhelpers.NewFileInfo(
-			filepath.Join("fixtures", "flow_no_traindataset_or_testdataset.json"),
+			filepath.Join("fixtures", "flow_no_train_or_test.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing either: trainDataset or testDataset")},
+			errors.New("Experiment field missing either: train or test")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_csv_sql.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field: trainDataset, has no csv or sql field")},
+			errors.New("Experiment field: train > dataset, has no csv or sql field")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_csv_filename.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: trainDataset > csv > filename")},
+			errors.New("Experiment field missing: train > dataset > csv > filename")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_csv_separator.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: trainDataset > csv > separator")},
+			errors.New("Experiment field missing: train > dataset > csv > separator")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_csv_and_sql.yaml"),
 			time.Now(),
 		),
 			errors.New(
-				"Experiment field: trainDataset, can't specify csv and sql source",
+				"Experiment field: train > dataset, can't specify csv and sql source",
 			),
 		},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_sql_drivername.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: trainDataset > sql > driverName")},
+			errors.New("Experiment field missing: train > dataset > sql > driverName")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_invalid_sql_drivername.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field: trainDataset > sql, has invalid driverName: bob")},
+			errors.New("Experiment field: train > dataset > sql, has invalid driverName: bob")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_sql_datasourcename.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: trainDataset > sql > dataSourceName")},
+			errors.New("Experiment field missing: train > dataset > sql > dataSourceName")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_sql_query.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: trainDataset > sql > query")},
+			errors.New("Experiment field missing: train > dataset > sql > query")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_invalid_when.json"),
 			time.Now(),
@@ -439,91 +449,6 @@ func TestInvalidExtErrorError(t *testing.T) {
 	}
 }
 
-func TestShouldProcess(t *testing.T) {
-	funcs := map[string]dexpr.CallFun{}
-	cases := []struct {
-		e          *Experiment
-		isFinished bool
-		stamp      time.Time
-		want       bool
-	}{
-		{e: &Experiment{
-			File: testhelpers.NewFileInfo("bank-divorced.json", time.Now()),
-			When: dexpr.MustNew("!hasRun", funcs),
-		},
-			isFinished: true,
-			stamp: testhelpers.MustParse(time.RFC3339Nano,
-				"2016-05-04T14:53:00.570347516+01:00"),
-			want: true,
-		},
-		{e: &Experiment{
-			File: testhelpers.NewFileInfo("bank-divorced.json",
-				testhelpers.MustParse(time.RFC3339Nano,
-					"2016-05-04T14:53:00.570347516+01:00")),
-			When: dexpr.MustNew("!hasRun", funcs),
-		},
-			isFinished: true,
-			stamp: testhelpers.MustParse(time.RFC3339Nano,
-				"2016-05-04T14:53:00.570347516+01:00"),
-			want: false,
-		},
-		{e: &Experiment{
-			File: testhelpers.NewFileInfo("bank-tiny.json", time.Now()),
-			When: dexpr.MustNew("!hasRun", funcs),
-		},
-			isFinished: true,
-			stamp: testhelpers.MustParse(time.RFC3339Nano,
-				"2016-05-05T09:37:58.220312223+01:00"),
-			want: true,
-		},
-		{e: &Experiment{
-			File: testhelpers.NewFileInfo("bank-tiny.json",
-				testhelpers.MustParse(time.RFC3339Nano,
-					"2016-05-05T09:37:58.220312223+01:00")),
-			When: dexpr.MustNew("!hasRun", funcs),
-		},
-			isFinished: true,
-			stamp: testhelpers.MustParse(time.RFC3339Nano,
-				"2016-05-05T09:37:58.220312223+01:00"),
-			want: false,
-		},
-		{e: &Experiment{
-			File: testhelpers.NewFileInfo("bank-full-divorced.json", time.Now()),
-			When: dexpr.MustNew("!hasRun", funcs),
-		},
-			isFinished: false,
-			stamp:      time.Now(),
-			want:       true,
-		},
-		{e: &Experiment{
-			File: testhelpers.NewFileInfo("bank-full-divorced.json", time.Now()),
-			When: dexpr.MustNew("!hasRun", funcs),
-		},
-			isFinished: false,
-			stamp:      time.Now(),
-			want:       true,
-		},
-	}
-	tmpDir := testhelpers.TempDir(t)
-	defer os.RemoveAll(tmpDir)
-	testhelpers.CopyFile(
-		t,
-		filepath.Join("..", "progress", "fixtures", "progress.json"),
-		tmpDir,
-	)
-
-	for i, c := range cases {
-		got, err := c.e.ShouldProcess(c.isFinished, c.stamp)
-		if err != nil {
-			t.Errorf("(%d) shouldProcess: %s", i, err)
-			continue
-		}
-		if got != c.want {
-			t.Errorf("(%d) shouldProcess, got: %t, want: %t", i, got, c.want)
-		}
-	}
-}
-
 func TestProcess(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
@@ -548,9 +473,9 @@ func TestProcess(t *testing.T) {
 			Category: "testing",
 			Status: &progress.Status{
 				Stamp:   time.Now(),
-				Msg:     "Train > Assessing rules 5/5",
-				Percent: 100,
-				State:   progress.Processing,
+				Msg:     "Finished processing successfully",
+				Percent: 0,
+				State:   progress.Success,
 			},
 		},
 	}
@@ -568,15 +493,13 @@ func TestProcess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: err: %v", err)
 	}
+	l := testhelpers.NewLogger()
+	go l.Run(quit)
 	e, err := Load(cfg, file)
 	if err != nil {
 		t.Fatalf("Load: %s", err)
 	}
-	err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
-	if err != nil {
-		t.Fatalf("AddExperiment: %s", err)
-	}
-	if err := e.Process(cfg, pm); err != nil {
+	if err := e.Process(cfg, pm, l, false); err != nil {
 		t.Fatalf("Process: %s", err)
 	}
 
@@ -598,9 +521,91 @@ func TestProcess(t *testing.T) {
 		t.Errorf("GetCmdsRecevied() received less than 2 commands")
 	}
 	for _, c := range htmlCmdsReceived {
-		if c != cmd.Progress {
+		if c != cmd.Progress && c != cmd.Reports {
 			t.Errorf(
-				"GetCmdsRecevied() commands not all equal to Progress, found: %s",
+				"GetCmdsRecevied() commands not all equal to Progress or Reports, found: %s",
+				c,
+			)
+		}
+	}
+	// TODO: Test files generated
+}
+
+func TestProcess_ignoreWhen(t *testing.T) {
+	cfgDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(cfgDir)
+	cfg := &config.Config{
+		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
+		WWWDir:          filepath.Join(cfgDir, "www"),
+		BuildDir:        filepath.Join(cfgDir, "build"),
+		MaxNumRecords:   100,
+		MaxNumProcesses: 4,
+	}
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "flow_when_hasrun.json"),
+		cfg.ExperimentsDir,
+	)
+	file := testhelpers.NewFileInfo("flow_when_hasrun.json", time.Now())
+	wantPMExperiments := []*progress.Experiment{
+		&progress.Experiment{
+			Title:    "What would indicate good flow?",
+			Filename: "flow_when_hasrun.json",
+			Tags:     []string{"test", "fred / ned"},
+			Category: "testing",
+			Status: &progress.Status{
+				Stamp:   time.Now(),
+				Msg:     "Finished processing successfully",
+				Percent: 0,
+				State:   progress.Success,
+			},
+		},
+	}
+
+	quit := quitter.New()
+	defer quit.Quit()
+	htmlCmds := make(chan cmd.Cmd, 100)
+	defer close(htmlCmds)
+	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
+	go cmdMonitor.Run()
+	pm, err := progress.NewMonitor(
+		filepath.Join(cfg.BuildDir, "progress"),
+		htmlCmds,
+	)
+	if err != nil {
+		t.Fatalf("progress.NewMonitor: err: %v", err)
+	}
+	l := testhelpers.NewLogger()
+	go l.Run(quit)
+	e, err := Load(cfg, file)
+	if err != nil {
+		t.Fatalf("Load: %s", err)
+	}
+	if err := e.Process(cfg, pm, l, true); err != nil {
+		t.Fatalf("Process: %s", err)
+	}
+
+	err = progresstest.CheckExperimentsMatch(
+		pm.GetExperiments(),
+		wantPMExperiments,
+		false,
+	)
+	if err != nil {
+		t.Errorf("checkExperimentsMatch() err: %s", err)
+	}
+
+	/*
+	 *	Check html commands received == {Progress,Progress,Progress,...}
+	 */
+	htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
+	numCmds := len(htmlCmdsReceived)
+	if numCmds < 2 {
+		t.Errorf("GetCmdsRecevied() received less than 2 commands")
+	}
+	for _, c := range htmlCmdsReceived {
+		if c != cmd.Progress && c != cmd.Reports {
+			t.Errorf(
+				"GetCmdsRecevied() commands not all equal to Progress or Reports, found: %s",
 				c,
 			)
 		}
@@ -644,12 +649,8 @@ func TestProcess_supplied_rules(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %s", err)
 	}
-	err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
-	if err != nil {
-		t.Fatalf("AddExperiment: %s", err)
-	}
 
-	if err := e.Process(cfg, pm); err != nil {
+	if err := e.Process(cfg, pm, l, false); err != nil {
 		t.Fatalf("Process: %s", err)
 	}
 
@@ -721,13 +722,9 @@ func TestProcess_multiProcesses(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Load: %s", err)
 		}
-		err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
-		if err != nil {
-			t.Fatalf("AddExperiment: %s", err)
-		}
 
 		start := time.Now()
-		if err := e.Process(cfg, pm); err != nil {
+		if err := e.Process(cfg, pm, l, false); err != nil {
 			t.Fatalf("Process: %s", err)
 		}
 		return time.Since(start).Nanoseconds()
@@ -779,18 +776,11 @@ func TestProcess_errors(t *testing.T) {
 	}
 
 	cases := []struct {
-		file    testhelpers.FileInfo
-		wantErr string
+		file testhelpers.FileInfo
 	}{
-		{file: testhelpers.NewFileInfo("flow_div_zero_train.yaml", time.Now()),
-			wantErr: "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)",
-		},
-		{file: testhelpers.NewFileInfo("flow_div_zero_test.yaml", time.Now()),
-			wantErr: "Couldn't assess rules: invalid rule: height / 0",
-		},
-		{file: testhelpers.NewFileInfo("flow_invalid_aggregator.yaml", time.Now()),
-			wantErr: "Couldn't assess rules: invalid expression: bob > 60 (variable doesn't exist: bob)",
-		},
+		{file: testhelpers.NewFileInfo("flow_div_zero_train.yaml", time.Now())},
+		{file: testhelpers.NewFileInfo("flow_div_zero_test.yaml", time.Now())},
+		{file: testhelpers.NewFileInfo("flow_invalid_aggregator.yaml", time.Now())},
 	}
 	wantPMExperiments := []*progress.Experiment{
 		&progress.Experiment{
@@ -800,8 +790,8 @@ func TestProcess_errors(t *testing.T) {
 			Category: "testing",
 			Status: &progress.Status{
 				Stamp: time.Now(),
-				Msg:   "Train > Assessing rules 2/5",
-				State: progress.Processing,
+				Msg:   "Couldn't assess rules: invalid expression: numMatches / 0 (divide by zero)",
+				State: progress.Error,
 			},
 		},
 		&progress.Experiment{
@@ -811,8 +801,8 @@ func TestProcess_errors(t *testing.T) {
 			Category: "testing",
 			Status: &progress.Status{
 				Stamp: time.Now(),
-				Msg:   "Test > Assessing rules",
-				State: progress.Processing,
+				Msg:   "Couldn't assess rules: invalid rule: height / 0",
+				State: progress.Error,
 			},
 		},
 		&progress.Experiment{
@@ -822,8 +812,8 @@ func TestProcess_errors(t *testing.T) {
 			Category: "",
 			Status: &progress.Status{
 				Stamp: time.Now(),
-				Msg:   "Train > Assessing rules 2/5",
-				State: progress.Processing,
+				Msg:   "Couldn't assess rules: invalid expression: bob > 60 (variable doesn't exist: bob)",
+				State: progress.Error,
 			},
 		},
 	}
@@ -852,14 +842,15 @@ func TestProcess_errors(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Load: %s", err)
 			}
+			l := testhelpers.NewLogger()
 			err = pm.AddExperiment(c.file.Name(), e.Title, e.Tags, e.Category)
 			if err != nil {
 				t.Fatalf("AddExperiment: %s", err)
 			}
 
-			if err := e.Process(cfg, pm); err == nil || err.Error() != c.wantErr {
-				t.Fatalf("Process: file: %s, gotErr: %s, wantErr: %s",
-					c.file.Name(), err, c.wantErr)
+			err = e.Process(cfg, pm, l, false)
+			if err != nil {
+				t.Fatalf("Process: file: %s, err: %s", c.file.Name(), err)
 			}
 		}
 
@@ -882,9 +873,9 @@ func TestProcess_errors(t *testing.T) {
 		t.Errorf("GetCmdsRecevied() received less than 2 commands")
 	}
 	for _, c := range htmlCmdsReceived {
-		if c != cmd.Progress {
+		if c != cmd.Progress && c != cmd.Reports {
 			t.Errorf(
-				"GetCmdsRecevied() commands not all equal to Progress, found: %s",
+				"GetCmdsRecevied() commands not all equal to Progress or Reports, found: %s",
 				c,
 			)
 		}
@@ -984,7 +975,7 @@ func TestMakeDataset(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		got, err := makeDataset("trainDataset", c.config, c.fields, c.desc)
+		got, err := makeDataset("train", c.config, c.fields, c.desc)
 		if err != nil {
 			t.Errorf("(%d) makeDataset: %s", i, err)
 		} else if err := checkDatasetsEqual(got, c.want); err != nil {
@@ -1002,7 +993,7 @@ func TestMakeDataset_err(t *testing.T) {
 		desc              *datasetDesc
 		wantOpenErrRegexp *regexp.Regexp
 	}{
-		{experimentField: "trainDataset",
+		{experimentField: "train",
 			fields: []string{},
 			desc: &datasetDesc{
 				SQL: &sqlDesc{
@@ -1013,7 +1004,7 @@ func TestMakeDataset_err(t *testing.T) {
 			},
 			wantOpenErrRegexp: regexp.MustCompile("^dial tcp 127.0.0.1:9999.*?connection.*?refused.*$"),
 		},
-		{experimentField: "trainDataset",
+		{experimentField: "train",
 			fields: []string{},
 			desc: &datasetDesc{
 				CSV: &csvDesc{
@@ -1094,12 +1085,8 @@ func BenchmarkProcess_csv(b *testing.B) {
 		if err != nil {
 			b.Fatalf("Load: %s", err)
 		}
-		err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
-		if err != nil {
-			b.Fatalf("AddExperiment: %s", err)
-		}
 		b.StartTimer()
-		if err := e.Process(cfg, pm); err != nil {
+		if err := e.Process(cfg, pm, l, false); err != nil {
 			b.Fatalf("Process: %s", err)
 		}
 	}
@@ -1142,12 +1129,8 @@ func BenchmarkProcess_sql(b *testing.B) {
 		if err != nil {
 			b.Fatalf("Load: %s", err)
 		}
-		err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
-		if err != nil {
-			b.Fatalf("AddExperiment: %s", err)
-		}
 		b.StartTimer()
-		if err := e.Process(cfg, pm); err != nil {
+		if err := e.Process(cfg, pm, l, false); err != nil {
 			b.Fatalf("Process: %s", err)
 		}
 	}
@@ -1182,17 +1165,27 @@ func checkExperimentMatch(
 	if !areSortOrdersEqual(e1.SortOrder, e2.SortOrder) {
 		return errors.New("Sort Orders don't match")
 	}
-	if e1.When.String() != e2.When.String() {
-		return errors.New("Whens don't match")
-	}
 	if !areRulesEqual(e1.Rules, e2.Rules) {
 		return errors.New("Rules don't match")
 	}
-	if err := checkDatasetsEqual(e1.TrainDataset, e2.TrainDataset); err != nil {
-		return fmt.Errorf("trainDataset: %s", err)
+	if err := checkModesEqual(e1.Train, e2.Train); err != nil {
+		return fmt.Errorf("train: %s", err)
 	}
-	if err := checkDatasetsEqual(e1.TestDataset, e2.TestDataset); err != nil {
-		return fmt.Errorf("testDataset: %s", err)
+	if err := checkModesEqual(e1.Test, e2.Test); err != nil {
+		return fmt.Errorf("test: %s", err)
+	}
+	return nil
+}
+
+func checkModesEqual(m1, m2 *Mode) error {
+	if m1 == nil && m2 == nil {
+		return nil
+	}
+	if err := checkDatasetsEqual(m1.Dataset, m2.Dataset); err != nil {
+		return fmt.Errorf("dataset: %s", err)
+	}
+	if m1.When.String() != m2.When.String() {
+		return fmt.Errorf("When: '%s' != '%s'", m1.When, m2.When)
 	}
 	return nil
 }

@@ -67,7 +67,6 @@ func (p *Program) Start(s service.Service) error {
 func (p *Program) ProcessFile(file fileinfo.FileInfo, ignoreWhen bool) error {
 	var err error
 	pm := p.progressMonitor
-	stamp := time.Now()
 
 	e, err := experiment.Load(p.config, file)
 	if err != nil {
@@ -86,52 +85,7 @@ func (p *Program) ProcessFile(file fileinfo.FileInfo, ignoreWhen bool) error {
 		}
 	}()
 
-	isFinished, stamp := pm.GetFinishStamp(file.Name())
-
-	if !isFinished {
-		pmErr := pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
-		if pmErr != nil {
-			return p.logger.Error(pmErr)
-		}
-	}
-
-	if !ignoreWhen {
-		ok, err := e.ShouldProcess(isFinished, stamp)
-		if err != nil {
-			logErr :=
-				fmt.Errorf("Error processing experiment: %s, %s", file.Name(), err)
-			p.logger.Error(logErr)
-			if pmErr := pm.ReportError(file.Name(), err); pmErr != nil {
-				return p.logger.Error(pmErr)
-			}
-			return nil
-		}
-		if !ok {
-			return nil
-		}
-	}
-
-	p.logger.Info("Processing experiment: " + file.Name())
-	err = pm.AddExperiment(file.Name(), e.Title, e.Tags, e.Category)
-	if err != nil {
-		return p.logger.Error(err)
-	}
-	if err := e.Process(p.config, p.progressMonitor); err != nil {
-		logErr :=
-			fmt.Errorf("Error processing experiment: %s, %s", file.Name(), err)
-		p.logger.Error(logErr)
-		if pmErr := pm.ReportError(file.Name(), err); pmErr != nil {
-			return p.logger.Error(pmErr)
-		}
-		return nil
-	}
-
-	logInfo := "Successfully processed experiment: " + file.Name()
-	p.logger.Info(logInfo)
-	if pmErr := pm.ReportSuccess(file.Name()); pmErr != nil {
-		return p.logger.Error(pmErr)
-	}
-	return nil
+	return e.Process(p.config, p.progressMonitor, p.logger, ignoreWhen)
 }
 
 func (p *Program) ProcessDir(dir string, ignoreWhen bool) error {

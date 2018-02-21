@@ -3,11 +3,12 @@ tags:
   - test
   - "fred / ned"
 category: "testing"
-trainDataset:
-  csv:
-    filename: "fixtures/flow_big.csv"
-    hasHeader: true
-    separator:  ","
+train:
+  dataset:
+    csv:
+      filename: "fixtures/flow_big.csv"
+      hasHeader: true
+      separator:  ","
 fields:
   - group
   - district

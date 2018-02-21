@@ -2,11 +2,13 @@ title: "What indicates a steel plate k scratch fault?"
 category: "engineering"
 tags:
   - steel
-trainDataset:
-  csv:
-    filename: "csv/steel_plate_faults.tsv"
-    hasHeader: false
-    separator: "\t"
+train:
+  dataset:
+    csv:
+      filename: "csv/steel_plate_faults.tsv"
+      hasHeader: false
+      separator: "\t"
+  when: "!hasRun"
 fields:
   - X_Minimum
   - X_Maximum
@@ -85,4 +87,3 @@ aggregators:
 sortOrder:
   - aggregator: "mccHasKScratch"
     direction: "descending"
-when: "!hasRun"

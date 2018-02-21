@@ -3,11 +3,13 @@ category: "botany"
 tags:
   - iris
   - life
-trainDataset:
-  csv:
-    filename: "csv/iris.csv"
-    hasHeader: false
-    separator: ","
+train:
+  dataset:
+    csv:
+      filename: "csv/iris.csv"
+      hasHeader: false
+      separator: ","
+  when: "!hasRun"
 fields:
    - sepalLength
    - sepalWidth
@@ -37,4 +39,3 @@ aggregators:
 sortOrder:
   - aggregator: "mccIrisVersicolor"
     direction: "descending"
-when: "!hasRun"

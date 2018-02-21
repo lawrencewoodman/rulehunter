@@ -4,13 +4,15 @@ tags:
   - breast cancer
   - cancer
   - wisconsin
-trainDataset:
-  sql:
-    driverName: "sqlite3"
-    dataSourceName: "db/breast_cancer_wisconsin.db"
-    # The following query excludes records using the rules that have assessd
-    # a tumour as confidently benign or malignant
-    query: "select * from breast_cancer where NOT (area_worst * symmetry_worst >= 308 OR concave_points_worst * texture_worst >= 4.6) AND NOT (perimeter_worst * texture_worst <= 1908 OR radius_worst * smoothness_mean <= 1.3)"
+train:
+  dataset:
+    sql:
+      driverName: "sqlite3"
+      dataSourceName: "db/breast_cancer_wisconsin.db"
+      # The following query excludes records using the rules that have assessd
+      # a tumour as confidently benign or malignant
+      query: "select * from breast_cancer where NOT (area_worst * symmetry_worst >= 308 OR concave_points_worst * texture_worst >= 4.6) AND NOT (perimeter_worst * texture_worst <= 1908 OR radius_worst * smoothness_mean <= 1.3)"
+  when: "!hasRun"
 fields:
   - id
   - diagnosis
@@ -96,4 +98,3 @@ aggregators:
 sortOrder:
   - aggregator: "mccIsMalignant"
     direction: "descending"
-when: "!hasRun"

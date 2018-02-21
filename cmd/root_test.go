@@ -17,17 +17,17 @@ func TestRunRoot(t *testing.T) {
 		{Level: testhelpers.Error,
 			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 3: did not find expected key"},
 		{Level: testhelpers.Info,
-			Msg: "Processing experiment: debt.json"},
+			Msg: "Processing experiment: debt.json, mode: train"},
 		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: debt.json"},
+			Msg: "Successfully processed experiment: debt.json, mode: train"},
 		{Level: testhelpers.Info,
-			Msg: "Processing experiment: debt.yaml"},
+			Msg: "Processing experiment: debt.yaml, mode: train"},
 		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: debt.yaml"},
+			Msg: "Successfully processed experiment: debt.yaml, mode: train"},
 		{Level: testhelpers.Info,
-			Msg: "Processing experiment: debt2.json"},
+			Msg: "Processing experiment: debt2.json, mode: train"},
 		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: debt2.json"},
+			Msg: "Successfully processed experiment: debt2.json, mode: train"},
 	}
 	wantReportFiles := []string{
 		// "debt2.json"
@@ -137,9 +137,9 @@ func TestRunRoot_errors(t *testing.T) {
 func TestRunRoot_file(t *testing.T) {
 	wantEntries := []testhelpers.Entry{
 		{Level: testhelpers.Info,
-			Msg: "Processing experiment: debt.json"},
+			Msg: "Processing experiment: debt.json, mode: train"},
 		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: debt.json"},
+			Msg: "Successfully processed experiment: debt.json, mode: train"},
 	}
 	wantReportFiles := []string{
 		// "debt.json"
@@ -252,13 +252,13 @@ func TestRunRoot_file_errors(t *testing.T) {
 func TestRunRoot_ignoreWhen(t *testing.T) {
 	wantEntries := []testhelpers.Entry{
 		{Level: testhelpers.Info,
-			Msg: "Processing experiment: debt.json"},
+			Msg: "Processing experiment: debt.json, mode: train"},
 		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: debt.json"},
+			Msg: "Successfully processed experiment: debt.json, mode: train"},
 		{Level: testhelpers.Info,
-			Msg: "Processing experiment: debt_when_hasrun.yaml"},
+			Msg: "Processing experiment: debt_when_hasrun.yaml, mode: train"},
 		{Level: testhelpers.Info,
-			Msg: "Successfully processed experiment: debt_when_hasrun.yaml"},
+			Msg: "Successfully processed experiment: debt_when_hasrun.yaml, mode: train"},
 	}
 	wantReportFiles := []string{
 		// "debt.json"

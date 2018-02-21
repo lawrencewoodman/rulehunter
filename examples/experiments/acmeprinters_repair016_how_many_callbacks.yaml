@@ -4,11 +4,13 @@ tags:
   - repair
   - sales
   - printers
-trainDataset:
-  csv:
-    filename: "csv/printer_repairs_callbacks.csv"
-    hasHeader: true
-    separator: ","
+train:
+  dataset:
+    csv:
+      filename: "csv/printer_repairs_callbacks.csv"
+      hasHeader: true
+      separator: ","
+  when: "!hasRun || sinceLastRunMinutes > 40"
 fields:
   - callbacks
   - segment
@@ -74,5 +76,3 @@ sortOrder:
     direction: "descending"
 rules:
   - "(callbacks <= 5  && in(segment,\"a\",\"d\",\"f\",\"g\")) || (callbacks <= 9 && in(segment,\"b\",\"c\",\"e\"))"
-when: "!hasRun || sinceLastRunMinutes > 40"
-

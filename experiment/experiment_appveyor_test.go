@@ -45,7 +45,7 @@ func TestMakeDataset_appveyor(t *testing.T) {
 		BuildDir:      filepath.Join(tmpDir, "build"),
 	}
 	for i, c := range cases {
-		got, err := makeDataset("trainDataset", cfg, c.fields, c.desc)
+		got, err := makeDataset("train", cfg, c.fields, c.desc)
 		if err != nil {
 			t.Errorf("(%d) makeDataset: %s", i, err)
 		} else if err := checkDatasetsEqual(got, c.want); err != nil {

@@ -4,11 +4,13 @@ tags:
   - repair
   - sales
   - printers
-trainDataset:
-  csv:
-    filename: "csv/printer_repairs_callstats.csv"
-    hasHeader: true
-    separator: ","
+train:
+  dataset:
+    csv:
+      filename: "csv/printer_repairs_callstats.csv"
+      hasHeader: true
+      separator: ","
+  when: "!hasRun || sinceLastRunMinutes > 40"
 fields:
   - quarter
   - segment
@@ -72,4 +74,3 @@ sortOrder:
     direction: "descending"
   - aggregator: "conversion"
     direction: "descending"
-when: "!hasRun || sinceLastRunMinutes > 40"

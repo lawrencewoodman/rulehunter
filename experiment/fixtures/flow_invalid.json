@@ -1,14 +1,20 @@
 {
   "title": "What would indicate good flow?",
   "tags": ["test", "fred / ned
-  "dataset": "csv",
-  "csv": {
-    "filename": "fixtures/flow.csv",
-    "hasHeader": true,
-    "separator":  ","
+  "train:" {
+    "dataset": {
+      "csv": {
+        "filename": "fixtures/flow.csv",
+        "hasHeader": true,
+        "separator":  ","
+      }
+    "when": "never"
   },
   "fields": ["group","district","height","flow"],
-  "ruleFields": ["group","district","height"],
+  "ruleGeneration": {
+    "fields": ["group","district","height"],
+    "arithmetic": true
+  },
   "aggregators": [
     {
       "name": "goodFlowAccuracy",

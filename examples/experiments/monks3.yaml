@@ -2,16 +2,20 @@ title: "Monk's Problem 3"
 category: "ai"
 tags:
   - classic
-trainDataset:
-  csv:
-    filename: "csv/monks-3.train.csv"
-    hasHeader: false
-    separator: " "
-testDataset:
-  csv:
-    filename: "csv/monks-3.test.csv"
-    hasHeader: false
-    separator: " "
+train:
+  dataset:
+    csv:
+      filename: "csv/monks-3.train.csv"
+      hasHeader: false
+      separator: " "
+  when: "!hasRun"
+test:
+  dataset:
+    csv:
+      filename: "csv/monks-3.test.csv"
+      hasHeader: false
+      separator: " "
+  when: "!hasRun"
 fields:
   - class
   - a1
@@ -37,10 +41,3 @@ aggregators:
 sortOrder:
   - aggregator: "mccClassIs1"
     direction: "descending"
-when: "!hasRun"
-
-
-
-
-
-

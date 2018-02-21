@@ -14,11 +14,12 @@ ruleGeneration:
     - "num_cards"
     - "marital_status"
     - "tertiary_educated"
-trainDataset:
-  csv:
-    filename: "fixtures/debt.csv"
-    hasHeader: true
-    separator:  ","
+train:
+  dataset:
+    csv:
+      filename: "fixtures/debt.csv"
+      hasHeader: true
+      separator:  ","
 aggregators:
   - name: "successMcc"
     kind: "mcc"

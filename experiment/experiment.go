@@ -11,14 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 
 	"github.com/lawrencewoodman/ddataset"
-	"github.com/lawrencewoodman/ddataset/dcopy"
-	"github.com/lawrencewoodman/ddataset/dcsv"
-	"github.com/lawrencewoodman/ddataset/dsql"
-	"github.com/lawrencewoodman/ddataset/dtruncate"
-	"github.com/lawrencewoodman/dexpr"
 	"github.com/vlifesystems/rhkit/aggregator"
 	rhkassessment "github.com/vlifesystems/rhkit/assessment"
 	"github.com/vlifesystems/rhkit/description"
@@ -26,6 +20,8 @@ import (
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
+	"github.com/vlifesystems/rulehunter/logger"
+	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/report"
 	"gopkg.in/yaml.v2"
 )
@@ -33,13 +29,12 @@ import (
 type Experiment struct {
 	Title          string
 	File           fileinfo.FileInfo
-	TrainDataset   ddataset.Dataset
-	TestDataset    ddataset.Dataset
+	Train          *Mode
+	Test           *Mode
 	RuleGeneration rule.GenerationDescriber
 	Aggregators    []aggregator.Spec
 	Goals          []*goal.Goal
 	SortOrder      []rhkassessment.SortOrder
-	When           *dexpr.Expr
 	Category       string
 	Tags           []string
 	Rules          []rule.Rule
@@ -49,8 +44,8 @@ type descFile struct {
 	Title          string             `yaml:"title"`
 	Category       string             `yaml:"category"`
 	Tags           []string           `yaml:"tags"`
-	TrainDataset   *datasetDesc       `yaml:"trainDataset"`
-	TestDataset    *datasetDesc       `yaml:"testDataset"`
+	Train          *modeDesc          `yaml:"train"`
+	Test           *modeDesc          `yaml:"test"`
 	Csv            *csvDesc           `yaml:"csv"`
 	Sql            *sqlDesc           `yaml:"sql"`
 	Fields         []string           `yaml:"fields"`
@@ -58,9 +53,7 @@ type descFile struct {
 	Aggregators    []*aggregator.Desc `yaml:"aggregators"`
 	Goals          []string           `yaml:"goals"`
 	SortOrder      []sortDesc         `yaml:"sortOrder"`
-	// An expression that works out whether to run the experiment
-	When  string   `yaml:"when"`
-	Rules []string `yaml:"rules"`
+	Rules          []string           `yaml:"rules"`
 }
 
 type datasetDesc struct {
@@ -116,10 +109,6 @@ func (e InvalidExtError) Error() string {
 	return "invalid extension: " + string(e)
 }
 
-type progressReporter interface {
-	ReportProgress(string, report.ModeKind, string, float64) error
-}
-
 // Which dataset is to be used
 type datasetKind int
 
@@ -133,22 +122,22 @@ func newExperiment(
 	file fileinfo.FileInfo,
 	d *descFile,
 ) (*Experiment, error) {
-	var trainDataset ddataset.Dataset
-	var testDataset ddataset.Dataset
+	var train *Mode
+	var test *Mode
 	var err error
 
 	if err := d.checkValid(); err != nil {
 		return nil, err
 	}
 
-	if d.TrainDataset != nil {
-		trainDataset, err = makeDataset("trainDataset", cfg, d.Fields, d.TrainDataset)
+	if d.Train != nil {
+		train, err = newMode("train", cfg, d.Fields, d.Train)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if d.TestDataset != nil {
-		testDataset, err = makeDataset("testDataset", cfg, d.Fields, d.TestDataset)
+	if d.Test != nil {
+		test, err = newMode("test", cfg, d.Fields, d.Test)
 		if err != nil {
 			return nil, err
 		}
@@ -166,20 +155,16 @@ func newExperiment(
 	if err != nil {
 		return nil, fmt.Errorf("sortOrder: %s", err)
 	}
-	when, err := makeWhenExpr(d.When)
-	if err != nil {
-		return nil, InvalidWhenExprError(d.When)
-	}
 	rules, err := rule.MakeDynamicRules(d.Rules)
 	if err != nil {
 		return nil, fmt.Errorf("rules: %s", err)
 	}
 
 	return &Experiment{
-		Title:        d.Title,
-		File:         file,
-		TrainDataset: trainDataset,
-		TestDataset:  testDataset,
+		Title: d.Title,
+		File:  file,
+		Train: train,
+		Test:  test,
 		RuleGeneration: ruleGeneration{
 			fields:     d.RuleGeneration.Fields,
 			arithmetic: d.RuleGeneration.Arithmetic,
@@ -187,7 +172,6 @@ func newExperiment(
 		Aggregators: aggregators,
 		Goals:       goals,
 		SortOrder:   sortOrder,
-		When:        when,
 		Tags:        d.Tags,
 		Category:    d.Category,
 		Rules:       rules,
@@ -218,22 +202,23 @@ func Load(cfg *config.Config, file fileinfo.FileInfo) (*Experiment, error) {
 }
 
 func (e *Experiment) Release() error {
-	datasets := []ddataset.Dataset{e.TrainDataset, e.TestDataset}
-	for _, d := range datasets {
-		if d != nil {
-			if err := d.Release(); err != nil {
+	modes := []*Mode{e.Train, e.Test}
+	for _, m := range modes {
+		if m != nil {
+			if err := m.Dataset.Release(); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
 }
+
 func (e *Experiment) processTrainDataset(
 	cfg *config.Config,
-	pr progressReporter,
+	pm *progress.Monitor,
 ) ([]rule.Rule, error) {
 	reportProgress := func(msg string, percent float64) error {
-		return pr.ReportProgress(e.File.Name(), report.Train, msg, percent)
+		return pm.ReportProgress(e.File.Name(), report.Train, msg, percent)
 	}
 	noRules := []rule.Rule{}
 
@@ -241,12 +226,12 @@ func (e *Experiment) processTrainDataset(
 		return noRules, err
 	}
 
-	desc, err := description.DescribeDataset(e.TrainDataset)
+	desc, err := description.DescribeDataset(e.Train.Dataset)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't describe train dataset: %s", err)
 	}
 
-	userRulesAss, err := e.assessRules(1, train, e.Rules, pr, cfg)
+	userRulesAss, err := e.assessRules(1, train, e.Rules, pm, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
 	}
@@ -259,7 +244,7 @@ func (e *Experiment) processTrainDataset(
 		return noRules, fmt.Errorf("Couldn't generate rules: %s", err)
 	}
 
-	ass, err := e.assessRules(2, train, generatedRules, pr, cfg)
+	ass, err := e.assessRules(2, train, generatedRules, pm, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
 	}
@@ -277,7 +262,7 @@ func (e *Experiment) processTrainDataset(
 	}
 	tweakableRules := rule.Tweak(1, sortedRules, desc)
 
-	newAss, err := e.assessRules(3, train, tweakableRules, pr, cfg)
+	newAss, err := e.assessRules(3, train, tweakableRules, pm, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
 	}
@@ -295,7 +280,7 @@ func (e *Experiment) processTrainDataset(
 	}
 	reducedDPRules := rule.ReduceDP(sortedRules)
 
-	newAss, err = e.assessRules(4, train, reducedDPRules, pr, cfg)
+	newAss, err = e.assessRules(4, train, reducedDPRules, pm, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
 	}
@@ -310,7 +295,7 @@ func (e *Experiment) processTrainDataset(
 	bestNonCombinedRules := ass.Rules(numRulesToCombine)
 	combinedRules := rule.Combine(bestNonCombinedRules)
 
-	newAss, err = e.assessRules(5, train, combinedRules, pr, cfg)
+	newAss, err = e.assessRules(5, train, combinedRules, pm, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
 	}
@@ -351,19 +336,19 @@ func (e *Experiment) processTrainDataset(
 
 func (e *Experiment) processTestDataset(
 	cfg *config.Config,
-	pr progressReporter,
+	pm *progress.Monitor,
 	rules []rule.Rule,
 ) error {
 	err :=
-		pr.ReportProgress(e.File.Name(), report.Test, "Describing train dataset", 0)
+		pm.ReportProgress(e.File.Name(), report.Test, "Describing train dataset", 0)
 	if err != nil {
 		return err
 	}
-	desc, err := description.DescribeDataset(e.TestDataset)
+	desc, err := description.DescribeDataset(e.Test.Dataset)
 	if err != nil {
 		return fmt.Errorf("Couldn't describe test dataset: %s", err)
 	}
-	ass, err := e.assessRules(1, test, rules, pr, cfg)
+	ass, err := e.assessRules(1, test, rules, pm, cfg)
 	if err != nil {
 		return fmt.Errorf("Couldn't assess rules: %s", err)
 	}
@@ -386,34 +371,90 @@ func (e *Experiment) processTestDataset(
 
 func (e *Experiment) Process(
 	cfg *config.Config,
-	pr progressReporter,
+	pm *progress.Monitor,
+	l logger.Logger,
+	ignoreWhen bool,
 ) error {
 	rules := e.Rules
-	if e.TrainDataset != nil {
-		trainRules, err := e.processTrainDataset(cfg, pr)
+
+	reportProcessing := func(mode string) error {
+		l.Info(
+			fmt.Sprintf("Processing experiment: %s, mode: %s",
+				e.File.Name(), mode),
+		)
+		err := pm.AddExperiment(e.File.Name(), e.Title, e.Tags, e.Category)
 		if err != nil {
-			return err
+			return l.Error(err)
 		}
-		rules = append(rules, trainRules...)
+		return nil
 	}
 
-	if e.TestDataset != nil {
-		if err := e.processTestDataset(cfg, pr, rules); err != nil {
-			return err
+	reportSuccess := func(mode string) error {
+		l.Info(
+			fmt.Sprintf("Successfully processed experiment: %s, mode: %s",
+				e.File.Name(), mode),
+		)
+		if pmErr := pm.ReportSuccess(e.File.Name()); pmErr != nil {
+			return l.Error(pmErr)
+		}
+		return nil
+	}
+
+	reportError := func(err error) error {
+		pmErr := pm.AddExperiment(e.File.Name(), e.Title, e.Tags, e.Category)
+		if pmErr != nil {
+			return l.Error(pmErr)
+		}
+		logErr :=
+			fmt.Errorf("Error processing experiment: %s, %s", e.File.Name(), err)
+		l.Error(logErr)
+		if pmErr := pm.ReportError(e.File.Name(), err); pmErr != nil {
+			return l.Error(pmErr)
+		}
+		return nil
+	}
+
+	isFinished, stamp := pm.GetFinishStamp(e.File.Name())
+
+	if e.Train != nil {
+		ok, err := e.Train.ShouldProcess(e.File, isFinished, stamp)
+		if err != nil {
+			return reportError(err)
+		}
+		if ok || ignoreWhen {
+			if err := reportProcessing("train"); err != nil {
+				return err
+			}
+			trainRules, err := e.processTrainDataset(cfg, pm)
+			if err != nil {
+				return reportError(err)
+			}
+			rules = append(rules, trainRules...)
+			if err := reportSuccess("train"); err != nil {
+				return err
+			}
+		}
+	}
+
+	if e.Test != nil {
+		ok, err := e.Test.ShouldProcess(e.File, isFinished, stamp)
+		if err != nil {
+			return reportError(err)
+		}
+		if ok || ignoreWhen {
+			if err := reportProcessing("test"); err != nil {
+				return err
+			}
+			if err := e.processTestDataset(cfg, pm, rules); err != nil {
+				return reportError(err)
+			}
+			if err := reportSuccess("test"); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
-}
-
-func (e *Experiment) ShouldProcess(
-	isFinished bool,
-	stamp time.Time,
-) (bool, error) {
-	if isFinished && e.File.ModTime().After(stamp) {
-		isFinished, stamp = false, time.Now()
-	}
-	return evalWhenExpr(time.Now(), isFinished, stamp, e.When)
 }
 
 func loadJSON(filename string) (*descFile, error) {
@@ -459,102 +500,34 @@ func makeSortOrder(
 	return r, nil
 }
 
-func makeDataset(
-	experimentField string,
-	cfg *config.Config,
-	fields []string,
-	dd *datasetDesc,
-) (ddataset.Dataset, error) {
-	// File mode permission:
-	// No special permission bits
-	// User: Read, Write Execute
-	// Group: None
-	// Other: None
-	const modePerm = 0700
-	var dataset ddataset.Dataset
-	if dd.CSV != nil && dd.SQL != nil {
-		return nil, fmt.Errorf(
-			"Experiment field: %s, can't specify csv and sql source",
-			experimentField,
-		)
-	}
-	if dd.CSV == nil && dd.SQL == nil {
-		return nil,
-			fmt.Errorf("Experiment field: %s, has no csv or sql field", experimentField)
-	}
-	if dd.CSV != nil {
-		if dd.CSV.Filename == "" {
-			return nil, fmt.Errorf("Experiment field missing: %s > csv > filename",
-				experimentField)
-		}
-		if dd.CSV.Separator == "" {
-			return nil, fmt.Errorf("Experiment field missing: %s > csv > separator",
-				experimentField)
-		}
-		dataset = dcsv.New(
-			dd.CSV.Filename,
-			dd.CSV.HasHeader,
-			rune(dd.CSV.Separator[0]),
-			fields,
-		)
-	} else if dd.SQL != nil {
-		if dd.SQL.DriverName == "" {
-			return nil, fmt.Errorf(
-				"Experiment field missing: %s > sql > driverName",
-				experimentField,
-			)
-		}
-		if dd.SQL.DataSourceName == "" {
-			return nil, fmt.Errorf(
-				"Experiment field missing: %s > sql > dataSourceName",
-				experimentField,
-			)
-		}
-		if dd.SQL.Query == "" {
-			return nil, fmt.Errorf("Experiment field missing: %s > sql > query",
-				experimentField)
-		}
-		sqlHandler, err := newSQLHandler(
-			dd.SQL.DriverName,
-			dd.SQL.DataSourceName,
-			dd.SQL.Query,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("Experiment field: %s > sql, has %s",
-				experimentField, err)
-		}
-		dataset = dsql.New(sqlHandler, fields)
-	}
-
-	if cfg.MaxNumRecords >= 1 {
-		dataset = dtruncate.New(dataset, cfg.MaxNumRecords)
-	}
-	// Copy dataset to get stable version
-	buildTmpDir := filepath.Join(cfg.BuildDir, "tmp")
-	if err := os.MkdirAll(buildTmpDir, modePerm); err != nil {
-		return nil, err
-	}
-	copyDataset, err := dcopy.New(dataset, buildTmpDir)
-	if err != nil {
-		return nil, err
-	}
-	return copyDataset, nil
-}
-
 func (e *descFile) checkValid() error {
 	if len(e.Title) == 0 {
 		return errors.New("Experiment field missing: title")
 	}
-	if e.TrainDataset == nil && e.TestDataset == nil {
+	if e.Train == nil && e.Test == nil {
 		return errors.New(
-			"Experiment field missing either: trainDataset or testDataset",
+			"Experiment field missing either: train or test",
 		)
+	}
+	if e.Train != nil {
+		if e.Train.Dataset == nil {
+			return errors.New(
+				"Experiment field missing: train > Dataset",
+			)
+		}
+	}
+	if e.Test != nil {
+		if e.Test.Dataset == nil {
+			return errors.New(
+				"Experiment field missing: test > Dataset",
+			)
+		}
 	}
 	return nil
 }
 
 func reportTrainAssessProgress(
-	pr progressReporter,
+	pm *progress.Monitor,
 	filename string,
 	stage int,
 	recordNum int64,
@@ -562,29 +535,30 @@ func reportTrainAssessProgress(
 ) error {
 	progress := 100.0 * float64(recordNum) / float64(numRecords)
 	msg := fmt.Sprintf("Assessing rules %d/%d", stage, assessRulesNumStages)
-	return pr.ReportProgress(filename, report.Train, msg, progress)
+	return pm.ReportProgress(filename, report.Train, msg, progress)
 }
 
 func reportTestAssessProgress(
-	pr progressReporter,
+	pm *progress.Monitor,
 	filename string,
 	recordNum int64,
 	numRecords int64,
 ) error {
 	progress := 100.0 * float64(recordNum) / float64(numRecords)
 	msg := fmt.Sprintf("Assessing rules")
-	return pr.ReportProgress(filename, report.Test, msg, progress)
+	return pm.ReportProgress(filename, report.Test, msg, progress)
 }
 
 func (e *Experiment) assessRules(
 	stage int,
 	mode datasetKind,
 	rules []rule.Rule,
-	pr progressReporter,
+	pm *progress.Monitor,
 	cfg *config.Config,
 ) (*rhkassessment.Assessment, error) {
 	var wg sync.WaitGroup
 	var result *rhkassessment.Assessment
+	var dataset ddataset.Dataset
 	progressIntervals := int64(1000)
 	numRules := len(rules)
 	records := []chan ddataset.Record{}
@@ -596,9 +570,10 @@ func (e *Experiment) assessRules(
 			close(r)
 		}
 	}
-	dataset := e.TrainDataset
-	if mode == test {
-		dataset = e.TestDataset
+	if mode == train {
+		dataset = e.Train.Dataset
+	} else {
+		dataset = e.Test.Dataset
 	}
 
 	if stage > assessRulesNumStages {
@@ -664,7 +639,7 @@ func (e *Experiment) assessRules(
 		if recordNum == 0 || recordNum%reportNumRecords == 0 {
 			if mode == train {
 				err := reportTrainAssessProgress(
-					pr,
+					pm,
 					e.File.Name(),
 					stage,
 					recordNum,
@@ -677,7 +652,7 @@ func (e *Experiment) assessRules(
 				}
 			} else {
 				err := reportTestAssessProgress(
-					pr,
+					pm,
 					e.File.Name(),
 					recordNum,
 					dataset.NumRecords(),

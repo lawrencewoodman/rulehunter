@@ -2,15 +2,16 @@ title: "What would indicate good flow?"
 tags:
   - test
   - "fred / ned"
-trainDataset:
-  csv:
-    filename: "fixtures/flow.csv"
-    hasHeader: true
-    separator:  ","
-  sql:
-    driverName: "sqlite3"
-    dataSourceName: "fixtures/flow.db"
-    query: "select * from \"flow\""
+train:
+  dataset:
+    csv:
+      filename: "fixtures/flow.csv"
+      hasHeader: true
+      separator:  ","
+    sql:
+      driverName: "sqlite3"
+      dataSourceName: "fixtures/flow.db"
+      query: "select * from \"flow\""
 fields:
   - group
   - district

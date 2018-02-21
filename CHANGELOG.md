@@ -3,6 +3,9 @@
 ### Config
  * Add `httpPort` to allow internal web server
 
+### Experiment Files
+ * Restructure `trainDataset` and `testDataset` to become `train` and `test`
+ * Allow a `when` expression for each of `train` and `test`
 
 ## 0.2 (15th February 2018)
 

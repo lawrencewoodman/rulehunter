@@ -1,7 +1,9 @@
 {
   "title": "What would indicate good flow?",
   "tags": ["test", "fred / ned"],
-  "trainDataset": {
+  "train": {
+    "dataset": {
+    }
   },
   "fields": ["group","district","height","flow"],
   "ruleFields": ["group","district","height"],

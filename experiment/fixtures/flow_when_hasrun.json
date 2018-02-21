@@ -9,7 +9,8 @@
         "hasHeader": true,
         "separator":  ","
       }
-    }
+    },
+    "when": "hasRun"
   },
   "fields": ["group","district","height","flow"],
   "ruleGeneration": {
@@ -44,3 +45,4 @@
     "district != \"northcal\" && group == \"b\""
   ]
 }
+

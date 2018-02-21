@@ -1,4 +1,3 @@
-fileFormatVersion: "0.1"
 title: "What is most likely to indicate success"
 fields:
   - "name"
@@ -14,11 +13,12 @@ ruleGeneration:
     - "num_cards"
     - "marital_status"
     - "tertiary_educated"
-trainDataset:
-  csv:
-    filename: "fixtures/debt.csv"
-    hasHeader: true
-    separator:  ","
+train:
+  dataset:
+    csv:
+      filename: "fixtures/debt.csv"
+      hasHeader: true
+      separator:  ","
 aggregators:
   - name: "successMcc"
     kind: "mcc"
