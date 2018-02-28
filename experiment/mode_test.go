@@ -1,11 +1,18 @@
 package experiment
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
+	"syscall"
 	"testing"
 	"time"
 
+	"github.com/lawrencewoodman/ddataset"
+	"github.com/lawrencewoodman/ddataset/dcsv"
+	"github.com/lawrencewoodman/ddataset/dtruncate"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
@@ -71,9 +78,6 @@ func TestShouldProcess(t *testing.T) {
 		BuildDir:      filepath.Join(tmpDir, "build"),
 	}
 
-	fields := []string{"name", "balance", "num_cards", "marital_status",
-		"tertiary_educated", "success",
-	}
 	testhelpers.CopyFile(
 		t,
 		filepath.Join("..", "progress", "fixtures", "progress.json"),
@@ -88,10 +92,13 @@ func TestShouldProcess(t *testing.T) {
 					HasHeader: false,
 					Separator: ",",
 				},
+				Fields: []string{"name", "balance", "num_cards", "marital_status",
+					"tertiary_educated", "success",
+				},
 			},
 			When: c.when,
 		}
-		m, err := newMode("train", cfg, fields, desc)
+		m, err := newMode("train", cfg, desc)
 		if err != nil {
 			t.Fatalf("newMode: %s", err)
 		}
@@ -102,6 +109,162 @@ func TestShouldProcess(t *testing.T) {
 		}
 		if got != c.want {
 			t.Errorf("(%d) shouldProcess, got: %t, want: %t", i, got, c.want)
+		}
+	}
+}
+
+func TestMakeDataset(t *testing.T) {
+	tmpDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(tmpDir)
+	cases := []struct {
+		desc           *datasetDesc
+		dataSourceName string
+		query          string
+		config         *config.Config
+		want           ddataset.Dataset
+	}{
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "sqlite3",
+				DataSourceName: filepath.Join("fixtures", "flow.db"),
+				Query:          "select * from flow",
+			},
+			Fields: []string{"grp", "district", "height", "flow"},
+		},
+			config: &config.Config{
+				MaxNumRecords: -1,
+				BuildDir:      filepath.Join(tmpDir, "build"),
+			},
+			want: dcsv.New(
+				filepath.Join("fixtures", "flow.csv"),
+				true,
+				rune(','),
+				[]string{"grp", "district", "height", "flow"},
+			),
+		},
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "sqlite3",
+				DataSourceName: filepath.Join("fixtures", "flow.db"),
+				Query:          "select * from flow",
+			},
+			Fields: []string{"grp", "district", "height", "flow"},
+		},
+			config: &config.Config{
+				MaxNumRecords: 1000,
+				BuildDir:      filepath.Join(tmpDir, "build"),
+			},
+			want: dcsv.New(
+				filepath.Join("fixtures", "flow.csv"),
+				true,
+				rune(','),
+				[]string{"grp", "district", "height", "flow"},
+			),
+		},
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "sqlite3",
+				DataSourceName: filepath.Join("fixtures", "flow.db"),
+				Query:          "select * from flow",
+			},
+			Fields: []string{"grp", "district", "height", "flow"},
+		},
+			config: &config.Config{
+				MaxNumRecords: 4,
+				BuildDir:      filepath.Join(tmpDir, "build"),
+			},
+			want: dtruncate.New(
+				dcsv.New(
+					filepath.Join("fixtures", "flow.csv"),
+					true,
+					rune(','),
+					[]string{"grp", "district", "height", "flow"},
+				),
+				4,
+			),
+		},
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "sqlite3",
+				DataSourceName: filepath.Join("fixtures", "flow.db"),
+				Query:          "select grp,district,flow from flow",
+			},
+			Fields: []string{"grp", "district", "flow"},
+		},
+			config: &config.Config{
+				MaxNumRecords: -1,
+				BuildDir:      filepath.Join(tmpDir, "build"),
+			},
+			want: dcsv.New(
+				filepath.Join("fixtures", "flow_three_columns.csv"),
+				true,
+				rune(','),
+				[]string{"grp", "district", "flow"},
+			),
+		},
+	}
+	for i, c := range cases {
+		got, err := makeDataset(c.config, c.desc)
+		if err != nil {
+			t.Errorf("(%d) makeDataset: %s", i, err)
+		} else if err := checkDatasetsEqual(got, c.want); err != nil {
+			t.Errorf("(%d) checkDatasetsEqual: %s", i, err)
+		}
+	}
+}
+
+func TestMakeDataset_err(t *testing.T) {
+	tmpDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(tmpDir)
+	cases := []struct {
+		desc              *datasetDesc
+		wantOpenErrRegexp *regexp.Regexp
+	}{
+		{desc: &datasetDesc{
+			SQL: &sqlDesc{
+				DriverName:     "mysql",
+				DataSourceName: "invalid:invalid@tcp(127.0.0.1:9999)/master",
+				Query:          "select * from invalid",
+			},
+			Fields: []string{},
+		},
+			wantOpenErrRegexp: regexp.MustCompile("^dial tcp 127.0.0.1:9999.*?connection.*?refused.*$"),
+		},
+		{desc: &datasetDesc{
+			CSV: &csvDesc{
+				Filename:  filepath.Join("fixtures", "nonexistant.csv"),
+				HasHeader: false,
+				Separator: ",",
+			},
+			Fields: []string{},
+		},
+			wantOpenErrRegexp: regexp.MustCompile(
+				// Replace used because in Windows the backslash in the path is
+				// altering the meaning of the regexp
+				strings.Replace(
+					fmt.Sprintf(
+						"^%s$",
+						&os.PathError{
+							Op:   "open",
+							Path: filepath.Join("fixtures", "nonexistant.csv"),
+							Err:  syscall.ENOENT,
+						},
+					),
+					"\\",
+					"\\\\",
+					-1,
+				),
+			),
+		},
+	}
+	cfg := &config.Config{
+		MaxNumRecords: -1,
+		BuildDir:      filepath.Join(tmpDir, "build"),
+	}
+	for i, c := range cases {
+		_, err := makeDataset(cfg, c.desc)
+		if !c.wantOpenErrRegexp.MatchString(err.Error()) {
+			t.Fatalf("(%d) makeDataset: %s", i, err)
 		}
 	}
 }

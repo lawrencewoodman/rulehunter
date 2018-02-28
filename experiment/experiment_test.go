@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"runtime"
 	"strings"
 	"syscall"
@@ -317,60 +316,62 @@ func TestLoad_error(t *testing.T) {
 			filepath.Join("fixtures", "flow_no_title.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: title")},
+			errors.New("experiment missing: title")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_train_or_test.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing either: train or test")},
+			errors.New("experiment missing either: train or test")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_csv_sql.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field: train > dataset, has no csv or sql field")},
+			errors.New("experiment field: train: dataset: has no csv or sql field")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_csv_filename.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: train > dataset > csv > filename")},
+			errors.New("experiment field: train: dataset: csv: missing filename")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_csv_separator.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: train > dataset > csv > separator")},
+			errors.New("experiment field: train: dataset: csv: missing separator")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_csv_and_sql.yaml"),
 			time.Now(),
 		),
 			errors.New(
-				"Experiment field: train > dataset, can't specify csv and sql source",
+				"experiment field: train: dataset: can't specify csv and sql source",
 			),
 		},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_sql_drivername.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: train > dataset > sql > driverName")},
+			errors.New("experiment field: train: dataset: sql: missing driverName")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_invalid_sql_drivername.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field: train > dataset > sql, has invalid driverName: bob")},
+			errors.New("experiment field: train: dataset: sql: invalid driverName: bob")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_sql_datasourcename.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: train > dataset > sql > dataSourceName")},
+			errors.New("experiment field: train: dataset: sql: missing dataSourceName")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_no_sql_query.json"),
 			time.Now(),
 		),
-			errors.New("Experiment field missing: train > dataset > sql > query")},
+			errors.New("experiment field: train: dataset: sql: missing query")},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_invalid_when.json"),
 			time.Now(),
 		),
-			InvalidWhenExprError("has(twolegs")},
+			fmt.Errorf("experiment field: train: %s",
+				InvalidWhenExprError("has(twolegs")),
+		},
 		{testhelpers.NewFileInfo(
 			filepath.Join("fixtures", "flow_invalid.json"),
 			time.Now(),
@@ -411,7 +412,8 @@ func TestLoad_error(t *testing.T) {
 			filepath.Join("fixtures", "flow_invalid_rules.json"),
 			time.Now(),
 		),
-			fmt.Errorf("rules: %s", rule.InvalidExprError{Expr: "flow < <= 9.42"}),
+			fmt.Errorf("experiment field: rules: %s",
+				rule.InvalidExprError{Expr: "flow < <= 9.42"}),
 		},
 	}
 	tmpDir := testhelpers.BuildConfigDirs(t, true)
@@ -434,7 +436,7 @@ func TestLoad_error(t *testing.T) {
 
 func TestInvalidWhenExprErrorError(t *testing.T) {
 	e := InvalidWhenExprError("has)nothing")
-	want := "When field invalid: has)nothing"
+	want := "when field invalid: has)nothing"
 	if got := e.Error(); got != want {
 		t.Errorf("Error() got: %v, want: %v", got, want)
 	}
@@ -881,167 +883,6 @@ func TestProcess_errors(t *testing.T) {
 		}
 	}
 	// TODO: Test files generated
-}
-
-func TestMakeDataset(t *testing.T) {
-	tmpDir := testhelpers.BuildConfigDirs(t, true)
-	defer os.RemoveAll(tmpDir)
-	cases := []struct {
-		desc           *datasetDesc
-		dataSourceName string
-		query          string
-		fields         []string
-		config         *config.Config
-		want           ddataset.Dataset
-	}{
-		{desc: &datasetDesc{
-			SQL: &sqlDesc{
-				DriverName:     "sqlite3",
-				DataSourceName: filepath.Join("fixtures", "flow.db"),
-				Query:          "select * from flow",
-			},
-		},
-			fields: []string{"grp", "district", "height", "flow"},
-			config: &config.Config{
-				MaxNumRecords: -1,
-				BuildDir:      filepath.Join(tmpDir, "build"),
-			},
-			want: dcsv.New(
-				filepath.Join("fixtures", "flow.csv"),
-				true,
-				rune(','),
-				[]string{"grp", "district", "height", "flow"},
-			),
-		},
-		{desc: &datasetDesc{
-			SQL: &sqlDesc{
-				DriverName:     "sqlite3",
-				DataSourceName: filepath.Join("fixtures", "flow.db"),
-				Query:          "select * from flow",
-			},
-		},
-			fields: []string{"grp", "district", "height", "flow"},
-			config: &config.Config{
-				MaxNumRecords: 1000,
-				BuildDir:      filepath.Join(tmpDir, "build"),
-			},
-			want: dcsv.New(
-				filepath.Join("fixtures", "flow.csv"),
-				true,
-				rune(','),
-				[]string{"grp", "district", "height", "flow"},
-			),
-		},
-		{desc: &datasetDesc{
-			SQL: &sqlDesc{
-				DriverName:     "sqlite3",
-				DataSourceName: filepath.Join("fixtures", "flow.db"),
-				Query:          "select * from flow",
-			},
-		},
-			fields: []string{"grp", "district", "height", "flow"},
-			config: &config.Config{
-				MaxNumRecords: 4,
-				BuildDir:      filepath.Join(tmpDir, "build"),
-			},
-			want: dtruncate.New(
-				dcsv.New(
-					filepath.Join("fixtures", "flow.csv"),
-					true,
-					rune(','),
-					[]string{"grp", "district", "height", "flow"},
-				),
-				4,
-			),
-		},
-		{desc: &datasetDesc{
-			SQL: &sqlDesc{
-				DriverName:     "sqlite3",
-				DataSourceName: filepath.Join("fixtures", "flow.db"),
-				Query:          "select grp,district,flow from flow",
-			},
-		},
-			fields: []string{"grp", "district", "flow"},
-			config: &config.Config{
-				MaxNumRecords: -1,
-				BuildDir:      filepath.Join(tmpDir, "build"),
-			},
-			want: dcsv.New(
-				filepath.Join("fixtures", "flow_three_columns.csv"),
-				true,
-				rune(','),
-				[]string{"grp", "district", "flow"},
-			),
-		},
-	}
-	for i, c := range cases {
-		got, err := makeDataset("train", c.config, c.fields, c.desc)
-		if err != nil {
-			t.Errorf("(%d) makeDataset: %s", i, err)
-		} else if err := checkDatasetsEqual(got, c.want); err != nil {
-			t.Errorf("(%d) checkDatasetsEqual: %s", i, err)
-		}
-	}
-}
-
-func TestMakeDataset_err(t *testing.T) {
-	tmpDir := testhelpers.BuildConfigDirs(t, true)
-	defer os.RemoveAll(tmpDir)
-	cases := []struct {
-		experimentField   string
-		fields            []string
-		desc              *datasetDesc
-		wantOpenErrRegexp *regexp.Regexp
-	}{
-		{experimentField: "train",
-			fields: []string{},
-			desc: &datasetDesc{
-				SQL: &sqlDesc{
-					DriverName:     "mysql",
-					DataSourceName: "invalid:invalid@tcp(127.0.0.1:9999)/master",
-					Query:          "select * from invalid",
-				},
-			},
-			wantOpenErrRegexp: regexp.MustCompile("^dial tcp 127.0.0.1:9999.*?connection.*?refused.*$"),
-		},
-		{experimentField: "train",
-			fields: []string{},
-			desc: &datasetDesc{
-				CSV: &csvDesc{
-					Filename:  filepath.Join("fixtures", "nonexistant.csv"),
-					HasHeader: false,
-					Separator: ",",
-				},
-			},
-			wantOpenErrRegexp: regexp.MustCompile(
-				// Replace used because in Windows the backslash in the path is
-				// altering the meaning of the regexp
-				strings.Replace(
-					fmt.Sprintf(
-						"^%s$",
-						&os.PathError{
-							Op:   "open",
-							Path: filepath.Join("fixtures", "nonexistant.csv"),
-							Err:  syscall.ENOENT,
-						},
-					),
-					"\\",
-					"\\\\",
-					-1,
-				),
-			),
-		},
-	}
-	cfg := &config.Config{
-		MaxNumRecords: -1,
-		BuildDir:      filepath.Join(tmpDir, "build"),
-	}
-	for i, c := range cases {
-		_, err := makeDataset(c.experimentField, cfg, c.fields, c.desc)
-		if !c.wantOpenErrRegexp.MatchString(err.Error()) {
-			t.Fatalf("(%d) makeDataset: %s", i, err)
-		}
-	}
 }
 
 /*************************

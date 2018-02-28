@@ -7,18 +7,18 @@
         "driverName": "sqlite3",
         "dataSourceName": "fixtures/debt.db",
         "query": "select * from \"people\""
-      }
+      },
+      "fields": [
+        "name",
+        "balance",
+        "numCards",
+        "martialStatus",
+        "tertiaryEducated",
+        "success"
+      ]
     },
     "when": "!hasRunToday || sinceLastRunHours > 2"
   },
-  "fields": [
-		"name",
-		"balance",
-		"numCards",
-		"martialStatus",
-		"tertiaryEducated",
-		"success"
-  ],
   "ruleGeneration": {
     "fields": [
       "name",

@@ -46,31 +46,11 @@ type descFile struct {
 	Tags           []string           `yaml:"tags"`
 	Train          *modeDesc          `yaml:"train"`
 	Test           *modeDesc          `yaml:"test"`
-	Csv            *csvDesc           `yaml:"csv"`
-	Sql            *sqlDesc           `yaml:"sql"`
-	Fields         []string           `yaml:"fields"`
 	RuleGeneration ruleGenerationDesc `yaml:"ruleGeneration"`
 	Aggregators    []*aggregator.Desc `yaml:"aggregators"`
 	Goals          []string           `yaml:"goals"`
 	SortOrder      []sortDesc         `yaml:"sortOrder"`
 	Rules          []string           `yaml:"rules"`
-}
-
-type datasetDesc struct {
-	CSV *csvDesc `yaml:"csv"`
-	SQL *sqlDesc `yaml:"sql"`
-}
-
-type csvDesc struct {
-	Filename  string `yaml:"filename"`
-	HasHeader bool   `yaml:"hasHeader"`
-	Separator string `yaml:"separator"`
-}
-
-type sqlDesc struct {
-	DriverName     string `yaml:"driverName"`
-	DataSourceName string `yaml:"dataSourceName"`
-	Query          string `yaml:"query"`
 }
 
 type ruleGenerationDesc struct {
@@ -94,12 +74,6 @@ func (rg ruleGeneration) Arithmetic() bool {
 type sortDesc struct {
 	Aggregator string `yaml:"aggregator"`
 	Direction  string `yaml:"direction"`
-}
-
-type InvalidWhenExprError string
-
-func (e InvalidWhenExprError) Error() string {
-	return "When field invalid: " + string(e)
 }
 
 // InvalidExtError indicates that a config file has an invalid extension
@@ -130,34 +104,38 @@ func newExperiment(
 		return nil, err
 	}
 
+	allFields := []string{}
+
 	if d.Train != nil {
-		train, err = newMode("train", cfg, d.Fields, d.Train)
+		train, err = newMode("train", cfg, d.Train)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("experiment field: train: %s", err)
 		}
+		allFields = append(allFields, d.Train.Dataset.Fields...)
 	}
 	if d.Test != nil {
-		test, err = newMode("test", cfg, d.Fields, d.Test)
+		test, err = newMode("test", cfg, d.Test)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("experiment field: test: %s", err)
 		}
+		allFields = append(allFields, d.Test.Dataset.Fields...)
 	}
 
 	goals, err := goal.MakeGoals(d.Goals)
 	if err != nil {
-		return nil, fmt.Errorf("goals: %s", err)
+		return nil, fmt.Errorf("experiment field: goals: %s", err)
 	}
-	aggregators, err := aggregator.MakeSpecs(d.Fields, d.Aggregators)
+	aggregators, err := aggregator.MakeSpecs(allFields, d.Aggregators)
 	if err != nil {
-		return nil, fmt.Errorf("aggregators: %s", err)
+		return nil, fmt.Errorf("experiment field: aggregators: %s", err)
 	}
 	sortOrder, err := makeSortOrder(aggregators, d.SortOrder)
 	if err != nil {
-		return nil, fmt.Errorf("sortOrder: %s", err)
+		return nil, fmt.Errorf("experiment field: sortOrder: %s", err)
 	}
 	rules, err := rule.MakeDynamicRules(d.Rules)
 	if err != nil {
-		return nil, fmt.Errorf("rules: %s", err)
+		return nil, fmt.Errorf("experiment field: rules: %s", err)
 	}
 
 	return &Experiment{
@@ -502,24 +480,24 @@ func makeSortOrder(
 
 func (e *descFile) checkValid() error {
 	if len(e.Title) == 0 {
-		return errors.New("Experiment field missing: title")
+		return errors.New("experiment missing: title")
 	}
 	if e.Train == nil && e.Test == nil {
 		return errors.New(
-			"Experiment field missing either: train or test",
+			"experiment missing either: train or test",
 		)
 	}
 	if e.Train != nil {
 		if e.Train.Dataset == nil {
 			return errors.New(
-				"Experiment field missing: train > Dataset",
+				"experiment field: train: missing dataset",
 			)
 		}
 	}
 	if e.Test != nil {
 		if e.Test.Dataset == nil {
 			return errors.New(
-				"Experiment field missing: test > Dataset",
+				"experiment field: test: missing dataset",
 			)
 		}
 	}

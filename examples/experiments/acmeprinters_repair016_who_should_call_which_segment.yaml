@@ -10,14 +10,14 @@ train:
       filename: "csv/printer_repairs_callerstats.csv"
       hasHeader: true
       separator: ","
+    fields:
+      - name
+      - segment
+      - conversion
+      - callTime
+      - numContacts
+      - value
   when: "!hasRun || sinceLastRunMinutes > 40"
-fields:
-  - name
-  - segment
-  - conversion
-  - callTime
-  - numContacts
-  - value
 ruleGeneration:
   fields:
     - name

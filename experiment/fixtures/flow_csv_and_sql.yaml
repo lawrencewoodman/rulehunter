@@ -12,11 +12,11 @@ train:
       driverName: "sqlite3"
       dataSourceName: "fixtures/flow.db"
       query: "select * from \"flow\""
-fields:
-  - group
-  - district
-  - height
-  - flow
+    fields:
+      - group
+      - district
+      - height
+      - flow
 ruleGeneration:
   fields:
     - group

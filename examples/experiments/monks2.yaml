@@ -8,6 +8,15 @@ train:
       filename: "csv/monks-2.train.csv"
       hasHeader: false
       separator: " "
+    fields:
+      - class
+      - a1
+      - a2
+      - a3
+      - a4
+      - a5
+      - a6
+      - id
   when: "!hasRun"
 test:
   dataset:
@@ -15,16 +24,16 @@ test:
       filename: "csv/monks-2.test.csv"
       hasHeader: false
       separator: " "
+    fields:
+      - class
+      - a1
+      - a2
+      - a3
+      - a4
+      - a5
+      - a6
+      - id
   when: "!hasRun"
-fields:
-  - class
-  - a1
-  - a2
-  - a3
-  - a4
-  - a5
-  - a6
-  - id
 ruleGeneration:
   fields:
   - a1

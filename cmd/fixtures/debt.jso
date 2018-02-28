@@ -7,11 +7,11 @@
         "filename": "fixtures/debt.csv",
         "hasHeader": true,
         "separator":  ","
-      }
+      },
+      "fields": ["name", "balance", "num_cards", "marital_status",
+                     "tertiary_educated", "success"]
     }
   },
-  "fields": ["name", "balance", "num_cards", "marital_status",
-                 "tertiary_educated", "success"],
   "ruleFields": ["name", "balance", "num_cards", "marital_status",
                  "tertiary_educated"],
   "aggregators": [

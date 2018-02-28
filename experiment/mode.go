@@ -4,6 +4,7 @@
 package experiment
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,21 +25,44 @@ type Mode struct {
 	When    *dexpr.Expr
 }
 
+type InvalidWhenExprError string
+
+func (e InvalidWhenExprError) Error() string {
+	return "when field invalid: " + string(e)
+}
+
 type modeDesc struct {
 	Dataset *datasetDesc `yaml:"dataset"`
 	// An expression that works out whether to run the experiment for this mode
 	When string `yaml:"when"`
 }
 
+type datasetDesc struct {
+	CSV    *csvDesc `yaml:"csv"`
+	SQL    *sqlDesc `yaml:"sql"`
+	Fields []string `yaml:"fields"`
+}
+
+type csvDesc struct {
+	Filename  string `yaml:"filename"`
+	HasHeader bool   `yaml:"hasHeader"`
+	Separator string `yaml:"separator"`
+}
+
+type sqlDesc struct {
+	DriverName     string `yaml:"driverName"`
+	DataSourceName string `yaml:"dataSourceName"`
+	Query          string `yaml:"query"`
+}
+
 func newMode(
 	modeField string,
 	cfg *config.Config,
-	fields []string,
 	desc *modeDesc,
 ) (*Mode, error) {
-	d, err := makeDataset(modeField+" > dataset", cfg, fields, desc.Dataset)
+	d, err := makeDataset(cfg, desc.Dataset)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("dataset: %s", err)
 	}
 	when, err := makeWhenExpr(desc.When)
 	if err != nil {
@@ -62,9 +86,7 @@ func (m *Mode) ShouldProcess(
 }
 
 func makeDataset(
-	modeField string,
 	cfg *config.Config,
-	fields []string,
 	dd *datasetDesc,
 ) (ddataset.Dataset, error) {
 	// File mode permission:
@@ -75,46 +97,34 @@ func makeDataset(
 	const modePerm = 0700
 	var dataset ddataset.Dataset
 	if dd.CSV != nil && dd.SQL != nil {
-		return nil, fmt.Errorf(
-			"Experiment field: %s, can't specify csv and sql source",
-			modeField,
-		)
+		return nil, errors.New("can't specify csv and sql source")
 	}
 	if dd.CSV == nil && dd.SQL == nil {
 		return nil,
-			fmt.Errorf("Experiment field: %s, has no csv or sql field", modeField)
+			errors.New("has no csv or sql field")
 	}
 	if dd.CSV != nil {
 		if dd.CSV.Filename == "" {
-			return nil, fmt.Errorf("Experiment field missing: %s > csv > filename",
-				modeField)
+			return nil, errors.New("csv: missing filename")
 		}
 		if dd.CSV.Separator == "" {
-			return nil, fmt.Errorf("Experiment field missing: %s > csv > separator",
-				modeField)
+			return nil, errors.New("csv: missing separator")
 		}
 		dataset = dcsv.New(
 			dd.CSV.Filename,
 			dd.CSV.HasHeader,
 			rune(dd.CSV.Separator[0]),
-			fields,
+			dd.Fields,
 		)
 	} else if dd.SQL != nil {
 		if dd.SQL.DriverName == "" {
-			return nil, fmt.Errorf(
-				"Experiment field missing: %s > sql > driverName",
-				modeField,
-			)
+			return nil, errors.New("sql: missing driverName")
 		}
 		if dd.SQL.DataSourceName == "" {
-			return nil, fmt.Errorf(
-				"Experiment field missing: %s > sql > dataSourceName",
-				modeField,
-			)
+			return nil, errors.New("sql: missing dataSourceName")
 		}
 		if dd.SQL.Query == "" {
-			return nil, fmt.Errorf("Experiment field missing: %s > sql > query",
-				modeField)
+			return nil, errors.New("sql: missing query")
 		}
 		sqlHandler, err := newSQLHandler(
 			dd.SQL.DriverName,
@@ -122,10 +132,9 @@ func makeDataset(
 			dd.SQL.Query,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("Experiment field: %s > sql, has %s",
-				modeField, err)
+			return nil, fmt.Errorf("sql: %s", err)
 		}
-		dataset = dsql.New(sqlHandler, fields)
+		dataset = dsql.New(sqlHandler, dd.Fields)
 	}
 
 	if cfg.MaxNumRecords >= 1 {

@@ -7,11 +7,11 @@
         "filename": "fixtures/flow.csv",
         "hasHeader": true,
         "separator":  ","
-      }
+      },
+      "fields": ["group","district","height","flow"]
     },
     "when": "has(twolegs"
   },
-  "fields": ["group","district","height","flow"],
   "ruleFields": ["group","district","height"],
   "aggregators": [
     {

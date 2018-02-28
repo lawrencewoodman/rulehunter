@@ -3,9 +3,9 @@
   "tags": ["test", "fred / ned"],
   "train": {
     "dataset": {
+      "fields": ["group","district","height","flow"]
     }
   },
-  "fields": ["group","district","height","flow"],
   "ruleFields": ["group","district","height"],
   "aggregators": [
     {

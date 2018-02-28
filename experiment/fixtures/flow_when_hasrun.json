@@ -8,11 +8,11 @@
         "filename": "fixtures/flow.csv",
         "hasHeader": true,
         "separator":  ","
-      }
+      },
+      "fields": ["group","district","height","flow"]
     },
     "when": "hasRun"
   },
-  "fields": ["group","district","height","flow"],
   "ruleGeneration": {
     "fields": ["group","district","height"],
     "arithmetic": true

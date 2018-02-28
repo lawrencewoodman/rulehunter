@@ -6,10 +6,10 @@
       "sql": {
         "driverName": "sqlite3",
         "query": "select * from \"people\""
-      }
+      },
+      "fields": ["group","district","height","flow"]
     }
   },
-  "fields": ["group","district","height","flow"],
   "ruleFields": ["group","district","height"],
   "aggregators": [
     {

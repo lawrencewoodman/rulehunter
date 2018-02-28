@@ -16,9 +16,8 @@ import (
 
 func TestMakeDataset_travis(t *testing.T) {
 	cases := []struct {
-		desc   *datasetDesc
-		fields []string
-		want   ddataset.Dataset
+		desc *datasetDesc
+		want ddataset.Dataset
 	}{
 		{desc: &datasetDesc{
 			SQL: &sqlDesc{
@@ -26,8 +25,8 @@ func TestMakeDataset_travis(t *testing.T) {
 				DataSourceName: "travis@/master",
 				Query:          "select * from flow",
 			},
+			Fields: []string{"grp", "district", "height", "flow"},
 		},
-			fields: []string{"grp", "district", "height", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow.csv"),
 				true,
@@ -41,8 +40,8 @@ func TestMakeDataset_travis(t *testing.T) {
 				DataSourceName: "travis@/master",
 				Query:          "select grp,district,flow from flow",
 			},
+			Fields: []string{"grp", "district", "flow"},
 		},
-			fields: []string{"grp", "district", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow_three_columns.csv"),
 				true,
@@ -56,8 +55,8 @@ func TestMakeDataset_travis(t *testing.T) {
 				DataSourceName: "user=postgres",
 				Query:          "select * from \"flow\"",
 			},
+			Fields: []string{"grp", "district", "height", "flow"},
 		},
-			fields: []string{"grp", "district", "height", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow.csv"),
 				true,
@@ -71,8 +70,8 @@ func TestMakeDataset_travis(t *testing.T) {
 				DataSourceName: "user=postgres",
 				Query:          "select grp,district,flow from \"flow\"",
 			},
+			Fields: []string{"grp", "district", "flow"},
 		},
-			fields: []string{"grp", "district", "flow"},
 			want: dcsv.New(
 				filepath.Join("fixtures", "flow_three_columns.csv"),
 				true,
@@ -88,7 +87,7 @@ func TestMakeDataset_travis(t *testing.T) {
 		BuildDir:      filepath.Join(tmpDir, "build"),
 	}
 	for i, c := range cases {
-		got, err := makeDataset("train", cfg, c.fields, c.desc)
+		got, err := makeDataset(cfg, c.desc)
 		if err != nil {
 			t.Errorf("(%d) makeDataset: %s", i, err)
 		} else if err := checkDatasetsEqual(got, c.want); err != nil {

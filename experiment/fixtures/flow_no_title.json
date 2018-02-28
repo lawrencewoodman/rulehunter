@@ -6,11 +6,11 @@
         "filename": "fixtures/flow.csv",
         "hasHeader": true,
         "separator":  ","
-      }
+      },
+      "fields": ["group","district","height","flow"]
     },
     "when": "never"
   },
-  "fields": ["group","district","height","flow"],
   "ruleGeneration": {
     "fields": ["group","district","height"],
     "arithmetic": true

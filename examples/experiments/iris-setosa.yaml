@@ -9,13 +9,13 @@ train:
       filename: "csv/iris.csv"
       hasHeader: false
       separator: ","
+    fields:
+       - sepalLength
+       - sepalWidth
+       - petalLength
+       - petalWidth
+       - class
   when: "!hasRun"
-fields:
-   - sepalLength
-   - sepalWidth
-   - petalLength
-   - petalWidth
-   - class
 ruleGeneration:
   fields:
      - sepalLength

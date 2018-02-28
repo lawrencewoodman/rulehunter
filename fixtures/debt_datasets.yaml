@@ -1,13 +1,6 @@
 fileFormatVersion: "0.1"
 title: "What is most likely to indicate success"
 category: "testing"
-fields:
-  - "name"
-  - "balance"
-  - "num_cards"
-  - "marital_status"
-  - "tertiary_educated"
-  - "success"
 ruleGeneration:
   fields:
     - "name"
@@ -21,12 +14,27 @@ train:
       filename: "datasets/debt.csv"
       hasHeader: true
       separator:  ","
+    fields:
+      - "name"
+      - "balance"
+      - "num_cards"
+      - "marital_status"
+      - "tertiary_educated"
+      - "success"
 test:
   dataset:
     csv:
       filename: "datasets/debt.csv"
       hasHeader: true
       separator:  ","
+    fields:
+      - "name"
+      - "balance"
+      - "num_cards"
+      - "marital_status"
+      - "tertiary_educated"
+      - "success"
+
 aggregators:
   - name: "successMcc"
     kind: "mcc"

@@ -104,7 +104,7 @@ var wantPMExperiments = []*progress.Experiment{
 		Tags:     []string{},
 		Status: &progress.Status{
 			Stamp:   time.Now(),
-			Msg:     "Error loading experiment: yaml: line 3: did not find expected key",
+			Msg:     "Error loading experiment: yaml: line 4: did not find expected key",
 			Percent: 0.0,
 			State:   progress.Error,
 		},
@@ -185,7 +185,7 @@ var wantValidNamePMExperiments = []*progress.Experiment{
 		Tags:     []string{},
 		Status: &progress.Status{
 			Stamp:   time.Now(),
-			Msg:     "Error loading experiment: yaml: line 3: did not find expected key",
+			Msg:     "Error loading experiment: yaml: line 4: did not find expected key",
 			Percent: 0.0,
 			State:   progress.Error,
 		},
@@ -201,7 +201,7 @@ func initExperimentsTime(experiments []*progress.Experiment) {
 
 var wantLogEntries = []testhelpers.Entry{
 	{Level: testhelpers.Error,
-		Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 3: did not find expected key"},
+		Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 4: did not find expected key"},
 	{Level: testhelpers.Info,
 		Msg: "Processing experiment: debt.json, mode: train"},
 	{Level: testhelpers.Info,
@@ -230,7 +230,7 @@ var wantLogEntries = []testhelpers.Entry{
 
 var wantValidNameLogEntries = []testhelpers.Entry{
 	{Level: testhelpers.Error,
-		Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 3: did not find expected key"},
+		Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 4: did not find expected key"},
 	{Level: testhelpers.Info,
 		Msg: "Processing experiment: debt.json, mode: train"},
 	{Level: testhelpers.Info,

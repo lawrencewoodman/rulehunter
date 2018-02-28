@@ -7,10 +7,10 @@
         "driverName": "bob",
         "dataSourceName": "fred",
         "query": "select * from flow"
-      }
+      },
+      "fields": ["group","district","height","flow"]
     }
   },
-  "fields": ["group","district","height","flow"],
   "ruleFields": ["group","district","height"],
   "aggregators": [
     {

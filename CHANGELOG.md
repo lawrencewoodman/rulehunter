@@ -6,6 +6,7 @@
 ### Experiment Files
  * Restructure `trainDataset` and `testDataset` to become `train` and `test`
  * Allow a `when` expression for each of `train` and `test`
+ * Make `fields` part of `dataset`
 
 
 ## 0.2 (15th February 2018)

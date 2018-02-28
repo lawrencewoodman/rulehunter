@@ -3,13 +3,6 @@ category: "testing"
 tags:
   - bank
   - loan
-fields:
-  - "name"
-  - "balance"
-  - "num_cards"
-  - "marital_status"
-  - "tertiary_educated"
-  - "success"
 ruleGeneration:
   fields:
     - "name"
@@ -23,6 +16,13 @@ train:
       filename: "fixtures/debt.csv"
       hasHeader: true
       separator:  ","
+    fields:
+      - "name"
+      - "balance"
+      - "num_cards"
+      - "marital_status"
+      - "tertiary_educated"
+      - "success"
 aggregators:
   - name: "successMcc"
     kind: "mcc"

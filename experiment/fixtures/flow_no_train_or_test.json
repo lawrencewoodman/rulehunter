@@ -1,7 +1,6 @@
 {
   "title": "What would indicate good flow?",
   "tags": ["test", "fred / ned"],
-  "fields": ["group","district","height","flow"],
   "ruleFields": ["group","district","height"],
   "aggregators": [
     {

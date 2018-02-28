@@ -6,11 +6,11 @@
         "filename": "datasets/debt.csv",
         "hasHeader": true,
         "separator":  ","
-      }
+      },
+      "fields": ["name", "balance", "num_cards", "marital_status",
+                     "tertiary_educated", "success"]
     }
   },
-  "fields": ["name", "balance", "num_cards", "marital_status",
-                 "tertiary_educated", "success"],
   "ruleGeneration": {
     "fields": ["name", "balance", "num_cards", "marital_status",
                        "tertiary_educated"]
