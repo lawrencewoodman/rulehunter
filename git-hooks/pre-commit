@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Redirect output to stderr.
+exec 1>&2
+# enable user input
+exec < /dev/tty
+
+todoRegexp='^\+.*TODO'
+
+if test $(git diff --cached | grep $todoRegexp | wc -l) != 0
+then
+  exec git diff --cached | grep -ne $todoRegexp
+  echo
+  read -p "There are new TODO comments in your modifications. Are you sure want to continue? (y/n)" yn
+  echo $yn | grep ^[Yy]$
+  if [ $? -eq 0 ]
+  then
+    exit 0; # Yes
+  else
+    exit 1; # No
+  fi
+fi
