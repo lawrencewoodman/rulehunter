@@ -11,7 +11,6 @@ import (
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
-	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal"
 	"github.com/vlifesystems/rulehunter/internal/progresstest"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
@@ -326,13 +325,8 @@ func TestProcessFile(t *testing.T) {
 	l := testhelpers.NewLogger()
 	quit := quitter.New()
 	defer quit.Quit()
-	htmlCmds := make(chan cmd.Cmd, 100)
-	defer close(htmlCmds)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfg.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: %s", err)
@@ -399,13 +393,8 @@ func TestProcessFile_title_change(t *testing.T) {
 	l := testhelpers.NewLogger()
 	quit := quitter.New()
 	defer quit.Quit()
-	htmlCmds := make(chan cmd.Cmd, 100)
-	defer close(htmlCmds)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfg.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: %s", err)
@@ -473,13 +462,8 @@ func TestProcessFile_ignoreWhen(t *testing.T) {
 	l := testhelpers.NewLogger()
 	quit := quitter.New()
 	defer quit.Quit()
-	htmlCmds := make(chan cmd.Cmd, 100)
-	defer close(htmlCmds)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfg.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: %s", err)
@@ -543,13 +527,8 @@ func TestProcessFilename(t *testing.T) {
 	l := testhelpers.NewLogger()
 	quit := quitter.New()
 	defer quit.Quit()
-	htmlCmds := make(chan cmd.Cmd, 100)
-	defer close(htmlCmds)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfg.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: %s", err)
@@ -610,13 +589,8 @@ func TestProcessDir(t *testing.T) {
 	l := testhelpers.NewLogger()
 	quit := quitter.New()
 	defer quit.Quit()
-	htmlCmds := make(chan cmd.Cmd, 100)
-	defer close(htmlCmds)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfg.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: %s", err)
@@ -669,13 +643,8 @@ func TestStart(t *testing.T) {
 	l := testhelpers.NewLogger()
 	quit := quitter.New()
 	defer quit.Quit()
-	htmlCmds := make(chan cmd.Cmd, 100)
-	defer close(htmlCmds)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfg.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: %s", err)

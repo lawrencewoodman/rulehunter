@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"github.com/vlifesystems/rulehunter/progress"
 	"github.com/vlifesystems/rulehunter/quitter"
@@ -20,7 +19,6 @@ import (
 func TestRun_quit(t *testing.T) {
 	q := quitter.New()
 	l := testhelpers.NewLogger()
-	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
 	if err != nil {
 		t.Fatal("Getwd() err: ", err)
@@ -31,7 +29,6 @@ func TestRun_quit(t *testing.T) {
 
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfgDir, "build", "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("NewMonitor: %s", err)
@@ -41,19 +38,16 @@ func TestRun_quit(t *testing.T) {
 		WWWDir:         filepath.Join(cfgDir, "www"),
 		BuildDir:       filepath.Join(cfgDir, "build"),
 	}
-	h := New(config, pm, l, htmlCmds)
+	h := New(config, pm, l)
 	go h.Run(q)
 	for !h.Running() {
 	}
 
-	flushC := time.NewTimer(time.Second).C
 	quitC := time.NewTimer(2 * time.Second).C
 	isRunningC := time.NewTicker(100 * time.Millisecond).C
 	timeoutC := time.NewTimer(5 * time.Second).C
 	for {
 		select {
-		case <-flushC:
-			htmlCmds <- cmd.Flush
 		case <-isRunningC:
 			if !h.Running() {
 				return
@@ -66,12 +60,10 @@ func TestRun_quit(t *testing.T) {
 	}
 }
 
-// Tests Run for cmd.All
-func TestRun_cmd_all(t *testing.T) {
+func TestGenerateAll(t *testing.T) {
 	q := quitter.New()
 	defer q.Quit()
 	l := testhelpers.NewLogger()
-	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
 	if err != nil {
 		t.Fatal("Getwd() err: ", err)
@@ -95,7 +87,6 @@ func TestRun_cmd_all(t *testing.T) {
 
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfgDir, "build", "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %v", err)
@@ -146,45 +137,21 @@ func TestRun_cmd_all(t *testing.T) {
 			"index.html"),
 	}
 
-	h := New(config, pm, l, htmlCmds)
-	go h.Run(q)
+	h := New(config, pm, l)
 
-	var allC <-chan time.Time
-	timeoutC := time.NewTimer(5 * time.Second).C
-	ticker := time.NewTicker(time.Millisecond * 100).C
-	filesRemoved := false
-	for {
-		select {
-		case <-allC:
-			htmlCmds <- cmd.All
-		case <-ticker:
-			if err := checkFilesExist(wantFiles); err == nil {
-				if !filesRemoved {
-					// Files are first removed because cmd.All is passed at start
-					if err := removeFiles(wantFiles); err != nil {
-						t.Fatalf("removeFiles: %s", err)
-					}
-					filesRemoved = true
-					allC = time.NewTimer(time.Second).C
-				} else {
-					return
-				}
-			}
-		case <-timeoutC:
-			if err := checkFilesExist(wantFiles); err != nil {
-				t.Fatalf("Run: %s, log: %v", err, l)
-			}
-			return
-		}
+	if err := h.generateAll(); err != nil {
+		t.Fatalf("generateAll: %s", err)
+	}
+
+	if err := checkFilesExist(wantFiles); err != nil {
+		t.Errorf("checkFilesExist: %s", err)
 	}
 }
 
-// Tests Run for cmd.Reports
-func TestRun_cmd_reports(t *testing.T) {
+func TestGenerateReports(t *testing.T) {
 	q := quitter.New()
 	defer q.Quit()
 	l := testhelpers.NewLogger()
-	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
 	if err != nil {
 		t.Fatal("Getwd() err: ", err)
@@ -208,7 +175,6 @@ func TestRun_cmd_reports(t *testing.T) {
 
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfgDir, "build", "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %v", err)
@@ -259,45 +225,21 @@ func TestRun_cmd_reports(t *testing.T) {
 			"index.html"),
 	}
 
-	h := New(config, pm, l, htmlCmds)
-	go h.Run(q)
+	h := New(config, pm, l)
 
-	var reportsC <-chan time.Time
-	timeoutC := time.NewTimer(5 * time.Second).C
-	ticker := time.NewTicker(time.Millisecond * 100).C
-	filesRemoved := false
-	for {
-		select {
-		case <-reportsC:
-			htmlCmds <- cmd.Reports
-		case <-ticker:
-			if err := checkFilesExist(wantFiles); err == nil {
-				if !filesRemoved {
-					// Files are first removed because cmd.All is passed at start
-					if err := removeFiles(wantFiles); err != nil {
-						t.Fatalf("removeFiles: %s", err)
-					}
-					filesRemoved = true
-					reportsC = time.NewTimer(time.Second).C
-				} else {
-					return
-				}
-			}
-		case <-timeoutC:
-			if err := checkFilesExist(wantFiles); err != nil {
-				t.Fatalf("Run: %s", err)
-			}
-			return
-		}
+	if err := h.generateAll(); err != nil {
+		t.Fatalf("generateReports: %s", err)
+	}
+
+	if err := checkFilesExist(wantFiles); err != nil {
+		t.Errorf("checkFilesExist: %s", err)
 	}
 }
 
-// Tests Run for cmd.Progress
-func TestRun_cmd_progress(t *testing.T) {
+func TestGenerateProgress(t *testing.T) {
 	q := quitter.New()
 	defer q.Quit()
 	l := testhelpers.NewLogger()
-	htmlCmds := make(chan cmd.Cmd)
 	wd, err := os.Getwd()
 	if err != nil {
 		t.Fatal("Getwd() err: ", err)
@@ -318,7 +260,6 @@ func TestRun_cmd_progress(t *testing.T) {
 
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfgDir, "build", "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("NewMonitor() err: %v", err)
@@ -332,36 +273,14 @@ func TestRun_cmd_progress(t *testing.T) {
 		filepath.Join(cfgDir, "www", "activity", "index.html"),
 	}
 
-	h := New(config, pm, l, htmlCmds)
-	go h.Run(q)
+	h := New(config, pm, l)
 
-	var progressC <-chan time.Time
-	timeoutC := time.NewTimer(5 * time.Second).C
-	ticker := time.NewTicker(time.Millisecond * 100).C
-	filesRemoved := false
-	for {
-		select {
-		case <-progressC:
-			htmlCmds <- cmd.Progress
-		case <-ticker:
-			if err := checkFilesExist(wantFiles); err == nil {
-				if !filesRemoved {
-					// Files are first removed because cmd.All is passed at start
-					if err := removeFiles(wantFiles); err != nil {
-						t.Fatalf("removeFiles: %s", err)
-					}
-					filesRemoved = true
-					progressC = time.NewTimer(time.Second).C
-				} else {
-					return
-				}
-			}
-		case <-timeoutC:
-			if err := checkFilesExist(wantFiles); err != nil {
-				t.Fatalf("Run: %s", err)
-			}
-			return
-		}
+	if err := h.generateProgress(); err != nil {
+		t.Fatalf("generateProgress: %s", err)
+	}
+
+	if err := checkFilesExist(wantFiles); err != nil {
+		t.Errorf("checkFilesExist: %s", err)
 	}
 }
 

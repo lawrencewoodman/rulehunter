@@ -12,7 +12,6 @@ import (
 	"github.com/kardianos/service"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/html"
-	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/program"
 	"github.com/vlifesystems/rulehunter/progress"
@@ -39,10 +38,8 @@ func InitSetup(
 		return nil, err
 	}
 
-	htmlCmds := make(chan cmd.Cmd, 100)
 	pm, err := progress.NewMonitor(
 		filepath.Join(config.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		return nil, err
@@ -59,7 +56,7 @@ func InitSetup(
 	}
 
 	l.SetSvcLogger(svcLogger)
-	h := html.New(config, pm, l, htmlCmds)
+	h := html.New(config, pm, l)
 	go l.Run(q)
 	go h.Run(q)
 

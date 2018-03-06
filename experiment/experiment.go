@@ -22,6 +22,7 @@ import (
 	"github.com/vlifesystems/rulehunter/fileinfo"
 	"github.com/vlifesystems/rulehunter/logger"
 	"github.com/vlifesystems/rulehunter/progress"
+	"github.com/vlifesystems/rulehunter/quitter"
 	"github.com/vlifesystems/rulehunter/report"
 	"gopkg.in/yaml.v2"
 )
@@ -194,9 +195,18 @@ func (e *Experiment) Release() error {
 func (e *Experiment) processTrainDataset(
 	cfg *config.Config,
 	pm *progress.Monitor,
+	q *quitter.Quitter,
 ) ([]rule.Rule, error) {
 	reportProgress := func(msg string, percent float64) error {
 		return pm.ReportProgress(e.File.Name(), report.Train, msg, percent)
+	}
+	quitReceived := func() bool {
+		select {
+		case <-q.C:
+			return true
+		default:
+			return false
+		}
 	}
 	noRules := []rule.Rule{}
 
@@ -204,14 +214,23 @@ func (e *Experiment) processTrainDataset(
 		return noRules, err
 	}
 
+	if quitReceived() {
+		return noRules, nil
+	}
 	desc, err := description.DescribeDataset(e.Train.Dataset)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't describe train dataset: %s", err)
 	}
 
-	userRulesAss, err := e.assessRules(1, train, e.Rules, pm, cfg)
+	if quitReceived() {
+		return noRules, nil
+	}
+	userRulesAss, err := e.assessRules(1, train, e.Rules, pm, q, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
+	}
+	if quitReceived() {
+		return noRules, nil
 	}
 
 	if err := reportProgress("Generating rules", 0); err != nil {
@@ -222,9 +241,15 @@ func (e *Experiment) processTrainDataset(
 		return noRules, fmt.Errorf("Couldn't generate rules: %s", err)
 	}
 
-	ass, err := e.assessRules(2, train, generatedRules, pm, cfg)
+	if quitReceived() {
+		return noRules, nil
+	}
+	ass, err := e.assessRules(2, train, generatedRules, pm, q, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
+	}
+	if quitReceived() {
+		return noRules, nil
 	}
 	ass, err = ass.Merge(userRulesAss)
 	if err != nil {
@@ -240,9 +265,12 @@ func (e *Experiment) processTrainDataset(
 	}
 	tweakableRules := rule.Tweak(1, sortedRules, desc)
 
-	newAss, err := e.assessRules(3, train, tweakableRules, pm, cfg)
+	newAss, err := e.assessRules(3, train, tweakableRules, pm, q, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
+	}
+	if quitReceived() {
+		return noRules, nil
 	}
 	ass, err = ass.Merge(newAss)
 	if err != nil {
@@ -252,15 +280,17 @@ func (e *Experiment) processTrainDataset(
 	ass.Sort(e.SortOrder)
 	ass.Refine()
 	sortedRules = ass.Rules()
-
 	if err := reportProgress("Reduce DP of rules", 0); err != nil {
 		return noRules, err
 	}
 	reducedDPRules := rule.ReduceDP(sortedRules)
 
-	newAss, err = e.assessRules(4, train, reducedDPRules, pm, cfg)
+	newAss, err = e.assessRules(4, train, reducedDPRules, pm, q, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
+	}
+	if quitReceived() {
+		return noRules, nil
 	}
 	ass, err = ass.Merge(newAss)
 	if err != nil {
@@ -273,9 +303,12 @@ func (e *Experiment) processTrainDataset(
 	bestNonCombinedRules := ass.Rules(numRulesToCombine)
 	combinedRules := rule.Combine(bestNonCombinedRules)
 
-	newAss, err = e.assessRules(5, train, combinedRules, pm, cfg)
+	newAss, err = e.assessRules(5, train, combinedRules, pm, q, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
+	}
+	if quitReceived() {
+		return noRules, nil
 	}
 	ass, err = ass.Merge(newAss)
 	if err != nil {
@@ -315,6 +348,7 @@ func (e *Experiment) processTrainDataset(
 func (e *Experiment) processTestDataset(
 	cfg *config.Config,
 	pm *progress.Monitor,
+	q *quitter.Quitter,
 	rules []rule.Rule,
 ) error {
 	err :=
@@ -326,7 +360,7 @@ func (e *Experiment) processTestDataset(
 	if err != nil {
 		return fmt.Errorf("Couldn't describe test dataset: %s", err)
 	}
-	ass, err := e.assessRules(1, test, rules, pm, cfg)
+	ass, err := e.assessRules(1, test, rules, pm, q, cfg)
 	if err != nil {
 		return fmt.Errorf("Couldn't assess rules: %s", err)
 	}
@@ -351,8 +385,11 @@ func (e *Experiment) Process(
 	cfg *config.Config,
 	pm *progress.Monitor,
 	l logger.Logger,
+	q *quitter.Quitter,
 	ignoreWhen bool,
 ) error {
+	q.Add()
+	defer q.Done()
 	rules := e.Rules
 
 	reportProcessing := func(mode string) error {
@@ -403,7 +440,7 @@ func (e *Experiment) Process(
 			if err := reportProcessing("train"); err != nil {
 				return err
 			}
-			trainRules, err := e.processTrainDataset(cfg, pm)
+			trainRules, err := e.processTrainDataset(cfg, pm, q)
 			if err != nil {
 				return reportError(err)
 			}
@@ -423,7 +460,7 @@ func (e *Experiment) Process(
 			if err := reportProcessing("test"); err != nil {
 				return err
 			}
-			if err := e.processTestDataset(cfg, pm, rules); err != nil {
+			if err := e.processTestDataset(cfg, pm, q, rules); err != nil {
 				return reportError(err)
 			}
 			if err := reportSuccess("test"); err != nil {
@@ -532,6 +569,7 @@ func (e *Experiment) assessRules(
 	mode datasetKind,
 	rules []rule.Rule,
 	pm *progress.Monitor,
+	q *quitter.Quitter,
 	cfg *config.Config,
 ) (*rhkassessment.Assessment, error) {
 	var wg sync.WaitGroup
@@ -602,6 +640,10 @@ func (e *Experiment) assessRules(
 	recordNum := int64(0)
 	for conn.Next() {
 		select {
+		case <-q.C:
+			closeRecords()
+			wg.Wait()
+			return nil, nil
 		case err := <-errors:
 			closeRecords()
 			wg.Wait()

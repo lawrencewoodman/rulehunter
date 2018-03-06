@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"github.com/vlifesystems/rulehunter/progress"
 )
@@ -27,8 +26,7 @@ func TestGenerateTagPages(t *testing.T) {
 		WWWDir:   filepath.Join(tmpDir),
 		BuildDir: "fixtures",
 	}
-	htmlCmds := make(chan cmd.Cmd)
-	pm, err := progress.NewMonitor(tmpDir, htmlCmds)
+	pm, err := progress.NewMonitor(tmpDir)
 	if err != nil {
 		t.Fatalf("NewMonitor: %s", err)
 	}

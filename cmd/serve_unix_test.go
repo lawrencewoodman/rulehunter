@@ -17,9 +17,9 @@ func TestRunServe_interrupt(t *testing.T) {
 	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	defer os.RemoveAll(cfgDir)
 	if testing.Short() {
-		testhelpers.MustWriteConfig(t, cfgDir, 100)
+		testhelpers.MustWriteConfig(t, cfgDir, 3000)
 	} else {
-		testhelpers.MustWriteConfig(t, cfgDir, 2000)
+		testhelpers.MustWriteConfig(t, cfgDir, 20000)
 	}
 	l := testhelpers.NewLogger()
 	q := quitter.New()
@@ -76,7 +76,8 @@ func TestRunServe_interrupt(t *testing.T) {
 		t,
 		filepath.Join(cfgDir, "build", "reports"),
 	)
-	if len(gotReportFiles) != 1 {
-		t.Errorf("runServe - gotReportFiles: %v, len(want): 1", gotReportFiles)
+	if len(gotReportFiles) >= 3 {
+		t.Errorf("runServe - gotReportFiles: %v, want: len(gotReportFiles) < 3",
+			gotReportFiles)
 	}
 }

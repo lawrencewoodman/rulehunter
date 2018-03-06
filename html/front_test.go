@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/vlifesystems/rulehunter/config"
-	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
 	"github.com/vlifesystems/rulehunter/progress"
 )
@@ -27,13 +26,8 @@ func BenchmarkGenerateFront(b *testing.B) {
 		MaxNumRecords:   100,
 		MaxNumProcesses: 4,
 	}
-	htmlCmds := make(chan cmd.Cmd, 100)
-	defer close(htmlCmds)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfg.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		b.Fatalf("progress.NewMonitor: %s", err)

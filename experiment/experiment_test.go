@@ -23,7 +23,6 @@ import (
 	"github.com/vlifesystems/rhkit/rule"
 	"github.com/vlifesystems/rulehunter/config"
 	"github.com/vlifesystems/rulehunter/fileinfo"
-	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/internal"
 	"github.com/vlifesystems/rulehunter/internal/progresstest"
 	"github.com/vlifesystems/rulehunter/internal/testhelpers"
@@ -484,13 +483,8 @@ func TestProcess(t *testing.T) {
 
 	quit := quitter.New()
 	defer quit.Quit()
-	htmlCmds := make(chan cmd.Cmd, 100)
-	defer close(htmlCmds)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfg.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: err: %v", err)
@@ -501,7 +495,7 @@ func TestProcess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %s", err)
 	}
-	if err := e.Process(cfg, pm, l, false); err != nil {
+	if err := e.Process(cfg, pm, l, quit, false); err != nil {
 		t.Fatalf("Process: %s", err)
 	}
 
@@ -514,22 +508,6 @@ func TestProcess(t *testing.T) {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}
 
-	/*
-	 *	Check html commands received == {Progress,Progress,Progress,...}
-	 */
-	htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
-	numCmds := len(htmlCmdsReceived)
-	if numCmds < 2 {
-		t.Errorf("GetCmdsRecevied() received less than 2 commands")
-	}
-	for _, c := range htmlCmdsReceived {
-		if c != cmd.Progress && c != cmd.Reports {
-			t.Errorf(
-				"GetCmdsRecevied() commands not all equal to Progress or Reports, found: %s",
-				c,
-			)
-		}
-	}
 	// TODO: Test files generated
 }
 
@@ -566,13 +544,8 @@ func TestProcess_ignoreWhen(t *testing.T) {
 
 	quit := quitter.New()
 	defer quit.Quit()
-	htmlCmds := make(chan cmd.Cmd, 100)
-	defer close(htmlCmds)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfg.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: err: %v", err)
@@ -583,7 +556,7 @@ func TestProcess_ignoreWhen(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %s", err)
 	}
-	if err := e.Process(cfg, pm, l, true); err != nil {
+	if err := e.Process(cfg, pm, l, quit, true); err != nil {
 		t.Fatalf("Process: %s", err)
 	}
 
@@ -596,22 +569,6 @@ func TestProcess_ignoreWhen(t *testing.T) {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}
 
-	/*
-	 *	Check html commands received == {Progress,Progress,Progress,...}
-	 */
-	htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
-	numCmds := len(htmlCmdsReceived)
-	if numCmds < 2 {
-		t.Errorf("GetCmdsRecevied() received less than 2 commands")
-	}
-	for _, c := range htmlCmdsReceived {
-		if c != cmd.Progress && c != cmd.Reports {
-			t.Errorf(
-				"GetCmdsRecevied() commands not all equal to Progress or Reports, found: %s",
-				c,
-			)
-		}
-	}
 	// TODO: Test files generated
 }
 
@@ -636,13 +593,8 @@ func TestProcess_supplied_rules(t *testing.T) {
 	defer quit.Quit()
 	l := testhelpers.NewLogger()
 	go l.Run(quit)
-	htmlCmds := make(chan cmd.Cmd, 100)
-	defer close(htmlCmds)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfg.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: %s", err)
@@ -652,7 +604,7 @@ func TestProcess_supplied_rules(t *testing.T) {
 		t.Fatalf("Load: %s", err)
 	}
 
-	if err := e.Process(cfg, pm, l, false); err != nil {
+	if err := e.Process(cfg, pm, l, quit, false); err != nil {
 		t.Fatalf("Process: %s", err)
 	}
 
@@ -708,13 +660,8 @@ func TestProcess_multiProcesses(t *testing.T) {
 		defer quit.Quit()
 		l := testhelpers.NewLogger()
 		go l.Run(quit)
-		htmlCmds := make(chan cmd.Cmd)
-		defer close(htmlCmds)
-		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-		go cmdMonitor.Run()
 		pm, err := progress.NewMonitor(
 			filepath.Join(cfg.BuildDir, "progress"),
-			htmlCmds,
 		)
 		if err != nil {
 			t.Fatalf("progress.NewMonitor: %s", err)
@@ -726,7 +673,7 @@ func TestProcess_multiProcesses(t *testing.T) {
 		}
 
 		start := time.Now()
-		if err := e.Process(cfg, pm, l, false); err != nil {
+		if err := e.Process(cfg, pm, l, quit, false); err != nil {
 			t.Fatalf("Process: %s", err)
 		}
 		return time.Since(start).Nanoseconds()
@@ -754,6 +701,63 @@ func TestProcess_multiProcesses(t *testing.T) {
 	}
 }
 
+func TestProcess_quit(t *testing.T) {
+	if testing.Short() {
+		t.Skip("This test is skipped in short mode.")
+	}
+
+	timeProcess := func(quitEarly bool) (nanoseconds int64) {
+		cfgDir := testhelpers.BuildConfigDirs(t, true)
+		defer os.RemoveAll(cfgDir)
+		cfg := &config.Config{
+			ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
+			WWWDir:          filepath.Join(cfgDir, "www"),
+			BuildDir:        filepath.Join(cfgDir, "build"),
+			MaxNumProcesses: 4,
+			MaxNumRecords:   5000,
+		}
+		testhelpers.CopyFile(
+			t,
+			filepath.Join("fixtures", "flow_big.yaml"),
+			cfg.ExperimentsDir,
+		)
+		file := testhelpers.NewFileInfo("flow_big.yaml", time.Now())
+		quit := quitter.New()
+		l := testhelpers.NewLogger()
+		go l.Run(quit)
+		pm, err := progress.NewMonitor(
+			filepath.Join(cfg.BuildDir, "progress"),
+		)
+		if err != nil {
+			quit.Quit()
+			t.Fatalf("progress.NewMonitor: %s", err)
+		}
+
+		e, err := Load(cfg, file)
+		if err != nil {
+			quit.Quit()
+			t.Fatalf("Load: %s", err)
+		}
+		if quitEarly {
+			go func() {
+				<-time.After(2 * time.Second)
+				quit.Quit()
+			}()
+		}
+		start := time.Now()
+		if err := e.Process(cfg, pm, l, quit, false); err != nil {
+			quit.Quit()
+			t.Fatalf("Process: %s", err)
+		}
+		return time.Since(start).Nanoseconds()
+	}
+
+	noQuitTime := timeProcess(false)
+	quitTime := timeProcess(true)
+	if noQuitTime <= quitTime {
+		t.Errorf("Process didn't quit early when asked")
+	}
+}
 func TestProcess_errors(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)
@@ -824,13 +828,8 @@ func TestProcess_errors(t *testing.T) {
 	defer quit.Quit()
 	l := testhelpers.NewLogger()
 	go l.Run(quit)
-	htmlCmds := make(chan cmd.Cmd)
-	defer close(htmlCmds)
-	cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-	go cmdMonitor.Run()
 	pm, err := progress.NewMonitor(
 		filepath.Join(cfg.BuildDir, "progress"),
-		htmlCmds,
 	)
 	if err != nil {
 		t.Fatalf("progress.NewMonitor: %s", err)
@@ -850,7 +849,7 @@ func TestProcess_errors(t *testing.T) {
 				t.Fatalf("AddExperiment: %s", err)
 			}
 
-			err = e.Process(cfg, pm, l, false)
+			err = e.Process(cfg, pm, l, quit, false)
 			if err != nil {
 				t.Fatalf("Process: file: %s, err: %s", c.file.Name(), err)
 			}
@@ -866,22 +865,6 @@ func TestProcess_errors(t *testing.T) {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
 	}
 
-	/*
-	 *	Check html commands received == {Progress,Progress,Progress,...}
-	 */
-	htmlCmdsReceived := cmdMonitor.GetCmdsReceived()
-	numCmds := len(htmlCmdsReceived)
-	if numCmds < 2 {
-		t.Errorf("GetCmdsRecevied() received less than 2 commands")
-	}
-	for _, c := range htmlCmdsReceived {
-		if c != cmd.Progress && c != cmd.Reports {
-			t.Errorf(
-				"GetCmdsRecevied() commands not all equal to Progress or Reports, found: %s",
-				c,
-			)
-		}
-	}
 	// TODO: Test files generated
 }
 
@@ -911,13 +894,8 @@ func BenchmarkProcess_csv(b *testing.B) {
 		defer quit.Quit()
 		l := testhelpers.NewLogger()
 		go l.Run(quit)
-		htmlCmds := make(chan cmd.Cmd)
-		defer close(htmlCmds)
-		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-		go cmdMonitor.Run()
 		pm, err := progress.NewMonitor(
 			filepath.Join(cfg.BuildDir, "progress"),
-			htmlCmds,
 		)
 		if err != nil {
 			b.Fatalf("progress.NewMonitor: err: %v", err)
@@ -927,7 +905,7 @@ func BenchmarkProcess_csv(b *testing.B) {
 			b.Fatalf("Load: %s", err)
 		}
 		b.StartTimer()
-		if err := e.Process(cfg, pm, l, false); err != nil {
+		if err := e.Process(cfg, pm, l, quit, false); err != nil {
 			b.Fatalf("Process: %s", err)
 		}
 	}
@@ -955,13 +933,8 @@ func BenchmarkProcess_sql(b *testing.B) {
 		defer quit.Quit()
 		l := testhelpers.NewLogger()
 		go l.Run(quit)
-		htmlCmds := make(chan cmd.Cmd)
-		defer close(htmlCmds)
-		cmdMonitor := testhelpers.NewHtmlCmdMonitor(htmlCmds)
-		go cmdMonitor.Run()
 		pm, err := progress.NewMonitor(
 			filepath.Join(cfg.BuildDir, "progress"),
-			htmlCmds,
 		)
 		if err != nil {
 			b.Fatalf("progress.NewMonitor: err: %v", err)
@@ -971,7 +944,7 @@ func BenchmarkProcess_sql(b *testing.B) {
 			b.Fatalf("Load: %s", err)
 		}
 		b.StartTimer()
-		if err := e.Process(cfg, pm, l, false); err != nil {
+		if err := e.Process(cfg, pm, l, quit, false); err != nil {
 			b.Fatalf("Process: %s", err)
 		}
 	}

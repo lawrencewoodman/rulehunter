@@ -13,14 +13,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vlifesystems/rulehunter/html/cmd"
 	"github.com/vlifesystems/rulehunter/report"
 )
 
 // Monitor represents an experiment progress monitor.
 type Monitor struct {
 	filename    string
-	htmlCmds    chan<- cmd.Cmd
 	experiments map[string]*Experiment
 	sync.Mutex
 }
@@ -37,10 +35,7 @@ func (e ExperimentNotFoundError) Error() string {
 	return fmt.Sprintf("progress for experiment file not found: %s", e.filename)
 }
 
-func NewMonitor(
-	progressDir string,
-	htmlCmds chan<- cmd.Cmd,
-) (*Monitor, error) {
+func NewMonitor(progressDir string) (*Monitor, error) {
 	var progress progressFile
 	experiments := map[string]*Experiment{}
 	filename := filepath.Join(progressDir, "progress.json")
@@ -62,7 +57,6 @@ func NewMonitor(
 
 	return &Monitor{
 		filename:    filename,
-		htmlCmds:    htmlCmds,
 		experiments: experiments,
 	}, nil
 }
@@ -76,7 +70,6 @@ func (m *Monitor) AddExperiment(
 	m.Lock()
 	m.experiments[filename] = newExperiment(filename, title, tags, category)
 	m.Unlock()
-	m.htmlCmds <- cmd.Progress
 	return nil
 }
 
@@ -96,7 +89,6 @@ func (m *Monitor) ReportProgress(
 	if err := m.writeJSON(); err != nil {
 		return err
 	}
-	m.htmlCmds <- cmd.Progress
 	return nil
 }
 
@@ -127,8 +119,6 @@ func (m *Monitor) ReportError(file string, err error) error {
 	if err := m.writeJSON(); err != nil {
 		return err
 	}
-	m.htmlCmds <- cmd.Progress
-	m.htmlCmds <- cmd.Reports
 	return nil
 }
 
@@ -142,8 +132,6 @@ func (m *Monitor) ReportSuccess(file string) error {
 	if err := m.writeJSON(); err != nil {
 		return err
 	}
-	m.htmlCmds <- cmd.Progress
-	m.htmlCmds <- cmd.Reports
 	return nil
 }
 

@@ -85,7 +85,7 @@ func (p *Program) ProcessFile(file fileinfo.FileInfo, ignoreWhen bool) error {
 		}
 	}()
 
-	return e.Process(p.config, p.progressMonitor, p.logger, ignoreWhen)
+	return e.Process(p.config, p.progressMonitor, p.logger, p.quit, ignoreWhen)
 }
 
 func (p *Program) ProcessDir(dir string, ignoreWhen bool) error {
