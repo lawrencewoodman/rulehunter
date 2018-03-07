@@ -34,3 +34,16 @@ func (e *Experiment) String() string {
 		e.Filename, e.Title, e.Tags, e.Category, e.Status,
 	)
 }
+
+func (e *Experiment) IsEqual(o *Experiment) bool {
+	if len(e.Tags) != len(o.Tags) {
+		return false
+	}
+	for i, t := range e.Tags {
+		if t != o.Tags[i] {
+			return false
+		}
+	}
+	return e.Filename == o.Filename && e.Title == o.Title &&
+		e.Category == o.Category && e.Status.IsEqual(o.Status)
+}

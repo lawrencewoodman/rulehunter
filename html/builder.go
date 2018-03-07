@@ -50,15 +50,24 @@ func (b *Builder) Run(q *quitter.Quitter) {
 		b.log.Error(fmt.Errorf("Couldn't generate html: %s", err))
 	}
 
+	oldExperiments := b.pm.GetExperiments()
+
 	tickChan := time.NewTicker(time.Second * 5).C
 	for {
 		select {
 		case <-tickChan:
-			// TODO: Alter this so that it checks whether progress has changed and
-			// generates accordingly
-			if err := b.generateReports(); err != nil {
-				b.log.Error(fmt.Errorf("Couldn't generate html: %s", err))
+			currentExperiments := b.pm.GetExperiments()
+			if !areReportsUptodate(oldExperiments, currentExperiments) {
+				if err := b.generateReports(); err != nil {
+					b.log.Error(fmt.Errorf("Couldn't generate html: %s", err))
+				}
 			}
+			if !isProgressUptodate(oldExperiments, currentExperiments) {
+				if err := b.generateProgress(); err != nil {
+					b.log.Error(fmt.Errorf("Couldn't generate html: %s", err))
+				}
+			}
+			oldExperiments = currentExperiments
 		case <-q.C:
 			if err := b.generateAll(); err != nil {
 				b.log.Error(fmt.Errorf("Couldn't generate html: %s", err))
@@ -114,4 +123,41 @@ func (b *Builder) generate(generators []generator) error {
 		}
 	}
 	return nil
+}
+
+func areReportsUptodate(
+	oldExperiments, currentExperiments []*progress.Experiment,
+) bool {
+	for _, ce := range currentExperiments {
+		found := false
+		for _, oe := range oldExperiments {
+			if ce.Filename == oe.Filename {
+				found = true
+				if ce.Status.State == progress.Success &&
+					ce.Status.Stamp.After(oe.Status.Stamp) {
+					return false
+				}
+			}
+		}
+		if !found && ce.Status.State == progress.Success {
+			return false
+		}
+	}
+	return true
+}
+
+func isProgressUptodate(
+	oldExperiments, currentExperiments []*progress.Experiment,
+) bool {
+	if len(currentExperiments) != len(oldExperiments) {
+		return false
+	}
+	for _, ce := range currentExperiments {
+		for _, oe := range oldExperiments {
+			if !ce.IsEqual(oe) {
+				return false
+			}
+		}
+	}
+	return true
 }

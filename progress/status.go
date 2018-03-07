@@ -58,6 +58,11 @@ func (s *Status) String() string {
 	)
 }
 
+func (s *Status) IsEqual(o *Status) bool {
+	return s.Stamp == o.Stamp && s.Msg == o.Msg && s.Percent == o.Percent &&
+		s.State == o.State
+}
+
 // IsFinished returns whether the status is either Success or Error
 func (s *Status) IsFinished() bool {
 	return s.State == Success || s.State == Error
