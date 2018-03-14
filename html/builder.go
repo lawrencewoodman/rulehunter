@@ -129,17 +129,8 @@ func areReportsUptodate(
 	oldExperiments, currentExperiments []*progress.Experiment,
 ) bool {
 	for _, ce := range currentExperiments {
-		found := false
-		for _, oe := range oldExperiments {
-			if ce.Filename == oe.Filename {
-				found = true
-				if ce.Status.State == progress.Success &&
-					ce.Status.Stamp.After(oe.Status.Stamp) {
-					return false
-				}
-			}
-		}
-		if !found && ce.Status.State == progress.Success {
+		if ce.Status.State == progress.Success &&
+			time.Since(ce.Status.Stamp).Seconds() < 10 {
 			return false
 		}
 	}
