@@ -157,7 +157,7 @@ func newExperiment(
 	}, nil
 }
 
-const assessRulesNumStages = 5
+const assessRulesNumStages = 6
 
 func Load(cfg *config.Config, file fileinfo.FileInfo) (*Experiment, error) {
 	var d *descFile
@@ -225,12 +225,32 @@ func (e *Experiment) processTrainDataset(
 	if quitReceived() {
 		return noRules, nil
 	}
-	userRulesAss, err := e.assessRules(1, train, e.Rules, pm, q, cfg)
+	userRules := append(e.Rules, rule.NewTrue())
+	ass, err := e.assessRules(1, train, userRules, pm, q, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
 	}
 	if quitReceived() {
 		return noRules, nil
+	}
+	ass.Sort(e.SortOrder)
+	ass.Refine()
+
+	assessRules := func(stage int, rules []rule.Rule) error {
+		newAss, err := e.assessRules(stage, train, rules, pm, q, cfg)
+		if err != nil {
+			return fmt.Errorf("Couldn't assess rules: %s", err)
+		}
+		if quitReceived() {
+			return nil
+		}
+		newAss.Sort(e.SortOrder)
+		newAss.Refine()
+		ass, err = ass.Merge(newAss)
+		if err != nil {
+			return fmt.Errorf("Couldn't merge assessments: %s", err)
+		}
+		return nil
 	}
 
 	if err := reportProgress("Generating rules", 0); err != nil {
@@ -244,16 +264,35 @@ func (e *Experiment) processTrainDataset(
 	if quitReceived() {
 		return noRules, nil
 	}
-	ass, err := e.assessRules(2, train, generatedRules, pm, q, cfg)
-	if err != nil {
-		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
+
+	if err := assessRules(2, generatedRules); err != nil {
+		return noRules, err
 	}
+
 	if quitReceived() {
 		return noRules, nil
 	}
-	ass, err = ass.Merge(userRulesAss)
-	if err != nil {
-		return noRules, fmt.Errorf("Couldn't merge assessments: %s", err)
+
+	if len(e.RuleGeneration.Fields()) == 2 {
+		if err := reportProgress("Combining rules", 0); err != nil {
+			return noRules, err
+		}
+		cRules := rule.Combine(generatedRules)
+		if len(cRules) > 10000 {
+			for bestNum := 10000; bestNum > 50; bestNum-- {
+				cRules = rule.Combine(ass.Rules(bestNum))
+				if len(cRules) <= 10000 {
+					break
+				}
+			}
+		}
+		cRules = append(cRules, rule.NewTrue())
+		if err := assessRules(3, cRules); err != nil {
+			return noRules, err
+		}
+		if quitReceived() {
+			return noRules, nil
+		}
 	}
 
 	ass.Sort(e.SortOrder)
@@ -265,16 +304,11 @@ func (e *Experiment) processTrainDataset(
 	}
 	tweakableRules := rule.Tweak(1, sortedRules, desc)
 
-	newAss, err := e.assessRules(3, train, tweakableRules, pm, q, cfg)
-	if err != nil {
-		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
+	if err := assessRules(4, tweakableRules); err != nil {
+		return noRules, err
 	}
 	if quitReceived() {
 		return noRules, nil
-	}
-	ass, err = ass.Merge(newAss)
-	if err != nil {
-		return noRules, fmt.Errorf("Couldn't merge assessments: %s", err)
 	}
 
 	ass.Sort(e.SortOrder)
@@ -285,16 +319,11 @@ func (e *Experiment) processTrainDataset(
 	}
 	reducedDPRules := rule.ReduceDP(sortedRules)
 
-	newAss, err = e.assessRules(4, train, reducedDPRules, pm, q, cfg)
-	if err != nil {
-		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
+	if err := assessRules(5, reducedDPRules); err != nil {
+		return noRules, err
 	}
 	if quitReceived() {
 		return noRules, nil
-	}
-	ass, err = ass.Merge(newAss)
-	if err != nil {
-		return noRules, fmt.Errorf("Couldn't merge assessments: %s", err)
 	}
 
 	numRulesToCombine := 50
@@ -303,30 +332,16 @@ func (e *Experiment) processTrainDataset(
 	bestNonCombinedRules := ass.Rules(numRulesToCombine)
 	combinedRules := rule.Combine(bestNonCombinedRules)
 
-	newAss, err = e.assessRules(5, train, combinedRules, pm, q, cfg)
-	if err != nil {
-		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
+	if err := assessRules(6, combinedRules); err != nil {
+		return noRules, err
 	}
 	if quitReceived() {
 		return noRules, nil
-	}
-	ass, err = ass.Merge(newAss)
-	if err != nil {
-		return noRules, fmt.Errorf("Couldn't merge assessments: %s", err)
 	}
 
 	ass.Sort(e.SortOrder)
 	ass.Refine()
 	ass = ass.TruncateRuleAssessments(2)
-
-	ass, err = ass.Merge(userRulesAss)
-	if err != nil {
-		return noRules, fmt.Errorf("Couldn't merge assessments: %s", err)
-	}
-
-	ass.Sort(e.SortOrder)
-	ass.Refine()
-	ass = ass.TruncateRuleAssessments(10)
 
 	r := report.New(
 		report.Train,
@@ -541,72 +556,19 @@ func (e *descFile) checkValid() error {
 	return nil
 }
 
-func reportTrainAssessProgress(
-	pm *progress.Monitor,
-	filename string,
-	stage int,
-	recordNum int64,
-	numRecords int64,
-) error {
-	progress := 100.0 * float64(recordNum) / float64(numRecords)
-	msg := fmt.Sprintf("Assessing rules %d/%d", stage, assessRulesNumStages)
-	return pm.ReportProgress(filename, report.Train, msg, progress)
-}
-
-func reportTestAssessProgress(
-	pm *progress.Monitor,
-	filename string,
-	recordNum int64,
-	numRecords int64,
-) error {
-	progress := 100.0 * float64(recordNum) / float64(numRecords)
-	msg := fmt.Sprintf("Assessing rules")
-	return pm.ReportProgress(filename, report.Test, msg, progress)
-}
-
-func (e *Experiment) assessRules(
-	stage int,
-	mode datasetKind,
-	rules []rule.Rule,
-	pm *progress.Monitor,
-	q *quitter.Quitter,
+func (e *Experiment) startWorkers(
+	wg *sync.WaitGroup,
 	cfg *config.Config,
-) (*rhkassessment.Assessment, error) {
-	var wg sync.WaitGroup
-	var result *rhkassessment.Assessment
-	var dataset ddataset.Dataset
-	progressIntervals := int64(1000)
+	rules []rule.Rule,
+) (
+	[]*rhkassessment.Assessment,
+	[]chan ddataset.Record,
+	chan error,
+) {
 	numRules := len(rules)
+	assessments := []*rhkassessment.Assessment{}
 	records := []chan ddataset.Record{}
 	errors := make(chan error, cfg.MaxNumProcesses+1)
-	defer close(errors)
-	assessments := []*rhkassessment.Assessment{}
-	closeRecords := func() {
-		for _, r := range records {
-			close(r)
-		}
-	}
-	if mode == train {
-		dataset = e.Train.Dataset
-	} else {
-		dataset = e.Test.Dataset
-	}
-
-	if stage > assessRulesNumStages {
-		panic("assessRules: stage > assessRulesNumStages")
-	}
-
-	if len(rules) == 0 {
-		a := rhkassessment.New(e.Aggregators, e.Goals)
-		a.NumRecords = dataset.NumRecords()
-		if err := a.Update(); err != nil {
-			closeRecords()
-			return nil, err
-		}
-		closeRecords()
-		return a, nil
-	}
-
 	ruleStep := numRules / cfg.MaxNumProcesses
 	if ruleStep < cfg.MaxNumProcesses {
 		ruleStep = cfg.MaxNumProcesses
@@ -617,14 +579,29 @@ func (e *Experiment) assessRules(
 			nextI = numRules
 		}
 		a := rhkassessment.New(e.Aggregators, e.Goals)
-		a.AddRules(rules[i:nextI])
+		a.AddRules(append(rules[i:nextI], rule.NewTrue()))
 		assessments = append(assessments, a)
-		wg.Add(1)
 		recordC := make(chan ddataset.Record, 100)
 		records = append(records, recordC)
-		go assessRulesWorker(&wg, a, recordC, errors)
+		go assessRulesWorker(wg, a, recordC, errors)
 	}
+	return assessments, records, errors
+}
 
+func (e *Experiment) sendRecordsToWorkers(
+	wg *sync.WaitGroup,
+	q *quitter.Quitter,
+	reportProgress func(int64, int64) error,
+	records []chan ddataset.Record,
+	errors chan error,
+	dataset ddataset.Dataset,
+) error {
+	closeRecords := func() {
+		for _, r := range records {
+			close(r)
+		}
+	}
+	const progressIntervals = int64(100)
 	reportNumRecords := dataset.NumRecords() / progressIntervals
 	if reportNumRecords == 0 {
 		reportNumRecords = 1
@@ -633,7 +610,7 @@ func (e *Experiment) assessRules(
 	if err != nil {
 		closeRecords()
 		wg.Wait()
-		return nil, err
+		return err
 	}
 	defer conn.Close()
 
@@ -643,11 +620,11 @@ func (e *Experiment) assessRules(
 		case <-q.C:
 			closeRecords()
 			wg.Wait()
-			return nil, nil
+			return nil
 		case err := <-errors:
 			closeRecords()
 			wg.Wait()
-			return nil, err
+			return err
 		default:
 			break
 		}
@@ -657,54 +634,120 @@ func (e *Experiment) assessRules(
 		}
 		recordNum++
 		if recordNum == 0 || recordNum%reportNumRecords == 0 {
-			if mode == train {
-				err := reportTrainAssessProgress(
-					pm,
-					e.File.Name(),
-					stage,
-					recordNum,
-					dataset.NumRecords(),
-				)
-				if err != nil {
-					closeRecords()
-					wg.Wait()
-					return nil, err
-				}
-			} else {
-				err := reportTestAssessProgress(
-					pm,
-					e.File.Name(),
-					recordNum,
-					dataset.NumRecords(),
-				)
-				if err != nil {
-					closeRecords()
-					wg.Wait()
-					return nil, err
-				}
+			if err := reportProgress(recordNum, dataset.NumRecords()); err != nil {
+				closeRecords()
+				wg.Wait()
+				return err
 			}
 		}
 	}
 	if err := conn.Err(); err != nil {
 		closeRecords()
 		wg.Wait()
-		return nil, err
+		return err
 	}
 
 	closeRecords()
 	wg.Wait()
 	select {
 	case err := <-errors:
-		return nil, err
+		return err
 	default:
 		break
 	}
+	return nil
+}
 
-	result = assessments[0]
-	for _, a := range assessments[1:] {
-		result, err = result.Merge(a)
+func (e *Experiment) assessRules(
+	stage int,
+	mode datasetKind,
+	rules []rule.Rule,
+	pm *progress.Monitor,
+	q *quitter.Quitter,
+	cfg *config.Config,
+) (*rhkassessment.Assessment, error) {
+	const subRulesStep = 1000
+	var wg sync.WaitGroup
+	var result *rhkassessment.Assessment
+	var dataset ddataset.Dataset
+
+	if mode == train {
+		dataset = e.Train.Dataset
+	} else {
+		dataset = e.Test.Dataset
+	}
+
+	processSubRules := func(ruleProgress float64, subRules []rule.Rule) (
+		*rhkassessment.Assessment,
+		error,
+	) {
+		reportProgress := func(recordNum, numRecords int64) error {
+			progress :=
+				100.0*ruleProgress - 1 + float64(recordNum)/float64(numRecords)
+			if mode == train {
+				msg := fmt.Sprintf("Assessing rules %d/%d", stage, assessRulesNumStages)
+				return pm.ReportProgress(e.File.Name(), report.Train, msg, progress)
+			}
+			msg := fmt.Sprintf("Assessing rules")
+			return pm.ReportProgress(e.File.Name(), report.Test, msg, progress)
+		}
+
+		assessments, records, errors := e.startWorkers(&wg, cfg, rules)
+		defer close(errors)
+
+		err :=
+			e.sendRecordsToWorkers(&wg, q, reportProgress, records, errors, dataset)
 		if err != nil {
 			return nil, err
+		}
+
+		result = assessments[0]
+		for _, a := range assessments[1:] {
+			a.Sort(e.SortOrder)
+			a.Refine()
+			result, err = result.Merge(a)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return result, nil
+	}
+
+	if stage > assessRulesNumStages {
+		panic("assessRules: stage > assessRulesNumStages")
+	}
+
+	if len(rules) == 0 {
+		a := rhkassessment.New(e.Aggregators, e.Goals)
+		a.NumRecords = dataset.NumRecords()
+		if err := a.Update(); err != nil {
+			return nil, err
+		}
+		return a, nil
+	}
+
+	for i := 0; i < len(rules); i += subRulesStep {
+		endI := i + subRulesStep
+		if endI > len(rules) {
+			endI = len(rules)
+		}
+		ruleProgress := float64(endI) / float64(len(rules))
+		subRules := rules[i:endI]
+		subRules = append(subRules, rule.NewTrue())
+		newAss, err := processSubRules(ruleProgress, subRules)
+		if err != nil {
+			return nil, err
+		}
+		if i == 0 {
+			result = newAss
+		} else {
+			newAss.Sort(e.SortOrder)
+			newAss.Refine()
+			result, err = result.Merge(newAss)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -717,6 +760,7 @@ func assessRulesWorker(
 	records <-chan ddataset.Record,
 	errors chan<- error,
 ) {
+	wg.Add(1)
 	defer wg.Done()
 	for r := range records {
 		if err := ass.ProcessRecord(r); err != nil {

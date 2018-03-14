@@ -620,7 +620,6 @@ func TestProcess_supplied_rules(t *testing.T) {
 	}
 	s := string(b)
 	wantRules := []string{
-		"height \\u003e 67",
 		"flow \\u003e 20",
 	}
 	for _, wantRule := range wantRules {

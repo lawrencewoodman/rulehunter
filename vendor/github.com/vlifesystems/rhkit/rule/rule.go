@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 // Package rule implements rules to be tested against a dataset
@@ -68,19 +68,17 @@ func Generate(
 	}
 	rules := make([]Rule, 1)
 	rules[0] = NewTrue()
+
 	for _, generator := range generators {
 		newRules := generator(inputDescription, generationDesc)
 		rules = append(rules, newRules...)
 	}
 
-	if len(generationDesc.Fields()) == 2 {
-		cRules := Combine(rules)
-		rules = append(rules, cRules...)
-	}
 	Sort(rules)
 	return Uniq(rules), nil
 }
 
+// Combine combines rules together using And and Or
 func Combine(rules []Rule) []Rule {
 	Sort(rules)
 	combinedRules := make([]Rule, 0)
