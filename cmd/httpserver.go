@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -37,7 +38,7 @@ func httpServer(
 	// Wait until Quit is sent on channel
 	<-q.C
 	shutdownSent = true
-	if err := srv.Shutdown(nil); err != nil {
+	if err := srv.Shutdown(context.Background()); err != nil {
 		l.Error(fmt.Errorf("http server: %s", err))
 	} else {
 		l.Info(fmt.Sprintf("Shutdown http server on port: %d", port))
