@@ -84,6 +84,8 @@ func (e InvalidExtError) Error() string {
 	return "invalid extension: " + string(e)
 }
 
+var ErrQuitReceived = errors.New("quit signal received")
+
 // Which dataset is to be used
 type datasetKind int
 
@@ -215,7 +217,7 @@ func (e *Experiment) processTrainDataset(
 	}
 
 	if quitReceived() {
-		return noRules, nil
+		return noRules, ErrQuitReceived
 	}
 	desc, err := description.DescribeDataset(e.Train.Dataset)
 	if err != nil {
@@ -223,15 +225,12 @@ func (e *Experiment) processTrainDataset(
 	}
 
 	if quitReceived() {
-		return noRules, nil
+		return noRules, ErrQuitReceived
 	}
 	userRules := append(e.Rules, rule.NewTrue())
 	ass, err := e.assessRules(1, train, userRules, pm, q, cfg)
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
-	}
-	if quitReceived() {
-		return noRules, nil
 	}
 	ass.Sort(e.SortOrder)
 	ass.Refine()
@@ -240,9 +239,6 @@ func (e *Experiment) processTrainDataset(
 		newAss, err := e.assessRules(stage, train, rules, pm, q, cfg)
 		if err != nil {
 			return fmt.Errorf("Couldn't assess rules: %s", err)
-		}
-		if quitReceived() {
-			return nil
 		}
 		newAss.Sort(e.SortOrder)
 		newAss.Refine()
@@ -262,15 +258,11 @@ func (e *Experiment) processTrainDataset(
 	}
 
 	if quitReceived() {
-		return noRules, nil
+		return noRules, ErrQuitReceived
 	}
 
 	if err := assessRules(2, generatedRules); err != nil {
 		return noRules, err
-	}
-
-	if quitReceived() {
-		return noRules, nil
 	}
 
 	if len(e.RuleGeneration.Fields()) == 2 {
@@ -291,7 +283,7 @@ func (e *Experiment) processTrainDataset(
 			return noRules, err
 		}
 		if quitReceived() {
-			return noRules, nil
+			return noRules, ErrQuitReceived
 		}
 	}
 
@@ -307,9 +299,6 @@ func (e *Experiment) processTrainDataset(
 	if err := assessRules(4, tweakableRules); err != nil {
 		return noRules, err
 	}
-	if quitReceived() {
-		return noRules, nil
-	}
 
 	ass.Sort(e.SortOrder)
 	ass.Refine()
@@ -322,9 +311,6 @@ func (e *Experiment) processTrainDataset(
 	if err := assessRules(5, reducedDPRules); err != nil {
 		return noRules, err
 	}
-	if quitReceived() {
-		return noRules, nil
-	}
 
 	numRulesToCombine := 50
 	ass.Sort(e.SortOrder)
@@ -334,9 +320,6 @@ func (e *Experiment) processTrainDataset(
 
 	if err := assessRules(6, combinedRules); err != nil {
 		return noRules, err
-	}
-	if quitReceived() {
-		return noRules, nil
 	}
 
 	ass.Sort(e.SortOrder)
@@ -583,6 +566,10 @@ func (e *Experiment) startWorkers(
 		assessments = append(assessments, a)
 		recordC := make(chan ddataset.Record, 100)
 		records = append(records, recordC)
+
+		// wg.Add here because sometimes wg.Wait() called before all
+		// the goroutines had started
+		wg.Add(1)
 		go assessRulesWorker(wg, a, recordC, errors)
 	}
 	return assessments, records, errors
@@ -596,11 +583,6 @@ func (e *Experiment) sendRecordsToWorkers(
 	errors chan error,
 	dataset ddataset.Dataset,
 ) error {
-	closeRecords := func() {
-		for _, r := range records {
-			close(r)
-		}
-	}
 	const progressIntervals = int64(100)
 	reportNumRecords := dataset.NumRecords() / progressIntervals
 	if reportNumRecords == 0 {
@@ -608,8 +590,6 @@ func (e *Experiment) sendRecordsToWorkers(
 	}
 	conn, err := dataset.Open()
 	if err != nil {
-		closeRecords()
-		wg.Wait()
 		return err
 	}
 	defer conn.Close()
@@ -618,12 +598,8 @@ func (e *Experiment) sendRecordsToWorkers(
 	for conn.Next() {
 		select {
 		case <-q.C:
-			closeRecords()
-			wg.Wait()
-			return nil
+			return ErrQuitReceived
 		case err := <-errors:
-			closeRecords()
-			wg.Wait()
 			return err
 		default:
 			break
@@ -635,27 +611,11 @@ func (e *Experiment) sendRecordsToWorkers(
 		recordNum++
 		if recordNum == 0 || recordNum%reportNumRecords == 0 {
 			if err := reportProgress(recordNum, dataset.NumRecords()); err != nil {
-				closeRecords()
-				wg.Wait()
 				return err
 			}
 		}
 	}
-	if err := conn.Err(); err != nil {
-		closeRecords()
-		wg.Wait()
-		return err
-	}
-
-	closeRecords()
-	wg.Wait()
-	select {
-	case err := <-errors:
-		return err
-	default:
-		break
-	}
-	return nil
+	return conn.Err()
 }
 
 func (e *Experiment) assessRules(
@@ -693,25 +653,39 @@ func (e *Experiment) assessRules(
 		}
 
 		assessments, records, errors := e.startWorkers(&wg, cfg, rules)
-		defer close(errors)
-
 		err :=
 			e.sendRecordsToWorkers(&wg, q, reportProgress, records, errors, dataset)
+
+		// We have finished with records and errors now, so it makes sense
+		// to close these channels and wait for the goroutines to finish
+		for _, r := range records {
+			close(r)
+		}
+		wg.Wait()
+		select {
+		case errs := <-errors:
+			return nil, errs
+		default:
+			close(errors)
+			break
+		}
 		if err != nil {
 			return nil, err
 		}
 
-		result = assessments[0]
+		subResult := assessments[0]
+		subResult.Sort(e.SortOrder)
+		subResult.Refine()
 		for _, a := range assessments[1:] {
 			a.Sort(e.SortOrder)
 			a.Refine()
-			result, err = result.Merge(a)
+			subResult, err = subResult.Merge(a)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		return result, nil
+		return subResult, nil
 	}
 
 	if stage > assessRulesNumStages {
@@ -760,8 +734,8 @@ func assessRulesWorker(
 	records <-chan ddataset.Record,
 	errors chan<- error,
 ) {
-	wg.Add(1)
 	defer wg.Done()
+
 	for r := range records {
 		if err := ass.ProcessRecord(r); err != nil {
 			errors <- err
