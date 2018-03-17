@@ -8,6 +8,10 @@
  * Allow a `when` expression for each of `train` and `test`
  * Make `fields` part of `dataset`
 
+### Miscellaneous
+ * When a large number of rules are to be assessed, split them up to reduce
+   memory usage
+
 
 ## 0.2 (15th February 2018)
 
