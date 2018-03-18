@@ -693,12 +693,7 @@ func (e *Experiment) assessRules(
 	}
 
 	if len(rules) == 0 {
-		a := rhkassessment.New(e.Aggregators, e.Goals)
-		a.NumRecords = dataset.NumRecords()
-		if err := a.Update(); err != nil {
-			return nil, err
-		}
-		return a, nil
+		rules = []rule.Rule{rule.NewTrue()}
 	}
 
 	for i := 0; i < len(rules); i += subRulesStep {
