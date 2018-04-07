@@ -232,20 +232,19 @@ func (e *Experiment) processTrainDataset(
 	if err != nil {
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
 	}
-	ass.Sort(e.SortOrder)
-	ass.Refine()
 
 	assessRules := func(stage int, rules []rule.Rule) error {
 		newAss, err := e.assessRules(stage, train, rules, pm, q, cfg)
 		if err != nil {
 			return fmt.Errorf("Couldn't assess rules: %s", err)
 		}
-		newAss.Sort(e.SortOrder)
-		newAss.Refine()
 		ass, err = ass.Merge(newAss)
 		if err != nil {
 			return fmt.Errorf("Couldn't merge assessments: %s", err)
 		}
+		ass.Sort(e.SortOrder)
+		ass.Refine()
+		ass.TruncateRuleAssessments(5000)
 		return nil
 	}
 
@@ -265,65 +264,68 @@ func (e *Experiment) processTrainDataset(
 		return noRules, err
 	}
 
-	if len(e.RuleGeneration.Fields()) == 2 {
-		if err := reportProgress("Combining rules", 0); err != nil {
-			return noRules, err
-		}
-		cRules := rule.Combine(generatedRules)
-		if len(cRules) > 10000 {
-			for bestNum := 10000; bestNum > 50; bestNum-- {
-				cRules = rule.Combine(ass.Rules(bestNum))
-				if len(cRules) <= 10000 {
-					break
-				}
-			}
-		}
-		cRules = append(cRules, rule.NewTrue())
-		if err := assessRules(3, cRules); err != nil {
-			return noRules, err
-		}
-		if quitReceived() {
-			return noRules, ErrQuitReceived
-		}
+	if quitReceived() {
+		return noRules, ErrQuitReceived
 	}
-
-	ass.Sort(e.SortOrder)
-	ass.Refine()
-	sortedRules := ass.Rules()
 
 	if err := reportProgress("Tweaking rules", 0); err != nil {
 		return noRules, err
 	}
-	tweakableRules := rule.Tweak(1, sortedRules, desc)
+	tweakableRules := rule.Tweak(1, ass.Rules(), desc)
 
-	if err := assessRules(4, tweakableRules); err != nil {
+	if err := assessRules(3, tweakableRules); err != nil {
 		return noRules, err
 	}
 
-	ass.Sort(e.SortOrder)
-	ass.Refine()
-	sortedRules = ass.Rules()
+	if quitReceived() {
+		return noRules, ErrQuitReceived
+	}
+
 	if err := reportProgress("Reduce DP of rules", 0); err != nil {
 		return noRules, err
 	}
-	reducedDPRules := rule.ReduceDP(sortedRules)
+	reducedDPRules := rule.ReduceDP(ass.Rules())
 
-	if err := assessRules(5, reducedDPRules); err != nil {
+	if err := assessRules(4, reducedDPRules); err != nil {
 		return noRules, err
 	}
 
-	numRulesToCombine := 50
-	ass.Sort(e.SortOrder)
-	ass.Refine()
-	bestNonCombinedRules := ass.Rules(numRulesToCombine)
-	combinedRules := rule.Combine(bestNonCombinedRules)
+	if quitReceived() {
+		return noRules, ErrQuitReceived
+	}
+
+	combinedRules := []rule.Rule{}
+	hasCombined := false
+	for n := 1000; !hasCombined || len(combinedRules) > 10000; n -= 10 {
+		combinedRules = rule.Combine(ass.Rules(n))
+		hasCombined = true
+	}
+	combinedRules = append(combinedRules, rule.NewTrue())
+
+	if err := assessRules(5, combinedRules); err != nil {
+		return noRules, err
+	}
+
+	if quitReceived() {
+		return noRules, ErrQuitReceived
+	}
+
+	combinedRules = []rule.Rule{}
+	hasCombined = false
+	for n := 1000; !hasCombined || len(combinedRules) > 2500; n -= 10 {
+		combinedRules = rule.Combine(ass.Rules(n))
+		hasCombined = true
+	}
+	combinedRules = append(combinedRules, rule.NewTrue())
 
 	if err := assessRules(6, combinedRules); err != nil {
 		return noRules, err
 	}
 
-	ass.Sort(e.SortOrder)
-	ass.Refine()
+	if quitReceived() {
+		return noRules, ErrQuitReceived
+	}
+
 	ass = ass.TruncateRuleAssessments(2)
 
 	r := report.New(
@@ -720,6 +722,8 @@ func (e *Experiment) assessRules(
 		}
 	}
 
+	result.Sort(e.SortOrder)
+	result.Refine()
 	return result, nil
 }
 

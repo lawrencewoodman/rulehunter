@@ -814,19 +814,6 @@ func TestGetTrueRuleAssessment_error(t *testing.T) {
 				},
 			},
 			&rhkassessment.RuleAssessment{
-				Rule: rule.NewTrue(),
-				Aggregators: map[string]*dlit.Literal{
-					"numMatches":     dlit.MustNew("142"),
-					"percentMatches": dlit.MustNew("42"),
-					"numIncomeGt2":   dlit.MustNew("2"),
-					"goalsScore":     dlit.MustNew(0.1),
-				},
-				Goals: []*rhkassessment.GoalAssessment{
-					&rhkassessment.GoalAssessment{"numIncomeGt2 == 1", false},
-					&rhkassessment.GoalAssessment{"numIncomeGt2 == 2", true},
-				},
-			},
-			&rhkassessment.RuleAssessment{
 				Rule: rule.NewGEFV("rate", dlit.MustNew(789.2)),
 				Aggregators: map[string]*dlit.Literal{
 					"numMatches":     dlit.MustNew("3142"),

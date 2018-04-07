@@ -263,12 +263,13 @@ func getSortedAggregatorNames(aggregators map[string]*dlit.Literal) []string {
 func getTrueRuleAssessment(
 	assessment *rhkassessment.Assessment,
 ) (*rhkassessment.RuleAssessment, error) {
-	trueRuleAssessment :=
-		assessment.RuleAssessments[len(assessment.RuleAssessments)-1]
-	if _, isTrueRule := trueRuleAssessment.Rule.(rule.True); !isTrueRule {
-		return nil, errors.New("can't find true() rule")
+	for _, ra := range assessment.RuleAssessments {
+		if _, isTrueRule := ra.Rule.(rule.True); isTrueRule {
+			return ra, nil
+		}
 	}
-	return trueRuleAssessment, nil
+
+	return nil, errors.New("can't find true() rule")
 }
 
 func numDecPlaces(s string) int {

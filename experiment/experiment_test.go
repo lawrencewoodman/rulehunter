@@ -647,7 +647,7 @@ func TestProcess_multiProcesses(t *testing.T) {
 			WWWDir:          filepath.Join(cfgDir, "www"),
 			BuildDir:        filepath.Join(cfgDir, "build"),
 			MaxNumProcesses: numProcesses,
-			MaxNumRecords:   5000,
+			MaxNumRecords:   2000,
 		}
 		testhelpers.CopyFile(
 			t,
@@ -713,7 +713,7 @@ func TestProcess_quit(t *testing.T) {
 			WWWDir:          filepath.Join(cfgDir, "www"),
 			BuildDir:        filepath.Join(cfgDir, "build"),
 			MaxNumProcesses: 4,
-			MaxNumRecords:   5000,
+			MaxNumRecords:   10,
 		}
 		testhelpers.CopyFile(
 			t,
@@ -757,6 +757,7 @@ func TestProcess_quit(t *testing.T) {
 		t.Errorf("Process didn't quit early when asked")
 	}
 }
+
 func TestProcess_errors(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, true)
 	defer os.RemoveAll(cfgDir)

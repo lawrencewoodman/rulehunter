@@ -50,7 +50,7 @@ func doLogEntriesMatch(got, want []testhelpers.Entry) error {
 			return fmt.Errorf("got: %v, want: %v", got, want)
 		}
 	}
-	if len(got)-len(uniqGot) > 2 {
+	if len(got)-len(uniqGot) > 5 {
 		return fmt.Errorf("too big a difference between entries got: %v\n want: %v",
 			got, want)
 	}

@@ -54,9 +54,9 @@ func TestRunRoot(t *testing.T) {
 	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	defer os.RemoveAll(cfgDir)
 	if testing.Short() {
-		testhelpers.MustWriteConfig(t, cfgDir, 100)
+		testhelpers.MustWriteConfig(t, cfgDir, 5)
 	} else {
-		testhelpers.MustWriteConfig(t, cfgDir, 2000)
+		testhelpers.MustWriteConfig(t, cfgDir, 20)
 	}
 
 	experimentFiles := []string{
@@ -154,9 +154,9 @@ func TestRunRoot_file(t *testing.T) {
 	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	defer os.RemoveAll(cfgDir)
 	if testing.Short() {
-		testhelpers.MustWriteConfig(t, cfgDir, 100)
+		testhelpers.MustWriteConfig(t, cfgDir, 5)
 	} else {
-		testhelpers.MustWriteConfig(t, cfgDir, 2000)
+		testhelpers.MustWriteConfig(t, cfgDir, 20)
 	}
 
 	experimentFiles := []string{
@@ -273,9 +273,9 @@ func TestRunRoot_ignoreWhen(t *testing.T) {
 	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	defer os.RemoveAll(cfgDir)
 	if testing.Short() {
-		testhelpers.MustWriteConfig(t, cfgDir, 100)
+		testhelpers.MustWriteConfig(t, cfgDir, 5)
 	} else {
-		testhelpers.MustWriteConfig(t, cfgDir, 2000)
+		testhelpers.MustWriteConfig(t, cfgDir, 20)
 	}
 
 	experimentFiles := []string{

@@ -63,10 +63,6 @@ func (a *Assessment) IsSorted() bool {
 	return a.flags["sorted"]
 }
 
-func (a *Assessment) IsRefined() bool {
-	return a.flags["refined"]
-}
-
 // TODO: Test this
 func (a *Assessment) IsEqual(o *Assessment) bool {
 	if a.NumRecords != o.NumRecords {
@@ -103,7 +99,6 @@ func (sortedAssessment *Assessment) Refine() {
 	sortedAssessment.excludePoorRules()
 	sortedAssessment.excludeSameRecordsRules()
 	sortedAssessment.excludePoorerOverlappingRules()
-	sortedAssessment.flags["refined"] = true
 }
 
 func (a *Assessment) Merge(o *Assessment) (*Assessment, error) {
@@ -119,38 +114,51 @@ func (a *Assessment) Merge(o *Assessment) (*Assessment, error) {
 	return r, nil
 }
 
-// Assessment must be sorted and refined first
+// Assessment must be sorted first
 func (a *Assessment) TruncateRuleAssessments(
 	numRuleAssessments int,
 ) *Assessment {
 	if !a.IsSorted() {
 		panic("Assessment isn't sorted")
 	}
-	if !a.IsRefined() {
-		panic("Assessment isn't refined")
-	}
-	if len(a.RuleAssessments) < numRuleAssessments {
-		numRuleAssessments = len(a.RuleAssessments)
-	}
-	numNonTrueRuleAssessments := numRuleAssessments - 1
-
-	ruleAssessments := make([]*RuleAssessment, numRuleAssessments)
-	for i := 0; i < numNonTrueRuleAssessments; i++ {
-		ruleAssessments[i] = a.RuleAssessments[i].clone()
-	}
-
-	if numRuleAssessments > 0 {
-		trueRuleAssessment := a.RuleAssessments[len(a.RuleAssessments)-1]
-		if _, isTrueRule := trueRuleAssessment.Rule.(rule.True); !isTrueRule {
-			panic("Assessment doesn't have True rule last")
+	var trueRuleAssessment *RuleAssessment
+	for _, ra := range a.RuleAssessments {
+		if _, isTrueRule := ra.Rule.(rule.True); isTrueRule {
+			trueRuleAssessment = ra
 		}
+	}
 
-		ruleAssessments[numNonTrueRuleAssessments] = trueRuleAssessment
+	if trueRuleAssessment == nil {
+		panic("Assessment doesn't have True rule")
+	}
+
+	trueRuleAppended := false
+	ruleAssessments := []*RuleAssessment{}
+	for i, ra := range a.RuleAssessments {
+		if i >= numRuleAssessments {
+			break
+		}
+		_, isTrueRule := ra.Rule.(rule.True)
+		if isTrueRule {
+			if trueRuleAppended {
+				continue
+			} else {
+				trueRuleAppended = true
+			}
+		}
+		ruleAssessments = append(ruleAssessments, ra.clone())
+	}
+
+	if !trueRuleAppended && numRuleAssessments > 0 {
+		if len(ruleAssessments) >= numRuleAssessments {
+			ruleAssessments[len(ruleAssessments)-1] = trueRuleAssessment.clone()
+		} else {
+			ruleAssessments = append(ruleAssessments, trueRuleAssessment.clone())
+		}
 	}
 
 	flags := map[string]bool{
-		"sorted":  true,
-		"refined": true,
+		"sorted": true,
 	}
 	return &Assessment{
 		NumRecords:      a.NumRecords,
@@ -262,8 +270,7 @@ func processDataset(
 
 func (a *Assessment) resetFlags() {
 	a.flags = map[string]bool{
-		"sorted":  false,
-		"refined": false,
+		"sorted": false,
 	}
 }
 
@@ -329,23 +336,16 @@ func (sortedAssessment *Assessment) excludeSameRecordsRules() {
 }
 
 func (sortedAssessment *Assessment) excludePoorRules() {
-	trueFound := false
-	goodRuleAssessments := make([]*RuleAssessment, 0)
+	goodRuleAssessments := []*RuleAssessment{}
 	for _, a := range sortedAssessment.RuleAssessments {
-		numMatches, numMatchesIsInt := a.Aggregators["numMatches"].Int()
-		if !numMatchesIsInt {
-			panic("numMatches aggregator isn't an int")
+		percentMatches, percentMatchesIsFloat :=
+			a.Aggregators["percentMatches"].Float()
+		if !percentMatchesIsFloat {
+			panic("percentMatches aggregator isn't a float")
 		}
-		if numMatches > 1 {
+		if percentMatches >= 0.5 {
 			goodRuleAssessments = append(goodRuleAssessments, a)
 		}
-		if _, isTrueRule := a.Rule.(rule.True); isTrueRule {
-			trueFound = true
-			break
-		}
-	}
-	if !trueFound {
-		panic("No True rule found")
 	}
 	sortedAssessment.RuleAssessments = goodRuleAssessments
 }

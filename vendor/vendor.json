@@ -3,234 +3,110 @@
 	"ignore": "test",
 	"package": [
 		{
-			"path": "appengine/cloudsql",
-			"revision": ""
-		},
-		{
-			"checksumSHA1": "w0tKAADAfc6jNZR/sSqjSXsw3Hg=",
-			"path": "github.com/denisenkom/go-mssqldb",
-			"revision": "88555645b640cc621e32f8693d7586a1aa1575f4",
-			"revisionTime": "2017-10-06T17:24:03Z"
-		},
-		{
-			"checksumSHA1": "fSlTr0rwLji0DfsUOKYLkGUkiWo=",
-			"path": "github.com/go-sql-driver/mysql",
-			"revision": "ee359f95877bdef36cbb602711e49b6f0becfca9",
-			"revisionTime": "2017-10-07T15:01:58Z"
-		},
-		{
-			"checksumSHA1": "40vJyUB4ezQSn/NSadsKEOrudMc=",
-			"path": "github.com/inconshreveable/mousetrap",
-			"revision": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75",
-			"revisionTime": "2014-10-17T20:07:13Z"
-		},
-		{
-			"checksumSHA1": "gEjGS03N1eysvpQ+FCHTxPcbxXc=",
-			"path": "github.com/kardianos/osext",
-			"revision": "ae77be60afb1dcacde03767a8c37337fad28ac14",
-			"revisionTime": "2017-05-10T13:15:34Z"
-		},
-		{
-			"checksumSHA1": "LWmqZocKKIUnyTcsjPOjFe9uP9s=",
-			"path": "github.com/kardianos/service",
-			"revision": "f53685ef760d69d07e653aba30ffbde7b0a1bcaf",
-			"revisionTime": "2017-07-13T17:28:44Z"
-		},
-		{
-			"checksumSHA1": "01kPoNshPZuLal9fsdaYV2AdLTE=",
+			"checksumSHA1": "7pRKRXZTqGdPopmbQwjegt62pGs=",
 			"path": "github.com/lawrencewoodman/ddataset",
 			"revision": "0cf1d64c20f70c705b88c9ea67adbad3238bae00",
 			"revisionTime": "2018-03-04T07:05:55Z"
 		},
 		{
-			"checksumSHA1": "hU8xLNQ+AslMWp5P+k9Cgpcb+dg=",
-			"path": "github.com/lawrencewoodman/ddataset/dcopy",
-			"revision": "78d6366d27101e2738c2f924a6ebaed5d5fa006b",
-			"revisionTime": "2018-02-16T07:55:29Z"
-		},
-		{
-			"checksumSHA1": "GsdfqpEhbuzAxFvC/m9H4W6wKhE=",
+			"checksumSHA1": "TJhM4t1WNKDvFELC0dNs1qc7If4=",
 			"path": "github.com/lawrencewoodman/ddataset/dcsv",
-			"revision": "78d6366d27101e2738c2f924a6ebaed5d5fa006b",
-			"revisionTime": "2018-02-16T07:55:29Z"
+			"revision": "0cf1d64c20f70c705b88c9ea67adbad3238bae00",
+			"revisionTime": "2018-03-04T07:05:55Z"
 		},
 		{
-			"checksumSHA1": "QoYzJqtss1afwdUEFfKXrKzmRZ4=",
-			"path": "github.com/lawrencewoodman/ddataset/dsql",
-			"revision": "78d6366d27101e2738c2f924a6ebaed5d5fa006b",
-			"revisionTime": "2018-02-16T07:55:29Z"
-		},
-		{
-			"checksumSHA1": "MpHFczzT9H96K6gvVimbkS8rBZs=",
+			"checksumSHA1": "4Gsacju+gjHMjbJM4xgMc+HuBDY=",
 			"path": "github.com/lawrencewoodman/ddataset/dtruncate",
-			"revision": "78d6366d27101e2738c2f924a6ebaed5d5fa006b",
-			"revisionTime": "2018-02-16T07:55:29Z"
+			"revision": "0cf1d64c20f70c705b88c9ea67adbad3238bae00",
+			"revisionTime": "2018-03-04T07:05:55Z"
 		},
 		{
 			"checksumSHA1": "VnEv2sr2jwV9CKY/LVDbzv0Q2a8=",
 			"path": "github.com/lawrencewoodman/ddataset/internal",
-			"revision": "78d6366d27101e2738c2f924a6ebaed5d5fa006b",
-			"revisionTime": "2018-02-16T07:55:29Z"
+			"revision": "0cf1d64c20f70c705b88c9ea67adbad3238bae00",
+			"revisionTime": "2018-03-04T07:05:55Z"
 		},
 		{
-			"checksumSHA1": "6uSWY5B6QStbkFquijMxiOMKpvs=",
+			"checksumSHA1": "f2Xy7Ewun0KlA7XUniorutyXVFw=",
+			"path": "github.com/lawrencewoodman/ddataset/internal/testhelpers",
+			"revision": "0cf1d64c20f70c705b88c9ea67adbad3238bae00",
+			"revisionTime": "2018-03-04T07:05:55Z"
+		},
+		{
+			"checksumSHA1": "AXKegC+w8YJhURRgL6svL8ffyRw=",
 			"path": "github.com/lawrencewoodman/dexpr",
 			"revision": "130fe7bb4177cbe745b50ae0507af8c58bb4dc31",
 			"revisionTime": "2017-04-28T06:09:03Z"
 		},
 		{
-			"checksumSHA1": "duR5DVD3sQyFjGsBDQtAOi2PYbo=",
+			"checksumSHA1": "vCREl1sbW3bj40EW+/gRW03/BPs=",
 			"path": "github.com/lawrencewoodman/dlit",
 			"revision": "072199934fcdc420b17945135485b369bdf93013",
 			"revisionTime": "2017-12-06T10:05:13Z"
 		},
 		{
-			"checksumSHA1": "IfZcD4U1dtllJKlPNeD2aU4Jn98=",
-			"path": "github.com/lib/pq",
-			"revision": "83612a56d3dd153a94a629cd64925371c9adad78",
-			"revisionTime": "2017-11-26T05:04:59Z"
-		},
-		{
-			"checksumSHA1": "ATnwV0POluBNQEMjPdylodz0oK0=",
-			"path": "github.com/lib/pq/oid",
-			"revision": "83612a56d3dd153a94a629cd64925371c9adad78",
-			"revisionTime": "2017-11-26T05:04:59Z"
-		},
-		{
-			"checksumSHA1": "lWP9h/g42q0jGZltdSCe/gMJcow=",
+			"checksumSHA1": "w5AYn33pXsivrejJxVw9RAwH1vE=",
 			"path": "github.com/mattn/go-sqlite3",
-			"revision": "3c6eef45ff2de301fee18d11cd8727f65754eeb5",
-			"revisionTime": "2018-02-07T12:14:15Z"
+			"revision": "9101028e5ca824d2baf0fbd91b9700e2669a6cd9",
+			"revisionTime": "2018-03-07T07:20:36Z"
 		},
 		{
-			"checksumSHA1": "kZRhErakejBG0U2e8D+Ap/Djje8=",
-			"path": "github.com/phayes/freeport",
-			"revision": "e27662a4a9d6b2083dfd7e7b5d0e30985daca925",
-			"revisionTime": "2017-10-02T18:52:19Z"
-		},
-		{
-			"checksumSHA1": "CJxJs5h5+CPUPI497KC/mvWSG84=",
-			"path": "github.com/spf13/cobra",
-			"revision": "3c0b56b677e04926dfa835a1b3f11cd4f62f076e",
-			"revisionTime": "2017-09-01T15:16:37Z"
-		},
-		{
-			"checksumSHA1": "Q52Y7t0lEtk/wcDn5q7tS7B+jqs=",
-			"path": "github.com/spf13/pflag",
-			"revision": "7aff26db30c1be810f9de5038ec5ef96ac41fd7c",
-			"revisionTime": "2017-08-24T17:57:12Z"
-		},
-		{
-			"checksumSHA1": "yRkSo1DwUjdXz13EY7z7XIgaLGI=",
-			"path": "github.com/vlifesystems/rhkit",
-			"revision": "cf3042bf3f44cccb2637561528448d8b7473d103",
-			"revisionTime": "2018-03-14T13:21:21Z"
-		},
-		{
-			"checksumSHA1": "MT/+RCXlqmFIEErPhSVpMjwvMCg=",
-			"path": "github.com/vlifesystems/rhkit/aggregator",
-			"revision": "cf3042bf3f44cccb2637561528448d8b7473d103",
-			"revisionTime": "2018-03-14T13:21:21Z"
-		},
-		{
-			"checksumSHA1": "ED2yhly5niPf9m62tqbce8IDv48=",
-			"path": "github.com/vlifesystems/rhkit/assessment",
-			"revision": "cf3042bf3f44cccb2637561528448d8b7473d103",
-			"revisionTime": "2018-03-14T13:21:21Z"
-		},
-		{
-			"checksumSHA1": "loq7CeDNZd12PAI6t18krytHndE=",
-			"path": "github.com/vlifesystems/rhkit/description",
-			"revision": "cf3042bf3f44cccb2637561528448d8b7473d103",
-			"revisionTime": "2018-03-14T13:21:21Z"
-		},
-		{
-			"checksumSHA1": "POtS+3qwcYeCdXpyWYGaaNwv4Jw=",
-			"path": "github.com/vlifesystems/rhkit/goal",
-			"revision": "cf3042bf3f44cccb2637561528448d8b7473d103",
-			"revisionTime": "2018-03-14T13:21:21Z"
-		},
-		{
-			"checksumSHA1": "Wu4a6JfT161c2pVx8mecyt/iptE=",
-			"path": "github.com/vlifesystems/rhkit/internal",
-			"revision": "cf3042bf3f44cccb2637561528448d8b7473d103",
-			"revisionTime": "2018-03-14T13:21:21Z"
-		},
-		{
-			"checksumSHA1": "Z7Siz1CAdpkGplk2hsMxfOgq81U=",
-			"path": "github.com/vlifesystems/rhkit/internal/dexprfuncs",
-			"revision": "cf3042bf3f44cccb2637561528448d8b7473d103",
-			"revisionTime": "2018-03-14T13:21:21Z"
-		},
-		{
-			"checksumSHA1": "yF0FV1J0vKHDIrBMgxq4GF7W0rc=",
-			"path": "github.com/vlifesystems/rhkit/rule",
-			"revision": "cf3042bf3f44cccb2637561528448d8b7473d103",
-			"revisionTime": "2018-03-14T13:21:21Z"
-		},
-		{
-			"checksumSHA1": "MCeXr2RNeiG1XG6V+er1OR0qyeo=",
-			"path": "golang.org/x/crypto/md4",
-			"revision": "88d0005bf4c3ec17306ecaca4281a8d8efd73e91",
-			"revisionTime": "2016-08-11T18:32:03Z"
-		},
-		{
-			"checksumSHA1": "dr5+PfIRzXeN+l1VG+s0lea9qz8=",
-			"path": "golang.org/x/net/context",
-			"revision": "a04bdaca5b32abe1c069418fb7088ae607de5bd0",
-			"revisionTime": "2017-10-03T05:09:24Z"
-		},
-		{
-			"checksumSHA1": "vqc3a+oTUGX8PmD0TS+qQ7gmN8I=",
-			"path": "golang.org/x/net/html",
-			"revision": "c4c3ea71919de159c9e246d7be66deb7f0a39a58",
-			"revisionTime": "2016-05-27T23:48:58Z"
-		},
-		{
-			"checksumSHA1": "00eQaGynDYrv3tL+C7l9xH0IDZg=",
-			"path": "golang.org/x/net/html/atom",
-			"revision": "c4c3ea71919de159c9e246d7be66deb7f0a39a58",
-			"revisionTime": "2016-05-27T23:48:58Z"
-		},
-		{
-			"checksumSHA1": "42L+GOKH+OoRYqVyIohUcj8bLzI=",
-			"path": "golang.org/x/sys/windows",
-			"revision": "d4feaf1a7e61e1d9e79e6c4e76c6349e9cab0a03",
-			"revisionTime": "2016-05-16T12:31:02Z"
-		},
-		{
-			"checksumSHA1": "Qvq4DjtYrcpGgBT0O1s8nTTeFWQ=",
-			"path": "golang.org/x/sys/windows/registry",
-			"revision": "d4feaf1a7e61e1d9e79e6c4e76c6349e9cab0a03",
-			"revisionTime": "2016-05-16T12:31:02Z"
-		},
-		{
-			"checksumSHA1": "IRqLaXM/VQRzkbXPuiqOxTb2W0Y=",
-			"path": "golang.org/x/sys/windows/svc",
-			"revision": "d4feaf1a7e61e1d9e79e6c4e76c6349e9cab0a03",
-			"revisionTime": "2016-05-16T12:31:02Z"
-		},
-		{
-			"checksumSHA1": "uVlUSSKplihZG7N+QJ6fzDZ4Kh8=",
-			"path": "golang.org/x/sys/windows/svc/eventlog",
-			"revision": "d4feaf1a7e61e1d9e79e6c4e76c6349e9cab0a03",
-			"revisionTime": "2016-05-16T12:31:02Z"
-		},
-		{
-			"checksumSHA1": "6dvXhF7BOHN87mMJ8SaAuFxai0Q=",
-			"path": "golang.org/x/sys/windows/svc/mgr",
-			"revision": "d4feaf1a7e61e1d9e79e6c4e76c6349e9cab0a03",
-			"revisionTime": "2016-05-16T12:31:02Z"
-		},
-		{
-			"checksumSHA1": "SPMXWeoFQa5z0pLPmqpcFzyHqQQ=",
-			"path": "gopkg.in/yaml.v2",
-			"revision": "31c299268d302dd0aa9a0dcf765a3d58971ac83f",
-			"revisionTime": "2016-09-12T16:56:03Z"
-		},
-		{
-			"path": "https://github.com/phayes/freeport",
+			"path": "github.com/mattn/go-sqlite3/sqlite3_test",
 			"revision": ""
+		},
+		{
+			"checksumSHA1": "+jVjx3MPS656cJbFRnWz5K5dnOI=",
+			"path": "github.com/vlifesystems/rhkit",
+			"revision": "3fde7604090b9e3ebc2cfeb5e02e32c1b250a3d3",
+			"revisionTime": "2018-04-01T06:20:14Z"
+		},
+		{
+			"checksumSHA1": "0UqCL5lG4Bdi8/NHpQnOWyZd+PA=",
+			"path": "github.com/vlifesystems/rhkit/aggregator",
+			"revision": "3fde7604090b9e3ebc2cfeb5e02e32c1b250a3d3",
+			"revisionTime": "2018-04-01T06:20:14Z"
+		},
+		{
+			"checksumSHA1": "LEh3B+CE5Q0s/6i99gtbsr7xCaM=",
+			"path": "github.com/vlifesystems/rhkit/assessment",
+			"revision": "3fde7604090b9e3ebc2cfeb5e02e32c1b250a3d3",
+			"revisionTime": "2018-04-01T06:20:14Z"
+		},
+		{
+			"checksumSHA1": "wrjkug2/7wfR+z2/kO2o8cUurKA=",
+			"path": "github.com/vlifesystems/rhkit/description",
+			"revision": "3fde7604090b9e3ebc2cfeb5e02e32c1b250a3d3",
+			"revisionTime": "2018-04-01T06:20:14Z"
+		},
+		{
+			"checksumSHA1": "CBwtCO1v10dDpNGFDOeXKi9E0lU=",
+			"path": "github.com/vlifesystems/rhkit/goal",
+			"revision": "3fde7604090b9e3ebc2cfeb5e02e32c1b250a3d3",
+			"revisionTime": "2018-04-01T06:20:14Z"
+		},
+		{
+			"checksumSHA1": "9FbSYBVw5vGu/5BW0ENzLqdZlmY=",
+			"path": "github.com/vlifesystems/rhkit/internal",
+			"revision": "3fde7604090b9e3ebc2cfeb5e02e32c1b250a3d3",
+			"revisionTime": "2018-04-01T06:20:14Z"
+		},
+		{
+			"checksumSHA1": "5dfGc8+DAYBMpFdzvVifa3WFmOs=",
+			"path": "github.com/vlifesystems/rhkit/internal/dexprfuncs",
+			"revision": "3fde7604090b9e3ebc2cfeb5e02e32c1b250a3d3",
+			"revisionTime": "2018-04-01T06:20:14Z"
+		},
+		{
+			"checksumSHA1": "wcHnVSsfhgyrEkW82aYCbfezR4o=",
+			"path": "github.com/vlifesystems/rhkit/internal/testhelpers",
+			"revision": "3fde7604090b9e3ebc2cfeb5e02e32c1b250a3d3",
+			"revisionTime": "2018-04-01T06:20:14Z"
+		},
+		{
+			"checksumSHA1": "Wm+N/hQxqRYO4bwTl0uYBb2MIOU=",
+			"path": "github.com/vlifesystems/rhkit/rule",
+			"revision": "3fde7604090b9e3ebc2cfeb5e02e32c1b250a3d3",
+			"revisionTime": "2018-04-01T06:20:14Z"
 		}
 	],
 	"rootPath": "github.com/vlifesystems/rulehunter"

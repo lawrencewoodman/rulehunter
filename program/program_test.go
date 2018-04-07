@@ -300,7 +300,7 @@ func TestProcessFile(t *testing.T) {
 		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
 		WWWDir:          filepath.Join(cfgDir, "www"),
 		BuildDir:        filepath.Join(cfgDir, "build"),
-		MaxNumRecords:   100,
+		MaxNumRecords:   10,
 		MaxNumProcesses: 4,
 	}
 	for _, f := range experimentFiles {
@@ -358,6 +358,7 @@ func TestProcessFile(t *testing.T) {
 	}
 
 	got := pm.GetExperiments()
+	initExperimentsTime(wantPMExperiments)
 	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments, false)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
@@ -386,7 +387,7 @@ func TestProcessFile_title_change(t *testing.T) {
 		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
 		WWWDir:          filepath.Join(cfgDir, "www"),
 		BuildDir:        filepath.Join(cfgDir, "build"),
-		MaxNumRecords:   100,
+		MaxNumRecords:   20,
 		MaxNumProcesses: 4,
 	}
 
@@ -423,6 +424,7 @@ func TestProcessFile_title_change(t *testing.T) {
 	}
 
 	got := pm.GetExperiments()
+	initExperimentsTime(wantPMExperiments)
 	err = progresstest.CheckExperimentsMatch(got, wantPMExperiments, false)
 	if err != nil {
 		t.Errorf("checkExperimentsMatch() err: %s", err)
@@ -436,7 +438,7 @@ func TestProcessFile_ignoreWhen(t *testing.T) {
 		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
 		WWWDir:          filepath.Join(cfgDir, "www"),
 		BuildDir:        filepath.Join(cfgDir, "build"),
-		MaxNumRecords:   100,
+		MaxNumRecords:   20,
 		MaxNumProcesses: 4,
 	}
 	testhelpers.CopyFile(
@@ -502,7 +504,7 @@ func TestProcessFilename(t *testing.T) {
 		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
 		WWWDir:          filepath.Join(cfgDir, "www"),
 		BuildDir:        filepath.Join(cfgDir, "build"),
-		MaxNumRecords:   100,
+		MaxNumRecords:   10,
 		MaxNumProcesses: 4,
 	}
 	for _, f := range experimentFiles {
@@ -575,7 +577,7 @@ func TestProcessDir(t *testing.T) {
 		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
 		WWWDir:          filepath.Join(cfgDir, "www"),
 		BuildDir:        filepath.Join(cfgDir, "build"),
-		MaxNumRecords:   100,
+		MaxNumRecords:   10,
 		MaxNumProcesses: 4,
 	}
 	for _, f := range experimentFiles {
@@ -636,7 +638,7 @@ func TestStart(t *testing.T) {
 		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
 		WWWDir:          filepath.Join(cfgDir, "www"),
 		BuildDir:        filepath.Join(cfgDir, "build"),
-		MaxNumRecords:   100,
+		MaxNumRecords:   10,
 		MaxNumProcesses: 4,
 	}
 
