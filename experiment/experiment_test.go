@@ -647,7 +647,7 @@ func TestProcess_multiProcesses(t *testing.T) {
 			WWWDir:          filepath.Join(cfgDir, "www"),
 			BuildDir:        filepath.Join(cfgDir, "build"),
 			MaxNumProcesses: numProcesses,
-			MaxNumRecords:   2000,
+			MaxNumRecords:   500,
 		}
 		testhelpers.CopyFile(
 			t,
