@@ -11,6 +11,11 @@
 # Typical usages:
 #    sudo ./linux-test-su.sh $GOPATH `which go` systemd
 #    sudo ./linux-test-su.sh $GOPATH `which go` upstart
+#
+# Using Fish:
+#    sudo ./linux-test-su.sh $GOPATH (which go) systemd
+#    sudo ./linux-test-su.sh $GOPATH (which go) upstart
+
 
 export GOPATH=$1
 export GOROOT=`dirname $(dirname $2)`
