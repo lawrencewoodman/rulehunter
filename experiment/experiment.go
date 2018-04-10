@@ -631,8 +631,6 @@ func (e *Experiment) assessRules(
 		dataset = e.Test.Dataset
 	}
 
-	fmt.Printf("assessRules - stage: %d, len(rules): %d\n", stage, len(rules))
-
 	processSubRules := func(ruleProgress float64, subRules []rule.Rule) (
 		*rhkassessment.Assessment,
 		error,
