@@ -214,6 +214,7 @@ func (e *Experiment) processTrainDataset(
 		}
 	}
 	noRules := []rule.Rule{}
+	rt := newRuleTracker()
 
 	if err := reportProgress("Describing train dataset", 0); err != nil {
 		return noRules, err
@@ -230,6 +231,7 @@ func (e *Experiment) processTrainDataset(
 	if quitReceived() {
 		return noRules, ErrQuitReceived
 	}
+	rt.track(e.Rules)
 	userRules := append(e.Rules, rule.NewTrue())
 	ass, err := e.assessRules(1, train, userRules, pm, q, cfg)
 	if err != nil {
@@ -237,7 +239,8 @@ func (e *Experiment) processTrainDataset(
 	}
 
 	assessRules := func(stage int, rules []rule.Rule) error {
-		newAss, err := e.assessRules(stage, train, rules, pm, q, cfg)
+		newRules := rt.track(rules)
+		newAss, err := e.assessRules(stage, train, newRules, pm, q, cfg)
 		if err != nil {
 			return fmt.Errorf("Couldn't assess rules: %s", err)
 		}
