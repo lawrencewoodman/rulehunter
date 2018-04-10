@@ -58,7 +58,7 @@ func TestRunServe(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, false)
 	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	defer os.RemoveAll(cfgDir)
-	testhelpers.MustWriteConfig(t, cfgDir, 10)
+	testhelpers.MustWriteConfig(t, cfgDir, 100)
 	l := testhelpers.NewLogger()
 	q := quitter.New()
 
@@ -89,7 +89,7 @@ func TestRunServe(t *testing.T) {
 
 	hasQuit := false
 	tickerC := time.NewTicker(100 * time.Millisecond).C
-	timeoutC := time.NewTimer(30 * time.Second).C
+	timeoutC := time.NewTimer(20 * time.Second).C
 	for !hasQuit {
 		select {
 		case <-tickerC:
@@ -154,7 +154,7 @@ func TestRunServe_http(t *testing.T) {
 	cfgDir := testhelpers.BuildConfigDirs(t, false)
 	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	defer os.RemoveAll(cfgDir)
-	testhelpers.MustWriteConfig(t, cfgDir, 10, httpPort)
+	testhelpers.MustWriteConfig(t, cfgDir, 100, httpPort)
 	l := testhelpers.NewLogger()
 	q := quitter.New()
 
@@ -204,7 +204,7 @@ func TestRunServe_http(t *testing.T) {
 
 	hasQuit := false
 	tickerC := time.NewTicker(100 * time.Millisecond).C
-	timeoutC := time.NewTimer(30 * time.Second).C
+	timeoutC := time.NewTimer(20 * time.Second).C
 	for !hasQuit {
 		select {
 		case <-tickerC:

@@ -22,6 +22,7 @@ ruleGeneration:
   fields:
     - name
     - segment
+  combinationLength: 2
 aggregators:
   - name: "totalContacts"
     kind: "sum"

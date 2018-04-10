@@ -22,6 +22,7 @@ ruleGeneration:
   fields:
     - quarter
     - segment
+  combinationLength: 2
 aggregators:
   - name: "totalContacts"
     kind: "count"

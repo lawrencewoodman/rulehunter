@@ -17,9 +17,9 @@ func TestRunServe_interrupt(t *testing.T) {
 	cfgFilename := filepath.Join(cfgDir, "config.yaml")
 	defer os.RemoveAll(cfgDir)
 	if testing.Short() {
-		testhelpers.MustWriteConfig(t, cfgDir, 5)
+		testhelpers.MustWriteConfig(t, cfgDir, 3000)
 	} else {
-		testhelpers.MustWriteConfig(t, cfgDir, 20)
+		testhelpers.MustWriteConfig(t, cfgDir, 20000)
 	}
 	l := testhelpers.NewLogger()
 	q := quitter.New()

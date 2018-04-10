@@ -43,6 +43,7 @@ ruleGeneration:
   - a5
   - a6
   arithmetic: true
+  combinationLength: 1
 aggregators:
   - name: "mccClassIs1"
     kind: "mcc"

@@ -300,7 +300,7 @@ func TestLoad(t *testing.T) {
 		}
 		if err := checkExperimentMatch(gotExperiment, c.want); err != nil {
 			t.Errorf("load(%s) experiments don't match: %s\n"+
-				"gotExperiment: %s, wantExperiment: %s",
+				"gotExperiment: %v, wantExperiment: %v",
 				c.file, err, gotExperiment, c.want)
 		}
 	}
@@ -631,6 +631,65 @@ func TestProcess_supplied_rules(t *testing.T) {
 	// TODO: Test files generated
 }
 
+func TestProcess_combinationLength(t *testing.T) {
+	cfgDir := testhelpers.BuildConfigDirs(t, true)
+	defer os.RemoveAll(cfgDir)
+	cfg := &config.Config{
+		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
+		WWWDir:          filepath.Join(cfgDir, "www"),
+		BuildDir:        filepath.Join(cfgDir, "build"),
+		MaxNumRecords:   100,
+		MaxNumProcesses: 4,
+	}
+	testhelpers.CopyFile(
+		t,
+		filepath.Join("fixtures", "debt_combinationlength_1.json"),
+		cfg.ExperimentsDir,
+	)
+	file := testhelpers.NewFileInfo("debt_combinationlength_1.json", time.Now())
+
+	quit := quitter.New()
+	defer quit.Quit()
+	l := testhelpers.NewLogger()
+	go l.Run(quit)
+	pm, err := progress.NewMonitor(
+		filepath.Join(cfg.BuildDir, "progress"),
+	)
+	if err != nil {
+		t.Fatalf("progress.NewMonitor: %s", err)
+	}
+	e, err := Load(cfg, file)
+	if err != nil {
+		t.Fatalf("Load: %s", err)
+	}
+
+	if err := e.Process(cfg, pm, l, quit, false); err != nil {
+		t.Fatalf("Process: %s", err)
+	}
+
+	flowBuildFullFilename := filepath.Join(
+		cfgDir,
+		"build",
+		"reports",
+		internal.MakeBuildFilename("train", e.Category, e.Title),
+	)
+	b, err := ioutil.ReadFile(flowBuildFullFilename)
+	if err != nil {
+		t.Fatalf("ReadFile: %s", err)
+	}
+	s := string(b)
+	want := []string{
+		"\\u0026\\u0026", // Check for &&
+	}
+	for _, wantText := range want {
+		if !strings.Contains(s, wantText) {
+			t.Errorf("text: %s, missing from: %s", wantText, flowBuildFullFilename)
+		}
+	}
+
+	// TODO: Test files generated
+}
+
 func TestProcess_multiProcesses(t *testing.T) {
 	if runtime.NumCPU() < 2 {
 		t.Skip("This test isn't implemented on single cpu systems.")
@@ -647,7 +706,7 @@ func TestProcess_multiProcesses(t *testing.T) {
 			WWWDir:          filepath.Join(cfgDir, "www"),
 			BuildDir:        filepath.Join(cfgDir, "build"),
 			MaxNumProcesses: numProcesses,
-			MaxNumRecords:   500,
+			MaxNumRecords:   2000,
 		}
 		testhelpers.CopyFile(
 			t,
@@ -713,7 +772,7 @@ func TestProcess_quit(t *testing.T) {
 			WWWDir:          filepath.Join(cfgDir, "www"),
 			BuildDir:        filepath.Join(cfgDir, "build"),
 			MaxNumProcesses: 4,
-			MaxNumRecords:   10,
+			MaxNumRecords:   5000,
 		}
 		testhelpers.CopyFile(
 			t,

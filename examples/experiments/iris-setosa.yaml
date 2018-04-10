@@ -23,6 +23,7 @@ ruleGeneration:
      - petalLength
      - petalWidth
   arithmetic: true
+  combinationLength: 3
 aggregators:
   - name: "mccIrisSetosa"
     kind: "mcc"

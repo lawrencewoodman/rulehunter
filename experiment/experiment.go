@@ -28,17 +28,18 @@ import (
 )
 
 type Experiment struct {
-	Title          string
-	File           fileinfo.FileInfo
-	Train          *Mode
-	Test           *Mode
-	RuleGeneration rule.GenerationDescriber
-	Aggregators    []aggregator.Spec
-	Goals          []*goal.Goal
-	SortOrder      []rhkassessment.SortOrder
-	Category       string
-	Tags           []string
-	Rules          []rule.Rule
+	Title                string
+	File                 fileinfo.FileInfo
+	Train                *Mode
+	Test                 *Mode
+	RuleGeneration       ruleGeneration
+	Aggregators          []aggregator.Spec
+	Goals                []*goal.Goal
+	SortOrder            []rhkassessment.SortOrder
+	Category             string
+	Tags                 []string
+	Rules                []rule.Rule
+	assessRulesNumStages int
 }
 
 type descFile struct {
@@ -55,13 +56,15 @@ type descFile struct {
 }
 
 type ruleGenerationDesc struct {
-	Fields     []string `yaml:"fields"`
-	Arithmetic bool     `yaml:"arithmetic"`
+	Fields            []string `yaml:"fields"`
+	Arithmetic        bool     `yaml:"arithmetic"`
+	CombinationLength int      `yaml:"combinationLength"`
 }
 
 type ruleGeneration struct {
-	fields     []string
-	arithmetic bool
+	fields            []string
+	arithmetic        bool
+	combinationLength int
 }
 
 func (rg ruleGeneration) Fields() []string {
@@ -147,19 +150,19 @@ func newExperiment(
 		Train: train,
 		Test:  test,
 		RuleGeneration: ruleGeneration{
-			fields:     d.RuleGeneration.Fields,
-			arithmetic: d.RuleGeneration.Arithmetic,
+			fields:            d.RuleGeneration.Fields,
+			arithmetic:        d.RuleGeneration.Arithmetic,
+			combinationLength: d.RuleGeneration.CombinationLength,
 		},
-		Aggregators: aggregators,
-		Goals:       goals,
-		SortOrder:   sortOrder,
-		Tags:        d.Tags,
-		Category:    d.Category,
-		Rules:       rules,
+		Aggregators:          aggregators,
+		Goals:                goals,
+		SortOrder:            sortOrder,
+		Tags:                 d.Tags,
+		Category:             d.Category,
+		Rules:                rules,
+		assessRulesNumStages: 4 + d.RuleGeneration.CombinationLength,
 	}, nil
 }
-
-const assessRulesNumStages = 6
 
 func Load(cfg *config.Config, file fileinfo.FileInfo) (*Experiment, error) {
 	var d *descFile
@@ -294,36 +297,22 @@ func (e *Experiment) processTrainDataset(
 		return noRules, ErrQuitReceived
 	}
 
-	combinedRules := []rule.Rule{}
-	hasCombined := false
-	for n := 1000; !hasCombined || len(combinedRules) > 10000; n -= 10 {
-		combinedRules = rule.Combine(ass.Rules(n))
-		hasCombined = true
-	}
-	combinedRules = append(combinedRules, rule.NewTrue())
+	for i := 0; i < e.RuleGeneration.combinationLength; i++ {
+		combinedRules := []rule.Rule{}
+		hasCombined := false
+		for n := 1000; !hasCombined || len(combinedRules) > 10000; n -= 10 {
+			combinedRules = rule.Combine(ass.Rules(n))
+			hasCombined = true
+		}
+		combinedRules = append(combinedRules, rule.NewTrue())
 
-	if err := assessRules(5, combinedRules); err != nil {
-		return noRules, err
-	}
+		if err := assessRules(5+i, combinedRules); err != nil {
+			return noRules, err
+		}
 
-	if quitReceived() {
-		return noRules, ErrQuitReceived
-	}
-
-	combinedRules = []rule.Rule{}
-	hasCombined = false
-	for n := 1000; !hasCombined || len(combinedRules) > 2500; n -= 10 {
-		combinedRules = rule.Combine(ass.Rules(n))
-		hasCombined = true
-	}
-	combinedRules = append(combinedRules, rule.NewTrue())
-
-	if err := assessRules(6, combinedRules); err != nil {
-		return noRules, err
-	}
-
-	if quitReceived() {
-		return noRules, ErrQuitReceived
+		if quitReceived() {
+			return noRules, ErrQuitReceived
+		}
 	}
 
 	ass = ass.TruncateRuleAssessments(2)
@@ -639,6 +628,8 @@ func (e *Experiment) assessRules(
 		dataset = e.Test.Dataset
 	}
 
+	fmt.Printf("assessRules - stage: %d, len(rules): %d\n", stage, len(rules))
+
 	processSubRules := func(ruleProgress float64, subRules []rule.Rule) (
 		*rhkassessment.Assessment,
 		error,
@@ -647,7 +638,8 @@ func (e *Experiment) assessRules(
 			progress :=
 				100.0*ruleProgress - 1 + float64(recordNum)/float64(numRecords)
 			if mode == train {
-				msg := fmt.Sprintf("Assessing rules %d/%d", stage, assessRulesNumStages)
+				msg :=
+					fmt.Sprintf("Assessing rules %d/%d", stage, e.assessRulesNumStages)
 				return pm.ReportProgress(e.File.Name(), report.Train, msg, progress)
 			}
 			msg := fmt.Sprintf("Assessing rules")
@@ -690,7 +682,7 @@ func (e *Experiment) assessRules(
 		return subResult, nil
 	}
 
-	if stage > assessRulesNumStages {
+	if stage > e.assessRulesNumStages {
 		panic("assessRules: stage > assessRulesNumStages")
 	}
 

@@ -29,6 +29,7 @@
  * Add `category` to experiment files
  * Replace `complexity` and `ruleFields` in experiment files
    with `ruleGeneration`
+ * Add `combinationLength` to experiment files
  * Allow two datasets to be used: `trainDataset` and `testDataset`
  * Add support for PostgreSQL
  * Temporarily disable sqlite3 for goreleaser release

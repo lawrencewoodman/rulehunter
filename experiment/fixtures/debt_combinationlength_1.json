@@ -1,0 +1,50 @@
+{
+  "title": "What would predict people being helped to be debt free?",
+  "tags": ["debt"],
+  "train": {
+    "dataset": {
+      "sql": {
+        "driverName": "sqlite3",
+        "dataSourceName": "fixtures/debt.db",
+        "query": "select * from \"people\""
+      },
+      "fields": [
+        "name",
+        "balance",
+        "numCards",
+        "martialStatus",
+        "tertiaryEducated",
+        "success"
+      ]
+    },
+    "when": "!hasRunToday || sinceLastRunHours > 2"
+  },
+  "ruleGeneration": {
+    "fields": [
+      "name",
+      "balance",
+      "numCards",
+      "martialStatus",
+      "tertiaryEducated"
+    ],
+    "combinationLength": 1
+  },
+  "aggregators": [
+    {
+      "name": "helpedMcc",
+      "kind": "mcc",
+      "arg": "success"
+    }
+  ],
+  "goals": ["helpedMcc > 0"],
+  "sortOrder": [
+    {
+      "aggregator": "helpedMcc",
+      "direction": "descending"
+    },
+    {
+      "aggregator": "numMatches",
+      "direction": "descending"
+    }
+  ]
+}

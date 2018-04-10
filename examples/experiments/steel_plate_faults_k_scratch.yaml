@@ -74,6 +74,7 @@ ruleGeneration:
   - Luminosity_Index
   - SigmoidOfAreas
   arithmetic: true
+  combinationLength: 2
 aggregators:
   - name: "mccHasKScratch"
     kind: "mcc"

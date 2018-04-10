@@ -44,6 +44,7 @@ ruleGeneration:
     - pdays
     - previous
     - poutcome
+  combinationLength: 1
 aggregators:
   - name: "mccSubscribe"
     kind: "mcc"

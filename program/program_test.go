@@ -300,7 +300,7 @@ func TestProcessFile(t *testing.T) {
 		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
 		WWWDir:          filepath.Join(cfgDir, "www"),
 		BuildDir:        filepath.Join(cfgDir, "build"),
-		MaxNumRecords:   10,
+		MaxNumRecords:   100,
 		MaxNumProcesses: 4,
 	}
 	for _, f := range experimentFiles {
@@ -387,7 +387,7 @@ func TestProcessFile_title_change(t *testing.T) {
 		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
 		WWWDir:          filepath.Join(cfgDir, "www"),
 		BuildDir:        filepath.Join(cfgDir, "build"),
-		MaxNumRecords:   20,
+		MaxNumRecords:   100,
 		MaxNumProcesses: 4,
 	}
 
@@ -438,7 +438,7 @@ func TestProcessFile_ignoreWhen(t *testing.T) {
 		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
 		WWWDir:          filepath.Join(cfgDir, "www"),
 		BuildDir:        filepath.Join(cfgDir, "build"),
-		MaxNumRecords:   20,
+		MaxNumRecords:   100,
 		MaxNumProcesses: 4,
 	}
 	testhelpers.CopyFile(
@@ -577,7 +577,7 @@ func TestProcessDir(t *testing.T) {
 		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
 		WWWDir:          filepath.Join(cfgDir, "www"),
 		BuildDir:        filepath.Join(cfgDir, "build"),
-		MaxNumRecords:   10,
+		MaxNumRecords:   100,
 		MaxNumProcesses: 4,
 	}
 	for _, f := range experimentFiles {
@@ -638,7 +638,7 @@ func TestStart(t *testing.T) {
 		ExperimentsDir:  filepath.Join(cfgDir, "experiments"),
 		WWWDir:          filepath.Join(cfgDir, "www"),
 		BuildDir:        filepath.Join(cfgDir, "build"),
-		MaxNumRecords:   10,
+		MaxNumRecords:   100,
 		MaxNumProcesses: 4,
 	}
 

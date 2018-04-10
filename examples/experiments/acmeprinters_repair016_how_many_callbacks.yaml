@@ -22,6 +22,7 @@ ruleGeneration:
   fields:
     - callbacks
     - segment
+  combinationLength: 1
 aggregators:
   - name: "totalContacts"
     kind: "count"
