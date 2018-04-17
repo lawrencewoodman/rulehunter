@@ -4,13 +4,6 @@ category: "testing"
 tags:
   - bank
   - loan
-ruleGeneration:
-  fields:
-    - "name"
-    - "balance"
-    - "num_cards"
-    - "marital_status"
-    - "tertiary_educated"
 train:
   dataset:
     csv:
@@ -25,6 +18,13 @@ train:
       - "tertiary_educated"
       - "success"
   when: "!hasRun"
+  ruleGeneration:
+    fields:
+      - "name"
+      - "balance"
+      - "num_cards"
+      - "marital_status"
+      - "tertiary_educated"
 aggregators:
   - name: "successMcc"
     kind: "mcc"

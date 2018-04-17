@@ -7,6 +7,7 @@
  * Restructure `trainDataset` and `testDataset` to become `train` and `test`
  * Allow a `when` expression for each of `train` and `test`
  * Make `fields` part of `dataset`
+ * Move `ruleGeneration` into `train`
 
 ### Miscellaneous
  * When a large number of rules are to be assessed, split them up to reduce

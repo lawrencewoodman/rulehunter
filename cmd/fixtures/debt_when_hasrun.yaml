@@ -1,12 +1,5 @@
 fileFormatVersion: "0.1"
 title: "What is most likely to indicate success"
-ruleGeneration:
-  fields:
-    - "name"
-    - "balance"
-    - "num_cards"
-    - "marital_status"
-    - "tertiary_educated"
 train:
   dataset:
     csv:
@@ -21,6 +14,13 @@ train:
       - "tertiary_educated"
       - "success"
   when: "hasRun"
+  ruleGeneration:
+    fields:
+      - "name"
+      - "balance"
+      - "num_cards"
+      - "marital_status"
+      - "tertiary_educated"
 aggregators:
   - name: "successMcc"
     kind: "mcc"

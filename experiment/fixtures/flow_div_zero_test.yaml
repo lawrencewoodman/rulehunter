@@ -14,11 +14,11 @@ test:
       - district
       - height
       - flow
-ruleGeneration:
-  fields:
-    - group
-    - district
-    - height
+  ruleGeneration:
+    fields:
+      - group
+      - district
+      - height
 sortOrder:
   - aggregator: "numMatches"
     direction: "descending"

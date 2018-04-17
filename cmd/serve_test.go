@@ -20,7 +20,7 @@ import (
 func TestRunServe(t *testing.T) {
 	wantEntries := []testhelpers.Entry{
 		{Level: testhelpers.Error,
-			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 4: did not find expected key"},
+			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 5: did not find expected key"},
 		{Level: testhelpers.Info,
 			Msg: "Processing experiment: debt.json, mode: train"},
 		{Level: testhelpers.Info,
@@ -136,7 +136,7 @@ func TestRunServe_http(t *testing.T) {
 		{Level: testhelpers.Info,
 			Msg: fmt.Sprintf("Shutdown http server on port: %d", httpPort)},
 		{Level: testhelpers.Error,
-			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 4: did not find expected key"},
+			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 5: did not find expected key"},
 		{Level: testhelpers.Info,
 			Msg: "Processing experiment: debt.json, mode: train"},
 		{Level: testhelpers.Info,

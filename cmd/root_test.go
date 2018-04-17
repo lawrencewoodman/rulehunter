@@ -15,7 +15,7 @@ import (
 func TestRunRoot(t *testing.T) {
 	wantEntries := []testhelpers.Entry{
 		{Level: testhelpers.Error,
-			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 4: did not find expected key"},
+			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 5: did not find expected key"},
 		{Level: testhelpers.Info,
 			Msg: "Processing experiment: debt.json, mode: train"},
 		{Level: testhelpers.Info,
@@ -196,7 +196,7 @@ func TestRunRoot_file(t *testing.T) {
 func TestRunRoot_file_errors(t *testing.T) {
 	wantEntries := []testhelpers.Entry{
 		{Level: testhelpers.Error,
-			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 4: did not find expected key"},
+			Msg: "Can't load experiment: 0debt_broken.yaml, yaml: line 5: did not find expected key"},
 		{Level: testhelpers.Error,
 			Msg: "Can't load experiment: nonexistant.json, " + syscall.ENOENT.Error()},
 	}

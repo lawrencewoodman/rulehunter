@@ -34,16 +34,16 @@ test:
       - a6
       - id
   when: "!hasRun"
-ruleGeneration:
-  fields:
-  - a1
-  - a2
-  - a3
-  - a4
-  - a5
-  - a6
-  arithmetic: true
-  combinationLength: 1
+  ruleGeneration:
+    fields:
+    - a1
+    - a2
+    - a3
+    - a4
+    - a5
+    - a6
+    arithmetic: true
+    combinationLength: 1
 aggregators:
   - name: "mccClassIs1"
     kind: "mcc"

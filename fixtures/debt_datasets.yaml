@@ -1,13 +1,6 @@
 fileFormatVersion: "0.1"
 title: "What is most likely to indicate success"
 category: "testing"
-ruleGeneration:
-  fields:
-    - "name"
-    - "balance"
-    - "num_cards"
-    - "marital_status"
-    - "tertiary_educated"
 train:
   dataset:
     csv:
@@ -21,6 +14,13 @@ train:
       - "marital_status"
       - "tertiary_educated"
       - "success"
+  ruleGeneration:
+    fields:
+      - "name"
+      - "balance"
+      - "num_cards"
+      - "marital_status"
+      - "tertiary_educated"
 test:
   dataset:
     csv:

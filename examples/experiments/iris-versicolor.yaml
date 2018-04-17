@@ -16,14 +16,14 @@ train:
        - petalWidth
        - class
   when: "!hasRun"
-ruleGeneration:
-  fields:
-     - sepalLength
-     - sepalWidth
-     - petalLength
-     - petalWidth
-  arithmetic: true
-  combinationLength: 3
+  ruleGeneration:
+    fields:
+       - sepalLength
+       - sepalWidth
+       - petalLength
+       - petalWidth
+    arithmetic: true
+    combinationLength: 3
 aggregators:
   - name: "mccIrisVersicolor"
     kind: "mcc"

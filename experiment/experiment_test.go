@@ -49,18 +49,18 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
-				Train: &Mode{
-					Dataset: dcsv.New(
+				Train: &TrainMode{
+					dataset: dcsv.New(
 						filepath.Join("fixtures", "flow.csv"),
 						true,
 						rune(','),
 						[]string{"group", "district", "height", "flow"},
 					),
-					When: dexpr.MustNew("!hasRun", funcs),
-				},
-				RuleGeneration: ruleGeneration{
-					fields:     []string{"group", "district", "height"},
-					arithmetic: true,
+					when: dexpr.MustNew("!hasRun", funcs),
+					ruleGeneration: ruleGeneration{
+						fields:     []string{"group", "district", "height"},
+						arithmetic: true,
+					},
 				},
 				Aggregators: []aggregator.Spec{
 					aggregator.MustNew("numMatches", "count", "true()"),
@@ -100,8 +100,8 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
-				Train: &Mode{
-					Dataset: dtruncate.New(
+				Train: &TrainMode{
+					dataset: dtruncate.New(
 						dcsv.New(
 							filepath.Join("fixtures", "flow.csv"),
 							true,
@@ -110,11 +110,11 @@ func TestLoad(t *testing.T) {
 						),
 						4,
 					),
-					When: dexpr.MustNew("!hasRun", funcs),
-				},
-				RuleGeneration: ruleGeneration{
-					fields:     []string{"group", "district", "height"},
-					arithmetic: true,
+					when: dexpr.MustNew("!hasRun", funcs),
+					ruleGeneration: ruleGeneration{
+						fields:     []string{"group", "district", "height"},
+						arithmetic: true,
+					},
 				},
 				Aggregators: []aggregator.Spec{
 					aggregator.MustNew("numMatches", "count", "true()"),
@@ -154,18 +154,14 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
-				Test: &Mode{
-					Dataset: dcsv.New(
+				Test: &TestMode{
+					dataset: dcsv.New(
 						filepath.Join("fixtures", "flow.csv"),
 						true,
 						rune(','),
 						[]string{"group", "district", "height", "flow"},
 					),
-					When: dexpr.MustNew("!hasRun", funcs),
-				},
-				RuleGeneration: ruleGeneration{
-					fields:     []string{"group", "district", "height"},
-					arithmetic: true,
+					when: dexpr.MustNew("!hasRun", funcs),
 				},
 				Aggregators: []aggregator.Spec{
 					aggregator.MustNew("numMatches", "count", "true()"),
@@ -203,8 +199,8 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would predict people being helped to be debt free?",
-				Train: &Mode{
-					Dataset: dcsv.New(
+				Train: &TrainMode{
+					dataset: dcsv.New(
 						filepath.Join("fixtures", "debt.csv"),
 						true,
 						rune(','),
@@ -217,20 +213,20 @@ func TestLoad(t *testing.T) {
 							"success",
 						},
 					),
-					When: dexpr.MustNew(
+					when: dexpr.MustNew(
 						"!hasRunToday || sinceLastRunHours > 2",
 						funcs,
 					),
-				},
-				RuleGeneration: ruleGeneration{
-					fields: []string{
-						"name",
-						"balance",
-						"numCards",
-						"martialStatus",
-						"tertiaryEducated",
+					ruleGeneration: ruleGeneration{
+						fields: []string{
+							"name",
+							"balance",
+							"numCards",
+							"martialStatus",
+							"tertiaryEducated",
+						},
+						arithmetic: false,
 					},
-					arithmetic: false,
 				},
 				Aggregators: []aggregator.Spec{
 					aggregator.MustNew("numMatches", "count", "true()"),
@@ -260,18 +256,18 @@ func TestLoad(t *testing.T) {
 			),
 			want: &Experiment{
 				Title: "What would indicate good flow?",
-				Train: &Mode{
-					Dataset: dcsv.New(
+				Train: &TrainMode{
+					dataset: dcsv.New(
 						filepath.Join("fixtures", "flow.csv"),
 						true,
 						rune(','),
 						[]string{"group", "district", "height", "flow"},
 					),
-					When: dexpr.MustNew("!hasRun", funcs),
-				},
-				RuleGeneration: ruleGeneration{
-					fields:     []string{"group", "district", "height"},
-					arithmetic: false,
+					when: dexpr.MustNew("!hasRun", funcs),
+					ruleGeneration: ruleGeneration{
+						fields:     []string{"group", "district", "height"},
+						arithmetic: false,
+					},
 				},
 				Aggregators: []aggregator.Spec{
 					aggregator.MustNew("numMatches", "count", "true()"),
@@ -1026,8 +1022,8 @@ func checkExperimentMatch(
 	if e1.Category != e2.Category {
 		return errors.New("Categories don't match")
 	}
-	if !areGenerationDescribersEqual(e1.RuleGeneration, e2.RuleGeneration) {
-		return errors.New("RuleGeneration don't match")
+	if !areRulesEqual(e1.Rules, e2.Rules) {
+		return errors.New("Rules don't match")
 	}
 	if !areGoalExpressionsEqual(e1.Goals, e2.Goals) {
 		return errors.New("Goals don't match")
@@ -1038,13 +1034,10 @@ func checkExperimentMatch(
 	if !areSortOrdersEqual(e1.SortOrder, e2.SortOrder) {
 		return errors.New("Sort Orders don't match")
 	}
-	if !areRulesEqual(e1.Rules, e2.Rules) {
-		return errors.New("Rules don't match")
-	}
-	if err := checkModesEqual(e1.Train, e2.Train); err != nil {
+	if err := checkTrainModesEqual(e1.Train, e2.Train); err != nil {
 		return fmt.Errorf("train: %s", err)
 	}
-	if err := checkModesEqual(e1.Test, e2.Test); err != nil {
+	if err := checkTestModesEqual(e1.Test, e2.Test); err != nil {
 		return fmt.Errorf("test: %s", err)
 	}
 	return nil
@@ -1054,11 +1047,34 @@ func checkModesEqual(m1, m2 *Mode) error {
 	if m1 == nil && m2 == nil {
 		return nil
 	}
-	if err := checkDatasetsEqual(m1.Dataset, m2.Dataset); err != nil {
+	return nil
+}
+
+func checkTrainModesEqual(tm1, tm2 *TrainMode) error {
+	if tm1 == nil && tm2 == nil {
+		return nil
+	}
+	if err := checkDatasetsEqual(tm1.dataset, tm2.dataset); err != nil {
 		return fmt.Errorf("dataset: %s", err)
 	}
-	if m1.When.String() != m2.When.String() {
-		return fmt.Errorf("When: '%s' != '%s'", m1.When, m2.When)
+	if tm1.when.String() != tm2.when.String() {
+		return fmt.Errorf("When: '%s' != '%s'", tm1.when, tm2.when)
+	}
+	if !areGenerationDescribersEqual(tm1.ruleGeneration, tm2.ruleGeneration) {
+		return errors.New("RuleGeneration doesn't match")
+	}
+	return nil
+}
+
+func checkTestModesEqual(tm1, tm2 *TestMode) error {
+	if tm1 == nil && tm2 == nil {
+		return nil
+	}
+	if err := checkDatasetsEqual(tm1.dataset, tm2.dataset); err != nil {
+		return fmt.Errorf("dataset: %s", err)
+	}
+	if tm1.when.String() != tm2.when.String() {
+		return fmt.Errorf("When: '%s' != '%s'", tm1.when, tm2.when)
 	}
 	return nil
 }

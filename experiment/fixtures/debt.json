@@ -17,16 +17,16 @@
         "success"
       ]
     },
-    "when": "!hasRunToday || sinceLastRunHours > 2"
-  },
-  "ruleGeneration": {
-    "fields": [
-      "name",
-      "balance",
-      "numCards",
-      "martialStatus",
-      "tertiaryEducated"
-    ]
+    "when": "!hasRunToday || sinceLastRunHours > 2",
+    "ruleGeneration": {
+      "fields": [
+        "name",
+        "balance",
+        "numCards",
+        "martialStatus",
+        "tertiaryEducated"
+      ]
+    }
   },
   "aggregators": [
     {

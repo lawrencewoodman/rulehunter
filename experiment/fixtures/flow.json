@@ -10,11 +10,11 @@
         "separator":  ","
       },
       "fields": ["group","district","height","flow"]
+    },
+    "ruleGeneration": {
+      "fields": ["group","district","height"],
+      "arithmetic": true
     }
-  },
-  "ruleGeneration": {
-    "fields": ["group","district","height"],
-    "arithmetic": true
   },
   "aggregators": [
     {

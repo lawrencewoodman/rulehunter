@@ -10,11 +10,11 @@
       },
       "fields": ["name", "balance", "num_cards", "marital_status",
                      "tertiary_educated", "success"]
+    },
+    "ruleGeneration": {
+      "fields": ["name", "balance", "num_cards", "marital_status",
+                         "tertiary_educated"]
     }
-  },
-  "ruleGeneration": {
-    "fields": ["name", "balance", "num_cards", "marital_status",
-                       "tertiary_educated"]
   },
   "aggregators": [
     {

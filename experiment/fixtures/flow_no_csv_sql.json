@@ -9,15 +9,15 @@
   "ruleFields": ["group","district","height"],
   "aggregators": [
     {
-      "name": "goodFlowAccuracy",
-      "kind": "accuracy",
+      "name": "goodFlowMCC",
+      "kind": "mcc",
       "arg": "flow > 60"
     }
   ],
   "goals": ["goodFlowAccuracy > 10"],
   "sortOrder": [
     {
-      "aggregator": "goodFlowAccuracy",
+      "aggregator": "goodFlowMCC",
       "direction": "descending"
     },
     {

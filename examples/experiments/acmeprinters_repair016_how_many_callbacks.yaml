@@ -18,11 +18,11 @@ train:
       - isContact
       - value
   when: "!hasRun || sinceLastRunMinutes > 40"
-ruleGeneration:
-  fields:
-    - callbacks
-    - segment
-  combinationLength: 1
+  ruleGeneration:
+    fields:
+      - callbacks
+      - segment
+    combinationLength: 1
 aggregators:
   - name: "totalContacts"
     kind: "count"

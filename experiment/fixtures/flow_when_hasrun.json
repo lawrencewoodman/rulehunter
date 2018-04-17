@@ -11,11 +11,11 @@
       },
       "fields": ["group","district","height","flow"]
     },
-    "when": "hasRun"
-  },
-  "ruleGeneration": {
-    "fields": ["group","district","height"],
-    "arithmetic": true
+    "when": "hasRun",
+    "ruleGeneration": {
+      "fields": ["group","district","height"],
+      "arithmetic": true
+    }
   },
   "aggregators": [
     {

@@ -18,11 +18,11 @@ train:
       - numContacts
       - value
   when: "!hasRun || sinceLastRunMinutes > 40"
-ruleGeneration:
-  fields:
-    - name
-    - segment
-  combinationLength: 2
+  ruleGeneration:
+    fields:
+      - name
+      - segment
+    combinationLength: 2
 aggregators:
   - name: "totalContacts"
     kind: "sum"

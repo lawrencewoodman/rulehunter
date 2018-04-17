@@ -9,11 +9,11 @@
         "separator":  ","
       },
       "fields": ["group","district","height","flow"]
-    "when": "never"
-  },
-  "ruleGeneration": {
-    "fields": ["group","district","height"],
-    "arithmetic": true
+    "when": "never",
+    "ruleGeneration": {
+      "fields": ["group","district","height"],
+      "arithmetic": true
+    }
   },
   "aggregators": [
     {

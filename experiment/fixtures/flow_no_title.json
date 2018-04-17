@@ -9,13 +9,12 @@
       },
       "fields": ["group","district","height","flow"]
     },
-    "when": "never"
+    "when": "never",
+    "ruleGeneration": {
+      "fields": ["group","district","height"],
+      "arithmetic": true
+    }
   },
-  "ruleGeneration": {
-    "fields": ["group","district","height"],
-    "arithmetic": true
-  },
-
   "aggregators": [
     {
       "name": "goodFlowMcc",
