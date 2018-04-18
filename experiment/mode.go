@@ -225,17 +225,24 @@ func assessRules(
 		*assessment.Assessment,
 		error,
 	) {
+		prevMsg := ""
+		prevProgress := 0.0
 		reportProgress := func(recordNum, numRecords int64) error {
-			progress :=
-				100.0*ruleProgress - 1 + float64(recordNum)/float64(numRecords)
 			msg :=
 				fmt.Sprintf("Assessing rules %d/%d", stage, m.NumAssessRulesStages())
-			return pm.ReportProgress(
-				e.File.Name(),
-				m.Kind(),
-				msg,
-				progress,
-			)
+			progress :=
+				100.0*ruleProgress - 1 + float64(recordNum)/float64(numRecords)
+			if msg != prevMsg || progress-prevProgress >= 0.5 {
+				prevMsg = msg
+				prevProgress = progress
+				return pm.ReportProgress(
+					e.File.Name(),
+					m.Kind(),
+					msg,
+					progress,
+				)
+			}
+			return nil
 		}
 
 		assessments, records, errors :=
