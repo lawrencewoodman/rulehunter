@@ -274,17 +274,14 @@ func assessRules(
 		}
 
 		subResult := assessments[0]
-		subResult.Sort(e.SortOrder)
-		subResult.Refine()
 		for _, a := range assessments[1:] {
-			a.Sort(e.SortOrder)
-			a.Refine()
 			subResult, err = subResult.Merge(a)
 			if err != nil {
 				return nil, err
 			}
 		}
-
+		subResult.Sort(e.SortOrder)
+		subResult.Refine()
 		return subResult, nil
 	}
 
@@ -311,8 +308,6 @@ func assessRules(
 		if i == 0 {
 			result = newAss
 		} else {
-			newAss.Sort(e.SortOrder)
-			newAss.Refine()
 			result, err = result.Merge(newAss)
 			if err != nil {
 				return nil, err
