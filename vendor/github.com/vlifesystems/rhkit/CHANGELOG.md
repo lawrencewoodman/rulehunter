@@ -7,6 +7,11 @@
   * Supply aggregator specs and goals to `assessment.New`, therefore they
     do not need to be passed to `AssessRules`
   * Create `assessment.ProcessRecord` and `assessment.Update` methods
+  * Use `percentMatches` aggregator in `assessment.Refine` rather than
+    `numRecords`
+  * Don't stop at `True` rule in `assessment.Refine`
+  * Remove `refined` status for `Assessment`
+
 
 ## 0.3 (11th October 2017)
 
