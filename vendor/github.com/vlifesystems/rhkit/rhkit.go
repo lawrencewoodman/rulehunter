@@ -126,7 +126,7 @@ func processGenerate(
 	ass.Refine()
 
 	if len(opts.Fields()) == 2 {
-		cRules := rule.Combine(ass.Rules())
+		cRules := rule.Combine(ass.Rules(), 5000)
 		if err := ass.AssessRules(dataset, cRules); err != nil {
 			return AssessError{Err: err}
 		}
@@ -152,9 +152,7 @@ func processGenerate(
 	ass.Sort(sortOrder)
 	ass.Refine()
 
-	numRulesToCombine := 50
-	bestNonCombinedRules := ass.Rules(numRulesToCombine)
-	combinedRules := rule.Combine(bestNonCombinedRules)
+	combinedRules := rule.Combine(ass.Rules(), 2000)
 
 	if err := ass.AssessRules(dataset, combinedRules); err != nil {
 		return AssessError{Err: err}

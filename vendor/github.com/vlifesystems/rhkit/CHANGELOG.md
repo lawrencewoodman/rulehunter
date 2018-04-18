@@ -11,6 +11,7 @@
     `numRecords`
   * Don't stop at `True` rule in `assessment.Refine`
   * Remove `refined` status for `Assessment`
+  * Add `maxNumRules` argument to `rule.Combine`
 
 
 ## 0.3 (11th October 2017)

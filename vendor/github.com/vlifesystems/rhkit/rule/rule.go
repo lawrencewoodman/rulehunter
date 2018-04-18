@@ -79,7 +79,7 @@ func Generate(
 }
 
 // Combine combines rules together using And and Or
-func Combine(rules []Rule) []Rule {
+func Combine(rules []Rule, maxNumRules int) []Rule {
 	Sort(rules)
 	combinedRules := make([]Rule, 0)
 	numRules := len(rules)
@@ -88,9 +88,18 @@ func Combine(rules []Rule) []Rule {
 			if andRule, err := NewAnd(rules[i], rules[j]); err == nil {
 				combinedRules = append(combinedRules, andRule)
 			}
+			if len(combinedRules) >= maxNumRules {
+				break
+			}
 			if orRule, err := NewOr(rules[i], rules[j]); err == nil {
 				combinedRules = append(combinedRules, orRule)
 			}
+			if len(combinedRules) >= maxNumRules {
+				break
+			}
+		}
+		if len(combinedRules) >= maxNumRules {
+			break
 		}
 	}
 	return Uniq(combinedRules)

@@ -205,18 +205,13 @@ func (m *TrainMode) Process(
 	}
 
 	for i := 0; i < m.ruleGeneration.combinationLength; i++ {
-		combinedRules := []rule.Rule{}
-		hasCombined := false
-		for n := 1000; !hasCombined || len(combinedRules) > 10000; n -= 10 {
-			combinedRules = rule.Combine(ass.Rules(n))
-			hasCombined = true
+		if err := reportProgress("Combining rules", 0); err != nil {
+			return noRules, err
 		}
-		combinedRules = append(combinedRules, rule.NewTrue())
-
+		combinedRules := rule.Combine(ass.Rules(), 10000)
 		if err := assessRules(5+i, combinedRules); err != nil {
 			return noRules, err
 		}
-
 		if quitReceived() {
 			return noRules, ErrQuitReceived
 		}

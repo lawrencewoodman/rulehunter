@@ -143,7 +143,7 @@ func (a *Assessment) TruncateRuleAssessments(
 		ruleAssessments = append(ruleAssessments, ra.clone())
 	}
 
-	if getTrueRuleAssessment(ruleAssessments) != nil && maxRuleAssessments > 0 {
+	if getTrueRuleAssessment(ruleAssessments) == nil && maxRuleAssessments > 0 {
 		if len(ruleAssessments) >= maxRuleAssessments {
 			ruleAssessments[len(ruleAssessments)-1] = trueRuleAssessment.clone()
 		} else {
