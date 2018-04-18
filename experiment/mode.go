@@ -246,7 +246,7 @@ func assessRules(
 		}
 
 		assessments, records, errors :=
-			startWorkers(&wg, cfg, e.Aggregators, e.Goals, rules)
+			startWorkers(&wg, cfg, e.Aggregators, e.Goals, subRules)
 		err := sendRecordsToWorkers(
 			&wg,
 			q,
