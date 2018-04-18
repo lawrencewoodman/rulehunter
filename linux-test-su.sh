@@ -18,5 +18,5 @@
 
 
 export GOPATH=$1
-export GOROOT=`dirname $(dirname $2)`
-$GOROOT/bin/go test -v -tags="su $3" ./...
+export GOBIN=`dirname $(dirname $2)`/bin
+$GOBIN/go test -v -tags="su $3" ./...
