@@ -93,6 +93,9 @@ func (ai *meanInstance) NextRecord(
 			"value": exprValue,
 		}
 		ai.sum = meanSumExpr.Eval(vars)
+		if err := ai.sum.Err(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

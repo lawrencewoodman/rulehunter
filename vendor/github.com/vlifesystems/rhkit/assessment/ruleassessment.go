@@ -21,6 +21,15 @@ type RuleAssessment struct {
 	goals       []*goal.Goal
 }
 
+type AggregatorError struct {
+	Name string
+	Err  error
+}
+
+func (ae AggregatorError) Error() string {
+	return fmt.Sprintf("problem with aggregator: %s, %s", ae.Name, ae.Err)
+}
+
 func newRuleAssessment(
 	rule rule.Rule,
 	aggregatorSpecs []aggregator.Spec,
@@ -52,7 +61,7 @@ func (r *RuleAssessment) NextRecord(record ddataset.Record) error {
 		}
 		err = aggregator.NextRecord(record, ruleIsTrue)
 		if err != nil {
-			return err
+			return AggregatorError{Name: aggregator.Name(), Err: err}
 		}
 	}
 	return nil

@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 package aggregator
@@ -81,6 +81,9 @@ func (ai *sumInstance) NextRecord(
 			"value": exprValue,
 		}
 		ai.sum = sumExpr.Eval(vars)
+		if err := ai.sum.Err(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
