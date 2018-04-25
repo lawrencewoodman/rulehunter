@@ -14,6 +14,8 @@
   * Add `maxNumRules` argument to `rule.Combine`
   * Ensure `NextRecord` returns error early if internal expressions of
     `Sum` and `Mean` aggregator fail.
+  * Add `if` dexpr func
+  * Add `iferr` dexpr func
 
 
 ## 0.3 (11th October 2017)

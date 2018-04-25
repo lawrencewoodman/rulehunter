@@ -43,7 +43,7 @@ aggregators:
     arg: "totalClientCommission + totalClientContactCharge"
   - name: "totalClientROI"
     kind: "calc"
-    arg: "roundto(totalClientValue / (totalClientCharge + pow(0,totalClientCharge)), 2)"
+    arg: "iferr(roundto(totalClientValue / totalClientCharge, 2), 0)"
   - name: "totalCallCentreCost"
     kind: "sum"
     # £0.04/min call cost, plus £10/hr caller cost, plus £10/hr overheads
@@ -57,7 +57,7 @@ aggregators:
     arg: "conversion"
   - name: "totalCallCentreROI"
     kind: "calc"
-    arg: "roundto(totalClientCharge / (totalCallCentreCost + pow(0,totalCallCentreCost)), 2)"
+    arg: "iferr(roundto(totalClientCharge / totalCallCentreCost, 2), 0)"
 goals:
   - "totalCallCentreROI >= 1.10"
   - "totalClientROI >= 15"

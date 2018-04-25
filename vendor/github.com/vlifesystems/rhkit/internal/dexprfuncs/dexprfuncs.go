@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 vLife Systems Ltd <http://vlifesystems.com>
+// Copyright (C) 2016-2018 vLife Systems Ltd <http://vlifesystems.com>
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 // Package to handle functions to be used by dexpr
@@ -16,6 +16,8 @@ import (
 var CallFuncs = map[string]dexpr.CallFun{}
 
 func init() {
+	CallFuncs["if"] = ifFunc
+	CallFuncs["iferr"] = ifErrFunc
 	CallFuncs["in"] = in
 	CallFuncs["ni"] = ni
 	CallFuncs["min"] = min
@@ -49,6 +51,48 @@ type CantConvertToTypeError struct {
 
 func (e CantConvertToTypeError) Error() string {
 	return fmt.Sprintf("can't convert to %s: %s", e.Kind, e.Value)
+}
+
+// ifFunc returns a value dependant on a boolean condition value
+// e.g. ifFunc(boolCondition, trueValue, falseValue)
+func ifFunc(args []*dlit.Literal) (*dlit.Literal, error) {
+	if len(args) != 3 {
+		err := WrongNumOfArgsError{Got: len(args), Want: 3}
+		r := dlit.MustNew(err)
+		return r, err
+	}
+	boolCondition := args[0]
+	trueValue := args[1]
+	falseValue := args[2]
+	b, isBool := boolCondition.Bool()
+	if !isBool {
+		if err := boolCondition.Err(); err != nil {
+			return boolCondition, err
+		}
+		err := CantConvertToTypeError{Kind: "bool", Value: boolCondition}
+		return dlit.MustNew(err), err
+	}
+	if b {
+		return trueValue, nil
+	}
+	return falseValue, nil
+}
+
+// ifErrFunc returns an alternative value if a value is an error,
+// otherwise the original value is returned
+// e.g. ifErrFunc(testValue, alternativeValue)
+func ifErrFunc(args []*dlit.Literal) (*dlit.Literal, error) {
+	if len(args) != 2 {
+		err := WrongNumOfArgsError{Got: len(args), Want: 2}
+		r := dlit.MustNew(err)
+		return r, err
+	}
+	testValue := args[0]
+	alternativeValue := args[1]
+	if err := testValue.Err(); err != nil {
+		return alternativeValue, nil
+	}
+	return testValue, nil
 }
 
 // sqrt returns the square root of a number
