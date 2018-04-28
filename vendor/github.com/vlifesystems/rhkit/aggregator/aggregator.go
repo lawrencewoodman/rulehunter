@@ -150,7 +150,7 @@ func addDefaultAggregators(specs []Spec) []Spec {
 	newSpecs[1] = MustNew(
 		"percentMatches",
 		"calc",
-		"roundto(100.0 * numMatches / numRecords, 2)",
+		"iferr(roundto(100.0 * numMatches / numRecords, 2), 0)",
 	)
 	goalsScoreSpec := MustNew("goalsScore", "goalsscore")
 	newSpecs = append(newSpecs, specs...)

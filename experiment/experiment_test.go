@@ -67,7 +67,7 @@ func TestLoad(t *testing.T) {
 					aggregator.MustNew(
 						"percentMatches",
 						"calc",
-						"roundto(100.0 * numMatches / numRecords, 2)",
+						"iferr(roundto(100.0 * numMatches / numRecords, 2), 0)",
 					),
 					aggregator.MustNew("goodFlowMcc", "mcc", "flow > 60"),
 					aggregator.MustNew("goalsScore", "goalsscore"),
@@ -121,7 +121,7 @@ func TestLoad(t *testing.T) {
 					aggregator.MustNew(
 						"percentMatches",
 						"calc",
-						"roundto(100.0 * numMatches / numRecords, 2)",
+						"iferr(roundto(100.0 * numMatches / numRecords, 2), 0)",
 					),
 					aggregator.MustNew("goodFlowMcc", "mcc", "flow > 60"),
 					aggregator.MustNew("goalsScore", "goalsscore"),
@@ -168,7 +168,7 @@ func TestLoad(t *testing.T) {
 					aggregator.MustNew(
 						"percentMatches",
 						"calc",
-						"roundto(100.0 * numMatches / numRecords, 2)",
+						"iferr(roundto(100.0 * numMatches / numRecords, 2), 0)",
 					),
 					aggregator.MustNew("goodFlowMcc", "mcc", "flow > 60"),
 					aggregator.MustNew("goalsScore", "goalsscore"),
@@ -233,7 +233,7 @@ func TestLoad(t *testing.T) {
 					aggregator.MustNew(
 						"percentMatches",
 						"calc",
-						"roundto(100.0 * numMatches / numRecords, 2)",
+						"iferr(roundto(100.0 * numMatches / numRecords, 2), 0)",
 					),
 					aggregator.MustNew("helpedMcc", "mcc", "success"),
 					aggregator.MustNew("goalsScore", "goalsscore"),
@@ -274,7 +274,7 @@ func TestLoad(t *testing.T) {
 					aggregator.MustNew(
 						"percentMatches",
 						"calc",
-						"roundto(100.0 * numMatches / numRecords, 2)",
+						"iferr(roundto(100.0 * numMatches / numRecords, 2), 0)",
 					),
 					aggregator.MustNew("goodFlowMcc", "mcc", "flow > 60"),
 					aggregator.MustNew("goalsScore", "goalsscore"),

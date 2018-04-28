@@ -16,6 +16,7 @@
     `Sum` and `Mean` aggregator fail.
   * Add `if` dexpr func
   * Add `iferr` dexpr func
+  * Use `iferr` to protect `percentMatches` from cases when `numRecords == 0`
 
 
 ## 0.3 (11th October 2017)
