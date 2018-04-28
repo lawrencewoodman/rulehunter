@@ -873,7 +873,7 @@ func TestProcess_errors(t *testing.T) {
 			Category: "",
 			Status: &progress.Status{
 				Stamp: time.Now(),
-				Msg:   "Couldn't assess rules: invalid expression: bob > 60 (variable doesn't exist: bob)",
+				Msg:   "Couldn't assess rules: problem with aggregator: goodFlowMcc, invalid expression: bob > 60 (variable doesn't exist: bob)",
 				State: progress.Error,
 			},
 		},

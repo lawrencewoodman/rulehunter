@@ -204,6 +204,7 @@ func (m *TrainMode) Process(
 		return noRules, ErrQuitReceived
 	}
 
+	ruleAssessments := []*assessment.RuleAssessment{ass.RuleAssessments[0]}
 	for i := 0; i < m.ruleGeneration.combinationLength; i++ {
 		if err := reportProgress("Combining rules", 0); err != nil {
 			return noRules, err
@@ -215,9 +216,34 @@ func (m *TrainMode) Process(
 		if quitReceived() {
 			return noRules, ErrQuitReceived
 		}
+
+	outerLoop:
+		// Add ruleAssessment for each combinationLength
+		for _, ra := range ass.RuleAssessments {
+			for _, r := range combinedRules {
+				_, isTrueRule := ra.Rule.(rule.True)
+				if !isTrueRule && ra.Rule.String() == r.String() {
+					ruleAssessments = append(ruleAssessments, ra)
+					break outerLoop
+				}
+			}
+		}
 	}
 
-	ass = ass.TruncateRuleAssessments(2)
+	// Add the true rule assessment if missing
+	trueRuleAssessment := getTrueRuleAssessment(ruleAssessments)
+	if trueRuleAssessment == nil {
+		trueRuleAssessment = getTrueRuleAssessment(ass.RuleAssessments)
+		if trueRuleAssessment == nil {
+			panic("true rule missing from assessment")
+		}
+		ruleAssessments = append(ruleAssessments, trueRuleAssessment)
+	}
+	ass.RuleAssessments = ruleAssessments
+	ass.Sort(e.SortOrder)
+	ass.Refine()
+	// TODO: Remove ruleAssessments that have longer combinationLength than
+	// previous ruleAssessment?
 
 	r := report.New(
 		report.Train,
@@ -234,4 +260,15 @@ func (m *TrainMode) Process(
 		return noRules, fmt.Errorf("Couldn't write JSON train report: %s", err)
 	}
 	return ass.Rules(), nil
+}
+
+func getTrueRuleAssessment(
+	ruleAssessments []*assessment.RuleAssessment,
+) *assessment.RuleAssessment {
+	for _, ra := range ruleAssessments {
+		if _, isTrueRule := ra.Rule.(rule.True); isTrueRule {
+			return ra
+		}
+	}
+	return nil
 }

@@ -12,6 +12,8 @@
 ### Miscellaneous
  * When a large number of rules are to be assessed, split them up to reduce
    memory usage
+ * When processing experiment, put one rule for each `combinationLength` into
+   report
 
 
 ## 0.2 (15th February 2018)
