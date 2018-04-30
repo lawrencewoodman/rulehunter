@@ -141,21 +141,24 @@ func (m *TrainMode) Process(
 		return noRules, fmt.Errorf("Couldn't assess rules: %s", err)
 	}
 
-	assessRules := func(stage int, rules []rule.Rule) error {
+	assessRules := func(
+		stage int,
+		rules []rule.Rule,
+	) (*assessment.Assessment, error) {
 		newRules := rt.track(rules)
 		newAss, err :=
 			assessRules(e, m, stage, newRules, pm, q, cfg)
 		if err != nil {
-			return fmt.Errorf("Couldn't assess rules: %s", err)
+			return nil, fmt.Errorf("Couldn't assess rules: %s", err)
 		}
 		ass, err = ass.Merge(newAss)
 		if err != nil {
-			return fmt.Errorf("Couldn't merge assessments: %s", err)
+			return nil, fmt.Errorf("Couldn't merge assessments: %s", err)
 		}
 		ass.Sort(e.SortOrder)
 		ass.Refine()
-		ass.TruncateRuleAssessments(5000)
-		return nil
+		ass = ass.TruncateRuleAssessments(10000)
+		return newAss, nil
 	}
 
 	if err := reportProgress("Generating rules", 0); err != nil {
@@ -170,7 +173,7 @@ func (m *TrainMode) Process(
 		return noRules, ErrQuitReceived
 	}
 
-	if err := assessRules(2, generatedRules); err != nil {
+	if _, err := assessRules(2, generatedRules); err != nil {
 		return noRules, err
 	}
 
@@ -183,7 +186,7 @@ func (m *TrainMode) Process(
 	}
 	tweakableRules := rule.Tweak(1, ass.Rules(), desc)
 
-	if err := assessRules(3, tweakableRules); err != nil {
+	if _, err := assessRules(3, tweakableRules); err != nil {
 		return noRules, err
 	}
 
@@ -196,7 +199,7 @@ func (m *TrainMode) Process(
 	}
 	reducedDPRules := rule.ReduceDP(ass.Rules())
 
-	if err := assessRules(4, reducedDPRules); err != nil {
+	if _, err := assessRules(4, reducedDPRules); err != nil {
 		return noRules, err
 	}
 
@@ -210,22 +213,21 @@ func (m *TrainMode) Process(
 			return noRules, err
 		}
 		combinedRules := rule.Combine(ass.Rules(), 10000)
-		if err := assessRules(5+i, combinedRules); err != nil {
+		combinedAss, err := assessRules(5+i, combinedRules)
+		if err != nil {
 			return noRules, err
 		}
 		if quitReceived() {
 			return noRules, ErrQuitReceived
 		}
+		combinedAss.Sort(e.SortOrder)
+		combinedAss.Refine()
 
-	outerLoop:
 		// Add ruleAssessment for each combinationLength
-		for _, ra := range ass.RuleAssessments {
-			for _, r := range combinedRules {
-				_, isTrueRule := ra.Rule.(rule.True)
-				if !isTrueRule && ra.Rule.String() == r.String() {
-					ruleAssessments = append(ruleAssessments, ra)
-					break outerLoop
-				}
+		for _, ra := range combinedAss.RuleAssessments {
+			if _, isTrueRule := ra.Rule.(rule.True); !isTrueRule {
+				ruleAssessments = append(ruleAssessments, ra)
+				break
 			}
 		}
 	}
