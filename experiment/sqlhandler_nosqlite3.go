@@ -2,6 +2,8 @@
 // Licensed under an MIT licence.  Please see LICENSE.md for details.
 
 // +build nosqlite3
+// TODO: Remove this file and all references to nosqlite3
+// TODO: once sure it is no longer needed
 
 package experiment
 

@@ -14,7 +14,6 @@ builds:
     - "386"
   goarm:
     - "6"
-  flags: -tags nosqlite3
   main: .
   binary: rulehunter
 

@@ -9,6 +9,9 @@
  * Make `fields` part of `dataset`
  * Move `ruleGeneration` into `train`
 
+### Release
+ * Re-enable `sqlite3` as sql `driverName` in experiment
+
 ### Miscellaneous
  * When a large number of rules are to be assessed, split them up to reduce
    memory usage
