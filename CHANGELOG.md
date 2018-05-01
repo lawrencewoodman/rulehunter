@@ -1,4 +1,4 @@
-## Master
+## 0.3 (1st May 2018)
 
 ### Config
  * Add `httpPort` to allow internal web server

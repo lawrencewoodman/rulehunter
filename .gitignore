@@ -10,3 +10,8 @@ build
 /experiments
 www
 
+# Directory to hold development notes
+notes
+
+# Release notes
+release.md

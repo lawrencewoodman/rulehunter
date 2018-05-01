@@ -26,10 +26,10 @@ type rulehunterVersion struct {
 // CurrentRulehunterVersion represents the current build version.
 var currentRulehunterVersion = rulehunterVersion{
 	Major: 0,
-	Minor: 2,
+	Minor: 3,
 	Patch: 0,
 	// Change Suffix to -DEV", for next commit following version
-	Suffix: "-DEV",
+	Suffix: "",
 }
 
 func Version() string {
