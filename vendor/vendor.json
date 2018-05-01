@@ -45,14 +45,10 @@
 			"revisionTime": "2017-12-06T10:05:13Z"
 		},
 		{
-			"checksumSHA1": "w5AYn33pXsivrejJxVw9RAwH1vE=",
+			"checksumSHA1": "VibJh/oNzIw3tY0PCgReKMzrxf0=",
 			"path": "github.com/mattn/go-sqlite3",
-			"revision": "9101028e5ca824d2baf0fbd91b9700e2669a6cd9",
-			"revisionTime": "2018-03-07T07:20:36Z"
-		},
-		{
-			"path": "github.com/mattn/go-sqlite3/sqlite3_test",
-			"revision": ""
+			"revision": "a72efd674f654961a11ac41aae72c0e43963fe6c",
+			"revisionTime": "2018-04-19T07:32:57Z"
 		},
 		{
 			"checksumSHA1": "+N2Ib0b8esluzGOqUXWCRIvHtio=",
@@ -101,6 +97,10 @@
 			"path": "github.com/vlifesystems/rhkit/rule",
 			"revision": "faca0d4cc7bcfcf3e002566005567de404846c19",
 			"revisionTime": "2018-04-28T06:39:45Z"
+		},
+		{
+			"path": "vendor/github.com/mattn/go-sqlite3",
+			"revision": ""
 		}
 	],
 	"rootPath": "github.com/vlifesystems/rulehunter"
